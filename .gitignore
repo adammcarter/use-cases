@@ -1,0 +1,4 @@
+.agent-cache/
+.agent-tool/
+.agent-receipts/
+.DS_Store
