@@ -2,3 +2,7 @@
 .agent-tool/
 .agent-receipts/
 .DS_Store
+coverage/
+node_modules/
+packages/*/dist/
+packages/*/*.tsbuildinfo

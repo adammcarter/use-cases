@@ -1,0 +1,25 @@
+{
+  "name": "presentation-skills",
+  "version": "0.1.0",
+  "description": "Use-case, evidence, and live showcase infrastructure for agent work.",
+  "author": {
+    "name": "Presentation Skills"
+  },
+  "license": "MIT",
+  "keywords": ["agents", "showcase", "use-cases", "evidence"],
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Presentation Skills",
+    "shortDescription": "Plan, prove, and showcase agent work.",
+    "longDescription": "Maintains use cases, proof history, and live showcase flows for agent-led product work.",
+    "developerName": "Presentation Skills",
+    "category": "Productivity",
+    "capabilities": ["Interactive", "Write"],
+    "defaultPrompt": [
+      "Create use cases for this feature.",
+      "Plan a live showcase for this branch.",
+      "Record evidence for the latest work."
+    ],
+    "brandColor": "#2563EB"
+  }
+}
