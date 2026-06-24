@@ -1,0 +1,23 @@
+{
+  "name": "@presentation-skills/ucm-cli",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "CLI for presentation-skills.",
+  "bin": {
+    "presentation-skills": "./dist/index.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "package.json"],
+  "dependencies": {
+    "@presentation-skills/ucm-core": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b --pretty false"
+  }
+}

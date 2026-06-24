@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "presentation-skills": {
+      "command": "node",
+      "args": ["./packages/ucm-mcp/dist/index.js"]
+    }
+  }
+}

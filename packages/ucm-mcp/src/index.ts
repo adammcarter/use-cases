@@ -1,0 +1,115 @@
+#!/usr/bin/env node
+import { realpathSync } from "node:fs";
+import { createInterface } from "node:readline";
+import { stdin, stdout } from "node:process";
+import { fileURLToPath } from "node:url";
+import { getVersionInfo } from "@presentation-skills/ucm-core";
+
+type JsonRpcRequest = {
+  jsonrpc: "2.0";
+  id?: string | number | null;
+  method?: string;
+  params?: unknown;
+};
+
+type JsonRpcResponse = {
+  jsonrpc: "2.0";
+  id: string | number | null;
+  result?: unknown;
+  error?: {
+    code: number;
+    message: string;
+  };
+};
+
+export function handleMcpMessage(message: JsonRpcRequest): JsonRpcResponse | null {
+  if (message.method === "notifications/initialized") {
+    return null;
+  }
+
+  const id = message.id ?? null;
+
+  if (message.method === "initialize") {
+    return {
+      jsonrpc: "2.0",
+      id,
+      result: {
+        protocolVersion: "2024-11-05",
+        capabilities: {
+          tools: {}
+        },
+        serverInfo: getVersionInfo()
+      }
+    };
+  }
+
+  if (message.method === "tools/list") {
+    return {
+      jsonrpc: "2.0",
+      id,
+      result: {
+        tools: []
+      }
+    };
+  }
+
+  return {
+    jsonrpc: "2.0",
+    id,
+    error: {
+      code: -32601,
+      message: `Method not found: ${message.method ?? "<missing>"}`
+    }
+  };
+}
+
+export function startStdioServer(): void {
+  const lines = createInterface({
+    input: stdin,
+    crlfDelay: Infinity,
+    terminal: false
+  });
+
+  lines.on("line", (line: string) => {
+    if (!line.trim()) {
+      return;
+    }
+
+    let parsed: JsonRpcRequest;
+    try {
+      parsed = JSON.parse(line) as JsonRpcRequest;
+    } catch {
+      const response: JsonRpcResponse = {
+        jsonrpc: "2.0",
+        id: null,
+        error: {
+          code: -32700,
+          message: "Parse error"
+        }
+      };
+      stdout.write(`${JSON.stringify(response)}\n`);
+      return;
+    }
+
+    const response = handleMcpMessage(parsed);
+    if (response) {
+      stdout.write(`${JSON.stringify(response)}\n`);
+    }
+  });
+}
+
+function isEntrypoint(): boolean {
+  if (!process.argv[1]) {
+    return false;
+  }
+
+  try {
+    return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
+  } catch {
+    return false;
+  }
+}
+
+if (isEntrypoint()) {
+  startStdioServer();
+}

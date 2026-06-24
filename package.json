@@ -1,0 +1,23 @@
+{
+  "name": "presentation-skills",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.9.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc -b packages/ucm-core packages/ucm-cli packages/ucm-mcp",
+    "clean": "rm -rf packages/*/dist coverage",
+    "cli": "node packages/ucm-cli/dist/index.js",
+    "lint": "tsc -b --pretty false --dry",
+    "test": "vitest run",
+    "typecheck": "tsc -b --pretty false"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.0",
+    "typescript": "6.0.3",
+    "vitest": "4.1.9"
+  }
+}

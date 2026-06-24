@@ -2,3 +2,7 @@
 .Codex/
 .cowork-receipts/
 .DS_Store
+coverage/
+node_modules/
+packages/*/dist/
+packages/*/*.tsbuildinfo
