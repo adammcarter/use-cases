@@ -121,6 +121,7 @@ eslint.config.* or equivalent
 plugin.json
 .codex-plugin/plugin.json
 .claude-plugin/plugin.json
+docs/adr/0001-p0-bootstrap-decisions.md
 packages/ucm-core/package.json
 packages/ucm-cli/package.json
 packages/ucm-mcp/package.json
@@ -131,6 +132,8 @@ docs/superpowers/plans/2026-06-24-presentation-skills-implementation.md
 **Implementation steps:**
 
 - [ ] Add the pnpm workspace with packages `ucm-core`, `ucm-cli`, and `ucm-mcp`.
+- [ ] Pin the package manager with `packageManager: pnpm@11.9.0` and support `corepack pnpm` when global `pnpm` is absent.
+- [ ] Record installed-plugin launch, module-format, version, package-name, schema-ownership, CLI, and MCP startup decisions in `docs/adr/0001-p0-bootstrap-decisions.md`.
 - [ ] Add root scripts:
   - `pnpm test`
   - `pnpm typecheck`
@@ -138,14 +141,20 @@ docs/superpowers/plans/2026-06-24-presentation-skills-implementation.md
   - `pnpm build`
   - `pnpm cli -- ...`
 - [ ] Add minimal package entry points that export or print version information only.
+- [ ] Ensure package exports and executable bins point at built `dist/` output, not TypeScript source.
 - [ ] Add plugin manifests with conservative metadata and no unsupported host claims.
 - [ ] Add `.gitignore` entries for build output, coverage, `.albus/`, `.cowork-receipts/`, `.DS_Store`, and package manager cache artifacts if needed.
 - [ ] Add a smoke test that imports `ucm-core`, invokes the CLI `--version`, and starts the MCP server enough to list its tool metadata.
+- [ ] Add a packed-consumer smoke test that packs the packages, installs tarballs into a clean temp project, and verifies runtime imports, type declarations, CLI bin, and MCP bin.
+- [ ] Add a wire-level MCP smoke test that starts the distributed MCP executable over stdio, runs `initialize`, sends `notifications/initialized`, calls `tools/list`, and verifies stdout contains protocol messages only.
+- [ ] Add a staged-plugin smoke test that copies only intended distributable files into a clean directory and validates every manifest command/path against that staged root.
 
 **Tests first:**
 
 - [ ] Write a failing smoke test that expects each package entry point to load.
 - [ ] Write a failing CLI smoke test that expects `presentation-skills --version` to return JSON when `--json` is passed.
+- [ ] Write a failing MCP wire smoke test for initialize and tools/list.
+- [ ] Write a failing packed-consumer smoke test for tarball install and bins.
 
 **Acceptance evidence:**
 
@@ -155,6 +164,8 @@ pnpm test
 pnpm typecheck
 pnpm build
 pnpm cli -- --version --json
+pnpm pack --dry-run
+pnpm test -- tests/smoke
 ```
 
 **Commit:** `Scaffold presentation skills workspace`
@@ -164,6 +175,8 @@ pnpm cli -- --version --json
 - Package manager cannot install reproducibly.
 - Plugin manifests imply capabilities not yet implemented.
 - CLI and package names drift from the product name.
+- Source checkout works but packed-consumer or staged-plugin smoke fails.
+- MCP startup writes non-protocol data to stdout.
 
 ---
 
