@@ -1,0 +1,28 @@
+schema_version: 1
+feature:
+  id: damage.duplicate
+  name: Duplicate use cases
+  summary: Duplicate IDs are ambiguous.
+use_cases:
+  - id: damage.duplicate.id
+    title: Duplicate use case B
+    lifecycle: active
+    value_tier: supporting
+    journey_role: edge
+    usage_frequency: rare
+    actor: agent
+    intent: Exercise duplicate detection.
+    preconditions: [A duplicate sibling exists.]
+    trigger: Matrix validation runs.
+    scenarios:
+      - id: damage.duplicate.b.cli
+        kind: steps
+        steps: [Validate duplicate B.]
+    observable_outcomes: [Duplicate B is marked ambiguous.]
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: none
+    approval_policy:
+      mode: none

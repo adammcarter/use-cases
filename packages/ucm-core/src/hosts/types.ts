@@ -91,6 +91,16 @@ export type HostSupportSummary = {
   evidence_event_ids: string[];
 };
 
+export type HostExecutableSmoke = {
+  status: "passed" | "failed" | "not_run";
+  executable: string;
+  argv: string[];
+  reason: string;
+  exit_code: number | null;
+  stdout?: string;
+  stderr?: string;
+};
+
 export type HostDoctorResult = {
   schema_version: 1;
   host: HostName;
@@ -113,6 +123,7 @@ export type HostConformanceResult = {
   profile_hash: string;
   projection_manifest_hash: string | null;
   evidence_event_ids: string[];
+  executable_smoke: HostExecutableSmoke;
   checks: Array<{ id: string; result: "pass" | "fail" | "not_tested"; message: string }>;
   diagnostics: Diagnostic[];
 };

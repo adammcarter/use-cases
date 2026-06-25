@@ -1,0 +1,32 @@
+schema_version: 1
+feature:
+  id: matrix.core
+  name: Use-case matrix
+  summary: Use-case files load as the living acceptance matrix.
+use_cases:
+  - id: matrix.core.validate
+    title: Validate the use-case matrix without summaries
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    tags: [matrix, acceptance]
+    source_refs:
+      - kind: file
+        path: packages/ucm-core/src/useCases/loadUseCaseMatrix.ts
+    actor: agent
+    intent: Confirm the matrix is current and structurally clean.
+    preconditions: [Use cases are stored under use-cases.]
+    trigger: Agent plans or verifies work.
+    scenarios:
+      - id: matrix.core.validate.cli
+        kind: steps
+        steps: [Run matrix validate.]
+    observable_outcomes: [The matrix reports clean integrity.]
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: none
+    approval_policy:
+      mode: none

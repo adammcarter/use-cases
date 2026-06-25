@@ -1,0 +1,85 @@
+schema_version: 1
+feature:
+  id: product.search
+  name: Product search
+  summary: Users can find and refine product results.
+metadata:
+  owner: presentation-skills
+  lifecycle: active
+use_cases:
+  - id: product.search.golden
+    title: Find a product from the main search box
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    tags: [product, search, showcase]
+    source_refs:
+      - kind: file
+        path: src/product/search.ts
+    actor: shopper
+    intent: Find a matching product quickly.
+    preconditions:
+      - Product catalog contains visible items.
+    trigger: Shopper submits a product search.
+    scenarios:
+      - id: product.search.golden.cli
+        kind: steps
+        steps:
+          - Open the product search surface.
+          - Search for a known product.
+          - Select the highest-ranked matching result.
+    observable_outcomes:
+      - Matching product results are visible.
+      - The selected product can be opened from the results list.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+      - host_surface: claude.cli
+        supported: true
+      - host_surface: opencode.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers: [script]
+          minimum_count: 1
+    approval_policy:
+      mode: predefined
+      requirements:
+        - approver_type: user
+          minimum_count: 1
+      statement: User approval follows the live product search showcase.
+  - id: product.filter.alternate
+    title: Refine product results with a filter
+    lifecycle: active
+    value_tier: core
+    journey_role: alternate
+    usage_frequency: occasional
+    tags: [product, filter]
+    source_refs:
+      - kind: file
+        path: src/product/filter.ts
+    actor: shopper
+    intent: Narrow a product result set.
+    preconditions:
+      - Product search results are visible.
+    trigger: Shopper applies a category filter.
+    scenarios:
+      - id: product.filter.alternate.cli
+        kind: steps
+        steps:
+          - Search for a product category.
+          - Apply one category filter.
+    observable_outcomes:
+      - Results are narrowed to the selected category.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+      - host_surface: claude.cli
+        supported: true
+    verification_policy:
+      mode: none
+    approval_policy:
+      mode: none

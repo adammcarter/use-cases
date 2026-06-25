@@ -38,9 +38,12 @@ import {
   toMatrixValidationResult,
   validateSkillAssets,
   validateFixtureWorkspace,
+  type HostName,
   type HostProfile,
   type UseCaseQuery
 } from "@presentation-skills/ucm-core";
+
+const SUPPORTED_HOSTS: HostName[] = ["claude", "codex", "copilot", "opencode"];
 
 export function runCli(argv: string[]): number {
   const normalizedArgv = argv[0] === "--" ? argv.slice(1) : argv;
@@ -1015,6 +1018,56 @@ function runHostConformance(argv: string[]): number {
   const contextResult = contextFromArgs(argv, "host.conformance");
   if ("exitCode" in contextResult) {
     return contextResult.exitCode;
+  }
+  if (argv.includes("--all")) {
+    const hosts = SUPPORTED_HOSTS.map((host) => {
+      const profile = loadHostProfile({ pluginRoot: contextResult.plugin_root, host });
+      if (!profile.profile) {
+        return {
+          schema_version: 1,
+          host,
+          complete: false,
+          diagnostics: profile.diagnostics
+        };
+      }
+      return runHostConformanceCore({ context: contextResult, profile: profile.profile });
+    });
+    const diagnostics = hosts.flatMap((host) => "diagnostics" in host ? host.diagnostics : []);
+    const failedExecutableSmokes = hosts.filter(
+      (host) => "executable_smoke" in host && host.executable_smoke.status === "failed"
+    ).length;
+    const notRunExecutableSmokes = hosts.filter(
+      (host) => "executable_smoke" in host && host.executable_smoke.status === "not_run"
+    ).length;
+    const data = {
+      schema_version: 1,
+      complete: diagnostics.length === 0,
+      hosts,
+      summary: {
+        total_hosts: SUPPORTED_HOSTS.length,
+        static_conformant: hosts.filter(
+          (host) => "support_status" in host && host.support_status === "conformant_static"
+        ).length,
+        executable_smoke_passed: hosts.filter(
+          (host) => "executable_smoke" in host && host.executable_smoke.status === "passed"
+        ).length,
+        executable_smoke_failed: failedExecutableSmokes,
+        executable_smoke_not_run: notRunExecutableSmokes
+      }
+    };
+    process.stdout.write(
+      `${JSON.stringify(
+        createCliResult("host.conformance", data, {
+          ok: diagnostics.length === 0,
+          complete: diagnostics.length === 0,
+          diagnostics,
+          workspaceRoot: contextResult.workspace_root,
+          dataRoot: contextResult.data_root,
+          componentId: contextResult.component_id
+        })
+      )}\n`
+    );
+    return diagnostics.length === 0 ? 0 : 1;
   }
   const profileResult = profileFromArgs(argv, contextResult.plugin_root, "host.conformance");
   if (profileResult.exitCode !== undefined) {

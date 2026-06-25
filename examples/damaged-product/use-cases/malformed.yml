@@ -1,0 +1,14 @@
+schema_version: 1
+feature:
+  id: damage.malformed
+  name: Malformed file
+  summary: This file is intentionally malformed.
+use_cases:
+  - id: damage.malformed
+    title: Broken
+    lifecycle: active
+    value_tier: supporting
+    journey_role: edge
+    usage_frequency: rare
+    actor: agent
+    intent: [

@@ -1,0 +1,32 @@
+schema_version: 1
+feature:
+  id: hosts.projections
+  name: Host projections
+  summary: Claude, Codex, Copilot, and OpenCode receive thin activation stubs.
+use_cases:
+  - id: hosts.projections.all
+    title: Check all first-class host projections
+    lifecycle: active
+    value_tier: core
+    journey_role: alternate
+    usage_frequency: common
+    tags: [hosts, projections]
+    source_refs:
+      - kind: file
+        path: packages/ucm-core/src/hosts/projectHostFiles.ts
+    actor: agent
+    intent: Confirm host files are projected without claiming unsupported proof.
+    preconditions: [Host profiles are available.]
+    trigger: Agent installs or verifies host support.
+    scenarios:
+      - id: hosts.projections.all.cli
+        kind: steps
+        steps: [Run host conformance for all supported host profiles.]
+    observable_outcomes: [Each host reports static conformance or exact not-run reasons.]
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: none
+    approval_policy:
+      mode: none

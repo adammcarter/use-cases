@@ -1,0 +1,19 @@
+schema_version: 1
+capsule_id: capsule.basic.product_search
+title: Product search showcase
+mode: showcase
+description: Demonstrate the golden product search path.
+audience: reviewer
+timebox_seconds: 600
+items:
+  - use_case_id: product.search.golden
+    scenario_ids: [product.search.golden.cli]
+    runbook:
+      - kind: instruction
+        text: Open the product search surface.
+      - kind: instruction
+        text: Search for a known product.
+      - kind: observation
+        text: Confirm that matching results and a selectable product are visible.
+permissions:
+  command_execution: false
