@@ -146,6 +146,15 @@ describe("P0 package entrypoints", () => {
           }
         }),
         JSON.stringify({ jsonrpc: "2.0", id: 2, method: "tools/list", params: {} }),
+        JSON.stringify({
+          jsonrpc: "2.0",
+          id: 3,
+          method: "tools/call",
+          params: {
+            name: "host_doctor",
+            arguments: { repo: repoRoot, host: "codex" }
+          }
+        }),
         ""
       ].join("\n"),
       consumer
@@ -158,7 +167,31 @@ describe("P0 package entrypoints", () => {
           serverInfo: { name: "presentation-skills", version: "0.1.0" }
         })
       }),
-      { jsonrpc: "2.0", id: 2, result: { tools: [] } }
+      expect.objectContaining({
+        jsonrpc: "2.0",
+        id: 2,
+        result: {
+          tools: expect.arrayContaining([
+            expect.objectContaining({ name: "matrix_validate" }),
+            expect.objectContaining({ name: "showcase_request_approval" }),
+            expect.objectContaining({ name: "host_doctor" })
+          ])
+        }
+      }),
+      expect.objectContaining({
+        jsonrpc: "2.0",
+        id: 3,
+        result: expect.objectContaining({
+          structuredContent: expect.objectContaining({
+            command: "host.doctor",
+            ok: true,
+            data: expect.objectContaining({
+              host: "codex",
+              support_status: expect.any(String)
+            })
+          })
+        })
+      })
     ]);
   });
 });

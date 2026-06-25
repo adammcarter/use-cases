@@ -6,6 +6,8 @@ const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, "../../..");
 const source = join(repoRoot, "schemas/v1");
 const destination = join(repoRoot, "packages/ucm-core/dist/schemas/v1");
+const hostProfileSource = join(repoRoot, "hosts");
+const hostProfileDestination = join(repoRoot, "packages/ucm-core/dist/host-profiles");
 const lockDir = join(repoRoot, "packages/ucm-core/dist/.copy-schemas.lock");
 
 mkdirSync(dirname(lockDir), { recursive: true });
@@ -13,6 +15,9 @@ withDirectoryLock(lockDir, () => {
   mkdirSync(destination, { recursive: true });
   cpSync(source, destination, { recursive: true });
   removeOrphanedEntries(source, destination);
+  mkdirSync(hostProfileDestination, { recursive: true });
+  cpSync(hostProfileSource, hostProfileDestination, { recursive: true });
+  removeOrphanedEntries(hostProfileSource, hostProfileDestination);
 });
 
 function withDirectoryLock(path, work) {

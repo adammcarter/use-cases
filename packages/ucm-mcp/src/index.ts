@@ -4,6 +4,7 @@ import { createInterface } from "node:readline";
 import { stdin, stdout } from "node:process";
 import { fileURLToPath } from "node:url";
 import { getVersionInfo } from "@presentation-skills/ucm-core";
+import { callMcpTool, mcpTools } from "./tools.js";
 
 type JsonRpcRequest = {
   jsonrpc: "2.0";
@@ -48,7 +49,23 @@ export function handleMcpMessage(message: JsonRpcRequest): JsonRpcResponse | nul
       jsonrpc: "2.0",
       id,
       result: {
-        tools: []
+        tools: mcpTools
+      }
+    };
+  }
+
+  if (message.method === "tools/call") {
+    const params = isRecord(message.params) ? message.params : {};
+    const name = typeof params.name === "string" ? params.name : "";
+    const args = isRecord(params.arguments) ? params.arguments : {};
+    const envelope = callMcpTool(name, args);
+    return {
+      jsonrpc: "2.0",
+      id,
+      result: {
+        content: [{ type: "text", text: JSON.stringify(envelope) }],
+        structuredContent: envelope,
+        isError: false
       }
     };
   }
@@ -112,4 +129,8 @@ function isEntrypoint(): boolean {
 
 if (isEntrypoint()) {
   startStdioServer();
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
