@@ -1,0 +1,32 @@
+schema_version: 1
+feature:
+  id: mcp.wrapper
+  name: MCP wrapper
+  summary: MCP tools preserve the CLI envelope contract.
+use_cases:
+  - id: mcp.wrapper.parity
+    title: MCP matrix validation matches the CLI envelope
+    lifecycle: active
+    value_tier: core
+    journey_role: alternate
+    usage_frequency: common
+    tags: [mcp, cli]
+    source_refs:
+      - kind: file
+        path: packages/ucm-mcp/src/tools.ts
+    actor: agent
+    intent: Use MCP without inventing separate behavior.
+    preconditions: [The MCP server can load the core package.]
+    trigger: Agent calls a matrix validation tool.
+    scenarios:
+      - id: mcp.wrapper.parity.cli
+        kind: steps
+        steps: [Call matrix_validate through MCP and matrix validate through CLI.]
+    observable_outcomes: [Both surfaces return matching CLI envelopes.]
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: none
+    approval_policy:
+      mode: none

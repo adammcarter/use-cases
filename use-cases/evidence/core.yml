@@ -1,0 +1,32 @@
+schema_version: 1
+feature:
+  id: evidence.core
+  name: Evidence ledger
+  summary: Evidence is recorded as append-only JSONL history.
+use_cases:
+  - id: evidence.core.record
+    title: Record evidence for a use case
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    tags: [evidence, ledger]
+    source_refs:
+      - kind: file
+        path: packages/ucm-core/src/evidence/appendEvidenceEvent.ts
+    actor: agent
+    intent: Persist proof without creating summary state.
+    preconditions: [A target use case resolves.]
+    trigger: Agent records test, demo, or observation proof.
+    scenarios:
+      - id: evidence.core.record.cli
+        kind: steps
+        steps: [Run evidence record.]
+    observable_outcomes: [A JSONL event is appended under evidence.]
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: none
+    approval_policy:
+      mode: none

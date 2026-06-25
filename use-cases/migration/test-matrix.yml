@@ -1,0 +1,32 @@
+schema_version: 1
+feature:
+  id: migration.test_matrix
+  name: TEST-MATRIX migration
+  summary: Legacy TEST-MATRIX.md files become draft intended behavior.
+use_cases:
+  - id: migration.test_matrix.draft
+    title: Migrate TEST-MATRIX without laundering proof
+    lifecycle: active
+    value_tier: core
+    journey_role: alternate
+    usage_frequency: occasional
+    tags: [migration, test-matrix]
+    source_refs:
+      - kind: file
+        path: packages/ucm-core/src/migration/testMatrix.ts
+    actor: agent
+    intent: Backfill use-case drafts from a legacy matrix safely.
+    preconditions: [A legacy TEST-MATRIX.md file exists.]
+    trigger: User wants to replace a legacy matrix.
+    scenarios:
+      - id: migration.test_matrix.draft.cli
+        kind: steps
+        steps: [Run migrate test-matrix in dry-run or write mode.]
+    observable_outcomes: [Generated YAML is draft behavior and old status is review context only.]
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: none
+    approval_policy:
+      mode: none

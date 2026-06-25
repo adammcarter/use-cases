@@ -1,0 +1,28 @@
+schema_version: 1
+feature:
+  id: damage.valid
+  name: Damaged fixture valid sibling
+  summary: A valid sibling remains usable while nearby files are damaged.
+use_cases:
+  - id: damage.valid.sibling
+    title: Valid sibling remains addressable
+    lifecycle: active
+    value_tier: supporting
+    journey_role: edge
+    usage_frequency: rare
+    actor: agent
+    intent: Confirm partial matrix recovery.
+    preconditions: [At least one nearby file is damaged.]
+    trigger: Matrix validation runs.
+    scenarios:
+      - id: damage.valid.sibling.cli
+        kind: steps
+        steps: [Validate the damaged workspace.]
+    observable_outcomes: [The valid sibling is still addressable.]
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: none
+    approval_policy:
+      mode: none

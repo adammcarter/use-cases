@@ -1,0 +1,43 @@
+schema_version: 1
+feature:
+  id: showcase.live
+  name: Live showcase
+  summary: Agents perform live demos and record user-visible outcomes.
+use_cases:
+  - id: showcase.live.user_signoff
+    title: Run a live showcase through user sign-off
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    tags: [showcase, signoff]
+    source_refs:
+      - kind: file
+        path: packages/ucm-core/src/showcase/appendShowcaseEvent.ts
+    actor: agent
+    intent: Prove finished work in front of the user.
+    preconditions: [A showcase item is selected.]
+    trigger: Agent finishes feature work.
+    scenarios:
+      - id: showcase.live.user_signoff.cli
+        kind: steps
+        steps:
+          - Start a showcase run.
+          - Record observation and verdict.
+          - Finish and record user approval.
+    observable_outcomes: [The run status shows passed and approved.]
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: live_demo
+          required_verifiers: [user]
+          minimum_count: 1
+    approval_policy:
+      mode: predefined
+      requirements:
+        - approver_type: user
+          minimum_count: 1
+      statement: User sign-off is required for this showcase acceptance row.
