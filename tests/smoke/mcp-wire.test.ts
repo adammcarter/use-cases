@@ -67,10 +67,16 @@ describe("P0 MCP wire contract", () => {
         }
       }
     });
-    expect(responses[1]).toEqual({
+    expect(responses[1]).toMatchObject({
       jsonrpc: "2.0",
       id: 2,
-      result: { tools: [] }
+      result: {
+        tools: expect.arrayContaining([
+          expect.objectContaining({ name: "matrix_validate" }),
+          expect.objectContaining({ name: "showcase_request_approval" }),
+          expect.objectContaining({ name: "host_doctor" })
+        ])
+      }
     });
   });
 });

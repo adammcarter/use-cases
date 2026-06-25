@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { parseYamlToJson, validateBySchemaId, type Diagnostic } from "../schema/index.js";
 import type { HostName, HostProfile, HostProfileLoadResult } from "./types.js";
 
@@ -7,7 +8,7 @@ const HOST_PROFILE_SCHEMA_ID = "https://presentation-skills.dev/schemas/v1/host-
 
 export function loadHostProfile(options: { pluginRoot: string; host: HostName }): HostProfileLoadResult {
   const sourcePath = `hosts/${options.host}.yml`;
-  const fullPath = join(options.pluginRoot, sourcePath);
+  const fullPath = resolveHostProfilePath(options.pluginRoot, options.host);
   if (!existsSync(fullPath)) {
     return {
       schema_version: 1,
@@ -32,6 +33,15 @@ export function loadHostProfile(options: { pluginRoot: string; host: HostName })
     profile: parsed.value as HostProfile,
     diagnostics: []
   };
+}
+
+function resolveHostProfilePath(pluginRoot: string, host: HostName): string {
+  const sourcePath = `hosts/${host}.yml`;
+  const repoPath = join(pluginRoot, sourcePath);
+  if (existsSync(repoPath)) {
+    return repoPath;
+  }
+  return join(dirname(fileURLToPath(import.meta.url)), "../host-profiles", `${host}.yml`);
 }
 
 function diagnostic(code: string, message: string, sourcePath: string): Diagnostic {
