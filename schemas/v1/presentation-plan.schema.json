@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://presentation-skills.dev/schemas/v1/presentation-plan.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "plan_id": { "$ref": "common.schema.json#/$defs/id" },
+    "mode": { "enum": ["showcase", "walkthrough"] },
+    "complete": { "type": "boolean" },
+    "selection_method": { "enum": ["generated", "manual", "capsule"] },
+    "workspace_snapshot": { "$ref": "common.schema.json#/$defs/workspace_snapshot" },
+    "environment_expectations": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "host_surfaces": {
+          "type": "array",
+          "items": { "$ref": "common.schema.json#/$defs/host_surface" }
+        }
+      },
+      "required": ["host_surfaces"]
+    },
+    "audience": { "type": "string", "minLength": 1 },
+    "timebox_seconds": { "type": "integer", "minimum": 1 },
+    "selected_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "use_case_id": { "$ref": "common.schema.json#/$defs/id" },
+          "scenario_ids": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/id" } },
+          "use_case_content_hash": { "$ref": "common.schema.json#/$defs/hash" },
+          "resolved_steps": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "expected_observations": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "verification_policy_snapshot": { "$ref": "common.schema.json#/$defs/verification_policy" },
+          "approval_policy_snapshot": { "$ref": "common.schema.json#/$defs/approval_policy" },
+          "selection_reasons": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "score_components": { "type": "object", "additionalProperties": { "type": "number" } }
+        },
+        "required": ["use_case_id", "scenario_ids", "use_case_content_hash", "resolved_steps", "expected_observations", "verification_policy_snapshot", "approval_policy_snapshot", "selection_reasons", "score_components"]
+      }
+    },
+    "exclusions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "use_case_id": { "$ref": "common.schema.json#/$defs/id" },
+          "reason": { "type": "string", "minLength": 1 }
+        },
+        "required": ["use_case_id", "reason"]
+      }
+    },
+    "diagnostics": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/diagnostic" } },
+    "capsule": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "capsule_id": { "$ref": "common.schema.json#/$defs/id" },
+        "content_hash": { "$ref": "common.schema.json#/$defs/hash" }
+      },
+      "required": ["capsule_id", "content_hash"]
+    },
+    "extensions": { "$ref": "common.schema.json#/$defs/extensions" }
+  },
+  "required": ["schema_version", "plan_id", "mode", "complete", "selection_method", "workspace_snapshot", "environment_expectations", "audience", "timebox_seconds", "selected_items", "exclusions"],
+  "allOf": [
+    {
+      "if": { "properties": { "complete": { "const": false } }, "required": ["complete"] },
+      "then": {
+        "properties": {
+          "diagnostics": true
+        },
+        "required": ["diagnostics"]
+      }
+    }
+  ]
+}

@@ -63,12 +63,13 @@ describe("P0 package entrypoints", () => {
       ok: true,
       command: "version",
       schema_version: 1,
+      protocol_version: 1,
+      complete: true,
       data: {
         name: "presentation-skills",
         version: "0.1.0"
       },
-      warnings: [],
-      errors: []
+      diagnostics: []
     });
   });
 

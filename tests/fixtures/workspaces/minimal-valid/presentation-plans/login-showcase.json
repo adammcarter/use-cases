@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "plan_id": "plan.login.showcase",
+  "mode": "showcase",
+  "complete": true,
+  "selection_method": "generated",
+  "workspace_snapshot": {
+    "repository_id": "presentation-skills-fixture",
+    "vcs": "git",
+    "head_revision": "unknown",
+    "dirty": false,
+    "working_tree_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "component_id": "presentation-skills",
+    "captured_at": "2026-06-25T00:00:00.000Z"
+  },
+  "environment_expectations": {
+    "host_surfaces": ["codex.cli"]
+  },
+  "audience": "reviewer",
+  "timebox_seconds": 600,
+  "selected_items": [
+    {
+      "use_case_id": "auth.login.success",
+      "scenario_ids": ["auth.login.success.web"],
+      "use_case_content_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "resolved_steps": ["Open the login page.", "Submit valid credentials."],
+      "expected_observations": ["The account home is shown."],
+      "verification_policy_snapshot": {
+        "mode": "requirements",
+        "requirements": [
+          {
+            "evidence_kind": "live_demo",
+            "required_verifiers": ["user"],
+            "minimum_count": 1
+          }
+        ]
+      },
+      "approval_policy_snapshot": {
+        "mode": "predefined",
+        "requirements": [
+          {
+            "approver_type": "user",
+            "minimum_count": 1
+          }
+        ],
+        "statement": "Final acceptance requires user-visible proof."
+      },
+      "selection_reasons": ["critical golden path"],
+      "score_components": {
+        "value": 100
+      }
+    }
+  ],
+  "exclusions": [],
+  "capsule": {
+    "capsule_id": "capsule.login.showcase",
+    "content_hash": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+  }
+}

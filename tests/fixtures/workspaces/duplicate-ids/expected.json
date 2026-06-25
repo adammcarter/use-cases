@@ -1,0 +1,10 @@
+{
+  "ok": false,
+  "complete": false,
+  "diagnostics": [
+    {
+      "code": "workspace.duplicate_use_case_id",
+      "entity_id": "auth.login.success"
+    }
+  ]
+}

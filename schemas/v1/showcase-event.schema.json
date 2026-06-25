@@ -1,0 +1,181 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://presentation-skills.dev/schemas/v1/showcase-event.schema.json",
+  "oneOf": [
+    { "$ref": "#/$defs/run_started" },
+    { "$ref": "#/$defs/action_recorded" },
+    { "$ref": "#/$defs/observation_recorded" },
+    { "$ref": "#/$defs/verdict_recorded" },
+    { "$ref": "#/$defs/run_finished" },
+    { "$ref": "#/$defs/approval_recorded" }
+  ],
+  "$defs": {
+    "base_props": {
+      "schema_version": { "const": 1 },
+      "event_id": { "$ref": "common.schema.json#/$defs/id" },
+      "aggregate_id": { "$ref": "common.schema.json#/$defs/id" },
+      "sequence": { "type": "integer", "minimum": 1 },
+      "recorded_at": { "$ref": "common.schema.json#/$defs/timestamp" },
+      "actor_type": { "$ref": "common.schema.json#/$defs/actor_type" },
+      "host_surface": { "$ref": "common.schema.json#/$defs/host_surface" },
+      "idempotency_key": { "type": "string", "minLength": 1 }
+    },
+    "run_started": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_type": { "const": "run_started" },
+        "plan": { "$ref": "presentation-plan.schema.json" },
+        "schema_version": { "$ref": "#/$defs/base_props/schema_version" },
+        "event_id": { "$ref": "#/$defs/base_props/event_id" },
+        "aggregate_id": { "$ref": "#/$defs/base_props/aggregate_id" },
+        "sequence": { "$ref": "#/$defs/base_props/sequence" },
+        "recorded_at": { "$ref": "#/$defs/base_props/recorded_at" },
+        "actor_type": { "$ref": "#/$defs/base_props/actor_type" },
+        "host_surface": { "$ref": "#/$defs/base_props/host_surface" },
+        "idempotency_key": { "$ref": "#/$defs/base_props/idempotency_key" }
+      },
+      "required": ["schema_version", "event_type", "event_id", "aggregate_id", "sequence", "recorded_at", "actor_type", "host_surface", "idempotency_key", "plan"]
+    },
+    "action_recorded": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_type": { "const": "action_recorded" },
+        "action": { "type": "object" },
+        "schema_version": { "$ref": "#/$defs/base_props/schema_version" },
+        "event_id": { "$ref": "#/$defs/base_props/event_id" },
+        "aggregate_id": { "$ref": "#/$defs/base_props/aggregate_id" },
+        "sequence": { "$ref": "#/$defs/base_props/sequence" },
+        "recorded_at": { "$ref": "#/$defs/base_props/recorded_at" },
+        "actor_type": { "$ref": "#/$defs/base_props/actor_type" },
+        "host_surface": { "$ref": "#/$defs/base_props/host_surface" },
+        "idempotency_key": { "$ref": "#/$defs/base_props/idempotency_key" }
+      },
+      "required": ["schema_version", "event_type", "event_id", "aggregate_id", "sequence", "recorded_at", "actor_type", "host_surface", "idempotency_key", "action"]
+    },
+    "observation_recorded": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_type": { "const": "observation_recorded" },
+        "observation": { "type": "object" },
+        "schema_version": { "$ref": "#/$defs/base_props/schema_version" },
+        "event_id": { "$ref": "#/$defs/base_props/event_id" },
+        "aggregate_id": { "$ref": "#/$defs/base_props/aggregate_id" },
+        "sequence": { "$ref": "#/$defs/base_props/sequence" },
+        "recorded_at": { "$ref": "#/$defs/base_props/recorded_at" },
+        "actor_type": { "$ref": "#/$defs/base_props/actor_type" },
+        "host_surface": { "$ref": "#/$defs/base_props/host_surface" },
+        "idempotency_key": { "$ref": "#/$defs/base_props/idempotency_key" }
+      },
+      "required": ["schema_version", "event_type", "event_id", "aggregate_id", "sequence", "recorded_at", "actor_type", "host_surface", "idempotency_key", "observation"]
+    },
+    "verdict_recorded": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_type": { "const": "verdict_recorded" },
+        "verdict": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "use_case_id": { "$ref": "common.schema.json#/$defs/id" },
+            "decision": { "$ref": "common.schema.json#/$defs/verdict" }
+          },
+          "required": ["use_case_id", "decision"]
+        },
+        "schema_version": { "$ref": "#/$defs/base_props/schema_version" },
+        "event_id": { "$ref": "#/$defs/base_props/event_id" },
+        "aggregate_id": { "$ref": "#/$defs/base_props/aggregate_id" },
+        "sequence": { "$ref": "#/$defs/base_props/sequence" },
+        "recorded_at": { "$ref": "#/$defs/base_props/recorded_at" },
+        "actor_type": { "$ref": "#/$defs/base_props/actor_type" },
+        "host_surface": { "$ref": "#/$defs/base_props/host_surface" },
+        "idempotency_key": { "$ref": "#/$defs/base_props/idempotency_key" }
+      },
+      "required": ["schema_version", "event_type", "event_id", "aggregate_id", "sequence", "recorded_at", "actor_type", "host_surface", "idempotency_key", "verdict"]
+    },
+    "run_finished": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_type": { "const": "run_finished" },
+        "finish": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "outcome": { "enum": ["passed", "passed_with_waivers", "partial", "failed", "blocked"] }
+          },
+          "required": ["outcome"]
+        },
+        "schema_version": { "$ref": "#/$defs/base_props/schema_version" },
+        "event_id": { "$ref": "#/$defs/base_props/event_id" },
+        "aggregate_id": { "$ref": "#/$defs/base_props/aggregate_id" },
+        "sequence": { "$ref": "#/$defs/base_props/sequence" },
+        "recorded_at": { "$ref": "#/$defs/base_props/recorded_at" },
+        "actor_type": { "$ref": "#/$defs/base_props/actor_type" },
+        "host_surface": { "$ref": "#/$defs/base_props/host_surface" },
+        "idempotency_key": { "$ref": "#/$defs/base_props/idempotency_key" }
+      },
+      "required": ["schema_version", "event_type", "event_id", "aggregate_id", "sequence", "recorded_at", "actor_type", "host_surface", "idempotency_key", "finish"]
+    },
+    "approval_recorded": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_type": { "const": "approval_recorded" },
+        "approval": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "decision": { "enum": ["approved", "rejected", "approved_with_known_gaps"] },
+            "approver": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "type": { "enum": ["user", "agent"] },
+                "identity": { "type": "string", "minLength": 1 }
+              },
+              "required": ["type", "identity"]
+            },
+            "recorded_by": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "type": { "enum": ["cli", "host"] },
+                "identity": { "type": "string", "minLength": 1 }
+              },
+              "required": ["type", "identity"]
+            },
+            "capture_method": { "enum": ["interactive_cli", "host_prompt"] },
+            "scope": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "run_id": { "$ref": "common.schema.json#/$defs/id" },
+                "plan_hash": { "$ref": "common.schema.json#/$defs/hash" },
+                "workspace_snapshot": { "$ref": "common.schema.json#/$defs/workspace_snapshot" },
+                "environment_snapshot": { "type": "object" },
+                "exclusions": { "type": "array" }
+              },
+              "required": ["run_id", "plan_hash", "workspace_snapshot", "environment_snapshot", "exclusions"]
+            },
+            "resolved_policy": { "$ref": "common.schema.json#/$defs/approval_policy" },
+            "statement": { "type": "string", "minLength": 1 }
+          },
+          "required": ["decision", "approver", "recorded_by", "capture_method", "scope", "resolved_policy", "statement"]
+        },
+        "schema_version": { "$ref": "#/$defs/base_props/schema_version" },
+        "event_id": { "$ref": "#/$defs/base_props/event_id" },
+        "aggregate_id": { "$ref": "#/$defs/base_props/aggregate_id" },
+        "sequence": { "$ref": "#/$defs/base_props/sequence" },
+        "recorded_at": { "$ref": "#/$defs/base_props/recorded_at" },
+        "actor_type": { "$ref": "#/$defs/base_props/actor_type" },
+        "host_surface": { "$ref": "#/$defs/base_props/host_surface" },
+        "idempotency_key": { "$ref": "#/$defs/base_props/idempotency_key" }
+      },
+      "required": ["schema_version", "event_type", "event_id", "aggregate_id", "sequence", "recorded_at", "actor_type", "host_surface", "idempotency_key", "approval"]
+    }
+  }
+}

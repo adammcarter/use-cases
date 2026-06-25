@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://presentation-skills.dev/schemas/v1/workspace-config.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "workspace_id": { "$ref": "common.schema.json#/$defs/id" },
+    "data_root": { "$ref": "#/$defs/relative_path" },
+    "use_cases_dir": { "$ref": "#/$defs/relative_path" },
+    "evidence_dir": { "$ref": "#/$defs/relative_path" },
+    "demo_capsules_dir": { "$ref": "#/$defs/relative_path" },
+    "showcase_runs_dir": { "$ref": "#/$defs/relative_path" },
+    "component_id": { "$ref": "common.schema.json#/$defs/id" },
+    "default_workflow_mode": {
+      "enum": ["continuous", "backfill", "showcase_only", "audit_only", "migration", "custom"]
+    },
+    "extensions": { "$ref": "common.schema.json#/$defs/extensions" }
+  },
+  "required": ["schema_version", "workspace_id", "data_root", "use_cases_dir", "evidence_dir", "demo_capsules_dir", "showcase_runs_dir", "component_id"],
+  "$defs": {
+    "relative_path": {
+      "type": "string",
+      "minLength": 1,
+      "not": {
+        "anyOf": [
+          { "pattern": "^/" },
+          { "pattern": "(^|/)\\.\\.(/|$)" }
+        ]
+      }
+    }
+  }
+}

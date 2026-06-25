@@ -1,0 +1,17 @@
+schema_version: 1
+capsule_id: capsule.login.showcase
+title: Login showcase
+mode: showcase
+description: Demonstrate the successful login golden path.
+audience: reviewer
+timebox_seconds: 600
+items:
+  - use_case_id: auth.login.success
+    scenario_ids: [auth.login.success.web]
+    runbook:
+      - kind: instruction
+        text: Open the login page and submit valid credentials.
+      - kind: observation
+        text: Confirm the account home and user name are visible.
+permissions:
+  command_execution: false

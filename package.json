@@ -8,7 +8,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "build": "tsc -b packages/ucm-core packages/ucm-cli packages/ucm-mcp",
+    "build": "tsc -b packages/ucm-core packages/ucm-cli packages/ucm-mcp && node packages/ucm-core/scripts/copy-schemas.mjs",
     "clean": "rm -rf packages/*/dist coverage",
     "cli": "node packages/ucm-cli/dist/index.js",
     "lint": "tsc -b --pretty false --dry",

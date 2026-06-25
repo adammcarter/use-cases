@@ -1,0 +1,10 @@
+{
+  "ok": true,
+  "complete": true,
+  "diagnostics": [],
+  "expected_state": {
+    "execution_status": "completed",
+    "outcome": "passed",
+    "approval_state": "approved"
+  }
+}
