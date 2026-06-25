@@ -31,6 +31,7 @@ import {
   toEvidenceStatusResult,
   toMatrixListResult,
   toMatrixValidationResult,
+  validateSkillAssets,
   validateFixtureWorkspace,
   type UseCaseQuery
 } from "@presentation-skills/ucm-core";
@@ -131,6 +132,10 @@ export function runCli(argv: string[]): number {
 
   if (normalizedArgv[0] === "workflow" && normalizedArgv[1] === "mode" && wantsJson) {
     return runWorkflowMode(normalizedArgv);
+  }
+
+  if (normalizedArgv[0] === "doctor" && normalizedArgv[1] === "skills" && wantsJson) {
+    return runDoctorSkills(normalizedArgv);
   }
 
   if (normalizedArgv[0] === "doctor" && normalizedArgv[1] === "roots" && wantsJson) {
@@ -954,6 +959,27 @@ function runDoctorRoots(argv: string[]): number {
     )}\n`
   );
   return 0;
+}
+
+function runDoctorSkills(argv: string[]): number {
+  const contextResult = contextFromArgs(argv, "doctor.skills");
+  if ("exitCode" in contextResult) {
+    return contextResult.exitCode;
+  }
+  const result = validateSkillAssets({ context: contextResult });
+  process.stdout.write(
+    `${JSON.stringify(
+      createCliResult("doctor.skills", result, {
+        ok: result.complete,
+        complete: result.complete,
+        diagnostics: result.diagnostics,
+        workspaceRoot: contextResult.workspace_root,
+        dataRoot: contextResult.data_root,
+        componentId: contextResult.component_id
+      })
+    )}\n`
+  );
+  return result.complete ? 0 : 1;
 }
 
 function contextFromArgs(argv: string[], command: string) {
