@@ -1,0 +1,50 @@
+# CLI Reference
+
+All commands use JSON envelopes with `schema_version`, `protocol_version`,
+`command`, `ok`, `complete`, `data`, `diagnostics`, and `context`.
+
+## Matrix
+
+- `matrix validate --repo <path> --json`: load all sharded YAML use cases and
+  report structural integrity.
+- `matrix list --repo <path> --json`: list addressable use cases. Filters:
+  `--value`, `--journey-role`, `--lifecycle`, `--host`, `--tag`,
+  `--changed-path`.
+- `matrix status --repo <path> --json`: combine matrix integrity and evidence
+  replay status.
+
+## Evidence
+
+- `evidence record --repo <path> --use-case <id> --kind <kind> --result <result> --json`
+  appends one evidence event.
+- `evidence status --repo <path> --json` replays append-only JSONL history.
+- `evidence void --repo <path> --evidence <id> --expected-head <event> --reason <text> --json`
+  records a correction event without deleting history.
+
+## Planning And Showcases
+
+- `plan showcase --repo <path> --json` selects high-value live-demo items.
+- `plan walkthrough --repo <path> --json` selects broader review coverage.
+- `capsule validate|list|plan --repo <path> --json` works with persisted demo
+  capsules.
+- `showcase start|record-observation|record-verdict|decide|pause|resume|finish|approve|reject|correct`
+  records a mechanical showcase run ledger.
+
+## Hosts And Doctors
+
+- `host project --host <host> --repo <path> --dry-run|--write|--revert --json`
+  projects or removes thin activation stubs.
+- `host doctor --host <host> --repo <path> --json` checks profile and projection
+  visibility.
+- `host conformance --host <host> --repo <path> --json` checks one profile.
+- `host conformance --all --repo <path> --json` checks Claude, Codex, Copilot,
+  and OpenCode.
+- `doctor roots|skills|package --repo <path> --json` checks workspace roots,
+  canonical skills, and release packaging.
+
+## Migration
+
+- `migrate test-matrix --repo <path> --source TEST-MATRIX.md --dry-run --json`
+  previews draft use cases.
+- `migrate test-matrix --repo <path> --source TEST-MATRIX.md --out use-cases/_migrated --write --json`
+  writes reviewed draft YAML. Old status and evidence stay review context only.
