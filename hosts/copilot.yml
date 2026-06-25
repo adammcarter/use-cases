@@ -1,14 +1,14 @@
 schema_version: 1
-profile_id: codex.cli.default
-host: codex
-surface: codex.cli
+profile_id: copilot.cli.default
+host: copilot
+surface: copilot.cli
 profile_version: 1
 host_version:
   min: null
   tested: null
   notes: null
 os_runtime:
-  supported: [darwin, linux]
+  supported: [darwin, linux, windows]
 installation_mode:
   expected: repo_projection
 permission_mode:
@@ -17,11 +17,13 @@ expected_capabilities:
   skill_discovery: required
   cli_access: required
   mcp_access: optional
+  artifact_visibility: optional
 projection_targets:
   - kind: activation_stub
-    path: .codex/presentation-skills.md
+    path: .github/copilot/presentation-skills.md
     managed: true
     content_policy: thin_stub
-doctor_checks: [profile_loaded, cli_available]
+doctor_checks: [profile_loaded, cli_available, projection_manifest_optional]
 conformance_checks: [projected_files_match_manifest, canonical_skill_hashes_match]
-known_limitations: []
+known_limitations:
+  - Static profile only; live Copilot behavior requires recorded host evidence.

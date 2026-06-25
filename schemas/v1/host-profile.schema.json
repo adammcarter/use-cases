@@ -8,18 +8,87 @@
     "profile_id": { "$ref": "common.schema.json#/$defs/id" },
     "host": { "enum": ["claude", "codex", "copilot", "opencode"] },
     "surface": { "$ref": "common.schema.json#/$defs/host_surface" },
-    "version_constraints": { "type": "object" },
-    "installation_shape": { "type": "string", "minLength": 1 },
-    "permission_expectations": { "type": "object" },
-    "skill_discovery": { "type": "object" },
-    "cli_expectations": { "type": "object" },
-    "mcp_expectations": { "type": "object" },
+    "profile_version": { "type": "integer", "minimum": 1 },
+    "host_version": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "min": { "type": ["string", "null"] },
+        "tested": { "type": ["string", "null"] },
+        "notes": { "type": ["string", "null"] }
+      },
+      "required": ["min", "tested", "notes"]
+    },
+    "os_runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "supported": {
+          "type": "array",
+          "items": { "enum": ["darwin", "linux", "windows", "unknown"] }
+        }
+      },
+      "required": ["supported"]
+    },
+    "installation_mode": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "expected": { "type": "string", "minLength": 1 }
+      },
+      "required": ["expected"]
+    },
+    "permission_mode": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "expected": { "type": "string", "minLength": 1 }
+      },
+      "required": ["expected"]
+    },
+    "expected_capabilities": {
+      "type": "object",
+      "additionalProperties": { "enum": ["required", "optional", "unsupported"] }
+    },
+    "projection_targets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kind": { "enum": ["activation_stub", "skill_stub"] },
+          "path": { "type": "string", "minLength": 1 },
+          "managed": { "type": "boolean" },
+          "content_policy": { "enum": ["thin_stub", "full_copy_required"] }
+        },
+        "required": ["kind", "path", "managed", "content_policy"]
+      }
+    },
     "known_limitations": { "type": "array", "items": { "type": "string" } },
-    "required_conformance_capabilities": {
+    "doctor_checks": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "conformance_checks": {
       "type": "array",
       "items": { "type": "string", "minLength": 1 }
     },
     "extensions": { "$ref": "common.schema.json#/$defs/extensions" }
   },
-  "required": ["schema_version", "profile_id", "host", "surface", "version_constraints", "installation_shape", "permission_expectations", "skill_discovery", "cli_expectations", "mcp_expectations", "known_limitations", "required_conformance_capabilities"]
+  "required": [
+    "schema_version",
+    "profile_id",
+    "host",
+    "surface",
+    "profile_version",
+    "host_version",
+    "os_runtime",
+    "installation_mode",
+    "permission_mode",
+    "expected_capabilities",
+    "projection_targets",
+    "doctor_checks",
+    "conformance_checks",
+    "known_limitations"
+  ]
 }

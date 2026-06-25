@@ -5,7 +5,19 @@
   "additionalProperties": false,
   "properties": {
     "schema_version": { "const": 1 },
-    "status": { "enum": ["verified", "partial", "not_tested", "blocked", "unsupported"] },
+    "status": {
+      "enum": [
+        "expected",
+        "installed",
+        "projected",
+        "conformant_static",
+        "verified_with_evidence",
+        "partial_with_evidence",
+        "blocked",
+        "unsupported",
+        "not_tested"
+      ]
+    },
     "profile_id": { "$ref": "common.schema.json#/$defs/id" },
     "host_surface": { "$ref": "common.schema.json#/$defs/host_surface" },
     "host_version": { "type": "string", "minLength": 1 },
@@ -21,7 +33,7 @@
   "allOf": [
     {
       "if": {
-        "properties": { "status": { "enum": ["verified", "partial"] } },
+        "properties": { "status": { "enum": ["verified_with_evidence", "partial_with_evidence"] } },
         "required": ["status"]
       },
       "then": {

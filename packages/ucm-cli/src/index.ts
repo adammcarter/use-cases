@@ -9,11 +9,15 @@ import {
   createCliResult,
   getVersionInfo,
   loadDemoCapsules,
+  loadHostProfile,
   loadUseCaseMatrix,
   planDemoCapsule,
+  projectHostFiles,
   queryUseCases,
   replayEvidence,
   resolveWorkspaceContext,
+  runHostConformance as runHostConformanceCore,
+  runHostDoctor as runHostDoctorCore,
   replayShowcaseRun,
   selectShowcasePlan,
   selectWalkthroughPlan,
@@ -33,6 +37,7 @@ import {
   toMatrixValidationResult,
   validateSkillAssets,
   validateFixtureWorkspace,
+  type HostProfile,
   type UseCaseQuery
 } from "@presentation-skills/ucm-core";
 
@@ -132,6 +137,10 @@ export function runCli(argv: string[]): number {
 
   if (normalizedArgv[0] === "workflow" && normalizedArgv[1] === "mode" && wantsJson) {
     return runWorkflowMode(normalizedArgv);
+  }
+
+  if (normalizedArgv[0] === "host" && wantsJson) {
+    return runHost(normalizedArgv);
   }
 
   if (normalizedArgv[0] === "doctor" && normalizedArgv[1] === "skills" && wantsJson) {
@@ -875,6 +884,119 @@ function writeShowcaseResult(
 function writeCaughtShowcaseError(command: string, error: unknown): number {
   const code = error instanceof Error && "code" in error ? String(error.code) : "internal_error";
   return writeError(command, code, error instanceof Error ? error.message : String(error), code === "showcase_ledger_damaged" ? 3 : 1);
+}
+
+function runHost(argv: string[]): number {
+  const action = argv[1];
+  if (action === "doctor") {
+    return runHostDoctor(argv);
+  }
+  if (action === "project") {
+    return runHostProject(argv);
+  }
+  if (action === "conformance") {
+    return runHostConformance(argv);
+  }
+  return writeError("host.unknown", "command.unknown", "Unknown host command.");
+}
+
+function runHostDoctor(argv: string[]): number {
+  const contextResult = contextFromArgs(argv, "host.doctor");
+  if ("exitCode" in contextResult) {
+    return contextResult.exitCode;
+  }
+  const profileResult = profileFromArgs(argv, contextResult.plugin_root, "host.doctor");
+  if (profileResult.exitCode !== undefined) {
+    return profileResult.exitCode;
+  }
+  const result = runHostDoctorCore({ context: contextResult, profile: profileResult.profile });
+  process.stdout.write(
+    `${JSON.stringify(
+      createCliResult("host.doctor", result, {
+        ok: true,
+        complete: true,
+        workspaceRoot: contextResult.workspace_root,
+        dataRoot: contextResult.data_root,
+        componentId: contextResult.component_id
+      })
+    )}\n`
+  );
+  return 0;
+}
+
+function runHostProject(argv: string[]): number {
+  const contextResult = contextFromArgs(argv, "host.project");
+  if ("exitCode" in contextResult) {
+    return contextResult.exitCode;
+  }
+  const profileResult = profileFromArgs(argv, contextResult.plugin_root, "host.project");
+  if (profileResult.exitCode !== undefined) {
+    return profileResult.exitCode;
+  }
+  const selectedModes = [
+    argv.includes("--dry-run") ? "dry-run" : null,
+    argv.includes("--write") ? "write" : null,
+    argv.includes("--revert") ? "revert" : null
+  ].filter((value): value is "dry-run" | "write" | "revert" => value !== null);
+  if (selectedModes.length !== 1) {
+    return writeError("host.project", "host.project_mode_required", "Use exactly one of --dry-run, --write, or --revert.");
+  }
+  const mode = selectedModes[0];
+  const result = projectHostFiles({ context: contextResult, profile: profileResult.profile, mode });
+  process.stdout.write(
+    `${JSON.stringify(
+      createCliResult("host.project", result, {
+        ok: result.complete,
+        complete: result.complete,
+        diagnostics: result.diagnostics,
+        workspaceRoot: contextResult.workspace_root,
+        dataRoot: contextResult.data_root,
+        componentId: contextResult.component_id
+      })
+    )}\n`
+  );
+  return result.complete ? 0 : 1;
+}
+
+function runHostConformance(argv: string[]): number {
+  const contextResult = contextFromArgs(argv, "host.conformance");
+  if ("exitCode" in contextResult) {
+    return contextResult.exitCode;
+  }
+  const profileResult = profileFromArgs(argv, contextResult.plugin_root, "host.conformance");
+  if (profileResult.exitCode !== undefined) {
+    return profileResult.exitCode;
+  }
+  const result = runHostConformanceCore({ context: contextResult, profile: profileResult.profile });
+  process.stdout.write(
+    `${JSON.stringify(
+      createCliResult("host.conformance", result, {
+        ok: true,
+        complete: true,
+        diagnostics: result.diagnostics,
+        workspaceRoot: contextResult.workspace_root,
+        dataRoot: contextResult.data_root,
+        componentId: contextResult.component_id
+      })
+    )}\n`
+  );
+  return 0;
+}
+
+function profileFromArgs(
+  argv: string[],
+  pluginRoot: string,
+  command: string
+): { profile: HostProfile; exitCode?: undefined } | { profile?: undefined; exitCode: number } {
+  const host = valueAfter(argv, "--host");
+  if (!host) {
+    return { exitCode: writeError(command, "host.required", "Missing --host.") };
+  }
+  const result = loadHostProfile({ pluginRoot, host: host as Parameters<typeof loadHostProfile>[0]["host"] });
+  if (!result.profile) {
+    return { exitCode: writeError(command, "host.profile_unavailable", result.diagnostics[0]?.message ?? "Host profile unavailable.", 1) };
+  }
+  return { profile: result.profile };
 }
 
 function runWorkflowMode(argv: string[]): number {

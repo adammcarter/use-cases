@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "status": "verified",
-  "profile_id": "host.codex.cli",
+  "status": "verified_with_evidence",
+  "profile_id": "codex.cli.default",
   "host_surface": "codex.cli",
   "host_version": "unknown",
   "environment": {

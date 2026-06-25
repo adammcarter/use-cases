@@ -17,11 +17,13 @@ expected_capabilities:
   skill_discovery: required
   cli_access: required
   mcp_access: optional
+  artifact_visibility: optional
 projection_targets:
   - kind: activation_stub
     path: .codex/presentation-skills.md
     managed: true
     content_policy: thin_stub
-doctor_checks: [profile_loaded, cli_available]
+doctor_checks: [profile_loaded, cli_available, projection_manifest_optional]
 conformance_checks: [projected_files_match_manifest, canonical_skill_hashes_match]
-known_limitations: []
+known_limitations:
+  - Static profile only; live Codex behavior requires recorded host evidence.
