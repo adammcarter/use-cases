@@ -1,0 +1,28 @@
+schema_version: 1
+feature:
+  id: auth.login
+  name: Login
+  summary: Damaged sibling fixture.
+use_cases:
+  - id: auth.login.damage_sibling
+    title: Valid sibling remains loadable
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    actor: registered_user
+    intent: Access the account area.
+    preconditions: [Account exists.]
+    trigger: Submit valid credentials.
+    scenarios:
+      - id: auth.login.damage_sibling.web
+        kind: steps
+        steps: [Submit valid credentials.]
+    observable_outcomes: [The account home is shown.]
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: none
+    approval_policy:
+      mode: none

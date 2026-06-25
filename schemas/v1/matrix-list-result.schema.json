@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://presentation-skills.dev/schemas/v1/matrix-list-result.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "complete": { "type": "boolean" },
+    "integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "state": { "enum": ["clean", "partial", "unusable"] },
+        "populated": { "type": "boolean" },
+        "blocking_diagnostic_count": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["state", "populated", "blocking_diagnostic_count"]
+    },
+    "use_cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "common.schema.json#/$defs/id" },
+          "title": { "type": "string", "minLength": 1 },
+          "feature_id": { "$ref": "common.schema.json#/$defs/id" },
+          "lifecycle": { "enum": ["planned", "active", "deprecated", "removed"] },
+          "value_tier": { "enum": ["critical", "core", "supporting", "long_tail"] },
+          "journey_role": { "enum": ["golden", "alternate", "edge", "negative", "failure"] },
+          "source_path": { "type": "string", "minLength": 1 },
+          "semantic_hash": { "$ref": "common.schema.json#/$defs/hash" },
+          "host_surfaces": {
+            "type": "array",
+            "items": { "$ref": "common.schema.json#/$defs/host_surface" }
+          },
+          "tags": {
+            "type": "array",
+            "items": { "$ref": "common.schema.json#/$defs/id" }
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "feature_id",
+          "lifecycle",
+          "value_tier",
+          "journey_role",
+          "source_path",
+          "semantic_hash",
+          "host_surfaces",
+          "tags"
+        ]
+      }
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "returned": { "type": "integer", "minimum": 0 },
+        "total_addressable": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["returned", "total_addressable"]
+    }
+  },
+  "required": ["schema_version", "complete", "integrity", "use_cases", "counts"]
+}

@@ -6,7 +6,13 @@ import {
   PUBLIC_SCHEMA_IDS,
   createCliResult,
   getVersionInfo,
-  validateFixtureWorkspace
+  loadUseCaseMatrix,
+  queryUseCases,
+  resolveWorkspaceContext,
+  toMatrixListResult,
+  toMatrixValidationResult,
+  validateFixtureWorkspace,
+  type UseCaseQuery
 } from "@presentation-skills/ucm-core";
 
 export function runCli(argv: string[]): number {
@@ -59,6 +65,14 @@ export function runCli(argv: string[]): number {
     return 0;
   }
 
+  if (normalizedArgv[0] === "matrix" && normalizedArgv[1] === "validate" && wantsJson) {
+    return runMatrixValidate(normalizedArgv);
+  }
+
+  if (normalizedArgv[0] === "matrix" && normalizedArgv[1] === "list" && wantsJson) {
+    return runMatrixList(normalizedArgv);
+  }
+
   process.stderr.write(
     `${JSON.stringify(
       createCliResult(
@@ -85,12 +99,80 @@ export function runCli(argv: string[]): number {
   return 2;
 }
 
+function runMatrixValidate(argv: string[]): number {
+  const strict = argv.includes("--strict");
+  const context = contextFromArgs(argv);
+  const snapshot = loadUseCaseMatrix({ context });
+  const ok = strict ? snapshot.complete : true;
+  process.stdout.write(
+    `${JSON.stringify(
+      createCliResult("matrix.validate", toMatrixValidationResult(snapshot), {
+        ok,
+        complete: snapshot.complete,
+        diagnostics: snapshot.diagnostics,
+        workspaceRoot: context.workspace_root,
+        dataRoot: context.data_root,
+        componentId: context.component_id
+      })
+    )}\n`
+  );
+  return ok ? 0 : 1;
+}
+
+function runMatrixList(argv: string[]): number {
+  const strict = argv.includes("--strict");
+  const context = contextFromArgs(argv);
+  const snapshot = loadUseCaseMatrix({ context });
+  const selected = queryUseCases(snapshot, {
+    valueTiers: valuesAfter(argv, "--value") as UseCaseQuery["valueTiers"],
+    journeyRoles: valuesAfter(argv, "--journey-role") as UseCaseQuery["journeyRoles"],
+    lifecycles: valuesAfter(argv, "--lifecycle") as UseCaseQuery["lifecycles"],
+    hostSurfaces: valuesAfter(argv, "--host") as UseCaseQuery["hostSurfaces"],
+    tagsAny: valuesAfter(argv, "--tag"),
+    changedPaths: valuesAfter(argv, "--changed-path")
+  });
+  const ok = strict ? snapshot.complete : true;
+  process.stdout.write(
+    `${JSON.stringify(
+      createCliResult("matrix.list", toMatrixListResult(snapshot, selected), {
+        ok,
+        complete: snapshot.complete,
+        diagnostics: snapshot.diagnostics,
+        workspaceRoot: context.workspace_root,
+        dataRoot: context.data_root,
+        componentId: context.component_id
+      })
+    )}\n`
+  );
+  return ok ? 0 : 1;
+}
+
+function contextFromArgs(argv: string[]) {
+  const workspaceRoot = resolve(process.cwd(), valueAfter(argv, "--repo") ?? ".");
+  const dataRootValue = valueAfter(argv, "--data-root");
+  return resolveWorkspaceContext({
+    workspaceRoot,
+    dataRootOverride: dataRootValue ? resolve(process.cwd(), dataRootValue) : undefined,
+    component: valueAfter(argv, "--component")
+  });
+}
+
 function valueAfter(argv: string[], flag: string): string | undefined {
   const index = argv.indexOf(flag);
   if (index === -1) {
     return undefined;
   }
   return argv[index + 1];
+}
+
+function valuesAfter(argv: string[], flag: string): string[] | undefined {
+  const values: string[] = [];
+  for (let index = 0; index < argv.length; index += 1) {
+    if (argv[index] === flag && argv[index + 1]) {
+      values.push(argv[index + 1]);
+    }
+  }
+  return values.length > 0 ? values : undefined;
 }
 
 function isEntrypoint(): boolean {

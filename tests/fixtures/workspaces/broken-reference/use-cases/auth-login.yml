@@ -1,0 +1,30 @@
+schema_version: 1
+feature:
+  id: auth.login
+  name: Login
+  summary: Broken reference fixture.
+use_cases:
+  - id: auth.login.with_reference
+    title: Login with related missing behavior
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    actor: registered_user
+    intent: Access the account area.
+    preconditions: [Account exists.]
+    trigger: Submit valid credentials.
+    related_use_cases:
+      - auth.login.missing
+    scenarios:
+      - id: auth.login.with_reference.web
+        kind: steps
+        steps: [Submit valid credentials.]
+    observable_outcomes: [The account home is shown.]
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: none
+    approval_policy:
+      mode: none

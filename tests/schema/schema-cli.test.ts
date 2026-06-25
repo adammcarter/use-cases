@@ -49,7 +49,7 @@ describe("P1 schema CLI", () => {
         component_id: "presentation-skills"
       }
     });
-    expect(payload.data.schemas).toHaveLength(11);
+    expect(payload.data.schemas).toHaveLength(13);
   });
 
   test("validates fixture workspaces with complete=false diagnostics for damaged YAML", () => {
