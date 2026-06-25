@@ -11,6 +11,7 @@ import {
   loadDemoCapsules,
   loadHostProfile,
   loadUseCaseMatrix,
+  migrateTestMatrix,
   planDemoCapsule,
   projectHostFiles,
   queryUseCases,
@@ -137,6 +138,10 @@ export function runCli(argv: string[]): number {
 
   if (normalizedArgv[0] === "workflow" && normalizedArgv[1] === "mode" && wantsJson) {
     return runWorkflowMode(normalizedArgv);
+  }
+
+  if (normalizedArgv[0] === "migrate" && wantsJson) {
+    return runMigrate(normalizedArgv);
   }
 
   if (normalizedArgv[0] === "host" && wantsJson) {
@@ -886,6 +891,54 @@ function writeCaughtShowcaseError(command: string, error: unknown): number {
   return writeError(command, code, error instanceof Error ? error.message : String(error), code === "showcase_ledger_damaged" ? 3 : 1);
 }
 
+function runMigrate(argv: string[]): number {
+  if (argv[1] !== "test-matrix") {
+    return writeError("migrate.unknown", "command.unknown", "Unknown migrate command.");
+  }
+  const contextResult = contextFromArgs(argv, "migrate.test-matrix");
+  if ("exitCode" in contextResult) {
+    return contextResult.exitCode;
+  }
+  const sourcePath = valueAfter(argv, "--source");
+  if (!sourcePath) {
+    return writeError("migrate.test-matrix", "migration_source_required", "Missing --source.");
+  }
+  const selectedModes = [
+    argv.includes("--dry-run") ? "dry_run" : null,
+    argv.includes("--write") ? "write" : null
+  ].filter((value): value is "dry_run" | "write" => value !== null);
+  if (selectedModes.length > 1) {
+    return writeError("migrate.test-matrix", "migration_mode_conflict", "Use only one of --dry-run or --write.");
+  }
+  const mode = selectedModes[0] ?? "dry_run";
+  try {
+    const result = migrateTestMatrix({
+      context: contextResult,
+      sourcePath,
+      outDir: valueAfter(argv, "--out") ?? undefined,
+      mode
+    });
+    const hasConflict = result.would_write.some((operation) => operation.action === "conflict");
+    process.stdout.write(
+      `${JSON.stringify(
+        createCliResult("migrate.test-matrix", result, {
+          ok: !hasConflict,
+          complete: result.warnings.length === 0 && !hasConflict,
+          diagnostics: migrationDiagnostics(result),
+          workspaceRoot: contextResult.workspace_root,
+          dataRoot: contextResult.data_root,
+          componentId: contextResult.component_id
+        })
+      )}\n`
+    );
+    return hasConflict ? 1 : 0;
+  } catch (error) {
+    const code = error instanceof Error && "code" in error ? String(error.code) : "internal_error";
+    const exitCode = code === "migration_unsafe_output_path" || code === "migration_unsafe_source_path" ? 4 : 1;
+    return writeError("migrate.test-matrix", code, error instanceof Error ? error.message : String(error), exitCode);
+  }
+}
+
 function runHost(argv: string[]): number {
   const action = argv[1];
   if (action === "doctor") {
@@ -997,6 +1050,18 @@ function profileFromArgs(
     return { exitCode: writeError(command, "host.profile_unavailable", result.diagnostics[0]?.message ?? "Host profile unavailable.", 1) };
   }
   return { profile: result.profile };
+}
+
+function migrationDiagnostics(result: ReturnType<typeof migrateTestMatrix>) {
+  return result.warnings.map((warning) => ({
+    code: warning.code,
+    severity: "warning" as const,
+    message: warning.message,
+    source_path: warning.row_ref,
+    json_pointer: null,
+    entity_id: null,
+    related_ids: []
+  }));
 }
 
 function runWorkflowMode(argv: string[]): number {
