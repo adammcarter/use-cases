@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://presentation-skills.dev/schemas/v1/evidence-append-result.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "appended": { "type": "boolean" },
+    "event": { "$ref": "evidence-event.schema.json" },
+    "ledger_path": { "type": "string", "minLength": 1 },
+    "durability": { "enum": ["file_synced", "file_and_directory_synced", "best_effort"] }
+  },
+  "required": ["schema_version", "appended", "event", "ledger_path", "durability"]
+}

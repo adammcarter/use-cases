@@ -4,11 +4,15 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   PUBLIC_SCHEMA_IDS,
+  appendEvidenceEvent,
   createCliResult,
   getVersionInfo,
   loadUseCaseMatrix,
   queryUseCases,
+  replayEvidence,
   resolveWorkspaceContext,
+  toEvidenceAppendResult,
+  toEvidenceStatusResult,
   toMatrixListResult,
   toMatrixValidationResult,
   validateFixtureWorkspace,
@@ -73,6 +77,14 @@ export function runCli(argv: string[]): number {
     return runMatrixList(normalizedArgv);
   }
 
+  if (normalizedArgv[0] === "evidence" && normalizedArgv[1] === "record" && wantsJson) {
+    return runEvidenceRecord(normalizedArgv);
+  }
+
+  if (normalizedArgv[0] === "evidence" && normalizedArgv[1] === "status" && wantsJson) {
+    return runEvidenceStatus(normalizedArgv);
+  }
+
   process.stderr.write(
     `${JSON.stringify(
       createCliResult(
@@ -97,6 +109,64 @@ export function runCli(argv: string[]): number {
     )}\n`
   );
   return 2;
+}
+
+function runEvidenceRecord(argv: string[]): number {
+  const context = contextFromArgs(argv);
+  const useCaseId = valueAfter(argv, "--use-case");
+  if (!useCaseId) {
+    return writeError("evidence.record", "evidence.use_case.required", "Missing --use-case.");
+  }
+  const matrix = loadUseCaseMatrix({ context });
+  const resolved = matrix.resolveUseCase(useCaseId);
+  if (resolved.kind !== "resolved") {
+    return writeError("evidence.record", "evidence.use_case.unresolved", `Use case '${useCaseId}' is ${resolved.kind}.`);
+  }
+  const kind = valueAfter(argv, "--kind") ?? "manual_observation";
+  const result = valueAfter(argv, "--result") ?? "observed";
+  const append = appendEvidenceEvent({
+    context,
+    idempotencyKey: valueAfter(argv, "--idempotency-key") ?? `cli:${useCaseId}:${kind}:${result}`,
+    target: {
+      use_case_id: useCaseId,
+      use_case_semantic_hash: resolved.useCase.semanticHash
+    },
+    kind: kind as Parameters<typeof appendEvidenceEvent>[0]["kind"],
+    result: result as Parameters<typeof appendEvidenceEvent>[0]["result"],
+    summary: valueAfter(argv, "--summary") ?? `Recorded ${kind} evidence for ${useCaseId}.`,
+    actorType: "agent",
+    hostSurface: "codex.cli"
+  });
+  process.stdout.write(
+    `${JSON.stringify(
+      createCliResult("evidence.record", toEvidenceAppendResult(append), {
+        ok: true,
+        complete: true,
+        workspaceRoot: context.workspace_root,
+        dataRoot: context.data_root,
+        componentId: context.component_id
+      })
+    )}\n`
+  );
+  return 0;
+}
+
+function runEvidenceStatus(argv: string[]): number {
+  const context = contextFromArgs(argv);
+  const snapshot = replayEvidence({ context });
+  process.stdout.write(
+    `${JSON.stringify(
+      createCliResult("evidence.status", toEvidenceStatusResult(snapshot), {
+        ok: snapshot.complete,
+        complete: snapshot.complete,
+        diagnostics: snapshot.diagnostics,
+        workspaceRoot: context.workspace_root,
+        dataRoot: context.data_root,
+        componentId: context.component_id
+      })
+    )}\n`
+  );
+  return snapshot.complete ? 0 : 1;
 }
 
 function runMatrixValidate(argv: string[]): number {
@@ -155,6 +225,33 @@ function contextFromArgs(argv: string[]) {
     dataRootOverride: dataRootValue ? resolve(process.cwd(), dataRootValue) : undefined,
     component: valueAfter(argv, "--component")
   });
+}
+
+function writeError(command: string, code: string, message: string): number {
+  process.stdout.write(
+    `${JSON.stringify(
+      createCliResult(
+        command,
+        {},
+        {
+          ok: false,
+          complete: false,
+          diagnostics: [
+            {
+              code,
+              severity: "error",
+              message,
+              source_path: null,
+              json_pointer: null,
+              entity_id: null,
+              related_ids: []
+            }
+          ]
+        }
+      )
+    )}\n`
+  );
+  return 2;
 }
 
 function valueAfter(argv: string[], flag: string): string | undefined {
