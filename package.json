@@ -7,6 +7,28 @@
   "engines": {
     "node": ">=22"
   },
+  "files": [
+    ".agents/skills",
+    ".claude-plugin/plugin.json",
+    ".codex-plugin/plugin.json",
+    ".mcp.json",
+    "README.md",
+    "CHANGELOG.md",
+    "bootstrap",
+    "docs",
+    "examples",
+    "hosts",
+    "packages/ucm-cli/dist",
+    "packages/ucm-cli/package.json",
+    "packages/ucm-core/dist",
+    "packages/ucm-core/package.json",
+    "packages/ucm-mcp/dist",
+    "packages/ucm-mcp/package.json",
+    "plugin.json",
+    "presentation-skills.yml",
+    "schemas/v1",
+    "use-cases"
+  ],
   "scripts": {
     "build": "tsc -b packages/ucm-core packages/ucm-cli packages/ucm-mcp && node packages/ucm-core/scripts/copy-schemas.mjs",
     "clean": "rm -rf packages/*/dist coverage",

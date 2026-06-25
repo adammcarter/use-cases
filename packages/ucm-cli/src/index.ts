@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { accessSync, constants, readFileSync, realpathSync, renameSync, writeFileSync } from "node:fs";
-import { isAbsolute, join, relative, resolve } from "node:path";
+import { accessSync, constants, existsSync, readdirSync, readFileSync, realpathSync, renameSync, statSync, writeFileSync } from "node:fs";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   PUBLIC_SCHEMA_IDS,
@@ -44,6 +44,31 @@ import {
 } from "@presentation-skills/ucm-core";
 
 const SUPPORTED_HOSTS: HostName[] = ["claude", "codex", "copilot", "opencode"];
+const REQUIRED_PACKAGE_PATHS = [
+  ".agents/skills/use-case-matrix/SKILL.md",
+  ".agents/skills/presentation-showcase/SKILL.md",
+  ".agents/skills/presentation-walkthrough/SKILL.md",
+  ".codex-plugin/plugin.json",
+  ".claude-plugin/plugin.json",
+  ".mcp.json",
+  "bootstrap/presentation-skills.md",
+  "packages/ucm-cli/dist/index.js",
+  "packages/ucm-core/dist/index.js",
+  "packages/ucm-core/dist/schemas/v1/use-case-file.schema.json",
+  "packages/ucm-mcp/dist/index.js",
+  "plugin.json",
+  "README.md",
+  "CHANGELOG.md"
+] as const;
+const FORBIDDEN_PACKAGE_SEGMENTS = [
+  ".agent-cache",
+  ".agent-tool",
+  ".agent-receipts",
+  ".DS_Store",
+  ".copy-schemas.lock",
+  "node_modules",
+  "coverage"
+] as const;
 
 export function runCli(argv: string[]): number {
   const normalizedArgv = argv[0] === "--" ? argv.slice(1) : argv;
@@ -153,6 +178,10 @@ export function runCli(argv: string[]): number {
 
   if (normalizedArgv[0] === "doctor" && normalizedArgv[1] === "skills" && wantsJson) {
     return runDoctorSkills(normalizedArgv);
+  }
+
+  if (normalizedArgv[0] === "doctor" && normalizedArgv[1] === "package" && wantsJson) {
+    return runDoctorPackage(normalizedArgv);
   }
 
   if (normalizedArgv[0] === "doctor" && normalizedArgv[1] === "roots" && wantsJson) {
@@ -1220,6 +1249,182 @@ function runDoctorSkills(argv: string[]): number {
     )}\n`
   );
   return result.complete ? 0 : 1;
+}
+
+function runDoctorPackage(argv: string[]): number {
+  const contextResult = contextFromArgs(argv, "doctor.package");
+  if ("exitCode" in contextResult) {
+    return contextResult.exitCode;
+  }
+  const root = contextResult.workspace_root;
+  const requiredPaths = REQUIRED_PACKAGE_PATHS.map((path) => ({
+    path,
+    status: existsSync(join(root, path)) ? "present" : "missing"
+  }));
+  const manifestReferences = packageManifestReferences(root);
+  const binEntrypoints = packageBinEntrypoints(root);
+  const filesAllowlist = packageFilesAllowlist(root);
+  const forbiddenPaths = packageForbiddenPaths(root, filesAllowlist.files);
+  const diagnostics = [
+    ...requiredPaths
+      .filter((item) => item.status === "missing")
+      .map((item) => packageDiagnostic("package.required_path_missing", `Missing package path '${item.path}'.`, item.path)),
+    ...manifestReferences
+      .filter((item) => item.status !== "resolved")
+      .map((item) => packageDiagnostic("package.manifest_reference_unresolved", `Manifest reference '${item.target}' from '${item.from}' is not resolved.`, item.target)),
+    ...binEntrypoints
+      .filter((item) => item.status !== "present")
+      .map((item) => packageDiagnostic("package.bin_missing", `Package bin '${item.name}' does not resolve to '${item.path}'.`, item.path)),
+    ...filesAllowlist.diagnostics,
+    ...forbiddenPaths.map((path) => packageDiagnostic("package.forbidden_path", `Forbidden package path '${path}' is present or allowlisted.`, path))
+  ];
+  const data = {
+    schema_version: 1,
+    complete: diagnostics.length === 0,
+    required_paths: requiredPaths,
+    manifest_references: manifestReferences,
+    bin_entrypoints: binEntrypoints,
+    files_allowlist: filesAllowlist.files,
+    forbidden_paths: forbiddenPaths
+  };
+  process.stdout.write(
+    `${JSON.stringify(
+      createCliResult("doctor.package", data, {
+        ok: diagnostics.length === 0,
+        complete: diagnostics.length === 0,
+        diagnostics,
+        workspaceRoot: root,
+        dataRoot: contextResult.data_root,
+        componentId: contextResult.component_id
+      })
+    )}\n`
+  );
+  return diagnostics.length === 0 ? 0 : 1;
+}
+
+function packageManifestReferences(root: string) {
+  const references: Array<{ from: string; target: string; status: "resolved" | "missing" }> = [];
+  const codexManifestPath = join(root, ".codex-plugin/plugin.json");
+  if (existsSync(codexManifestPath)) {
+    const manifest = readJson(codexManifestPath) as { mcpServers?: string };
+    if (manifest.mcpServers) {
+      const target = normalizePackagePath(manifest.mcpServers);
+      references.push({
+        from: ".codex-plugin/plugin.json",
+        target,
+        status: existsSync(join(root, target)) ? "resolved" : "missing"
+      });
+    }
+  }
+  const mcpPath = join(root, ".mcp.json");
+  if (existsSync(mcpPath)) {
+    const mcp = readJson(mcpPath) as { mcpServers?: Record<string, { args?: string[] }> };
+    const server = mcp.mcpServers?.["presentation-skills"];
+    const target = normalizePackagePath(server?.args?.[0] ?? "");
+    references.push({
+      from: ".mcp.json",
+      target,
+      status: target && existsSync(join(root, target)) ? "resolved" : "missing"
+    });
+  }
+  return references;
+}
+
+function packageBinEntrypoints(root: string) {
+  return ["packages/ucm-cli/package.json", "packages/ucm-mcp/package.json"].flatMap((manifestPath) => {
+    const packageJson = readJson(join(root, manifestPath)) as { bin?: Record<string, string> };
+    return Object.entries(packageJson.bin ?? {}).map(([name, value]) => {
+      const path = normalizePackagePath(join(dirname(manifestPath), value));
+      return {
+        name,
+        path,
+        status: existsSync(join(root, path)) ? "present" : "missing",
+        executable: hasExecutableBit(join(root, path))
+      };
+    });
+  });
+}
+
+function packageFilesAllowlist(root: string): { files: string[]; diagnostics: ReturnType<typeof packageDiagnostic>[] } {
+  const packageJson = readJson(join(root, "package.json")) as { files?: unknown };
+  if (!Array.isArray(packageJson.files) || !packageJson.files.every((item) => typeof item === "string")) {
+    return {
+      files: [],
+      diagnostics: [packageDiagnostic("package.files_allowlist_missing", "package.json must declare a files allowlist.", "package.json")]
+    };
+  }
+  return {
+    files: packageJson.files.map((item) => normalizePackagePath(item)),
+    diagnostics: []
+  };
+}
+
+function packageForbiddenPaths(root: string, files: string[]): string[] {
+  const forbidden = new Set<string>();
+  for (const value of files) {
+    if (containsForbiddenSegment(value)) {
+      forbidden.add(value);
+    }
+  }
+  for (const path of listExistingFiles(root, ["packages/ucm-core/dist", "packages/ucm-cli/dist", "packages/ucm-mcp/dist"])) {
+    if (containsForbiddenSegment(path)) {
+      forbidden.add(path);
+    }
+  }
+  return Array.from(forbidden).sort();
+}
+
+function listExistingFiles(root: string, paths: string[]): string[] {
+  const results: string[] = [];
+  for (const path of paths) {
+    const fullPath = join(root, path);
+    if (!existsSync(fullPath)) {
+      continue;
+    }
+    const stat = statSync(fullPath);
+    if (stat.isDirectory()) {
+      for (const entry of readdirSync(fullPath)) {
+        results.push(...listExistingFiles(root, [join(path, entry)]));
+      }
+      continue;
+    }
+    results.push(path);
+  }
+  return results;
+}
+
+function containsForbiddenSegment(path: string): boolean {
+  const parts = path.split(/[\\/]/);
+  return FORBIDDEN_PACKAGE_SEGMENTS.some((segment) => parts.includes(segment));
+}
+
+function normalizePackagePath(path: string): string {
+  return path.replaceAll("\\", "/").replace(/^\.\//, "");
+}
+
+function readJson(path: string): unknown {
+  return JSON.parse(readFileSync(path, "utf8"));
+}
+
+function hasExecutableBit(path: string): boolean {
+  try {
+    accessSync(path, constants.X_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function packageDiagnostic(code: string, message: string, sourcePath: string) {
+  return {
+    code,
+    severity: "error" as const,
+    message,
+    source_path: sourcePath,
+    json_pointer: null,
+    entity_id: null,
+    related_ids: []
+  };
 }
 
 function contextFromArgs(argv: string[], command: string) {
