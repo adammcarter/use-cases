@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://presentation-skills.dev/schemas/v1/cli-result.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "protocol_version": { "const": 1 },
+    "command": { "type": "string", "minLength": 1 },
+    "ok": { "type": "boolean" },
+    "complete": { "type": "boolean" },
+    "data": true,
+    "diagnostics": {
+      "type": "array",
+      "items": { "$ref": "common.schema.json#/$defs/diagnostic" }
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "workspace_root": { "type": "string", "minLength": 1 },
+        "data_root": { "type": "string", "minLength": 1 },
+        "component_id": { "$ref": "common.schema.json#/$defs/id" },
+        "workspace_snapshot": { "$ref": "common.schema.json#/$defs/workspace_snapshot" }
+      },
+      "required": ["workspace_root", "data_root", "component_id", "workspace_snapshot"]
+    }
+  },
+  "required": ["schema_version", "protocol_version", "command", "ok", "complete", "data", "diagnostics", "context"]
+}

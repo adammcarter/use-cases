@@ -1,0 +1,29 @@
+schema_version: 1
+feature:
+  id: bad.contracts
+  name: Bad contracts
+  summary: Invalid fixture used to lock P1 rejection behavior.
+use_cases:
+  - id: bad.contracts.no_outcomes
+    title: Missing outcomes
+    lifecycle: active
+    value_tier: golden_path
+    journey_role: happy_path
+    usage_frequency: common
+    actor: user
+    intent: Prove invalid contracts fail.
+    preconditions: [A bad fixture exists.]
+    trigger: Validation runs.
+    scenarios:
+      - id: bad.contracts.no_outcomes.case
+        kind: steps
+        steps: [Validate the file.]
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: live_demo
+          required_verifiers: [both]
+          minimum_count: 1

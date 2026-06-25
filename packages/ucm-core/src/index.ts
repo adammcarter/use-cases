@@ -12,3 +12,5 @@ export function getVersionInfo(): VersionInfo {
     version: PRESENTATION_SKILLS_VERSION
   };
 }
+
+export * from "./schema/index.js";

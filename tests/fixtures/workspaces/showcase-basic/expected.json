@@ -1,0 +1,14 @@
+{
+  "ok": true,
+  "complete": true,
+  "diagnostics": [],
+  "expected_state": {
+    "prepared_run": {
+      "execution_status": "prepared_not_performed",
+      "approval_state": "pending"
+    },
+    "execution_status": "completed",
+    "outcome": "passed",
+    "approval_state": "approved"
+  }
+}

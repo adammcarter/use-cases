@@ -1,0 +1,10 @@
+{
+  "ok": false,
+  "complete": false,
+  "diagnostics": [
+    {
+      "code": "parse_error",
+      "source_path": "malformed.yml"
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+schema_version: 1
+feature:
+  id: auth.login
+  name: Login
+  summary: Users can sign in and see their account home.
+metadata:
+  owner: product
+  lifecycle: active
+use_cases:
+  - id: auth.login.success
+    title: Successful login
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    actor: registered_user
+    intent: Access the authenticated account area.
+    preconditions:
+      - A registered account exists.
+      - The user is signed out.
+    trigger: The user submits valid credentials.
+    scenarios:
+      - id: auth.login.success.web
+        kind: gherkin
+        given:
+          - The login page is open.
+        when:
+          - The user submits valid credentials.
+        then:
+          - The account home is shown.
+    observable_outcomes:
+      - The account home route is visible.
+      - The signed-in user name is visible.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+      - host_surface: claude.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: live_demo
+          required_verifiers: [user]
+          minimum_count: 1
+    approval_policy:
+      mode: predefined
+      requirements:
+        - approver_type: user
+          minimum_count: 1
+      statement: Final acceptance requires user-visible proof.

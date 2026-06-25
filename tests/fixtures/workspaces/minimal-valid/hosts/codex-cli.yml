@@ -1,0 +1,19 @@
+schema_version: 1
+profile_id: host.codex.cli
+host: codex
+surface: codex.cli
+version_constraints:
+  minimum: unknown
+installation_shape: codex-plugin
+permission_expectations:
+  filesystem: workspace-write
+skill_discovery:
+  expected: true
+cli_expectations:
+  binary: presentation-skills
+mcp_expectations:
+  server_name: presentation-skills
+known_limitations: []
+required_conformance_capabilities:
+  - cli-json
+  - mcp-tools-list

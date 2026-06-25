@@ -1,0 +1,3 @@
+schema_version: 1
+mode: continuous
+description: This valid sibling proves damaged files do not bring down the run.

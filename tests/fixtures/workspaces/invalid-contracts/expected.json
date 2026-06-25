@@ -1,0 +1,15 @@
+{
+  "ok": false,
+  "complete": false,
+  "diagnostics": [
+    {
+      "code": "use_case.observable_outcomes.required"
+    },
+    {
+      "code": "approval_policy.required"
+    },
+    {
+      "code": "enum.invalid_value"
+    }
+  ]
+}
