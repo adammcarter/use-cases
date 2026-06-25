@@ -6,7 +6,42 @@ const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, "../../..");
 const source = join(repoRoot, "schemas/v1");
 const destination = join(repoRoot, "packages/ucm-core/dist/schemas/v1");
+const lockDir = join(repoRoot, "packages/ucm-core/dist/.copy-schemas.lock");
 
-rmSync(destination, { recursive: true, force: true });
-mkdirSync(destination, { recursive: true });
-cpSync(source, destination, { recursive: true });
+mkdirSync(dirname(lockDir), { recursive: true });
+withDirectoryLock(lockDir, () => {
+  rmSync(destination, {
+    recursive: true,
+    force: true,
+    maxRetries: 5,
+    retryDelay: 50
+  });
+  mkdirSync(destination, { recursive: true });
+  cpSync(source, destination, { recursive: true });
+});
+
+function withDirectoryLock(path, work) {
+  const deadline = Date.now() + 30_000;
+
+  while (true) {
+    try {
+      mkdirSync(path);
+      break;
+    } catch (error) {
+      if (error?.code !== "EEXIST" || Date.now() >= deadline) {
+        throw error;
+      }
+      sleep(25);
+    }
+  }
+
+  try {
+    work();
+  } finally {
+    rmSync(path, { recursive: true, force: true });
+  }
+}
+
+function sleep(milliseconds) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, milliseconds);
+}
