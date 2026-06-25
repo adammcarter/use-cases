@@ -1,0 +1,15 @@
+schema_version: 1
+feature:
+  id: partial.damaged
+  name: Damaged
+  summary: This file is intentionally malformed.
+use_cases:
+  - id: partial.damaged.golden
+    title: Damaged item
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    actor: user
+    intent: This is never parsed
+    preconditions: [broken

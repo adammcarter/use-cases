@@ -20,6 +20,7 @@ const expectedSchemaIds = [
   "https://presentation-skills.dev/schemas/v1/evidence-event.schema.json",
   "https://presentation-skills.dev/schemas/v1/demo-capsule.schema.json",
   "https://presentation-skills.dev/schemas/v1/presentation-plan.schema.json",
+  "https://presentation-skills.dev/schemas/v1/presentation-plan-result.schema.json",
   "https://presentation-skills.dev/schemas/v1/showcase-event.schema.json",
   "https://presentation-skills.dev/schemas/v1/host-profile.schema.json",
   "https://presentation-skills.dev/schemas/v1/host-status-result.schema.json",

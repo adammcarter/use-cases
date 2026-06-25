@@ -6,9 +6,69 @@
   "properties": {
     "schema_version": { "const": 1 },
     "plan_id": { "$ref": "common.schema.json#/$defs/id" },
+    "plan_content_hash": { "$ref": "common.schema.json#/$defs/hash" },
+    "generated_at": { "$ref": "common.schema.json#/$defs/timestamp" },
     "mode": { "enum": ["showcase", "walkthrough"] },
     "complete": { "type": "boolean" },
-    "selection_method": { "enum": ["generated", "manual", "capsule"] },
+    "prepared_not_performed": { "const": true },
+    "readiness": {
+      "enum": ["ready", "ready_with_evidence_gaps", "partial_due_to_integrity", "blocked"]
+    },
+    "integrity_acknowledgement_required": { "type": "boolean" },
+    "selection_method": { "enum": ["generated", "manual", "capsule", "deterministic"] },
+    "selection_profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/id" },
+        "version": { "type": "integer", "minimum": 1 },
+        "digest": { "$ref": "common.schema.json#/$defs/hash" }
+      },
+      "required": ["id", "version", "digest"]
+    },
+    "input_snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "matrix_digest": { "$ref": "common.schema.json#/$defs/hash" },
+        "evidence_basis_digest": { "$ref": "common.schema.json#/$defs/hash" },
+        "changed_paths": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "freshness_policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": { "$ref": "common.schema.json#/$defs/id" },
+            "digest": { "$ref": "common.schema.json#/$defs/hash" },
+            "evaluated_at": { "$ref": "common.schema.json#/$defs/timestamp" }
+          },
+          "required": ["id", "digest", "evaluated_at"]
+        },
+        "host_surface": { "$ref": "common.schema.json#/$defs/host_surface" },
+        "workflow": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "effective_mode": {
+              "enum": ["continuous", "backfill", "showcase_only", "audit_only", "migration", "custom"]
+            },
+            "source": { "enum": ["default", "workspace_config"] },
+            "advisory": { "const": true }
+          },
+          "required": ["effective_mode", "source", "advisory"]
+        }
+      },
+      "required": [
+        "matrix_digest",
+        "evidence_basis_digest",
+        "changed_paths",
+        "freshness_policy",
+        "host_surface",
+        "workflow"
+      ]
+    },
     "workspace_snapshot": { "$ref": "common.schema.json#/$defs/workspace_snapshot" },
     "environment_expectations": {
       "type": "object",
@@ -23,20 +83,120 @@
     },
     "audience": { "type": "string", "minLength": 1 },
     "timebox_seconds": { "type": "integer", "minimum": 1 },
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "section_id": { "$ref": "common.schema.json#/$defs/id" },
+          "title": { "type": "string", "minLength": 1 },
+          "purpose": { "type": "string", "minLength": 1 },
+          "item_ids": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "common.schema.json#/$defs/id" }
+          }
+        },
+        "required": ["section_id", "title", "purpose", "item_ids"]
+      }
+    },
     "selected_items": {
       "type": "array",
       "items": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "plan_item_id": { "$ref": "common.schema.json#/$defs/id" },
+          "delivery_kind": { "enum": ["live_demo", "evidence_review", "explanation"] },
+          "scenario_scope": { "enum": ["whole_use_case", "explicit"] },
           "use_case_id": { "$ref": "common.schema.json#/$defs/id" },
           "scenario_ids": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/id" } },
           "use_case_content_hash": { "$ref": "common.schema.json#/$defs/hash" },
+          "estimated_seconds": { "type": "integer", "minimum": 1 },
+          "estimate_source": { "enum": ["use_case", "default_profile"] },
+          "setup_steps": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
           "resolved_steps": { "type": "array", "items": { "type": "string", "minLength": 1 } },
           "expected_observations": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "teardown_steps": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "required_permissions": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "safety_constraints": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
           "verification_policy_snapshot": { "$ref": "common.schema.json#/$defs/verification_policy" },
           "approval_policy_snapshot": { "$ref": "common.schema.json#/$defs/approval_policy" },
+          "approval_resolution_required_at_run_start": { "type": "boolean" },
+          "required_evidence": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "evidence_kind": { "$ref": "common.schema.json#/$defs/evidence_kind" },
+                "required_verifiers": {
+                  "type": "array",
+                  "items": { "enum": ["user", "agent", "script"] }
+                },
+                "minimum_count": { "type": "integer", "minimum": 1 },
+                "status": {
+                  "enum": ["candidate_observed", "missing", "unknown_due_to_integrity", "not_applicable"]
+                }
+              },
+              "required": ["evidence_kind", "required_verifiers", "minimum_count", "status"]
+            }
+          },
+          "evidence_summary": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "readiness": {
+                "enum": ["available_current", "available_stale", "missing", "invalid", "unknown", "ambiguous"]
+              },
+              "active_evidence_ids": {
+                "type": "array",
+                "items": { "$ref": "common.schema.json#/$defs/id" }
+              },
+              "basis": { "type": "string", "minLength": 1 }
+            },
+            "required": ["readiness", "active_evidence_ids", "basis"]
+          },
+          "freshness_summary": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "state": { "enum": ["current", "needs_review", "stale", "unknown", "invalidated"] },
+              "basis": { "type": "string", "minLength": 1 }
+            },
+            "required": ["state", "basis"]
+          },
+          "known_gaps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "code": { "type": "string", "minLength": 1 },
+                "message": { "type": "string", "minLength": 1 },
+                "severity": { "enum": ["info", "warning", "error"] }
+              },
+              "required": ["code", "message", "severity"]
+            }
+          },
           "selection_reasons": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "selection_reason_codes": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
           "score_components": { "type": "object", "additionalProperties": { "type": "number" } }
         },
         "required": ["use_case_id", "scenario_ids", "use_case_content_hash", "resolved_steps", "expected_observations", "verification_policy_snapshot", "approval_policy_snapshot", "selection_reasons", "score_components"]
@@ -49,9 +209,24 @@
         "additionalProperties": false,
         "properties": {
           "use_case_id": { "$ref": "common.schema.json#/$defs/id" },
+          "reason_code": { "type": "string", "minLength": 1 },
+          "blocking": { "type": "boolean" },
           "reason": { "type": "string", "minLength": 1 }
         },
         "required": ["use_case_id", "reason"]
+      }
+    },
+    "known_gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": { "type": "string", "minLength": 1 },
+          "message": { "type": "string", "minLength": 1 },
+          "severity": { "enum": ["info", "warning", "error"] }
+        },
+        "required": ["code", "message", "severity"]
       }
     },
     "diagnostics": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/diagnostic" } },

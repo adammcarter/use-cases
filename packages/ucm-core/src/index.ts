@@ -22,3 +22,4 @@ export * from "./useCases/query.js";
 export * from "./useCases/types.js";
 export * from "./useCases/validateUseCaseFile.js";
 export * from "./evidence/index.js";
+export * from "./presentation/index.js";

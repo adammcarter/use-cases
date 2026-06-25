@@ -69,6 +69,7 @@ export const PUBLIC_SCHEMA_IDS = [
   "https://presentation-skills.dev/schemas/v1/evidence-event.schema.json",
   "https://presentation-skills.dev/schemas/v1/demo-capsule.schema.json",
   "https://presentation-skills.dev/schemas/v1/presentation-plan.schema.json",
+  "https://presentation-skills.dev/schemas/v1/presentation-plan-result.schema.json",
   "https://presentation-skills.dev/schemas/v1/showcase-event.schema.json",
   "https://presentation-skills.dev/schemas/v1/host-profile.schema.json",
   "https://presentation-skills.dev/schemas/v1/host-status-result.schema.json",
@@ -87,6 +88,7 @@ const SCHEMA_FILE_NAMES = [
   "evidence-event.schema.json",
   "demo-capsule.schema.json",
   "presentation-plan.schema.json",
+  "presentation-plan-result.schema.json",
   "showcase-event.schema.json",
   "host-profile.schema.json",
   "host-status-result.schema.json",
@@ -413,6 +415,74 @@ function validateSyntheticCommonContracts(validated: Set<string>, diagnostics: D
   });
   validated.add(schemaIdForName("evidence-status-result.schema.json"));
   diagnostics.push(...evidenceStatus.diagnostics);
+
+  const samplePlan = {
+    schema_version: 1,
+    plan_id: "plan.synthetic.showcase",
+    plan_content_hash: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    generated_at: "2026-06-25T00:00:00.000Z",
+    mode: "showcase",
+    complete: true,
+    prepared_not_performed: true,
+    readiness: "ready_with_evidence_gaps",
+    integrity_acknowledgement_required: false,
+    selection_method: "deterministic",
+    selection_profile: {
+      id: "showcase-v1",
+      version: 1,
+      digest: "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    input_snapshot: {
+      matrix_digest: "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      evidence_basis_digest: "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      changed_paths: [],
+      freshness_policy: {
+        id: "default-v1",
+        digest: "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        evaluated_at: "2026-06-25T00:00:00.000Z"
+      },
+      host_surface: "codex.cli",
+      workflow: {
+        effective_mode: "continuous",
+        source: "default",
+        advisory: true
+      }
+    },
+    workspace_snapshot: {
+      repository_id: "synthetic",
+      vcs: "unknown",
+      head_revision: "unknown",
+      dirty: false,
+      working_tree_digest: "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      component_id: "presentation-skills",
+      captured_at: "2026-06-25T00:00:00.000Z"
+    },
+    environment_expectations: { host_surfaces: ["codex.cli"] },
+    audience: "reviewer",
+    timebox_seconds: 600,
+    sections: [],
+    selected_items: [],
+    exclusions: [],
+    known_gaps: []
+  };
+  const presentationPlanResult = validateBySchemaId(schemaIdForName("presentation-plan-result.schema.json"), {
+    schema_version: 1,
+    outcome: "generated",
+    plan: samplePlan,
+    candidate_summary: {
+      considered: 0,
+      eligible: 0,
+      selected: 0,
+      excluded: 0,
+      excluded_by_reason: {}
+    },
+    input_integrity: {
+      matrix: "clean",
+      evidence: "clean"
+    }
+  });
+  validated.add(schemaIdForName("presentation-plan-result.schema.json"));
+  diagnostics.push(...presentationPlanResult.diagnostics);
 }
 
 function validateJsonLines(
