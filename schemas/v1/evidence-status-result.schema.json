@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://presentation-skills.dev/schemas/v1/evidence-status-result.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "complete": { "type": "boolean" },
+    "integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "state": { "enum": ["clean", "partial", "unusable"] },
+        "unknown_scope_damage": { "type": "boolean" },
+        "invalid_aggregate_count": { "type": "integer", "minimum": 0 },
+        "torn_tail_count": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["state", "unknown_scope_damage", "invalid_aggregate_count", "torn_tail_count"]
+    },
+    "ledgers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "complete": { "type": "boolean" },
+          "events_loaded": { "type": "integer", "minimum": 0 },
+          "torn_tail": { "type": "boolean" },
+          "unknown_scope_damage": { "type": "boolean" }
+        },
+        "required": ["path", "complete", "events_loaded", "torn_tail", "unknown_scope_damage"]
+      }
+    },
+    "aggregates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "evidence_id": { "$ref": "common.schema.json#/$defs/id" },
+          "status": { "enum": ["active", "voided", "invalidated", "superseded", "invalid"] },
+          "event_ids": {
+            "type": "array",
+            "items": { "$ref": "common.schema.json#/$defs/id" }
+          },
+          "target_links": { "type": "array" },
+          "assurance": { "type": "object" },
+          "freshness_inputs": { "type": "object" }
+        },
+        "required": ["evidence_id", "status", "event_ids", "target_links", "assurance", "freshness_inputs"]
+      }
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ledgers": { "type": "integer", "minimum": 0 },
+        "events_loaded": { "type": "integer", "minimum": 0 },
+        "aggregates_total": { "type": "integer", "minimum": 0 },
+        "aggregates_active": { "type": "integer", "minimum": 0 },
+        "aggregates_invalid": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["ledgers", "events_loaded", "aggregates_total", "aggregates_active", "aggregates_invalid"]
+    }
+  },
+  "required": ["schema_version", "complete", "integrity", "ledgers", "aggregates", "counts"]
+}

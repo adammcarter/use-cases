@@ -1,0 +1,40 @@
+schema_version: 1
+feature:
+  id: showcase.live
+  name: Live showcase
+  summary: Agent performs a user-visible live demo.
+use_cases:
+  - id: showcase.live.golden
+    title: Agent performs verified live showcase
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    tags: [showcase, live]
+    source_refs:
+      - kind: file
+        path: src/showcase/live.ts
+    actor: agent
+    intent: Show the product behavior directly to the user.
+    preconditions: [A feature run is ready to demonstrate.]
+    trigger: The user asks for a final showcase.
+    scenarios:
+      - id: showcase.live.golden.cli
+        kind: steps
+        steps: [Start the showcase, demonstrate the feature, record the verdict.]
+    observable_outcomes: [The user sees the behavior happen.]
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: manual_observation
+          required_verifiers: [user]
+          minimum_count: 1
+    approval_policy:
+      mode: predefined
+      requirements:
+        - approver_type: user
+          minimum_count: 1
+      statement: Final acceptance requires user-visible proof.

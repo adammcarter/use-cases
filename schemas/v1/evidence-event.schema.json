@@ -18,7 +18,8 @@
       "actor_type": { "$ref": "common.schema.json#/$defs/actor_type" },
       "host_surface": { "$ref": "common.schema.json#/$defs/host_surface" },
       "source": { "$ref": "common.schema.json#/$defs/source" },
-      "idempotency_key": { "type": "string", "minLength": 1 }
+      "idempotency_key": { "type": "string", "minLength": 1 },
+      "intent_digest": { "$ref": "common.schema.json#/$defs/hash" }
     },
     "evidence_recorded": {
       "type": "object",
@@ -44,6 +45,40 @@
             },
             "verdict": { "$ref": "common.schema.json#/$defs/verdict" },
             "summary": { "type": "string", "minLength": 1 }
+            ,
+            "targets": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "use_case_id": { "$ref": "common.schema.json#/$defs/id" },
+                  "scenario_id": { "$ref": "common.schema.json#/$defs/id" },
+                  "use_case_semantic_hash": { "$ref": "common.schema.json#/$defs/hash" }
+                },
+                "required": ["use_case_id", "use_case_semantic_hash"]
+              }
+            },
+            "kind": { "$ref": "common.schema.json#/$defs/evidence_kind" },
+            "captured_at": { "$ref": "common.schema.json#/$defs/timestamp" },
+            "result": { "enum": ["pass", "fail", "inconclusive", "observed"] },
+            "producer": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "type": { "enum": ["user", "agent", "script", "system"] },
+                "identity": { "type": "string", "minLength": 1 }
+              },
+              "required": ["type"]
+            },
+            "method": {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {
+                "type": { "enum": ["reported", "observed", "structured_command"] }
+              },
+              "required": ["type"]
+            }
           },
           "required": ["evidence_kind", "use_case_ids", "verifier", "verdict", "summary"]
         },
@@ -55,7 +90,8 @@
         "actor_type": { "$ref": "#/$defs/base_properties/actor_type" },
         "host_surface": { "$ref": "#/$defs/base_properties/host_surface" },
         "source": { "$ref": "#/$defs/base_properties/source" },
-        "idempotency_key": { "$ref": "#/$defs/base_properties/idempotency_key" }
+        "idempotency_key": { "$ref": "#/$defs/base_properties/idempotency_key" },
+        "intent_digest": { "$ref": "#/$defs/base_properties/intent_digest" }
       },
       "required": ["schema_version", "event_type", "event_id", "aggregate_id", "sequence", "recorded_at", "actor_type", "host_surface", "idempotency_key", "payload"]
     },
@@ -75,7 +111,8 @@
         "actor_type": { "$ref": "#/$defs/base_properties/actor_type" },
         "host_surface": { "$ref": "#/$defs/base_properties/host_surface" },
         "source": { "$ref": "#/$defs/base_properties/source" },
-        "idempotency_key": { "$ref": "#/$defs/base_properties/idempotency_key" }
+        "idempotency_key": { "$ref": "#/$defs/base_properties/idempotency_key" },
+        "intent_digest": { "$ref": "#/$defs/base_properties/intent_digest" }
       },
       "required": ["schema_version", "event_type", "event_id", "aggregate_id", "sequence", "recorded_at", "actor_type", "host_surface", "idempotency_key", "target_event_id", "replacement", "reason"]
     },
@@ -94,7 +131,8 @@
         "actor_type": { "$ref": "#/$defs/base_properties/actor_type" },
         "host_surface": { "$ref": "#/$defs/base_properties/host_surface" },
         "source": { "$ref": "#/$defs/base_properties/source" },
-        "idempotency_key": { "$ref": "#/$defs/base_properties/idempotency_key" }
+        "idempotency_key": { "$ref": "#/$defs/base_properties/idempotency_key" },
+        "intent_digest": { "$ref": "#/$defs/base_properties/intent_digest" }
       },
       "required": ["schema_version", "event_type", "event_id", "aggregate_id", "sequence", "recorded_at", "actor_type", "host_surface", "idempotency_key", "target_event_id", "reason"]
     },
@@ -114,7 +152,8 @@
         "actor_type": { "$ref": "#/$defs/base_properties/actor_type" },
         "host_surface": { "$ref": "#/$defs/base_properties/host_surface" },
         "source": { "$ref": "#/$defs/base_properties/source" },
-        "idempotency_key": { "$ref": "#/$defs/base_properties/idempotency_key" }
+        "idempotency_key": { "$ref": "#/$defs/base_properties/idempotency_key" },
+        "intent_digest": { "$ref": "#/$defs/base_properties/intent_digest" }
       },
       "required": ["schema_version", "event_type", "event_id", "aggregate_id", "sequence", "recorded_at", "actor_type", "host_surface", "idempotency_key", "target_event_id", "replacement_evidence_id", "reason"]
     },
@@ -133,7 +172,8 @@
         "actor_type": { "$ref": "#/$defs/base_properties/actor_type" },
         "host_surface": { "$ref": "#/$defs/base_properties/host_surface" },
         "source": { "$ref": "#/$defs/base_properties/source" },
-        "idempotency_key": { "$ref": "#/$defs/base_properties/idempotency_key" }
+        "idempotency_key": { "$ref": "#/$defs/base_properties/idempotency_key" },
+        "intent_digest": { "$ref": "#/$defs/base_properties/intent_digest" }
       },
       "required": ["schema_version", "event_type", "event_id", "aggregate_id", "sequence", "recorded_at", "actor_type", "host_surface", "idempotency_key", "target_event_id", "reason"]
     }

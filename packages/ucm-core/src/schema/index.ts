@@ -75,7 +75,9 @@ export const PUBLIC_SCHEMA_IDS = [
   "https://presentation-skills.dev/schemas/v1/workspace-config.schema.json",
   "https://presentation-skills.dev/schemas/v1/workflow-mode.schema.json",
   "https://presentation-skills.dev/schemas/v1/matrix-validation-result.schema.json",
-  "https://presentation-skills.dev/schemas/v1/matrix-list-result.schema.json"
+  "https://presentation-skills.dev/schemas/v1/matrix-list-result.schema.json",
+  "https://presentation-skills.dev/schemas/v1/evidence-append-result.schema.json",
+  "https://presentation-skills.dev/schemas/v1/evidence-status-result.schema.json"
 ] as const;
 
 const SCHEMA_FILE_NAMES = [
@@ -91,7 +93,9 @@ const SCHEMA_FILE_NAMES = [
   "workspace-config.schema.json",
   "workflow-mode.schema.json",
   "matrix-validation-result.schema.json",
-  "matrix-list-result.schema.json"
+  "matrix-list-result.schema.json",
+  "evidence-append-result.schema.json",
+  "evidence-status-result.schema.json"
 ] as const;
 
 let schemaCache: Map<string, unknown> | undefined;
@@ -345,6 +349,69 @@ function validateSyntheticCommonContracts(validated: Set<string>, diagnostics: D
   });
   validated.add(schemaIdForName("matrix-list-result.schema.json"));
   diagnostics.push(...matrixList.diagnostics);
+
+  const sampleEvent = {
+    schema_version: 1,
+    event_type: "evidence_recorded",
+    event_id: "evt_evidence_synthetic",
+    aggregate_id: "evidence.synthetic",
+    sequence: 1,
+    recorded_at: "2026-06-25T00:00:00.000Z",
+    actor_type: "agent",
+    host_surface: "codex.cli",
+    idempotency_key: "synthetic",
+    intent_digest: "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    payload: {
+      evidence_kind: "manual_observation",
+      use_case_ids: ["synthetic.case"],
+      verifier: { type: "agent" },
+      verdict: "pass",
+      summary: "Synthetic evidence contract sample.",
+      targets: [
+        {
+          use_case_id: "synthetic.case",
+          use_case_semantic_hash:
+            "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+        }
+      ],
+      kind: "manual_observation",
+      captured_at: "2026-06-25T00:00:00.000Z",
+      result: "pass",
+      producer: { type: "agent", identity: "synthetic" },
+      method: { type: "reported" }
+    }
+  };
+  const evidenceAppend = validateBySchemaId(schemaIdForName("evidence-append-result.schema.json"), {
+    schema_version: 1,
+    appended: true,
+    event: sampleEvent,
+    ledger_path: "evidence/by-id/ev/evidence.synthetic.jsonl",
+    durability: "file_synced"
+  });
+  validated.add(schemaIdForName("evidence-append-result.schema.json"));
+  diagnostics.push(...evidenceAppend.diagnostics);
+
+  const evidenceStatus = validateBySchemaId(schemaIdForName("evidence-status-result.schema.json"), {
+    schema_version: 1,
+    complete: true,
+    integrity: {
+      state: "clean",
+      unknown_scope_damage: false,
+      invalid_aggregate_count: 0,
+      torn_tail_count: 0
+    },
+    ledgers: [],
+    aggregates: [],
+    counts: {
+      ledgers: 0,
+      events_loaded: 0,
+      aggregates_total: 0,
+      aggregates_active: 0,
+      aggregates_invalid: 0
+    }
+  });
+  validated.add(schemaIdForName("evidence-status-result.schema.json"));
+  diagnostics.push(...evidenceStatus.diagnostics);
 }
 
 function validateJsonLines(
