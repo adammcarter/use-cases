@@ -115,6 +115,7 @@ export type MatrixSnapshot = {
 export type MatrixValidationResultData = {
   schema_version: 1;
   complete: boolean;
+  valid: boolean;
   integrity: {
     state: MatrixIntegrityState;
     populated: boolean;

@@ -6,6 +6,7 @@
   "properties": {
     "schema_version": { "const": 1 },
     "complete": { "type": "boolean" },
+    "valid": { "type": "boolean" },
     "integrity": {
       "type": "object",
       "additionalProperties": false,
@@ -72,5 +73,5 @@
       }
     }
   },
-  "required": ["schema_version", "complete", "integrity", "files", "counts", "ambiguous_ids"]
+  "required": ["schema_version", "complete", "valid", "integrity", "files", "counts", "ambiguous_ids"]
 }

@@ -2,7 +2,7 @@ import type { Diagnostic } from "../schema/index.js";
 import type { ResolvedWorkspaceContext } from "../roots.js";
 import { deriveEvidenceAssurance } from "./assurance.js";
 import { diagnostic, readEvidenceLedgers } from "./jsonlLedger.js";
-import type { EvidenceAggregateState, EvidenceEvent, EvidenceSnapshot } from "./types.js";
+import type { EvidenceAggregateState, EvidenceEvent, EvidenceObservation, EvidenceSnapshot } from "./types.js";
 
 export function replayEvidence(options: { context: ResolvedWorkspaceContext }): EvidenceSnapshot {
   const read = readEvidenceLedgers(options.context);
@@ -103,7 +103,7 @@ function projectAggregate(
   }
 
   let head = ordered[0];
-  let observation = ordered[0].payload;
+  let observation = normalizeObservation(ordered[0]);
   let status: EvidenceAggregateState["status"] = "active";
   let replacementEvidenceId: string | undefined;
 
@@ -117,7 +117,7 @@ function projectAggregate(
         diagnostics.push(diagnostic("evidence_invalid_transition", "Correction must contain a replacement and target an earlier head.", null, aggregateId));
         return invalidAggregate(aggregateId, eventIds);
       }
-      observation = event.replacement;
+      observation = normalizeObservation(event);
       head = event;
       continue;
     }
@@ -163,6 +163,34 @@ function projectAggregate(
     },
     eventIds,
     replacementEvidenceId
+  };
+}
+
+function normalizeObservation(event: EvidenceEvent): EvidenceObservation | undefined {
+  const payload = event.replacement ?? event.payload;
+  if (!payload) {
+    return undefined;
+  }
+  return {
+    targets:
+      payload.targets ??
+      (payload.use_case_ids ?? []).map((useCaseId) => ({
+        use_case_id: useCaseId,
+        use_case_semantic_hash:
+          "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+      })),
+    kind: payload.kind ?? payload.evidence_kind ?? "manual_observation",
+    captured_at: payload.captured_at ?? event.recorded_at,
+    result:
+      payload.result ??
+      (payload.verdict === "pass" || payload.verdict === "fail" ? payload.verdict : "observed"),
+    summary: payload.summary,
+    producer: payload.producer ?? { type: payload.verifier?.type ?? event.actor_type },
+    method: payload.method ?? { type: "reported" },
+    evidence_kind: payload.evidence_kind,
+    use_case_ids: payload.use_case_ids,
+    verifier: payload.verifier,
+    verdict: payload.verdict
   };
 }
 

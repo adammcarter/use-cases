@@ -312,6 +312,7 @@ function validateSyntheticCommonContracts(validated: Set<string>, diagnostics: D
   const matrixValidation = validateBySchemaId(schemaIdForName("matrix-validation-result.schema.json"), {
     schema_version: 1,
     complete: true,
+    valid: true,
     integrity: {
       state: "clean",
       populated: false,

@@ -132,6 +132,7 @@ export function toMatrixValidationResult(snapshot: MatrixSnapshot): MatrixValida
   return {
     schema_version: 1,
     complete: snapshot.complete,
+    valid: snapshot.complete,
     integrity: {
       state: snapshot.integrity.state,
       populated: snapshot.integrity.populated,
