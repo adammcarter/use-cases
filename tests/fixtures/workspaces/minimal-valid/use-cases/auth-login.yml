@@ -13,6 +13,10 @@ use_cases:
     value_tier: critical
     journey_role: golden
     usage_frequency: common
+    tags: [auth, login]
+    source_refs:
+      - kind: file
+        path: src/auth/login.ts
     actor: registered_user
     intent: Access the authenticated account area.
     preconditions:

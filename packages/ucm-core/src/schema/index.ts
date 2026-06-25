@@ -11,6 +11,10 @@ export type Diagnostic = {
   message: string;
   source_path: string | null;
   json_pointer: string | null;
+  source_span?: {
+    start: { line: number; column: number };
+    end: { line: number; column: number };
+  };
   entity_id: string | null;
   related_ids: string[];
 };
@@ -69,7 +73,9 @@ export const PUBLIC_SCHEMA_IDS = [
   "https://presentation-skills.dev/schemas/v1/host-profile.schema.json",
   "https://presentation-skills.dev/schemas/v1/host-status-result.schema.json",
   "https://presentation-skills.dev/schemas/v1/workspace-config.schema.json",
-  "https://presentation-skills.dev/schemas/v1/workflow-mode.schema.json"
+  "https://presentation-skills.dev/schemas/v1/workflow-mode.schema.json",
+  "https://presentation-skills.dev/schemas/v1/matrix-validation-result.schema.json",
+  "https://presentation-skills.dev/schemas/v1/matrix-list-result.schema.json"
 ] as const;
 
 const SCHEMA_FILE_NAMES = [
@@ -83,7 +89,9 @@ const SCHEMA_FILE_NAMES = [
   "host-profile.schema.json",
   "host-status-result.schema.json",
   "workspace-config.schema.json",
-  "workflow-mode.schema.json"
+  "workflow-mode.schema.json",
+  "matrix-validation-result.schema.json",
+  "matrix-list-result.schema.json"
 ] as const;
 
 let schemaCache: Map<string, unknown> | undefined;
@@ -242,10 +250,12 @@ export function createCliResult<T>(
     diagnostics?: Diagnostic[];
     workspaceRoot?: string;
     dataRoot?: string;
+    componentId?: string;
   } = {}
 ): CliResult<T> {
   const workspaceRoot = options.workspaceRoot ?? process.cwd();
   const dataRoot = options.dataRoot ?? workspaceRoot;
+  const componentId = options.componentId ?? "presentation-skills";
   return {
     schema_version: 1,
     protocol_version: 1,
@@ -257,14 +267,14 @@ export function createCliResult<T>(
     context: {
       workspace_root: workspaceRoot,
       data_root: dataRoot,
-      component_id: "presentation-skills",
+      component_id: componentId,
       workspace_snapshot: {
         repository_id: "unknown",
         vcs: "unknown",
         head_revision: "unknown",
         dirty: false,
         working_tree_digest: "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-        component_id: "presentation-skills",
+        component_id: componentId,
         captured_at: new Date(0).toISOString()
       }
     }
@@ -294,6 +304,47 @@ function validateSyntheticCommonContracts(validated: Set<string>, diagnostics: D
   );
   validated.add(schemaIdForName("cli-result.schema.json"));
   diagnostics.push(...cli.diagnostics);
+
+  const matrixValidation = validateBySchemaId(schemaIdForName("matrix-validation-result.schema.json"), {
+    schema_version: 1,
+    complete: true,
+    integrity: {
+      state: "clean",
+      populated: false,
+      blocking_diagnostic_count: 0
+    },
+    files: [],
+    counts: {
+      files_discovered: 0,
+      files_loaded: 0,
+      files_excluded: 0,
+      use_case_candidates: 0,
+      use_cases_addressable: 0,
+      use_cases_ambiguous: 0,
+      use_cases_structurally_clean: 0,
+      broken_references: 0
+    },
+    ambiguous_ids: []
+  });
+  validated.add(schemaIdForName("matrix-validation-result.schema.json"));
+  diagnostics.push(...matrixValidation.diagnostics);
+
+  const matrixList = validateBySchemaId(schemaIdForName("matrix-list-result.schema.json"), {
+    schema_version: 1,
+    complete: true,
+    integrity: {
+      state: "clean",
+      populated: false,
+      blocking_diagnostic_count: 0
+    },
+    use_cases: [],
+    counts: {
+      returned: 0,
+      total_addressable: 0
+    }
+  });
+  validated.add(schemaIdForName("matrix-list-result.schema.json"));
+  diagnostics.push(...matrixList.diagnostics);
 }
 
 function validateJsonLines(

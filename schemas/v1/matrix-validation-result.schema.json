@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://presentation-skills.dev/schemas/v1/matrix-validation-result.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "complete": { "type": "boolean" },
+    "integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "state": { "enum": ["clean", "partial", "unusable"] },
+        "populated": { "type": "boolean" },
+        "blocking_diagnostic_count": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["state", "populated", "blocking_diagnostic_count"]
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "status": { "type": "string", "minLength": 1 },
+          "semantic_hash": { "$ref": "common.schema.json#/$defs/hash" },
+          "file_hash": { "$ref": "common.schema.json#/$defs/hash" }
+        },
+        "required": ["path", "status"]
+      }
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "files_discovered": { "type": "integer", "minimum": 0 },
+        "files_loaded": { "type": "integer", "minimum": 0 },
+        "files_excluded": { "type": "integer", "minimum": 0 },
+        "use_case_candidates": { "type": "integer", "minimum": 0 },
+        "use_cases_addressable": { "type": "integer", "minimum": 0 },
+        "use_cases_ambiguous": { "type": "integer", "minimum": 0 },
+        "use_cases_structurally_clean": { "type": "integer", "minimum": 0 },
+        "broken_references": { "type": "integer", "minimum": 0 }
+      },
+      "required": [
+        "files_discovered",
+        "files_loaded",
+        "files_excluded",
+        "use_case_candidates",
+        "use_cases_addressable",
+        "use_cases_ambiguous",
+        "use_cases_structurally_clean",
+        "broken_references"
+      ]
+    },
+    "ambiguous_ids": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "entity_kind": { "enum": ["use_case"] },
+          "id": { "$ref": "common.schema.json#/$defs/id" },
+          "source_paths": {
+            "type": "array",
+            "minItems": 2,
+            "items": { "type": "string", "minLength": 1 }
+          }
+        },
+        "required": ["entity_kind", "id", "source_paths"]
+      }
+    }
+  },
+  "required": ["schema_version", "complete", "integrity", "files", "counts", "ambiguous_ids"]
+}

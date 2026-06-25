@@ -14,3 +14,10 @@ export function getVersionInfo(): VersionInfo {
 }
 
 export * from "./schema/index.js";
+export * from "./errors.js";
+export * from "./roots.js";
+export * from "./useCases/integrity.js";
+export * from "./useCases/loadUseCaseMatrix.js";
+export * from "./useCases/query.js";
+export * from "./useCases/types.js";
+export * from "./useCases/validateUseCaseFile.js";

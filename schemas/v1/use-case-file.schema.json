@@ -43,6 +43,36 @@
         "value_tier": { "enum": ["critical", "core", "supporting", "long_tail"] },
         "journey_role": { "enum": ["golden", "alternate", "edge", "negative", "failure"] },
         "usage_frequency": { "enum": ["common", "occasional", "rare"] },
+        "tags": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "common.schema.json#/$defs/id" }
+        },
+        "source_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "kind": { "const": "file" },
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "not": {
+                  "anyOf": [
+                    { "pattern": "^/" },
+                    { "pattern": "(^|/)\\.\\.(/|$)" }
+                  ]
+                }
+              }
+            },
+            "required": ["kind", "path"]
+          }
+        },
+        "related_use_cases": {
+          "type": "array",
+          "items": { "$ref": "common.schema.json#/$defs/id" }
+        },
         "actor": { "type": "string", "minLength": 1 },
         "intent": { "type": "string", "minLength": 1 },
         "preconditions": {

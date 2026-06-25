@@ -24,7 +24,9 @@ const expectedSchemaIds = [
   "https://presentation-skills.dev/schemas/v1/host-profile.schema.json",
   "https://presentation-skills.dev/schemas/v1/host-status-result.schema.json",
   "https://presentation-skills.dev/schemas/v1/workspace-config.schema.json",
-  "https://presentation-skills.dev/schemas/v1/workflow-mode.schema.json"
+  "https://presentation-skills.dev/schemas/v1/workflow-mode.schema.json",
+  "https://presentation-skills.dev/schemas/v1/matrix-validation-result.schema.json",
+  "https://presentation-skills.dev/schemas/v1/matrix-list-result.schema.json"
 ];
 
 describe("P1 schema registry", () => {

@@ -64,6 +64,31 @@
         "message": { "type": "string", "minLength": 1 },
         "source_path": { "type": ["string", "null"] },
         "json_pointer": { "type": ["string", "null"] },
+        "source_span": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "start": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "line": { "type": "integer", "minimum": 1 },
+                "column": { "type": "integer", "minimum": 1 }
+              },
+              "required": ["line", "column"]
+            },
+            "end": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "line": { "type": "integer", "minimum": 1 },
+                "column": { "type": "integer", "minimum": 1 }
+              },
+              "required": ["line", "column"]
+            }
+          },
+          "required": ["start", "end"]
+        },
         "entity_id": { "type": ["string", "null"] },
         "related_ids": {
           "type": "array",
