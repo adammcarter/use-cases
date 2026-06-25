@@ -78,13 +78,14 @@ describe("P2 matrix CLI", () => {
       "tests/fixtures/workspaces/damaged-yaml",
       "--json"
     ]);
-    requireSuccess(nonStrict);
+    expect(nonStrict.status).toBe(1);
     const nonStrictPayload = JSON.parse(nonStrict.stdout);
     expect(nonStrictPayload).toMatchObject({
       command: "matrix.validate",
       ok: true,
       complete: false,
       data: {
+        valid: false,
         integrity: {
           state: "partial",
           populated: true
@@ -110,7 +111,7 @@ describe("P2 matrix CLI", () => {
     expect(strict.stderr).toBe("");
     expect(JSON.parse(strict.stdout)).toMatchObject({
       command: "matrix.validate",
-      ok: false,
+      ok: true,
       complete: false
     });
   });

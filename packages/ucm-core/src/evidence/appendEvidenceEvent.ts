@@ -18,12 +18,26 @@ export type AppendEvidenceEventOptions = {
   hostSurface: EvidenceEvent["host_surface"];
 };
 
+export type VoidEvidenceEventOptions = {
+  context: ResolvedWorkspaceContext;
+  evidenceId: string;
+  expectedHeadEventId: string;
+  reason: string;
+  idempotencyKey: string;
+  actorType: "user" | "agent" | "script" | "system";
+  hostSurface: EvidenceEvent["host_surface"];
+};
+
 export type AppendEvidenceEventResult = EvidenceAppendResultData & {
   ledgerPath: string;
 };
 
 export function appendEvidenceEvent(options: AppendEvidenceEventOptions): AppendEvidenceEventResult {
   return withEvidenceAppendLock(options.context, () => appendUnderLock(options));
+}
+
+export function appendEvidenceVoidEvent(options: VoidEvidenceEventOptions): AppendEvidenceEventResult {
+  return withEvidenceAppendLock(options.context, () => voidUnderLock(options));
 }
 
 function appendUnderLock(options: AppendEvidenceEventOptions): AppendEvidenceEventResult {
@@ -60,6 +74,81 @@ function appendUnderLock(options: AppendEvidenceEventOptions): AppendEvidenceEve
     closeSync(fd);
   }
 
+  return {
+    schema_version: 1,
+    appended: true,
+    event,
+    ledger_path: evidenceRelativePath(options.context, ledgerPath),
+    durability: "file_synced",
+    ledgerPath
+  };
+}
+
+function voidUnderLock(options: VoidEvidenceEventOptions): AppendEvidenceEventResult {
+  const snapshot = replayEvidence({ context: options.context });
+  if (!snapshot.complete) {
+    throw new PresentationSkillsError("Refusing to append to damaged evidence history.", "evidence_ledger_damaged");
+  }
+  const aggregate = snapshot.aggregates.find((item) => item.evidenceId === options.evidenceId);
+  if (!aggregate || aggregate.status !== "active") {
+    throw new PresentationSkillsError("Evidence aggregate is not active.", "evidence_invalid_transition");
+  }
+  const currentHead = aggregate.eventIds.at(-1);
+  if (currentHead !== options.expectedHeadEventId) {
+    throw new PresentationSkillsError("Expected head event does not match current head.", "evidence_expected_head_mismatch");
+  }
+  const intentDigest = digestIntent({
+    context: options.context,
+    idempotencyKey: options.idempotencyKey,
+    target: {
+      use_case_id: options.evidenceId,
+      use_case_semantic_hash: "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    kind: "manual_observation",
+    result: "observed",
+    summary: options.reason,
+    actorType: options.actorType,
+    hostSurface: options.hostSurface
+  });
+  const existing = snapshot.events.find((event) => event.idempotency_key === options.idempotencyKey);
+  if (existing) {
+    if (existing.intent_digest === intentDigest) {
+      const ledgerPath = ledgerPathFor(options.context, existing.aggregate_id);
+      return {
+        schema_version: 1,
+        appended: false,
+        event: existing,
+        ledger_path: evidenceRelativePath(options.context, ledgerPath),
+        durability: "file_synced",
+        ledgerPath
+      };
+    }
+    throw new PresentationSkillsError("Idempotency key was reused with different intent.", "evidence_idempotency_conflict");
+  }
+
+  const eventId = uuidv7();
+  const event: EvidenceEvent = {
+    schema_version: 1,
+    event_type: "evidence_voided",
+    event_id: eventId,
+    aggregate_id: options.evidenceId,
+    sequence: aggregate.eventIds.length + 1,
+    recorded_at: new Date().toISOString(),
+    actor_type: options.actorType,
+    host_surface: options.hostSurface,
+    idempotency_key: options.idempotencyKey,
+    intent_digest: intentDigest,
+    target_event_id: options.expectedHeadEventId,
+    reason: options.reason
+  };
+  const ledgerPath = ledgerPathFor(options.context, options.evidenceId);
+  const fd = openSync(ledgerPath, "a");
+  try {
+    writeSync(fd, `${JSON.stringify(event)}\n`);
+    fsyncSync(fd);
+  } finally {
+    closeSync(fd);
+  }
   return {
     schema_version: 1,
     appended: true,
