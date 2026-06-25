@@ -25,3 +25,4 @@ export * from "./evidence/index.js";
 export * from "./presentation/index.js";
 export * from "./capsules/index.js";
 export * from "./showcase/index.js";
+export * from "./skills/index.js";
