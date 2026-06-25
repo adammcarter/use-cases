@@ -151,15 +151,20 @@ function buildCandidates(
   profile: SelectionProfile,
   hostSurface: HostSurface
 ): PresentationCandidate[] {
+  const requestedUseCaseIds = new Set(options.request.requestedUseCaseIds ?? []);
   return options.matrix.addressableUseCases.map((useCase) => {
     const changed = matchesChangedPath(useCase, options.request.changedPaths ?? []);
     const hardExclusion = hardEligibilityExclusion(useCase, hostSurface);
+    const requestExclusion =
+      requestedUseCaseIds.size > 0 && !requestedUseCaseIds.has(useCase.value.id)
+        ? exclusionForUseCase(useCase, "not_requested", "Use case was not requested for this plan.", false)
+        : undefined;
     const scoreComponents = scoreUseCase(useCase, profile.mode, changed);
     const reasons = scoreReasons(useCase, changed, profile.mode);
     return {
       useCase,
-      eligible: !hardExclusion,
-      exclusion: hardExclusion,
+      eligible: !hardExclusion && !requestExclusion,
+      exclusion: hardExclusion ?? requestExclusion,
       changed,
       scoreComponents,
       reasonCodes: reasons.codes,

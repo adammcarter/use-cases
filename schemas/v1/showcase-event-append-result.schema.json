@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://presentation-skills.dev/schemas/v1/showcase-event-append-result.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "run_id": { "$ref": "common.schema.json#/$defs/id" },
+    "appended_event_ids": {
+      "type": "array",
+      "items": { "$ref": "common.schema.json#/$defs/id" }
+    },
+    "event": { "$ref": "showcase-event.schema.json" },
+    "status": { "$ref": "showcase-run-status-result.schema.json" }
+  },
+  "required": ["schema_version", "run_id", "appended_event_ids", "event", "status"]
+}

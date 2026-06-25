@@ -1,0 +1,5 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://presentation-skills.dev/schemas/v1/showcase-approval-result.schema.json",
+  "$ref": "showcase-event-append-result.schema.json"
+}

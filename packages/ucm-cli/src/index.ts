@@ -8,12 +8,25 @@ import {
   appendEvidenceVoidEvent,
   createCliResult,
   getVersionInfo,
+  loadDemoCapsules,
   loadUseCaseMatrix,
+  planDemoCapsule,
   queryUseCases,
   replayEvidence,
   resolveWorkspaceContext,
+  replayShowcaseRun,
   selectShowcasePlan,
   selectWalkthroughPlan,
+  appendShowcaseFailureDecision,
+  appendShowcaseApproval,
+  appendShowcaseObservation,
+  appendShowcaseVerdict,
+  correctShowcaseVerdict,
+  finishShowcaseRun,
+  pauseShowcaseRun,
+  rejectShowcaseApproval,
+  resumeShowcaseRun,
+  startShowcaseRun,
   toEvidenceAppendResult,
   toEvidenceStatusResult,
   toMatrixListResult,
@@ -92,8 +105,16 @@ export function runCli(argv: string[]): number {
     return runPlan(normalizedArgv, "walkthrough");
   }
 
+  if (normalizedArgv[0] === "capsule" && wantsJson) {
+    return runCapsule(normalizedArgv);
+  }
+
   if (normalizedArgv[0] === "evidence" && normalizedArgv[1] === "record" && wantsJson) {
     return runEvidenceRecord(normalizedArgv);
+  }
+
+  if (normalizedArgv[0] === "showcase" && wantsJson) {
+    return runShowcase(normalizedArgv);
   }
 
   if (normalizedArgv[0] === "evidence" && normalizedArgv[1] === "status" && wantsJson) {
@@ -371,6 +392,484 @@ function runPlan(argv: string[], mode: "showcase" | "walkthrough"): number {
     return 1;
   }
   return 0;
+}
+
+function runCapsule(argv: string[]): number {
+  const action = argv[1];
+  if (action === "validate") {
+    return runCapsuleValidate(argv);
+  }
+  if (action === "list") {
+    return runCapsuleList(argv);
+  }
+  if (action === "plan") {
+    return runCapsulePlan(argv);
+  }
+  return writeError("capsule.unknown", "command.unknown", "Unknown capsule command.");
+}
+
+function runCapsuleValidate(argv: string[]): number {
+  const contextResult = contextFromArgs(argv, "capsule.validate");
+  if ("exitCode" in contextResult) {
+    return contextResult.exitCode;
+  }
+  const snapshot = loadDemoCapsules({ context: contextResult });
+  process.stdout.write(
+    `${JSON.stringify(
+      createCliResult("capsule.validate", snapshot, {
+        ok: snapshot.complete,
+        complete: snapshot.complete,
+        diagnostics: snapshot.diagnostics,
+        workspaceRoot: contextResult.workspace_root,
+        dataRoot: contextResult.data_root,
+        componentId: contextResult.component_id
+      })
+    )}\n`
+  );
+  return snapshot.complete ? 0 : 1;
+}
+
+function runCapsuleList(argv: string[]): number {
+  const contextResult = contextFromArgs(argv, "capsule.list");
+  if ("exitCode" in contextResult) {
+    return contextResult.exitCode;
+  }
+  const snapshot = loadDemoCapsules({ context: contextResult });
+  const data = {
+    schema_version: 1,
+    complete: snapshot.complete,
+    capsules: snapshot.capsules.map((entry) => ({
+      capsule_id: entry.capsule.capsule_id,
+      title: entry.capsule.title,
+      mode: entry.capsule.mode,
+      audience: entry.capsule.audience,
+      timebox_seconds: entry.capsule.timebox_seconds,
+      item_count: entry.capsule.items.length,
+      path: entry.path,
+      semantic_hash: entry.semantic_hash
+    }))
+  };
+  process.stdout.write(
+    `${JSON.stringify(
+      createCliResult("capsule.list", data, {
+        ok: true,
+        complete: snapshot.complete,
+        diagnostics: snapshot.diagnostics,
+        workspaceRoot: contextResult.workspace_root,
+        dataRoot: contextResult.data_root,
+        componentId: contextResult.component_id
+      })
+    )}\n`
+  );
+  return 0;
+}
+
+function runCapsulePlan(argv: string[]): number {
+  const contextResult = contextFromArgs(argv, "capsule.plan");
+  if ("exitCode" in contextResult) {
+    return contextResult.exitCode;
+  }
+  const capsuleId = valueAfter(argv, "--capsule");
+  if (!capsuleId) {
+    return writeError("capsule.plan", "cli_invalid_arguments", "Missing --capsule.");
+  }
+  const result = planDemoCapsule({ context: contextResult, capsuleId });
+  const ok = result.outcome === "generated";
+  process.stdout.write(
+    `${JSON.stringify(
+      createCliResult("capsule.plan", result, {
+        ok,
+        complete: result.outcome === "generated" && (result.plan_result?.plan?.complete ?? false),
+        diagnostics: result.diagnostics,
+        workspaceRoot: contextResult.workspace_root,
+        dataRoot: contextResult.data_root,
+        componentId: contextResult.component_id
+      })
+    )}\n`
+  );
+  return result.outcome === "generated" ? 0 : result.outcome === "integrity_blocked" ? 3 : 1;
+}
+
+function runShowcase(argv: string[]): number {
+  const action = argv[1];
+  if (action === "start") {
+    return runShowcaseStart(argv);
+  }
+  if (action === "record-observation") {
+    return runShowcaseObservation(argv);
+  }
+  if (action === "record-verdict") {
+    return runShowcaseVerdict(argv);
+  }
+  if (action === "decide") {
+    return runShowcaseDecide(argv);
+  }
+  if (action === "pause") {
+    return runShowcasePause(argv);
+  }
+  if (action === "resume") {
+    return runShowcaseResume(argv);
+  }
+  if (action === "finish") {
+    return runShowcaseFinish(argv);
+  }
+  if (action === "status") {
+    return runShowcaseStatus(argv);
+  }
+  if (action === "approve") {
+    return runShowcaseApprove(argv);
+  }
+  if (action === "reject") {
+    return runShowcaseReject(argv);
+  }
+  if (action === "correct") {
+    return runShowcaseCorrect(argv);
+  }
+  return writeError("showcase.unknown", "command.unknown", "Unknown showcase command.");
+}
+
+function runShowcaseStart(argv: string[]): number {
+  const contextResult = contextFromArgs(argv, "showcase.start");
+  if ("exitCode" in contextResult) {
+    return contextResult.exitCode;
+  }
+  const selected = valueAfter(argv, "--select");
+  if (!argv.includes("--adhoc") || !selected) {
+    return writeError("showcase.start", "showcase.plan_required", "Only --adhoc --select is supported in P6.");
+  }
+  const matrix = loadUseCaseMatrix({ context: contextResult });
+  const evidence = replayEvidence({ context: contextResult });
+  const planResult = selectShowcasePlan({
+    context: contextResult,
+    matrix,
+    evidence,
+    request: {
+      audience: valueAfter(argv, "--audience") ?? "reviewer",
+      timeboxSeconds: numberAfter(argv, "--timebox") ?? 600,
+      maxItems: 1,
+      hostSurface: "codex.cli",
+      requestedUseCaseIds: [selected],
+      generatedAt: valueAfter(argv, "--generated-at") ?? "2026-06-25T12:00:00.000Z",
+      freshnessEvaluatedAt: valueAfter(argv, "--generated-at") ?? "2026-06-25T12:00:00.000Z"
+    }
+  });
+  if (!planResult.plan || !planResult.plan.selected_items.some((item) => item.use_case_id === selected)) {
+    return writeError("showcase.start", "showcase.selected_use_case_unavailable", "Selected use case was not available for an ad hoc plan.", 1);
+  }
+  try {
+    const result = startShowcaseRun({
+      context: contextResult,
+      plan: planResult.plan,
+      controlMode: "agent_led",
+      actorType: "agent",
+      hostSurface: "codex.cli",
+      idempotencyKey: valueAfter(argv, "--idempotency-key") ?? `cli:start:${selected}:${Date.now()}`,
+      recordedAt: valueAfter(argv, "--recorded-at") ?? "2026-06-25T12:00:00.000Z"
+    });
+    return writeShowcaseResult("showcase.start", result, contextResult, 0);
+  } catch (error) {
+    return writeCaughtShowcaseError("showcase.start", error);
+  }
+}
+
+function runShowcaseObservation(argv: string[]): number {
+  const contextResult = contextFromArgs(argv, "showcase.record-observation");
+  if ("exitCode" in contextResult) {
+    return contextResult.exitCode;
+  }
+  const runId = valueAfter(argv, "--run");
+  const planItemId = valueAfter(argv, "--item");
+  const text = valueAfter(argv, "--text");
+  if (!runId || !planItemId || !text) {
+    return writeError("showcase.record-observation", "cli_invalid_arguments", "Missing --run, --item, or --text.");
+  }
+  try {
+    const result = appendShowcaseObservation({
+      context: contextResult,
+      runId,
+      planItemId,
+      text,
+      actorType: "agent",
+      hostSurface: "codex.cli",
+      idempotencyKey: valueAfter(argv, "--idempotency-key") ?? `cli:observation:${runId}:${planItemId}:${text}`,
+      recordedAt: valueAfter(argv, "--recorded-at") ?? "2026-06-25T12:01:00.000Z"
+    });
+    return writeShowcaseResult("showcase.record-observation", result, contextResult, 0);
+  } catch (error) {
+    return writeCaughtShowcaseError("showcase.record-observation", error);
+  }
+}
+
+function runShowcaseVerdict(argv: string[]): number {
+  const contextResult = contextFromArgs(argv, "showcase.record-verdict");
+  if ("exitCode" in contextResult) {
+    return contextResult.exitCode;
+  }
+  const runId = valueAfter(argv, "--run");
+  const planItemId = valueAfter(argv, "--item");
+  const verdict = valueAfter(argv, "--verdict");
+  if (!runId || !planItemId || !verdict) {
+    return writeError("showcase.record-verdict", "cli_invalid_arguments", "Missing --run, --item, or --verdict.");
+  }
+  const status = replayShowcaseRun({ context: contextResult, runId });
+  const item = status.items.find((candidate) => candidate.plan_item_id === planItemId);
+  if (!item?.latest_observation_event_id) {
+    return writeError("showcase.record-verdict", "showcase.verdict_requires_observation", "Verdict requires a prior observation.", 1);
+  }
+  try {
+    const result = appendShowcaseVerdict({
+      context: contextResult,
+      runId,
+      planItemId,
+      verdict: verdict as Parameters<typeof appendShowcaseVerdict>[0]["verdict"],
+      observationEventIds: [item.latest_observation_event_id],
+      actorType: (valueAfter(argv, "--actor") ?? "agent") as Parameters<typeof appendShowcaseVerdict>[0]["actorType"],
+      hostSurface: "codex.cli",
+      idempotencyKey: valueAfter(argv, "--idempotency-key") ?? `cli:verdict:${runId}:${planItemId}:${verdict}`,
+      recordedAt: valueAfter(argv, "--recorded-at") ?? "2026-06-25T12:02:00.000Z"
+    });
+    return writeShowcaseResult("showcase.record-verdict", result, contextResult, 0);
+  } catch (error) {
+    return writeCaughtShowcaseError("showcase.record-verdict", error);
+  }
+}
+
+function runShowcaseDecide(argv: string[]): number {
+  const contextResult = contextFromArgs(argv, "showcase.decide");
+  if ("exitCode" in contextResult) {
+    return contextResult.exitCode;
+  }
+  const runId = valueAfter(argv, "--run");
+  const verdictEventId = valueAfter(argv, "--verdict-event");
+  const decision = valueAfter(argv, "--decision");
+  const reason = valueAfter(argv, "--reason");
+  if (!runId || !verdictEventId || !decision || !reason) {
+    return writeError("showcase.decide", "cli_invalid_arguments", "Missing --run, --verdict-event, --decision, or --reason.");
+  }
+  try {
+    const result = appendShowcaseFailureDecision({
+      context: contextResult,
+      runId,
+      verdictEventId,
+      decision: decision as Parameters<typeof appendShowcaseFailureDecision>[0]["decision"],
+      reason,
+      actorType: (valueAfter(argv, "--actor") ?? "agent") as Parameters<typeof appendShowcaseFailureDecision>[0]["actorType"],
+      hostSurface: "codex.cli",
+      idempotencyKey: valueAfter(argv, "--idempotency-key") ?? `cli:decision:${runId}:${verdictEventId}:${decision}`,
+      recordedAt: valueAfter(argv, "--recorded-at") ?? "2026-06-25T12:02:30.000Z"
+    });
+    return writeShowcaseResult("showcase.decide", result, contextResult, 0);
+  } catch (error) {
+    return writeCaughtShowcaseError("showcase.decide", error);
+  }
+}
+
+function runShowcasePause(argv: string[]): number {
+  const contextResult = contextFromArgs(argv, "showcase.pause");
+  if ("exitCode" in contextResult) {
+    return contextResult.exitCode;
+  }
+  const runId = valueAfter(argv, "--run");
+  const reason = valueAfter(argv, "--reason") ?? "Paused by operator.";
+  if (!runId) {
+    return writeError("showcase.pause", "cli_invalid_arguments", "Missing --run.");
+  }
+  try {
+    const result = pauseShowcaseRun({
+      context: contextResult,
+      runId,
+      reason,
+      actorType: (valueAfter(argv, "--actor") ?? "agent") as Parameters<typeof pauseShowcaseRun>[0]["actorType"],
+      hostSurface: "codex.cli",
+      idempotencyKey: valueAfter(argv, "--idempotency-key") ?? `cli:pause:${runId}:${reason}`,
+      recordedAt: valueAfter(argv, "--recorded-at") ?? "2026-06-25T12:02:45.000Z"
+    });
+    return writeShowcaseResult("showcase.pause", result, contextResult, 0);
+  } catch (error) {
+    return writeCaughtShowcaseError("showcase.pause", error);
+  }
+}
+
+function runShowcaseResume(argv: string[]): number {
+  const contextResult = contextFromArgs(argv, "showcase.resume");
+  if ("exitCode" in contextResult) {
+    return contextResult.exitCode;
+  }
+  const runId = valueAfter(argv, "--run");
+  const reason = valueAfter(argv, "--reason") ?? "Resumed by operator.";
+  if (!runId) {
+    return writeError("showcase.resume", "cli_invalid_arguments", "Missing --run.");
+  }
+  try {
+    const result = resumeShowcaseRun({
+      context: contextResult,
+      runId,
+      reason,
+      actorType: (valueAfter(argv, "--actor") ?? "agent") as Parameters<typeof resumeShowcaseRun>[0]["actorType"],
+      hostSurface: "codex.cli",
+      idempotencyKey: valueAfter(argv, "--idempotency-key") ?? `cli:resume:${runId}:${reason}`,
+      recordedAt: valueAfter(argv, "--recorded-at") ?? "2026-06-25T12:02:50.000Z"
+    });
+    return writeShowcaseResult("showcase.resume", result, contextResult, 0);
+  } catch (error) {
+    return writeCaughtShowcaseError("showcase.resume", error);
+  }
+}
+
+function runShowcaseFinish(argv: string[]): number {
+  const contextResult = contextFromArgs(argv, "showcase.finish");
+  if ("exitCode" in contextResult) {
+    return contextResult.exitCode;
+  }
+  const runId = valueAfter(argv, "--run");
+  if (!runId) {
+    return writeError("showcase.finish", "cli_invalid_arguments", "Missing --run.");
+  }
+  try {
+    const result = finishShowcaseRun({
+      context: contextResult,
+      runId,
+      actorType: "agent",
+      hostSurface: "codex.cli",
+      idempotencyKey: valueAfter(argv, "--idempotency-key") ?? `cli:finish:${runId}`,
+      recordedAt: valueAfter(argv, "--recorded-at") ?? "2026-06-25T12:03:00.000Z"
+    });
+    return writeShowcaseResult("showcase.finish", result, contextResult, result.status.run_outcome === "passed" ? 0 : 1);
+  } catch (error) {
+    return writeCaughtShowcaseError("showcase.finish", error);
+  }
+}
+
+function runShowcaseStatus(argv: string[]): number {
+  const contextResult = contextFromArgs(argv, "showcase.status");
+  if ("exitCode" in contextResult) {
+    return contextResult.exitCode;
+  }
+  const runId = valueAfter(argv, "--run");
+  if (!runId) {
+    return writeError("showcase.status", "cli_invalid_arguments", "Missing --run.");
+  }
+  const status = replayShowcaseRun({ context: contextResult, runId });
+  process.stdout.write(
+    `${JSON.stringify(
+      createCliResult("showcase.status", status, {
+        ok: true,
+        complete: status.complete,
+        workspaceRoot: contextResult.workspace_root,
+        dataRoot: contextResult.data_root,
+        componentId: contextResult.component_id
+      })
+    )}\n`
+  );
+  return 0;
+}
+
+function runShowcaseApprove(argv: string[]): number {
+  const contextResult = contextFromArgs(argv, "showcase.approve");
+  if ("exitCode" in contextResult) {
+    return contextResult.exitCode;
+  }
+  const runId = valueAfter(argv, "--run");
+  const statement = valueAfter(argv, "--statement");
+  if (!runId || !statement) {
+    return writeError("showcase.approve", "cli_invalid_arguments", "Missing --run or --statement.");
+  }
+  try {
+    const result = appendShowcaseApproval({
+      context: contextResult,
+      runId,
+      decision: "approved",
+      actorType: (valueAfter(argv, "--actor") ?? "agent") as Parameters<typeof appendShowcaseApproval>[0]["actorType"],
+      hostSurface: "codex.cli",
+      statement,
+      idempotencyKey: valueAfter(argv, "--idempotency-key") ?? `cli:approve:${runId}:${statement}`,
+      recordedAt: valueAfter(argv, "--recorded-at") ?? "2026-06-25T12:04:00.000Z"
+    });
+    return writeShowcaseResult("showcase.approve", result, contextResult, 0);
+  } catch (error) {
+    return writeCaughtShowcaseError("showcase.approve", error);
+  }
+}
+
+function runShowcaseReject(argv: string[]): number {
+  const contextResult = contextFromArgs(argv, "showcase.reject");
+  if ("exitCode" in contextResult) {
+    return contextResult.exitCode;
+  }
+  const runId = valueAfter(argv, "--run");
+  const statement = valueAfter(argv, "--statement");
+  if (!runId || !statement) {
+    return writeError("showcase.reject", "cli_invalid_arguments", "Missing --run or --statement.");
+  }
+  try {
+    const result = rejectShowcaseApproval({
+      context: contextResult,
+      runId,
+      actorType: (valueAfter(argv, "--actor") ?? "user") as Parameters<typeof rejectShowcaseApproval>[0]["actorType"],
+      hostSurface: "codex.cli",
+      statement,
+      idempotencyKey: valueAfter(argv, "--idempotency-key") ?? `cli:reject:${runId}:${statement}`,
+      recordedAt: valueAfter(argv, "--recorded-at") ?? "2026-06-25T12:04:30.000Z"
+    });
+    return writeShowcaseResult("showcase.reject", result, contextResult, 1);
+  } catch (error) {
+    return writeCaughtShowcaseError("showcase.reject", error);
+  }
+}
+
+function runShowcaseCorrect(argv: string[]): number {
+  const contextResult = contextFromArgs(argv, "showcase.correct");
+  if ("exitCode" in contextResult) {
+    return contextResult.exitCode;
+  }
+  const runId = valueAfter(argv, "--run");
+  const targetEventId = valueAfter(argv, "--target-event");
+  const correctedVerdict = valueAfter(argv, "--verdict");
+  const reason = valueAfter(argv, "--reason");
+  if (!runId || !targetEventId || !correctedVerdict || !reason) {
+    return writeError("showcase.correct", "cli_invalid_arguments", "Missing --run, --target-event, --verdict, or --reason.");
+  }
+  try {
+    const result = correctShowcaseVerdict({
+      context: contextResult,
+      runId,
+      targetEventId,
+      correctedVerdict: correctedVerdict as Parameters<typeof correctShowcaseVerdict>[0]["correctedVerdict"],
+      reason,
+      actorType: (valueAfter(argv, "--actor") ?? "agent") as Parameters<typeof correctShowcaseVerdict>[0]["actorType"],
+      hostSurface: "codex.cli",
+      idempotencyKey: valueAfter(argv, "--idempotency-key") ?? `cli:correct:${runId}:${targetEventId}:${correctedVerdict}`,
+      recordedAt: valueAfter(argv, "--recorded-at") ?? "2026-06-25T12:04:45.000Z"
+    });
+    return writeShowcaseResult("showcase.correct", result, contextResult, 0);
+  } catch (error) {
+    return writeCaughtShowcaseError("showcase.correct", error);
+  }
+}
+
+function writeShowcaseResult(
+  command: string,
+  result: ReturnType<typeof startShowcaseRun>,
+  context: ReturnType<typeof resolveWorkspaceContext>,
+  exitCode: number
+): number {
+  process.stdout.write(
+    `${JSON.stringify(
+      createCliResult(command, result, {
+        ok: true,
+        complete: result.status.complete,
+        workspaceRoot: context.workspace_root,
+        dataRoot: context.data_root,
+        componentId: context.component_id
+      })
+    )}\n`
+  );
+  return exitCode;
+}
+
+function writeCaughtShowcaseError(command: string, error: unknown): number {
+  const code = error instanceof Error && "code" in error ? String(error.code) : "internal_error";
+  return writeError(command, code, error instanceof Error ? error.message : String(error), code === "showcase_ledger_damaged" ? 3 : 1);
 }
 
 function runWorkflowMode(argv: string[]): number {

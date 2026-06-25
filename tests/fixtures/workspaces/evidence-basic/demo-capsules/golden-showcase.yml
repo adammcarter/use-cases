@@ -1,0 +1,17 @@
+schema_version: 1
+capsule_id: capsule.showcase.golden
+title: Golden live showcase
+mode: showcase
+description: Run the critical live showcase use case.
+audience: reviewer
+timebox_seconds: 600
+items:
+  - use_case_id: showcase.live.golden
+    scenario_ids: [showcase.live.golden.cli]
+    runbook:
+      - kind: instruction
+        text: Start the live showcase.
+      - kind: observation
+        text: Confirm the user-visible behavior is demonstrated.
+permissions:
+  command_execution: false

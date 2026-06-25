@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://presentation-skills.dev/schemas/v1/showcase-run-status-result.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "run_id": { "$ref": "common.schema.json#/$defs/id" },
+    "complete": { "type": "boolean" },
+    "execution_status": {
+      "enum": ["prepared_not_performed", "running", "paused", "completed", "aborted", "incomplete"]
+    },
+    "run_outcome": {
+      "enum": ["prepared_not_performed", "passed", "passed_with_waivers", "partial", "failed", "blocked", "aborted", "incomplete"]
+    },
+    "approval_state": {
+      "enum": [
+        "not_required",
+        "resolution_required",
+        "pending",
+        "approved",
+        "rejected",
+        "approved_with_known_gaps",
+        "stale_due_to_run_change"
+      ]
+    },
+    "unresolved_failure_count": { "type": "integer", "minimum": 0 },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "plan_item_id": { "$ref": "common.schema.json#/$defs/id" },
+          "verdict": { "enum": ["pass", "partial", "fail", "waived", "blocked", "none"] },
+          "item_currency": {
+            "enum": ["current", "stale_due_to_epoch_change", "carried_forward", "corrected", "unknown"]
+          },
+          "verification_state": {
+            "enum": ["not_required", "requirements_unmet", "requirements_met", "stale", "unknown_due_to_integrity"]
+          },
+          "latest_observation_event_id": { "type": ["string", "null"] },
+          "latest_verdict_event_id": { "type": ["string", "null"] }
+        },
+        "required": [
+          "plan_item_id",
+          "verdict",
+          "item_currency",
+          "verification_state",
+          "latest_observation_event_id",
+          "latest_verdict_event_id"
+        ]
+      }
+    },
+    "known_gaps": { "type": "array", "items": { "type": "object" } },
+    "diagnostic_summary": { "type": "object" }
+  },
+  "required": [
+    "schema_version",
+    "run_id",
+    "complete",
+    "execution_status",
+    "run_outcome",
+    "approval_state",
+    "unresolved_failure_count",
+    "items",
+    "known_gaps",
+    "diagnostic_summary"
+  ]
+}

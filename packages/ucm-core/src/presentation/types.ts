@@ -13,6 +13,7 @@ export type PresentationPlanRequest = {
   maxItems?: number;
   hostSurface?: HostSurface;
   changedPaths?: readonly string[];
+  requestedUseCaseIds?: readonly string[];
   generatedAt?: string;
   freshnessEvaluatedAt?: string;
   strict?: boolean;
