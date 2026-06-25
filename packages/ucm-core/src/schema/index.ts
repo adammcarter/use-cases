@@ -71,6 +71,11 @@ export const PUBLIC_SCHEMA_IDS = [
   "https://presentation-skills.dev/schemas/v1/presentation-plan.schema.json",
   "https://presentation-skills.dev/schemas/v1/presentation-plan-result.schema.json",
   "https://presentation-skills.dev/schemas/v1/showcase-event.schema.json",
+  "https://presentation-skills.dev/schemas/v1/showcase-run-status-result.schema.json",
+  "https://presentation-skills.dev/schemas/v1/showcase-start-result.schema.json",
+  "https://presentation-skills.dev/schemas/v1/showcase-event-append-result.schema.json",
+  "https://presentation-skills.dev/schemas/v1/showcase-finish-result.schema.json",
+  "https://presentation-skills.dev/schemas/v1/showcase-approval-result.schema.json",
   "https://presentation-skills.dev/schemas/v1/host-profile.schema.json",
   "https://presentation-skills.dev/schemas/v1/host-status-result.schema.json",
   "https://presentation-skills.dev/schemas/v1/workspace-config.schema.json",
@@ -90,6 +95,11 @@ const SCHEMA_FILE_NAMES = [
   "presentation-plan.schema.json",
   "presentation-plan-result.schema.json",
   "showcase-event.schema.json",
+  "showcase-run-status-result.schema.json",
+  "showcase-start-result.schema.json",
+  "showcase-event-append-result.schema.json",
+  "showcase-finish-result.schema.json",
+  "showcase-approval-result.schema.json",
   "host-profile.schema.json",
   "host-status-result.schema.json",
   "workspace-config.schema.json",
@@ -483,6 +493,68 @@ function validateSyntheticCommonContracts(validated: Set<string>, diagnostics: D
   });
   validated.add(schemaIdForName("presentation-plan-result.schema.json"));
   diagnostics.push(...presentationPlanResult.diagnostics);
+
+  const sampleShowcaseEvent = {
+    schema_version: 1,
+    event_type: "observation_recorded",
+    event_id: "evt_showcase_synthetic_1",
+    run_id: "run.synthetic",
+    aggregate_id: "run.synthetic",
+    sequence: 2,
+    recorded_at: "2026-06-25T00:01:00.000Z",
+    actor_type: "agent",
+    host_surface: "codex.cli",
+    idempotency_key: "synthetic-showcase-observation",
+    intent_digest: "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    payload: {
+      plan_item_id: "item.synthetic.case",
+      observation: "Synthetic observation."
+    }
+  };
+  const sampleShowcaseStatus = {
+    schema_version: 1,
+    run_id: "run.synthetic",
+    complete: true,
+    execution_status: "running",
+    run_outcome: "incomplete",
+    approval_state: "pending",
+    unresolved_failure_count: 0,
+    items: [
+      {
+        plan_item_id: "item.synthetic.case",
+        verdict: "none",
+        item_currency: "unknown",
+        verification_state: "requirements_unmet",
+        latest_observation_event_id: "evt_showcase_synthetic_1",
+        latest_verdict_event_id: null
+      }
+    ],
+    known_gaps: [],
+    diagnostic_summary: {}
+  };
+  const showcaseStatus = validateBySchemaId(
+    schemaIdForName("showcase-run-status-result.schema.json"),
+    sampleShowcaseStatus
+  );
+  validated.add(schemaIdForName("showcase-run-status-result.schema.json"));
+  diagnostics.push(...showcaseStatus.diagnostics);
+
+  for (const fileName of [
+    "showcase-start-result.schema.json",
+    "showcase-event-append-result.schema.json",
+    "showcase-finish-result.schema.json",
+    "showcase-approval-result.schema.json"
+  ]) {
+    const result = validateBySchemaId(schemaIdForName(fileName), {
+      schema_version: 1,
+      run_id: "run.synthetic",
+      appended_event_ids: ["evt_showcase_synthetic_1"],
+      event: sampleShowcaseEvent,
+      status: sampleShowcaseStatus
+    });
+    validated.add(schemaIdForName(fileName));
+    diagnostics.push(...result.diagnostics);
+  }
 }
 
 function validateJsonLines(

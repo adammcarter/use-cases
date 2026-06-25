@@ -130,6 +130,33 @@ describe("P5 presentation plan selection", () => {
     ]);
   });
 
+  test("requested use cases override default showcase score ordering", () => {
+    const workspaceRoot = fixtureWorkspace("presentation-selection");
+    const context = resolveWorkspaceContext({ workspaceRoot });
+    const result = selectShowcasePlan({
+      context,
+      matrix: loadUseCaseMatrix({ context }),
+      evidence: replayEvidence({ context }),
+      request: {
+        audience: "reviewer",
+        timeboxSeconds: 600,
+        maxItems: 2,
+        hostSurface: "codex.cli",
+        requestedUseCaseIds: ["settings.theme.rare"],
+        generatedAt: "2026-06-25T12:00:00.000Z"
+      }
+    });
+
+    expect(result.outcome).toBe("generated");
+    expect(result.plan?.selected_items.map((item) => item.use_case_id)).toEqual(["settings.theme.rare"]);
+    expect(result.plan?.exclusions).toContainEqual(
+      expect.objectContaining({
+        use_case_id: "checkout.purchase.golden",
+        reason_code: "not_requested"
+      })
+    );
+  });
+
   test("plan content hash ignores volatile IDs and timestamps but changes with order", () => {
     const workspaceRoot = fixtureWorkspace("presentation-selection");
     const context = resolveWorkspaceContext({ workspaceRoot });

@@ -23,3 +23,5 @@ export * from "./useCases/types.js";
 export * from "./useCases/validateUseCaseFile.js";
 export * from "./evidence/index.js";
 export * from "./presentation/index.js";
+export * from "./capsules/index.js";
+export * from "./showcase/index.js";
