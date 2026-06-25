@@ -12,6 +12,8 @@ import {
   queryUseCases,
   replayEvidence,
   resolveWorkspaceContext,
+  selectShowcasePlan,
+  selectWalkthroughPlan,
   toEvidenceAppendResult,
   toEvidenceStatusResult,
   toMatrixListResult,
@@ -80,6 +82,14 @@ export function runCli(argv: string[]): number {
 
   if (normalizedArgv[0] === "matrix" && normalizedArgv[1] === "status" && wantsJson) {
     return runMatrixStatus(normalizedArgv);
+  }
+
+  if (normalizedArgv[0] === "plan" && normalizedArgv[1] === "showcase" && wantsJson) {
+    return runPlan(normalizedArgv, "showcase");
+  }
+
+  if (normalizedArgv[0] === "plan" && normalizedArgv[1] === "walkthrough" && wantsJson) {
+    return runPlan(normalizedArgv, "walkthrough");
   }
 
   if (normalizedArgv[0] === "evidence" && normalizedArgv[1] === "record" && wantsJson) {
@@ -320,6 +330,49 @@ function runMatrixStatus(argv: string[]): number {
   return data.complete ? 0 : 1;
 }
 
+function runPlan(argv: string[], mode: "showcase" | "walkthrough"): number {
+  const contextResult = contextFromArgs(argv, `plan.${mode}`);
+  if ("exitCode" in contextResult) {
+    return contextResult.exitCode;
+  }
+  const matrix = loadUseCaseMatrix({ context: contextResult });
+  const evidence = replayEvidence({ context: contextResult });
+  const request = {
+    audience: valueAfter(argv, "--audience") ?? "reviewer",
+    timeboxSeconds: numberAfter(argv, "--timebox") ?? (mode === "showcase" ? 600 : 1800),
+    maxItems: numberAfter(argv, "--max-items"),
+    hostSurface: (valueAfter(argv, "--host") ?? "unknown") as Parameters<typeof selectShowcasePlan>[0]["request"]["hostSurface"],
+    changedPaths: valuesAfter(argv, "--changed-path"),
+    generatedAt: valueAfter(argv, "--generated-at"),
+    strict: argv.includes("--strict")
+  };
+  const result =
+    mode === "showcase"
+      ? selectShowcasePlan({ context: contextResult, matrix, evidence, request })
+      : selectWalkthroughPlan({ context: contextResult, matrix, evidence, request });
+  const ok = result.outcome !== "integrity_blocked";
+  const complete = result.plan?.complete ?? (result.outcome === "no_eligible_items" && matrix.complete && evidence.complete);
+  process.stdout.write(
+    `${JSON.stringify(
+      createCliResult(`plan.${mode}`, result, {
+        ok,
+        complete,
+        diagnostics: [...matrix.diagnostics, ...evidence.diagnostics],
+        workspaceRoot: contextResult.workspace_root,
+        dataRoot: contextResult.data_root,
+        componentId: contextResult.component_id
+      })
+    )}\n`
+  );
+  if (result.outcome === "integrity_blocked") {
+    return 3;
+  }
+  if (result.outcome === "no_eligible_items") {
+    return 1;
+  }
+  return 0;
+}
+
 function runWorkflowMode(argv: string[]): number {
   const contextResult = contextFromArgs(argv, "workflow.get-mode");
   if ("exitCode" in contextResult) {
@@ -502,6 +555,15 @@ function valuesAfter(argv: string[], flag: string): string[] | undefined {
     }
   }
   return values.length > 0 ? values : undefined;
+}
+
+function numberAfter(argv: string[], flag: string): number | undefined {
+  const value = valueAfter(argv, flag);
+  if (!value) {
+    return undefined;
+  }
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
 }
 
 function isEntrypoint(): boolean {

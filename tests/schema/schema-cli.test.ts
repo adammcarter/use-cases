@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 import { describe, expect, test } from "vitest";
+import { PUBLIC_SCHEMA_IDS } from "../../packages/ucm-core/src/schema/index.js";
 
 const repoRoot = resolve(import.meta.dirname, "../..");
 
@@ -49,7 +50,7 @@ describe("P1 schema CLI", () => {
         component_id: "presentation-skills"
       }
     });
-    expect(payload.data.schemas).toHaveLength(15);
+    expect(payload.data.schemas).toHaveLength(PUBLIC_SCHEMA_IDS.length);
   });
 
   test("validates fixture workspaces with complete=false diagnostics for damaged YAML", () => {

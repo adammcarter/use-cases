@@ -1,0 +1,32 @@
+schema_version: 1
+feature:
+  id: partial.valid
+  name: Partial Valid
+  summary: Valid item beside damaged files.
+use_cases:
+  - id: partial.valid.golden
+    title: Valid partial showcase item
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    actor: user
+    intent: Demonstrate valid behavior despite unrelated damage.
+    preconditions: [The valid path is available.]
+    trigger: The user opens the valid path.
+    scenarios:
+      - id: partial.valid.golden.cli
+        kind: steps
+        steps: [Open the valid path.]
+    observable_outcomes: [The valid path appears.]
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: live_demo
+          required_verifiers: [user]
+          minimum_count: 1
+    approval_policy:
+      mode: ask

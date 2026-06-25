@@ -1,0 +1,80 @@
+schema_version: 1
+feature:
+  id: settings
+  name: Settings
+  summary: Users can personalize account preferences.
+use_cases:
+  - id: settings.theme.rare
+    title: Switch to a seasonal theme
+    lifecycle: active
+    value_tier: long_tail
+    journey_role: golden
+    usage_frequency: rare
+    tags: [settings, theme]
+    source_refs:
+      - kind: file
+        path: src/settings/theme.ts
+    actor: registered_user
+    intent: Apply a seasonal account theme.
+    preconditions:
+      - The user is signed in.
+    trigger: The user chooses a seasonal theme.
+    scenarios:
+      - id: settings.theme.rare.seasonal
+        kind: steps
+        steps:
+          - Open settings.
+          - Select the seasonal theme.
+          - Save the preference.
+        observable_outcomes:
+          - The seasonal theme is applied.
+    observable_outcomes:
+      - The seasonal theme is applied.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers: [script]
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  - id: settings.export.supporting
+    title: Export preferences file
+    lifecycle: active
+    value_tier: supporting
+    journey_role: alternate
+    usage_frequency: occasional
+    tags: [settings, export]
+    source_refs:
+      - kind: file
+        path: src/settings/export.ts
+    actor: registered_user
+    intent: Download account preferences.
+    preconditions:
+      - The user is signed in.
+    trigger: The user chooses export preferences.
+    scenarios:
+      - id: settings.export.supporting.file
+        kind: steps
+        steps:
+          - Open settings.
+          - Choose export preferences.
+        observable_outcomes:
+          - A preferences file is downloaded.
+    observable_outcomes:
+      - A preferences file is downloaded.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: artifact_review
+          required_verifiers: [agent]
+          minimum_count: 1
+    approval_policy:
+      mode: none

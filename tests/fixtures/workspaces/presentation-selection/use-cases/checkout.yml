@@ -1,0 +1,203 @@
+schema_version: 1
+feature:
+  id: checkout
+  name: Checkout
+  summary: Buyers can move from cart to confirmed order.
+use_cases:
+  - id: checkout.purchase.golden
+    title: Complete a card purchase
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    tags: [checkout, revenue]
+    source_refs:
+      - kind: file
+        path: src/checkout/flow.ts
+    actor: buyer
+    intent: Buy the items in the cart.
+    preconditions:
+      - The buyer has a valid account.
+      - The cart contains an in-stock item.
+    trigger: The buyer confirms a valid card payment.
+    scenarios:
+      - id: checkout.purchase.golden.card
+        kind: steps
+        steps:
+          - Open the cart.
+          - Confirm shipping details.
+          - Submit a valid card payment.
+        observable_outcomes:
+          - The order confirmation is shown.
+          - The order reference is visible.
+    observable_outcomes:
+      - The order confirmation is shown.
+      - The order reference is visible.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: live_demo
+          required_verifiers: [user]
+          minimum_count: 1
+    approval_policy:
+      mode: ask
+
+  - id: checkout.cart.alternate
+    title: Update cart quantity before purchase
+    lifecycle: active
+    value_tier: core
+    journey_role: alternate
+    usage_frequency: common
+    tags: [checkout, cart]
+    source_refs:
+      - kind: file
+        path: src/checkout/cart.ts
+    actor: buyer
+    intent: Change the cart before buying.
+    preconditions:
+      - The cart contains two items.
+    trigger: The buyer changes a quantity.
+    scenarios:
+      - id: checkout.cart.alternate.quantity
+        kind: steps
+        steps:
+          - Open the cart.
+          - Increase an item quantity.
+          - Review the updated total.
+        observable_outcomes:
+          - The total reflects the new quantity.
+    observable_outcomes:
+      - The total reflects the new quantity.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: live_demo
+          required_verifiers: [user]
+          minimum_count: 1
+    approval_policy:
+      mode: predefined
+      requirements:
+        - approver_type: user
+          minimum_count: 1
+      statement: User confirms the cart behavior is acceptable.
+
+  - id: checkout.validation.edge
+    title: Preserve cart after address validation
+    lifecycle: active
+    value_tier: core
+    journey_role: edge
+    usage_frequency: occasional
+    tags: [checkout, validation]
+    source_refs:
+      - kind: file
+        path: src/checkout/address.ts
+    actor: buyer
+    intent: Recover from a validation error without losing cart state.
+    preconditions:
+      - The cart contains an in-stock item.
+    trigger: The buyer submits an invalid postcode.
+    scenarios:
+      - id: checkout.validation.edge.postcode
+        kind: steps
+        steps:
+          - Submit an invalid postcode.
+          - Correct the postcode.
+          - Continue checkout.
+        observable_outcomes:
+          - The cart contents remain unchanged.
+    observable_outcomes:
+      - The cart contents remain unchanged.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: live_demo
+          required_verifiers: [user]
+          minimum_count: 1
+    approval_policy:
+      mode: ask
+
+  - id: checkout.payment.negative
+    title: Declined card shows recovery path
+    lifecycle: active
+    value_tier: core
+    journey_role: negative
+    usage_frequency: occasional
+    tags: [checkout, payment]
+    source_refs:
+      - kind: file
+        path: src/checkout/payment.ts
+    actor: buyer
+    intent: See a clear recovery path when payment fails.
+    preconditions:
+      - The buyer has a declined card.
+    trigger: The buyer submits the declined card.
+    scenarios:
+      - id: checkout.payment.negative.decline
+        kind: steps
+        steps:
+          - Submit a declined card.
+          - Read the recovery message.
+          - Choose another payment method.
+        observable_outcomes:
+          - The payment failure message is visible.
+          - The cart remains payable.
+    observable_outcomes:
+      - The payment failure message is visible.
+      - The cart remains payable.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: live_demo
+          required_verifiers: [user]
+          minimum_count: 1
+    approval_policy:
+      mode: ask
+
+  - id: checkout.inventory.failure
+    title: Sold-out item blocks order cleanly
+    lifecycle: active
+    value_tier: supporting
+    journey_role: failure
+    usage_frequency: rare
+    tags: [checkout, inventory]
+    source_refs:
+      - kind: file
+        path: src/checkout/inventory.ts
+    actor: buyer
+    intent: Understand why an unavailable item cannot be bought.
+    preconditions:
+      - A cart item becomes sold out.
+    trigger: The buyer attempts to place the order.
+    scenarios:
+      - id: checkout.inventory.failure.soldout
+        kind: steps
+        steps:
+          - Attempt to buy a sold-out item.
+          - Remove the sold-out item.
+        observable_outcomes:
+          - The order is blocked with a sold-out explanation.
+    observable_outcomes:
+      - The order is blocked with a sold-out explanation.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: live_demo
+          required_verifiers: [user]
+          minimum_count: 1
+    approval_policy:
+      mode: ask

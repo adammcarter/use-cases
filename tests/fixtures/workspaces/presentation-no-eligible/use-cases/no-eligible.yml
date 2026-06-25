@@ -1,0 +1,40 @@
+schema_version: 1
+feature:
+  id: archive
+  name: Archive
+  summary: Removed and incompatible behavior.
+use_cases:
+  - id: archive.removed.golden
+    title: Removed archive flow
+    lifecycle: removed
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+  - id: archive.host.golden
+    title: Desktop-only archive flow
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    actor: user
+    intent: Use a host-incompatible flow.
+    preconditions: [A desktop host is available.]
+    trigger: The user opens the archive.
+    scenarios:
+      - id: archive.host.golden.desktop
+        kind: steps
+        steps: [Open the archive.]
+    observable_outcomes: [The archive opens.]
+    host_applicability:
+      - host_surface: claude.desktop
+        supported: true
+      - host_surface: codex.cli
+        supported: false
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: live_demo
+          required_verifiers: [user]
+          minimum_count: 1
+    approval_policy:
+      mode: ask

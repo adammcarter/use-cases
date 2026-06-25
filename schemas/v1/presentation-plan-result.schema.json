@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://presentation-skills.dev/schemas/v1/presentation-plan-result.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "outcome": { "enum": ["generated", "no_eligible_items", "integrity_blocked"] },
+    "plan": {
+      "anyOf": [
+        { "$ref": "presentation-plan.schema.json" },
+        { "type": "null" }
+      ]
+    },
+    "candidate_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "considered": { "type": "integer", "minimum": 0 },
+        "eligible": { "type": "integer", "minimum": 0 },
+        "selected": { "type": "integer", "minimum": 0 },
+        "excluded": { "type": "integer", "minimum": 0 },
+        "excluded_by_reason": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        }
+      },
+      "required": ["considered", "eligible", "selected", "excluded", "excluded_by_reason"]
+    },
+    "input_integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "matrix": { "enum": ["clean", "partial", "unusable"] },
+        "evidence": { "enum": ["clean", "partial", "unusable"] }
+      },
+      "required": ["matrix", "evidence"]
+    }
+  },
+  "required": ["schema_version", "outcome", "plan", "candidate_summary", "input_integrity"],
+  "allOf": [
+    {
+      "if": { "properties": { "outcome": { "const": "generated" } }, "required": ["outcome"] },
+      "then": {
+        "not": { "properties": { "plan": { "type": "null" } }, "required": ["plan"] }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "outcome": { "enum": ["no_eligible_items", "integrity_blocked"] }
+        },
+        "required": ["outcome"]
+      },
+      "then": {
+        "properties": {
+          "plan": { "type": "null" }
+        }
+      }
+    }
+  ]
+}
