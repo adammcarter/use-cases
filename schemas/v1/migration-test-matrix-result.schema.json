@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://presentation-skills.dev/schemas/v1/migration-test-matrix-result.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "digest": { "$ref": "common.schema.json#/$defs/hash" },
+        "parser": { "type": "string", "minLength": 1 }
+      },
+      "required": ["path", "digest", "parser"]
+    },
+    "mode": { "enum": ["dry_run", "write"] },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tables_found": { "type": "integer", "minimum": 0 },
+        "rows_seen": { "type": "integer", "minimum": 0 },
+        "rows_importable": { "type": "integer", "minimum": 0 },
+        "rows_needing_review": { "type": "integer", "minimum": 0 },
+        "files_planned": { "type": "integer", "minimum": 0 },
+        "files_written": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["tables_found", "rows_seen", "rows_importable", "rows_needing_review", "files_planned", "files_written"]
+    },
+    "drafts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "output_path": { "type": "string", "minLength": 1 },
+          "feature_id": { "$ref": "common.schema.json#/$defs/id" },
+          "use_case_ids": {
+            "type": "array",
+            "items": { "$ref": "common.schema.json#/$defs/id" }
+          },
+          "content": { "type": "string" }
+        },
+        "required": ["output_path", "feature_id", "use_case_ids", "content"]
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": { "type": "string", "minLength": 1 },
+          "row_ref": { "type": ["string", "null"] },
+          "message": { "type": "string", "minLength": 1 }
+        },
+        "required": ["code", "row_ref", "message"]
+      }
+    },
+    "would_write": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "action": { "enum": ["create", "update_generated", "skip_unchanged", "conflict"] }
+        },
+        "required": ["path", "action"]
+      }
+    }
+  },
+  "required": ["schema_version", "source", "mode", "summary", "drafts", "warnings", "would_write"]
+}

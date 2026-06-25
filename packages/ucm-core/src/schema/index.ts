@@ -83,7 +83,8 @@ export const PUBLIC_SCHEMA_IDS = [
   "https://presentation-skills.dev/schemas/v1/matrix-validation-result.schema.json",
   "https://presentation-skills.dev/schemas/v1/matrix-list-result.schema.json",
   "https://presentation-skills.dev/schemas/v1/evidence-append-result.schema.json",
-  "https://presentation-skills.dev/schemas/v1/evidence-status-result.schema.json"
+  "https://presentation-skills.dev/schemas/v1/evidence-status-result.schema.json",
+  "https://presentation-skills.dev/schemas/v1/migration-test-matrix-result.schema.json"
 ] as const;
 
 const SCHEMA_FILE_NAMES = [
@@ -107,7 +108,8 @@ const SCHEMA_FILE_NAMES = [
   "matrix-validation-result.schema.json",
   "matrix-list-result.schema.json",
   "evidence-append-result.schema.json",
-  "evidence-status-result.schema.json"
+  "evidence-status-result.schema.json",
+  "migration-test-matrix-result.schema.json"
 ] as const;
 
 let schemaCache: Map<string, unknown> | undefined;
@@ -665,6 +667,9 @@ function schemaIdForFixturePath(relPath: string): string | undefined {
   }
   if (relPath.startsWith("host-status/")) {
     return schemaIdForName("host-status-result.schema.json");
+  }
+  if (relPath.startsWith("migrations/")) {
+    return schemaIdForName("migration-test-matrix-result.schema.json");
   }
   return undefined;
 }

@@ -27,3 +27,4 @@ export * from "./capsules/index.js";
 export * from "./showcase/index.js";
 export * from "./skills/index.js";
 export * from "./hosts/index.js";
+export * from "./migration/index.js";

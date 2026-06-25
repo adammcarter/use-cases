@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "source": {
+    "path": "TEST-MATRIX.md",
+    "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "parser": "remark-gfm-v1"
+  },
+  "mode": "dry_run",
+  "summary": {
+    "tables_found": 1,
+    "rows_seen": 1,
+    "rows_importable": 1,
+    "rows_needing_review": 1,
+    "files_planned": 1,
+    "files_written": 0
+  },
+  "drafts": [
+    {
+      "output_path": "use-cases/_migrated/auth.yml",
+      "feature_id": "migrated.auth",
+      "use_case_ids": ["migrated.auth.auth-1"],
+      "content": "schema_version: 1\n"
+    }
+  ],
+  "warnings": [
+    {
+      "code": "old_status_not_evidence",
+      "row_ref": "TEST-MATRIX.md#table-1-row-1",
+      "message": "Old status was preserved as review context only."
+    }
+  ],
+  "would_write": [
+    {
+      "path": "use-cases/_migrated/auth.yml",
+      "action": "create"
+    }
+  ]
+}
