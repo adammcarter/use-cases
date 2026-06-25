@@ -1,4 +1,4 @@
-import { cpSync, mkdirSync, rmSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -10,14 +10,9 @@ const lockDir = join(repoRoot, "packages/ucm-core/dist/.copy-schemas.lock");
 
 mkdirSync(dirname(lockDir), { recursive: true });
 withDirectoryLock(lockDir, () => {
-  rmSync(destination, {
-    recursive: true,
-    force: true,
-    maxRetries: 5,
-    retryDelay: 50
-  });
   mkdirSync(destination, { recursive: true });
   cpSync(source, destination, { recursive: true });
+  removeOrphanedEntries(source, destination);
 });
 
 function withDirectoryLock(path, work) {
@@ -44,4 +39,18 @@ function withDirectoryLock(path, work) {
 
 function sleep(milliseconds) {
   Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, milliseconds);
+}
+
+function removeOrphanedEntries(sourceDir, destinationDir) {
+  for (const entry of readdirSync(destinationDir, { withFileTypes: true })) {
+    const sourcePath = join(sourceDir, entry.name);
+    const destinationPath = join(destinationDir, entry.name);
+    if (!existsSync(sourcePath)) {
+      rmSync(destinationPath, { recursive: true, force: true });
+      continue;
+    }
+    if (entry.isDirectory() && statSync(sourcePath).isDirectory()) {
+      removeOrphanedEntries(sourcePath, destinationPath);
+    }
+  }
 }
