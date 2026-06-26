@@ -28,6 +28,7 @@ import {
   appendShowcaseVerdict,
   correctShowcaseVerdict,
   finishShowcaseRun,
+  loadPresentationPlanFile,
   pauseShowcaseRun,
   rejectShowcaseApproval,
   resumeShowcaseRun,
@@ -583,6 +584,25 @@ function runShowcaseStart(argv: string[]): number {
   const contextResult = contextFromArgs(argv, "showcase.start");
   if ("exitCode" in contextResult) {
     return contextResult.exitCode;
+  }
+  const planFile = valueAfter(argv, "--plan-file");
+  if (planFile) {
+    const planPath = isAbsolute(planFile) ? planFile : resolve(contextResult.workspace_root, planFile);
+    try {
+      const plan = loadPresentationPlanFile(planPath);
+      const result = startShowcaseRun({
+        context: contextResult,
+        plan,
+        controlMode: "agent_led",
+        actorType: "agent",
+        hostSurface: "codex.cli",
+        idempotencyKey: valueAfter(argv, "--idempotency-key") ?? `cli:start-plan:${plan.plan_content_hash}`,
+        recordedAt: valueAfter(argv, "--recorded-at") ?? "2026-06-25T12:00:00.000Z"
+      });
+      return writeShowcaseResult("showcase.start", result, contextResult, 0);
+    } catch (error) {
+      return writeCaughtShowcaseError("showcase.start", error);
+    }
   }
   const selected = valueAfter(argv, "--select");
   if (!argv.includes("--adhoc") || !selected) {

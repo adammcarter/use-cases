@@ -30,7 +30,16 @@ export function isTrustedUserDecisionEvent(event: ShowcaseEvent): boolean {
   if (event.actor_type !== "user") {
     return true;
   }
-  return event.payload.capture_method === "trusted_user_interactive_cli";
+  if (event.payload.capture_method !== "trusted_user_interactive_cli") {
+    return false;
+  }
+  if (event.event_type === "approval_recorded") {
+    return hasFinishBoundScope(event.payload.scope);
+  }
+  if (event.event_type === "approval_rejected") {
+    return hasFinishBoundScope(event.payload.scope);
+  }
+  return true;
 }
 
 function isTrustedAuthority(authority: TrustedApprovalAuthority | undefined): boolean {
@@ -44,4 +53,12 @@ function isTrustedAuthority(authority: TrustedApprovalAuthority | undefined): bo
     return authority.verified;
   }
   return false;
+}
+
+function hasFinishBoundScope(value: unknown): boolean {
+  return isRecord(value) && typeof value.finish_event_id === "string" && value.finish_event_id.length > 0;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

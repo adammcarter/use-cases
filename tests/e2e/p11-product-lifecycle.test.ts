@@ -1,11 +1,12 @@
 import { spawnSync, type SpawnSyncReturns } from "node:child_process";
-import { cpSync, existsSync, mkdtempSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { beforeAll, describe, expect, test } from "vitest";
 import { handleMcpMessage } from "../../packages/ucm-mcp/src/index.js";
 
 const repoRoot = resolve(import.meta.dirname, "../..");
+const zeroHash = "sha256:0000000000000000000000000000000000000000000000000000000000000000";
 
 beforeAll(() => {
   requireSuccess(run("corepack", ["pnpm", "build"]));
@@ -14,6 +15,8 @@ beforeAll(() => {
 describe("P11 product lifecycle examples", () => {
   test("runs the complete product lifecycle on the clean example", () => {
     const workspaceRoot = exampleWorkspace("basic-product");
+    expect(readFileSync(join(workspaceRoot, "evidence/by-id/ev/evidence-basic-search.jsonl"), "utf8")).not.toContain(zeroHash);
+    expect(readFileSync(join(workspaceRoot, "showcase-runs/run.basic.product.search/events.jsonl"), "utf8")).not.toContain(zeroHash);
 
     const validate = runCliJson(["matrix", "validate", "--repo", workspaceRoot, "--json"]);
     expect(validate.status).toBe(0);
@@ -36,7 +39,7 @@ describe("P11 product lifecycle examples", () => {
       data: {
         execution_status: "completed",
         run_outcome: "passed",
-        approval_state: "approved"
+        approval_state: "pending"
       }
     });
 
@@ -79,15 +82,18 @@ describe("P11 product lifecycle examples", () => {
     expect(plan.payload.data.plan.selected_items[0]).toMatchObject({
       use_case_id: "product.search.golden"
     });
+    const generatedPlan = plan.payload.data.plan;
+    const planPath = join(workspaceRoot, "presentation-plans", "p11-generated-showcase.json");
+    mkdirSync(join(workspaceRoot, "presentation-plans"), { recursive: true });
+    writeFileSync(planPath, `${JSON.stringify(generatedPlan, null, 2)}\n`);
 
     const start = runCliJson([
       "showcase",
       "start",
       "--repo",
       workspaceRoot,
-      "--adhoc",
-      "--select",
-      "product.search.golden",
+      "--plan-file",
+      planPath,
       "--idempotency-key",
       "p11:showcase:start",
       "--json"
@@ -95,6 +101,7 @@ describe("P11 product lifecycle examples", () => {
     expect(start.status).toBe(0);
     const runId = start.payload.data.run_id as string;
     const planItemId = start.payload.data.status.items[0].plan_item_id as string;
+    expect(start.payload.data.event.payload.plan_content_hash).toBe(generatedPlan.plan_content_hash);
 
     expect(
       runCliJson([
@@ -129,25 +136,10 @@ describe("P11 product lifecycle examples", () => {
       ]).status
     ).toBe(0);
     expect(runCliJson(["showcase", "finish", "--repo", workspaceRoot, "--run", runId, "--json"]).status).toBe(0);
-
-    const approval = runCliJson([
-      "showcase",
-      "approve",
-      "--repo",
-      workspaceRoot,
-      "--run",
-      runId,
-      "--actor",
-      "user",
-      "--statement",
-      "User observed and accepted the live showcase.",
-      "--json"
-    ]);
-    expect(approval.status).toBe(0);
-    expect(approval.payload.data.status).toMatchObject({
+    expect(runCliJson(["showcase", "status", "--repo", workspaceRoot, "--run", runId, "--json"]).payload.data).toMatchObject({
       execution_status: "completed",
       run_outcome: "passed",
-      approval_state: "approved"
+      approval_state: "pending"
     });
 
     const status = runCliJson(["matrix", "status", "--repo", workspaceRoot, "--json"]);

@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { cpSync, existsSync, readFileSync, readdirSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -201,6 +201,79 @@ describe("P6 showcase CLI contract", () => {
       }
     });
     expect(summaryFiles(workspaceRoot)).toEqual([]);
+  });
+
+  test("starts a showcase from a generated plan file and rejects mutated plan content", () => {
+    requireSuccess(run("corepack", ["pnpm", "build"]));
+    const workspaceRoot = fixtureWorkspace("evidence-basic");
+
+    const planResult = runCli([
+      "plan",
+      "showcase",
+      "--repo",
+      workspaceRoot,
+      "--max-items",
+      "1",
+      "--host",
+      "codex.cli",
+      "--generated-at",
+      "2026-06-25T12:00:00.000Z",
+      "--json"
+    ]);
+    requireSuccess(planResult);
+    const plan = JSON.parse(planResult.stdout).data.plan;
+    const planPath = join(workspaceRoot, "presentation-plans", "generated-showcase.json");
+    mkdirSync(join(workspaceRoot, "presentation-plans"), { recursive: true });
+    writeFileSync(planPath, `${JSON.stringify(plan, null, 2)}\n`);
+
+    const start = runCli([
+      "showcase",
+      "start",
+      "--repo",
+      workspaceRoot,
+      "--plan-file",
+      planPath,
+      "--idempotency-key",
+      "p6:plan-file:start",
+      "--json"
+    ]);
+    requireSuccess(start);
+    const startPayload = JSON.parse(start.stdout);
+    expect(startPayload).toMatchObject({
+      command: "showcase.start",
+      ok: true,
+      data: {
+        event: {
+          payload: {
+            plan_content_hash: plan.plan_content_hash,
+            plan: expect.objectContaining({
+              plan_content_hash: plan.plan_content_hash
+            })
+          }
+        }
+      }
+    });
+
+    const mutatedPath = join(workspaceRoot, "presentation-plans", "mutated-showcase.json");
+    writeFileSync(mutatedPath, `${JSON.stringify({ ...plan, audience: "different reviewer" }, null, 2)}\n`);
+    const mutated = runCli([
+      "showcase",
+      "start",
+      "--repo",
+      workspaceRoot,
+      "--plan-file",
+      mutatedPath,
+      "--idempotency-key",
+      "p6:plan-file:mutated",
+      "--json"
+    ]);
+
+    expect(mutated.status).toBe(1);
+    expect(JSON.parse(mutated.stdout)).toMatchObject({
+      command: "showcase.start",
+      ok: false,
+      diagnostics: [expect.objectContaining({ code: "showcase_plan_hash_mismatch" })]
+    });
   });
 
   test("refuses agent approval for a user-required showcase", () => {
