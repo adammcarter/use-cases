@@ -127,17 +127,19 @@ export function runHostDoctor(options: { context: ResolvedWorkspaceContext; prof
 export function runHostConformance(options: { context: ResolvedWorkspaceContext; profile: HostProfile }): HostConformanceResult {
   const manifest = readManifest(options.context.workspace_root);
   const manifestHash = manifest ? computeSemanticHash(manifest.raw) : null;
-  const filesMatch = manifest ? projectedFilesMatch(options.context.workspace_root, manifest) : false;
+  const sourceSkillHashes = readSourceSkillHashes(options.context.plugin_root);
+  const profileProjected = profileProjectionFilesMatch(options.context.workspace_root, options.profile, sourceSkillHashes);
+  const manifestSkillHashesMatch = manifest ? manifestSourceSkillHashesMatch(manifest, sourceSkillHashes) : false;
   const staticChecks = [
     {
       id: "projected_files_match_manifest",
-      result: filesMatch ? ("pass" as const) : manifest ? ("fail" as const) : ("not_tested" as const),
-      message: filesMatch ? "Projected files match manifest hashes." : manifest ? "Projected files do not match manifest hashes." : "No projection manifest found."
+      result: profileProjected ? ("pass" as const) : manifest ? ("fail" as const) : ("not_tested" as const),
+      message: profileProjected ? "Projected files match expected profile hashes." : manifest ? "Projected files do not match expected profile hashes." : "No projection manifest found."
     },
     {
       id: "canonical_skill_hashes_match",
-      result: manifest ? ("pass" as const) : ("not_tested" as const),
-      message: manifest ? "Canonical skill hashes are recorded in the manifest." : "No projection manifest found."
+      result: manifestSkillHashesMatch ? ("pass" as const) : manifest ? ("fail" as const) : ("not_tested" as const),
+      message: manifestSkillHashesMatch ? "Canonical skill hashes are recorded in the manifest." : manifest ? "Canonical skill hashes do not match the manifest." : "No projection manifest found."
     }
   ];
   const executableSmoke = runExecutableSmoke(options.profile);
@@ -165,6 +167,7 @@ export function runHostConformance(options: { context: ResolvedWorkspaceContext;
     checked_at: GENERATED_AT,
     status_basis: "static_conformance_only",
     support_status: derived.support_status,
+    support: productionSupportSummary(true, profileProjected, staticConformant, executableSmoke.status, evidenceEventIds),
     profile_hash: computeSemanticHash(options.profile),
     projection_manifest_hash: manifestHash,
     evidence_event_ids: evidenceEventIds,
@@ -261,6 +264,25 @@ function projectedFilesMatch(workspaceRoot: string, manifest: { generated_files?
   });
 }
 
+function profileProjectionFilesMatch(workspaceRoot: string, profile: HostProfile, sourceSkillHashes: Record<string, string>): boolean {
+  return profile.projection_targets.every((target) => {
+    const fullPath = join(workspaceRoot, target.path);
+    const expected = renderActivationStub(profile, sourceSkillHashes);
+    return existsSync(fullPath) && computeSemanticHash(readFileSync(fullPath, "utf8")) === computeSemanticHash(expected);
+  });
+}
+
+function manifestSourceSkillHashesMatch(
+  manifest: Record<string, unknown> | null,
+  sourceSkillHashes: Record<string, string>
+): boolean {
+  const actual = manifest?.source_skill_hashes;
+  if (!actual || typeof actual !== "object" || Array.isArray(actual)) {
+    return false;
+  }
+  return Object.entries(sourceSkillHashes).every(([name, hash]) => (actual as Record<string, unknown>)[name] === hash);
+}
+
 function supportSummary(
   expected: boolean,
   installed: boolean,
@@ -271,6 +293,23 @@ function supportSummary(
     expected,
     installed,
     static_conformant: staticConformant,
+    verified_with_evidence: evidenceEventIds.length > 0,
+    evidence_event_ids: evidenceEventIds
+  };
+}
+
+function productionSupportSummary(
+  profileAvailable: boolean,
+  projected: boolean,
+  staticConformant: boolean,
+  executableSmoke: HostConformanceResult["executable_smoke"]["status"],
+  evidenceEventIds: string[]
+) {
+  return {
+    profile_available: profileAvailable,
+    projected,
+    static_conformant: staticConformant,
+    executable_smoke: executableSmoke,
     verified_with_evidence: evidenceEventIds.length > 0,
     evidence_event_ids: evidenceEventIds
   };

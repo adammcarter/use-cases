@@ -26,6 +26,14 @@ use_cases:
           - Run host conformance with a missing or unavailable executable.
           - Run host conformance with a resolved executable that fails.
     observable_outcomes: [Hosts report passed, warning-backed not_run, or failed smoke semantics without claiming verified support.]
+    extensions:
+      presentation-skills.dev/status_fields:
+        required:
+          - profile_available
+          - projected
+          - static_conformant
+          - executable_smoke
+          - verified_with_evidence
     host_applicability:
       - host_surface: codex.cli
         supported: true

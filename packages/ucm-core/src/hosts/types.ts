@@ -91,6 +91,15 @@ export type HostSupportSummary = {
   evidence_event_ids: string[];
 };
 
+export type HostProductionSupportSummary = {
+  profile_available: boolean;
+  projected: boolean;
+  static_conformant: boolean;
+  executable_smoke: HostExecutableSmoke["status"];
+  verified_with_evidence: boolean;
+  evidence_event_ids: string[];
+};
+
 export type HostExecutableSmoke = {
   status: "passed" | "failed" | "not_run";
   executable: string;
@@ -121,6 +130,7 @@ export type HostConformanceResult = {
   checked_at: string;
   status_basis: "static_conformance_only";
   support_status: HostSupportStatus;
+  support: HostProductionSupportSummary;
   profile_hash: string;
   projection_manifest_hash: string | null;
   evidence_event_ids: string[];
