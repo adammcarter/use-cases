@@ -45,7 +45,7 @@ describe("P0 package entrypoints", () => {
 
     expect(core.getVersionInfo()).toEqual({
       name: "presentation-skills",
-      version: "0.1.0"
+      version: "1.0.0"
     });
   });
 
@@ -67,7 +67,7 @@ describe("P0 package entrypoints", () => {
       complete: true,
       data: {
         name: "presentation-skills",
-        version: "0.1.0"
+        version: "1.0.0"
       },
       diagnostics: []
     });
@@ -101,9 +101,9 @@ describe("P0 package entrypoints", () => {
     );
 
     const tarballs = [
-      "presentation-skills-ucm-core-0.1.0.tgz",
-      "presentation-skills-ucm-cli-0.1.0.tgz",
-      "presentation-skills-ucm-mcp-0.1.0.tgz"
+      "presentation-skills-ucm-core-1.0.0.tgz",
+      "presentation-skills-ucm-cli-1.0.0.tgz",
+      "presentation-skills-ucm-mcp-1.0.0.tgz"
     ].map((name) => join(packDir, name));
     writeFileSync(
       join(consumer, "pnpm-workspace.yaml"),
@@ -121,7 +121,7 @@ describe("P0 package entrypoints", () => {
       [
         "import { getVersionInfo } from '@presentation-skills/ucm-core';",
         "const info = getVersionInfo();",
-        "if (info.name !== 'presentation-skills' || info.version !== '0.1.0') throw new Error('bad version export');"
+        "if (info.name !== 'presentation-skills' || info.version !== '1.0.0') throw new Error('bad version export');"
       ].join("\n")
     );
     requireSuccess(run("node", ["check.mjs"], consumer));
@@ -129,7 +129,7 @@ describe("P0 package entrypoints", () => {
     const binDir = join(consumer, "node_modules/.bin");
     const cli = run(join(binDir, "presentation-skills"), ["--version", "--json"], consumer);
     requireSuccess(cli);
-    expect(JSON.parse(cli.stdout).data.version).toBe("0.1.0");
+    expect(JSON.parse(cli.stdout).data.version).toBe("1.0.0");
 
     const mcp = runWithInput(
       join(binDir, "presentation-skills-mcp"),
@@ -164,7 +164,7 @@ describe("P0 package entrypoints", () => {
       expect.objectContaining({
         id: 1,
         result: expect.objectContaining({
-          serverInfo: { name: "presentation-skills", version: "0.1.0" }
+          serverInfo: { name: "presentation-skills", version: "1.0.0" }
         })
       }),
       expect.objectContaining({
