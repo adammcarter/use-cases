@@ -1,5 +1,19 @@
 import { isAbsolute, relative, resolve } from "node:path";
-import {
+import type {
+  CliResult,
+  Diagnostic,
+  HostName,
+  HostSurface,
+  ResolvedWorkspaceContext,
+  ShowcaseActorType,
+  ShowcaseAppendResult,
+  ShowcaseVerdict,
+  UseCaseQuery
+} from "@presentation-skills/ucm-core";
+
+type UcmCoreModule = typeof import("@presentation-skills/ucm-core");
+
+const {
   appendEvidenceEvent,
   appendEvidenceVoidEvent,
   appendShowcaseFailureDecision,
@@ -22,17 +36,24 @@ import {
   toEvidenceAppendResult,
   toEvidenceStatusResult,
   toMatrixListResult,
-  toMatrixValidationResult,
-  type CliResult,
-  type Diagnostic,
-  type HostName,
-  type HostSurface,
-  type ResolvedWorkspaceContext,
-  type ShowcaseActorType,
-  type ShowcaseAppendResult,
-  type ShowcaseVerdict,
-  type UseCaseQuery
-} from "@presentation-skills/ucm-core";
+  toMatrixValidationResult
+} = await loadUcmCore();
+
+async function loadUcmCore(): Promise<UcmCoreModule> {
+  try {
+    return await import("@presentation-skills/ucm-core");
+  } catch (error) {
+    if (!isMissingCorePackage(error)) {
+      throw error;
+    }
+    const bundledCoreSpecifier = "../../ucm-core/dist/index.js";
+    return await import(bundledCoreSpecifier) as UcmCoreModule;
+  }
+}
+
+function isMissingCorePackage(error: unknown): boolean {
+  return error instanceof Error && "code" in error && error.code === "ERR_MODULE_NOT_FOUND" && error.message.includes("@presentation-skills/ucm-core");
+}
 
 type JsonObject = Record<string, unknown>;
 type ToolMode = "read" | "write" | "approval_request";
