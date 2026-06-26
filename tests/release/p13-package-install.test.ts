@@ -1,5 +1,5 @@
 import { spawnSync, type SpawnSyncReturns } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, realpathSync, readdirSync, statSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdtempSync, readFileSync, realpathSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join, resolve } from "node:path";
 import { beforeAll, describe, expect, test } from "vitest";
@@ -75,14 +75,16 @@ describe("P13 installable root package artifact", () => {
   });
 
   test("root tarball installs into a clean project and runs installed CLI and MCP", () => {
-    const installedRoot = installRootTarball(packRoot().tarball);
+    const installed = installRootTarball(packRoot().tarball);
+    const installedRoot = installed.installedRoot;
+    expect(installedRoot.startsWith(repoRoot)).toBe(false);
 
     const cli = run(process.execPath, [
       join(installedRoot, "packages/ucm-cli/dist/index.js"),
       "schema",
       "list",
       "--json"
-    ]);
+    ], installed.consumer);
     requireSuccess(cli);
     expect(JSON.parse(cli.stdout)).toMatchObject({
       command: "schema.list",
@@ -93,6 +95,23 @@ describe("P13 installable root package artifact", () => {
         ])
       }
     });
+    expect(`${cli.stdout}\n${cli.stderr}`).not.toContain(repoRoot);
+
+    const fixtureRoot = fixtureWorkspace("evidence-basic");
+    const installedBin = run(join(installed.consumer, "node_modules/.bin/presentation-skills"), [
+      "matrix",
+      "validate",
+      "--repo",
+      fixtureRoot,
+      "--json"
+    ], installed.consumer);
+    requireSuccess(installedBin);
+    expect(JSON.parse(installedBin.stdout)).toMatchObject({
+      command: "matrix.validate",
+      ok: true,
+      complete: true
+    });
+    expect(`${installedBin.stdout}\n${installedBin.stderr}`).not.toContain(repoRoot);
 
     const mcp = runWithInput(
       process.execPath,
@@ -113,6 +132,7 @@ describe("P13 installable root package artifact", () => {
       ].join("\n")
     );
     requireSuccess(mcp);
+    expect(`${mcp.stdout}\n${mcp.stderr}`).not.toContain(repoRoot);
     expect(mcp.stdout.trim().split("\n").map((line) => JSON.parse(line))).toEqual([
       expect.objectContaining({
         id: 1,
@@ -157,8 +177,8 @@ describe("P13 installable root package artifact", () => {
       }
     });
 
-    const installedRoot = installRootTarball(tarball);
-    const installedDoctor = runCli(["doctor", "package", "--installed-root", installedRoot, "--json"]);
+    const installed = installRootTarball(tarball);
+    const installedDoctor = runCli(["doctor", "package", "--installed-root", installed.installedRoot, "--json"]);
     requireSuccess(installedDoctor);
     expect(JSON.parse(installedDoctor.stdout)).toMatchObject({
       command: "doctor.package",
@@ -168,7 +188,7 @@ describe("P13 installable root package artifact", () => {
       data: {
         inspection_target: {
           kind: "installed_root",
-          path: installedRoot
+          path: installed.installedRoot
         },
         installed_smoke: {
           cli: { status: "passed" },
@@ -204,11 +224,20 @@ function extractPackageRoot(tarball: string): string {
   return packageRoot;
 }
 
-function installRootTarball(tarball: string): string {
+function installRootTarball(tarball: string): { consumer: string; installedRoot: string } {
   const consumer = mkdtempSync(join(tmpdir(), "presentation-skills-root-consumer-"));
   writeFileSync(join(consumer, "package.json"), JSON.stringify({ type: "module", dependencies: {} }, null, 2));
   requireSuccess(run("corepack", ["pnpm", "add", tarball], consumer));
-  return realpathSync(join(consumer, "node_modules", "presentation-skills"));
+  return {
+    consumer,
+    installedRoot: realpathSync(join(consumer, "node_modules", "presentation-skills"))
+  };
+}
+
+function fixtureWorkspace(name: string): string {
+  const workspaceRoot = mkdtempSync(join(tmpdir(), `presentation-skills-installed-fixture-${name}-`));
+  cpSync(join(repoRoot, "tests/fixtures/workspaces", name), workspaceRoot, { recursive: true });
+  return workspaceRoot;
 }
 
 function scanForbiddenText(root: string): Array<{ path: string; pattern: string }> {
@@ -248,7 +277,7 @@ function run(command: string, args: string[], cwd = repoRoot): SpawnSyncReturns<
   return spawnSync(command, args, {
     cwd,
     encoding: "utf8",
-    env: { ...process.env, COREPACK_ENABLE_DOWNLOAD_PROMPT: "0" }
+    env: { ...process.env, COREPACK_ENABLE_DOWNLOAD_PROMPT: "0", NODE_PATH: "" }
   });
 }
 
@@ -257,7 +286,7 @@ function runWithInput(command: string, args: string[], input: string, cwd = repo
     cwd,
     input,
     encoding: "utf8",
-    env: { ...process.env, COREPACK_ENABLE_DOWNLOAD_PROMPT: "0" }
+    env: { ...process.env, COREPACK_ENABLE_DOWNLOAD_PROMPT: "0", NODE_PATH: "" }
   });
 }
 
