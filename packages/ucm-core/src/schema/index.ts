@@ -82,6 +82,7 @@ export const PUBLIC_SCHEMA_IDS = [
   "https://presentation-skills.dev/schemas/v1/workflow-mode.schema.json",
   "https://presentation-skills.dev/schemas/v1/matrix-validation-result.schema.json",
   "https://presentation-skills.dev/schemas/v1/matrix-list-result.schema.json",
+  "https://presentation-skills.dev/schemas/v1/matrix-mutation-result.schema.json",
   "https://presentation-skills.dev/schemas/v1/evidence-append-result.schema.json",
   "https://presentation-skills.dev/schemas/v1/evidence-status-result.schema.json",
   "https://presentation-skills.dev/schemas/v1/migration-test-matrix-result.schema.json"
@@ -107,6 +108,7 @@ const SCHEMA_FILE_NAMES = [
   "workflow-mode.schema.json",
   "matrix-validation-result.schema.json",
   "matrix-list-result.schema.json",
+  "matrix-mutation-result.schema.json",
   "evidence-append-result.schema.json",
   "evidence-status-result.schema.json",
   "migration-test-matrix-result.schema.json"
@@ -364,6 +366,19 @@ function validateSyntheticCommonContracts(validated: Set<string>, diagnostics: D
   });
   validated.add(schemaIdForName("matrix-list-result.schema.json"));
   diagnostics.push(...matrixList.diagnostics);
+
+  const matrixMutation = validateBySchemaId(schemaIdForName("matrix-mutation-result.schema.json"), {
+    schema_version: 1,
+    operation: "upsert",
+    status: "created",
+    use_case_id: "synthetic.case",
+    file_path: "use-cases/synthetic.yml",
+    before_hash: null,
+    after_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    diagnostics: []
+  });
+  validated.add(schemaIdForName("matrix-mutation-result.schema.json"));
+  diagnostics.push(...matrixMutation.diagnostics);
 
   const sampleEvent = {
     schema_version: 1,
