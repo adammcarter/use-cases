@@ -1,17 +1,17 @@
 # Release Checklist
 
-Run these from the repository root after `pnpm install`:
+Run the production release gate from the repository root:
 
 ```bash
-pnpm typecheck
-pnpm build
-pnpm test
-pnpm cli -- doctor package --json
-pnpm pack --json --pack-destination "$(mktemp -d)"
+node scripts/release-gate.mjs
 ```
+
+The gate is intentionally sequential. Do not run `build` concurrently with
+`test`; tests import built workspace package outputs.
 
 Before release, inspect:
 
+- CI runs `node scripts/release-gate.mjs` on Node 22.
 - `doctor package` is complete and has no diagnostics. By default it builds and
   inspects the real root package tarball, not just the checkout.
 - For external artifacts, use `doctor package --tarball <path> --json`.

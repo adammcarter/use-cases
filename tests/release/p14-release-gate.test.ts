@@ -1,0 +1,41 @@
+import { existsSync, readFileSync } from "node:fs";
+import { describe, expect, test } from "vitest";
+
+describe("P14 production release gate", () => {
+  test("CI runs the same sequential release gate used locally", () => {
+    expect(existsSync("scripts/release-gate.mjs")).toBe(true);
+    expect(existsSync(".github/workflows/ci.yml")).toBe(true);
+
+    const gate = readFileSync("scripts/release-gate.mjs", "utf8");
+    const workflow = readFileSync(".github/workflows/ci.yml", "utf8");
+
+    const buildIndex = gate.indexOf("corepack pnpm build");
+    const testIndex = gate.indexOf("corepack pnpm test");
+
+    expect(workflow).toContain("node scripts/release-gate.mjs");
+    expect(gate).toContain("corepack pnpm install --frozen-lockfile");
+    expect(gate).toContain("corepack pnpm typecheck");
+    expect(gate).toContain("corepack pnpm build");
+    expect(gate).toContain("corepack pnpm test");
+    expect(gate).toContain("corepack pnpm cli -- doctor package --json");
+    expect(gate).toContain("corepack pnpm cli -- matrix validate --repo . --json");
+    expect(gate).toContain("corepack pnpm cli -- matrix list --repo . --json");
+    expect(gate).toContain("corepack pnpm pack --json --pack-destination");
+    expect(buildIndex).toBeGreaterThan(-1);
+    expect(testIndex).toBeGreaterThan(buildIndex);
+  });
+
+  test("root package is marked as a publishable v1 package", () => {
+    const manifest = JSON.parse(readFileSync("package.json", "utf8")) as {
+      version: string;
+      private?: boolean;
+      files: string[];
+    };
+
+    expect(manifest.version).toBe("1.0.0");
+    expect(manifest.private).toBe(false);
+    expect(manifest.files).toContain("packages/ucm-cli/dist");
+    expect(manifest.files).toContain("packages/ucm-mcp/dist");
+    expect(manifest.files).toContain("schemas/v1");
+  });
+});
