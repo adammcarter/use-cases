@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { cpSync, existsSync, readdirSync } from "node:fs";
+import { cpSync, existsSync, readFileSync, readdirSync } from "node:fs";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -246,6 +246,85 @@ describe("P6 showcase CLI contract", () => {
     });
   });
 
+  test("refuses scripted user approval without mutating the showcase ledger", () => {
+    requireSuccess(run("corepack", ["pnpm", "build"]));
+    const workspaceRoot = fixtureWorkspace("evidence-basic");
+    const startPayload = JSON.parse(
+      runCli([
+        "showcase",
+        "start",
+        "--repo",
+        workspaceRoot,
+        "--adhoc",
+        "--select",
+        "showcase.live.golden",
+        "--json"
+      ]).stdout
+    );
+    const runId = startPayload.data.run_id;
+    const planItemId = startPayload.data.status.items[0].plan_item_id;
+    requireSuccess(
+      runCli([
+        "showcase",
+        "record-observation",
+        "--repo",
+        workspaceRoot,
+        "--run",
+        runId,
+        "--item",
+        planItemId,
+        "--text",
+        "Observed expected live behavior",
+        "--json"
+      ])
+    );
+    requireSuccess(
+      runCli([
+        "showcase",
+        "record-verdict",
+        "--repo",
+        workspaceRoot,
+        "--run",
+        runId,
+        "--item",
+        planItemId,
+        "--verdict",
+        "pass",
+        "--json"
+      ])
+    );
+    requireSuccess(runCli(["showcase", "finish", "--repo", workspaceRoot, "--run", runId, "--json"]));
+    const ledgerPath = join(workspaceRoot, "showcase-runs", runId, "events.jsonl");
+    const before = readFileSync(ledgerPath, "utf8");
+
+    const approval = runCli([
+      "showcase",
+      "approve",
+      "--repo",
+      workspaceRoot,
+      "--run",
+      runId,
+      "--actor",
+      "user",
+      "--statement",
+      "Script cannot impersonate the user.",
+      "--json"
+    ]);
+
+    expect(approval.status).toBe(1);
+    expect(JSON.parse(approval.stdout)).toMatchObject({
+      command: "showcase.approve",
+      ok: false,
+      complete: false,
+      diagnostics: [
+        expect.objectContaining({
+          code: "showcase.trusted_user_confirmation_required"
+        })
+      ]
+    });
+    expect(readFileSync(ledgerPath, "utf8")).toEqual(before);
+  });
+
   test("supports lifecycle commands for pause, resume, decide, reject, and correct", () => {
     requireSuccess(run("corepack", ["pnpm", "build"]));
     const workspaceRoot = fixtureWorkspace("evidence-basic");
@@ -371,11 +450,17 @@ describe("P6 showcase CLI contract", () => {
     expect(reject.status).toBe(1);
     expect(JSON.parse(reject.stdout)).toMatchObject({
       command: "showcase.reject",
-      ok: true,
+      ok: false,
+      complete: false,
+      diagnostics: [
+        expect.objectContaining({
+          code: "showcase.trusted_user_confirmation_required"
+        })
+      ]
+    });
+    expect(JSON.parse(runCli(["showcase", "status", "--repo", workspaceRoot, "--run", runId, "--json"]).stdout)).toMatchObject({
       data: {
-        status: {
-          approval_state: "rejected"
-        }
+        approval_state: "pending"
       }
     });
   });

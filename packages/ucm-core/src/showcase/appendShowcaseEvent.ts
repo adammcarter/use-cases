@@ -6,6 +6,7 @@ import type { ResolvedWorkspaceContext } from "../roots.js";
 import type { HostSurface } from "../useCases/types.js";
 import { appendShowcaseEventLine, readShowcaseEvents, showcaseLedgerPath } from "./jsonlLedger.js";
 import { replayShowcaseEvents, replayShowcaseRun } from "./replayRun.js";
+import { requireTrustedUserApprovalAuthority, type TrustedApprovalAuthority } from "./approvalAuthority.js";
 import type {
   ShowcaseActorType,
   ShowcaseAppendResult,
@@ -264,13 +265,16 @@ export function appendShowcaseApproval(options: {
   statement: string;
   idempotencyKey: string;
   recordedAt?: string;
+  authority?: TrustedApprovalAuthority;
 }): ShowcaseAppendResult {
   const read = readShowcaseEvents(options.context, options.runId);
   const start = read.events.find((event) => event.event_type === "run_started");
   const plan = start?.payload.plan as PresentationPlan | undefined;
-  if (options.actorType !== "user" && planRequiresUserApproval(plan)) {
-    throw new PresentationSkillsError("Agent cannot record user-required approval.", "showcase.user_required_approval");
-  }
+  requireTrustedUserApprovalAuthority({
+    actorType: options.actorType,
+    authority: options.authority,
+    userApprovalRequired: planRequiresUserApproval(plan)
+  });
   const event = appendEvent(options.context, options.runId, {
     eventType: "approval_recorded",
     actorType: options.actorType,
@@ -299,7 +303,16 @@ export function rejectShowcaseApproval(options: {
   statement: string;
   idempotencyKey: string;
   recordedAt?: string;
+  authority?: TrustedApprovalAuthority;
 }): ShowcaseAppendResult {
+  const read = readShowcaseEvents(options.context, options.runId);
+  const start = read.events.find((event) => event.event_type === "run_started");
+  const plan = start?.payload.plan as PresentationPlan | undefined;
+  requireTrustedUserApprovalAuthority({
+    actorType: options.actorType,
+    authority: options.authority,
+    userApprovalRequired: planRequiresUserApproval(plan)
+  });
   const event = appendEvent(options.context, options.runId, {
     eventType: "approval_rejected",
     actorType: options.actorType,

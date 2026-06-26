@@ -2,6 +2,7 @@ import type { PresentationPlanItem } from "../presentation/types.js";
 import type { ShowcaseEvent, ShowcaseItemStatus, ShowcaseRunStatus } from "./types.js";
 import type { ShowcaseRunOptions } from "./types.js";
 import { readShowcaseEvents } from "./jsonlLedger.js";
+import { isTrustedUserDecisionEvent } from "./approvalAuthority.js";
 
 export function replayShowcaseRun(options: ShowcaseRunOptions): ShowcaseRunStatus {
   const read = readShowcaseEvents(options.context, options.runId);
@@ -23,6 +24,7 @@ export function replayShowcaseEvents(runId: string, events: ShowcaseEvent[], led
   let approvalState: ShowcaseRunStatus["approval_state"] = userApprovalRequired(plan) ? "pending" : "not_required";
   let outcomeAffectingEventAfterApproval = false;
   let approvedSequence = 0;
+  const ignoredApprovalEvents: string[] = [];
 
   for (const event of ordered) {
     if (event.event_type !== "run_started" && (event.event_type === "action_recorded" || event.event_type === "observation_recorded")) {
@@ -100,12 +102,20 @@ export function replayShowcaseEvents(runId: string, events: ShowcaseEvent[], led
       finished = true;
     }
     if (event.event_type === "approval_recorded") {
-      approvalState = event.payload.decision === "approved_with_known_gaps" ? "approved_with_known_gaps" : "approved";
-      approvedSequence = event.sequence;
+      if (isTrustedUserDecisionEvent(event)) {
+        approvalState = event.payload.decision === "approved_with_known_gaps" ? "approved_with_known_gaps" : "approved";
+        approvedSequence = event.sequence;
+      } else {
+        ignoredApprovalEvents.push(event.event_id);
+      }
     }
     if (event.event_type === "approval_rejected") {
-      approvalState = "rejected";
-      approvedSequence = event.sequence;
+      if (isTrustedUserDecisionEvent(event)) {
+        approvalState = "rejected";
+        approvedSequence = event.sequence;
+      } else {
+        ignoredApprovalEvents.push(event.event_id);
+      }
     }
   }
 
@@ -154,7 +164,7 @@ export function replayShowcaseEvents(runId: string, events: ShowcaseEvent[], led
     unresolved_failure_count: unresolvedFailureCount,
     items,
     known_gaps: plan?.known_gaps ?? [],
-    diagnostic_summary: {}
+    diagnostic_summary: ignoredApprovalEvents.length > 0 ? { ignored_approval_events: ignoredApprovalEvents } : {}
   };
 }
 

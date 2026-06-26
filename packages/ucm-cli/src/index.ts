@@ -834,7 +834,8 @@ function runShowcaseApprove(argv: string[]): number {
       hostSurface: "codex.cli",
       statement,
       idempotencyKey: valueAfter(argv, "--idempotency-key") ?? `cli:approve:${runId}:${statement}`,
-      recordedAt: valueAfter(argv, "--recorded-at") ?? "2026-06-25T12:04:00.000Z"
+      recordedAt: valueAfter(argv, "--recorded-at") ?? "2026-06-25T12:04:00.000Z",
+      authority: { kind: "untrusted_automation" }
     });
     return writeShowcaseResult("showcase.approve", result, contextResult, 0);
   } catch (error) {
@@ -860,7 +861,8 @@ function runShowcaseReject(argv: string[]): number {
       hostSurface: "codex.cli",
       statement,
       idempotencyKey: valueAfter(argv, "--idempotency-key") ?? `cli:reject:${runId}:${statement}`,
-      recordedAt: valueAfter(argv, "--recorded-at") ?? "2026-06-25T12:04:30.000Z"
+      recordedAt: valueAfter(argv, "--recorded-at") ?? "2026-06-25T12:04:30.000Z",
+      authority: { kind: "untrusted_automation" }
     });
     return writeShowcaseResult("showcase.reject", result, contextResult, 1);
   } catch (error) {
