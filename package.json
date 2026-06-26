@@ -7,6 +7,10 @@
   "engines": {
     "node": ">=22"
   },
+  "bin": {
+    "presentation-skills": "./packages/ucm-cli/dist/index.js",
+    "presentation-skills-mcp": "./packages/ucm-mcp/dist/index.js"
+  },
   "files": [
     ".agents/skills",
     ".claude-plugin/plugin.json",
@@ -15,7 +19,17 @@
     "README.md",
     "CHANGELOG.md",
     "bootstrap",
-    "docs",
+    "docs/acceptance.md",
+    "docs/activation.md",
+    "docs/adr",
+    "docs/cli.md",
+    "docs/data-model.md",
+    "docs/hosts.md",
+    "docs/mcp.md",
+    "docs/migration.md",
+    "docs/release.md",
+    "docs/security.md",
+    "docs/showcase.md",
     "examples",
     "hosts",
     "packages/ucm-cli/dist",
@@ -30,7 +44,7 @@
     "use-cases"
   ],
   "scripts": {
-    "build": "tsc -b packages/ucm-core packages/ucm-cli packages/ucm-mcp && node packages/ucm-core/scripts/copy-schemas.mjs",
+    "build": "tsc -b packages/ucm-core packages/ucm-cli packages/ucm-mcp && node packages/ucm-core/scripts/copy-schemas.mjs && chmod +x packages/ucm-cli/dist/index.js packages/ucm-mcp/dist/index.js",
     "clean": "rm -rf packages/*/dist coverage",
     "cli": "node packages/ucm-cli/dist/index.js",
     "lint": "tsc -b --pretty false --dry",
@@ -41,5 +55,12 @@
     "@types/node": "24.10.0",
     "typescript": "6.0.3",
     "vitest": "4.1.9"
+  },
+  "dependencies": {
+    "ajv": "^8.20.0",
+    "remark-gfm": "^4.0.1",
+    "remark-parse": "^11.0.0",
+    "unified": "^11.0.5",
+    "yaml": "^2.9.0"
   }
 }

@@ -3,8 +3,27 @@ import { realpathSync } from "node:fs";
 import { createInterface } from "node:readline";
 import { stdin, stdout } from "node:process";
 import { fileURLToPath } from "node:url";
-import { getVersionInfo } from "@presentation-skills/ucm-core";
 import { callMcpTool, mcpTools } from "./tools.js";
+
+type UcmCoreModule = typeof import("@presentation-skills/ucm-core");
+
+const { getVersionInfo } = await loadUcmCore();
+
+async function loadUcmCore(): Promise<UcmCoreModule> {
+  try {
+    return await import("@presentation-skills/ucm-core");
+  } catch (error) {
+    if (!isMissingCorePackage(error)) {
+      throw error;
+    }
+    const bundledCoreSpecifier = "../../ucm-core/dist/index.js";
+    return await import(bundledCoreSpecifier) as UcmCoreModule;
+  }
+}
+
+function isMissingCorePackage(error: unknown): boolean {
+  return error instanceof Error && "code" in error && error.code === "ERR_MODULE_NOT_FOUND" && error.message.includes("@presentation-skills/ucm-core");
+}
 
 type JsonRpcRequest = {
   jsonrpc: "2.0";
