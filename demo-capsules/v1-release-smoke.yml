@@ -1,0 +1,26 @@
+schema_version: 1
+capsule_id: capsule.v1.release_smoke
+title: v1 release smoke showcase
+mode: showcase
+description: Perform a command-backed smoke demo of the presentation-skills plugin itself.
+audience: reviewer
+timebox_seconds: 300
+items:
+  - use_case_id: capsule.live_runner.scripted
+    scenario_ids: [capsule.live_runner.scripted.cli]
+    runbook:
+      - kind: instruction
+        text: Run the v1 release smoke command through the capsule runner.
+      - kind: command
+        executable: node
+        argv:
+          - -e
+          - "require('node:fs').accessSync('presentation-skills.yml'); process.stdout.write('presentation-skills workspace smoke\\n');"
+        working_directory: .
+        expected_exit_codes: [0]
+permissions:
+  command_execution: true
+extensions:
+  presentation-skills.dev/runner:
+    command: presentation-skills capsule run --repo . --capsule capsule.v1.release_smoke --execute-commands --idempotency-key p14:v1-release-smoke --json
+    command_steps: required

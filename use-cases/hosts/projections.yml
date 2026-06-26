@@ -10,13 +10,16 @@ use_cases:
     value_tier: core
     journey_role: alternate
     usage_frequency: common
-    tags: [hosts, projections]
+    tags:
+      - hosts
+      - projections
     source_refs:
       - kind: file
         path: packages/ucm-core/src/hosts/projectHostFiles.ts
     actor: agent
     intent: Confirm host files are projected without claiming unsupported proof.
-    preconditions: [Host profiles are available.]
+    preconditions:
+      - Host profiles are available.
     trigger: Agent installs or verifies host support.
     scenarios:
       - id: hosts.projections.all.cli
@@ -25,7 +28,10 @@ use_cases:
           - Run host conformance with a passing executable smoke.
           - Run host conformance with a missing or unavailable executable.
           - Run host conformance with a resolved executable that fails.
-    observable_outcomes: [Hosts report passed, warning-backed not_run, or failed smoke semantics without claiming verified support.]
+    observable_outcomes:
+      - Hosts report passed
+      - warning-backed not_run
+      - or failed smoke semantics without claiming verified support.
     extensions:
       presentation-skills.dev/status_fields:
         required:
@@ -36,6 +42,52 @@ use_cases:
           - verified_with_evidence
     host_applicability:
       - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: none
+    approval_policy:
+      mode: none
+  - id: hosts.projections.static_conformance
+    title: Report host production support without overstating evidence
+    lifecycle: active
+    value_tier: core
+    journey_role: golden
+    usage_frequency: common
+    tags:
+      - hosts
+      - projections
+      - conformance
+      - support-status
+    source_refs:
+      - kind: file
+        path: packages/ucm-core/src/hosts/projectHostFiles.ts
+      - kind: file
+        path: docs/hosts.md
+    actor: agent
+    intent: Show Claude, Codex, Copilot, and OpenCode projection health as production status while keeping real evidence separate.
+    preconditions:
+      - Host profiles are available and projection targets are writable in a workspace.
+    trigger: Agent verifies host support before release or install handoff.
+    scenarios:
+      - id: hosts.projections.static_conformance.cli
+        kind: steps
+        steps:
+          - Project all first-class host activation stubs.
+          - Run host conformance for all hosts.
+          - Check support fields for profile availability, projection match, static conformance, executable smoke, and evidence ids.
+          - Revert the projected files.
+    observable_outcomes:
+      - Each host row reports static conformance and executable smoke state.
+      - verified_with_evidence remains false until evidence_event_ids exist.
+      - Unavailable executables produce warning-backed not_run status instead of a verified support claim.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+      - host_surface: claude.cli
+        supported: true
+      - host_surface: copilot.cli
+        supported: true
+      - host_surface: opencode.cli
         supported: true
     verification_policy:
       mode: none

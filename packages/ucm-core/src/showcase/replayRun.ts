@@ -154,6 +154,10 @@ export function replayShowcaseEvents(runId: string, events: ShowcaseEvent[], led
                 ? "passed"
                 : "incomplete";
 
+  const knownGaps = hasPerformedEvent
+    ? (plan?.known_gaps ?? []).filter((gap) => gap.code !== "prepared_not_performed")
+    : plan?.known_gaps ?? [];
+
   return {
     schema_version: 1,
     run_id: runId,
@@ -163,7 +167,7 @@ export function replayShowcaseEvents(runId: string, events: ShowcaseEvent[], led
     approval_state: approvalState,
     unresolved_failure_count: unresolvedFailureCount,
     items,
-    known_gaps: plan?.known_gaps ?? [],
+    known_gaps: knownGaps,
     diagnostic_summary: ignoredApprovalEvents.length > 0 ? { ignored_approval_events: ignoredApprovalEvents } : {}
   };
 }

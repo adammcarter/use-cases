@@ -10,13 +10,17 @@ use_cases:
     value_tier: critical
     journey_role: golden
     usage_frequency: occasional
-    tags: [release, package, doctor]
+    tags:
+      - release
+      - package
+      - doctor
     source_refs:
       - kind: file
         path: packages/ucm-core/src/package/inspectPackage.ts
     actor: agent
     intent: Prove the distributable artifact is installable and free of local state.
-    preconditions: [The workspace has been built.]
+    preconditions:
+      - The workspace has been built.
     trigger: Agent prepares release or merge evidence.
     scenarios:
       - id: release.package.installable_artifact.cli
@@ -26,7 +30,45 @@ use_cases:
           - Inspect tarball entries for required assets and forbidden state.
           - Install the tarball into a clean project.
           - Run installed CLI and MCP smoke checks.
-    observable_outcomes: [Package doctor reports a complete tarball or installed-root inspection with no diagnostics.]
+    observable_outcomes:
+      - Package doctor reports a complete tarball or installed-root inspection with no diagnostics.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: none
+    approval_policy:
+      mode: none
+  - id: release.ci_gate.sequential
+    title: Run the sequential production release gate
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: occasional
+    tags:
+      - release
+      - ci
+      - gate
+      - package
+    source_refs:
+      - kind: file
+        path: scripts/release-gate.mjs
+      - kind: file
+        path: .github/workflows/ci.yml
+    actor: agent
+    intent: Use one sequential command as the production release gate so build artifacts cannot race tests.
+    preconditions:
+      - Dependencies are installed from the lockfile and Node 22 or newer is available.
+    trigger: Agent prepares a v1 release, PR, or merge gate.
+    scenarios:
+      - id: release.ci_gate.sequential.local
+        kind: steps
+        steps:
+          - Run node scripts/release-gate.mjs from the repository root.
+          - Confirm install, typecheck, build, test, package doctor, matrix validation, matrix list, and pack run in order.
+          - Stop on the first failing command.
+    observable_outcomes:
+      - The command prints release gate passed only after all sequential checks exit zero.
     host_applicability:
       - host_surface: codex.cli
         supported: true
