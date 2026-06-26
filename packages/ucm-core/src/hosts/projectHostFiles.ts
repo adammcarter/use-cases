@@ -1,16 +1,15 @@
-import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { delimiter, dirname, isAbsolute, join, relative, sep } from "node:path";
+import { dirname, isAbsolute, join, relative, sep } from "node:path";
 import type { ResolvedWorkspaceContext } from "../roots.js";
 import { computeSemanticHash, type Diagnostic } from "../schema/index.js";
+import { deriveHostConformance, runExecutableSmoke } from "./conformanceStatus.js";
 import type {
   HostConformanceResult,
   HostDoctorResult,
   HostProfile,
   HostProjectionMode,
   HostProjectionOperation,
-  HostProjectionResult,
-  HostExecutableSmoke
+  HostProjectionResult
 } from "./types.js";
 
 const MANAGED_MARKER = "presentation-skills:managed";
@@ -151,6 +150,13 @@ export function runHostConformance(options: { context: ResolvedWorkspaceContext;
     }
   ];
   const staticConformant = staticChecks.every((check) => check.result === "pass");
+  const evidenceEventIds: string[] = [];
+  const derived = deriveHostConformance({
+    profile: options.profile,
+    staticConformant,
+    evidenceEventIds,
+    executableSmoke
+  });
   return {
     schema_version: 1,
     host: options.profile.host,
@@ -158,105 +164,14 @@ export function runHostConformance(options: { context: ResolvedWorkspaceContext;
     profile_id: options.profile.profile_id,
     checked_at: GENERATED_AT,
     status_basis: "static_conformance_only",
-    support_status: staticConformant ? "conformant_static" : "not_tested",
+    support_status: derived.support_status,
     profile_hash: computeSemanticHash(options.profile),
     projection_manifest_hash: manifestHash,
-    evidence_event_ids: [],
+    evidence_event_ids: evidenceEventIds,
     executable_smoke: executableSmoke,
     checks,
-    diagnostics: []
+    diagnostics: derived.diagnostics
   };
-}
-
-function runExecutableSmoke(profile: HostProfile): HostExecutableSmoke {
-  const command = smokeCommand(profile.host);
-  const resolved = resolveExecutable(command.executable);
-  if (!resolved) {
-    return {
-      status: "not_run",
-      executable: command.executable,
-      argv: command.argv,
-      reason: `Executable '${command.label}' not found on PATH; host smoke was not run.`,
-      exit_code: null
-    };
-  }
-
-  const result = spawnSync(resolved, command.argv, {
-    encoding: "utf8",
-    timeout: 5_000
-  });
-  if (result.error) {
-    return {
-      status: "failed",
-      executable: command.executable,
-      argv: command.argv,
-      reason: `Executable '${command.label}' failed to run: ${result.error.message}`,
-      exit_code: result.status ?? null,
-      stdout: trimOutput(result.stdout),
-      stderr: trimOutput(result.stderr)
-    };
-  }
-  if (result.status !== 0 && unavailableOutput(result.stdout, result.stderr)) {
-    return {
-      status: "not_run",
-      executable: command.executable,
-      argv: command.argv,
-      reason: `Executable '${command.label}' is unavailable: ${trimOutput(result.stderr) ?? trimOutput(result.stdout) ?? "not available"}.`,
-      exit_code: result.status,
-      stdout: trimOutput(result.stdout),
-      stderr: trimOutput(result.stderr)
-    };
-  }
-  if (result.status !== 0) {
-    return {
-      status: "failed",
-      executable: command.executable,
-      argv: command.argv,
-      reason: `Executable '${command.label}' exited with status ${result.status}.`,
-      exit_code: result.status,
-      stdout: trimOutput(result.stdout),
-      stderr: trimOutput(result.stderr)
-    };
-  }
-  return {
-    status: "passed",
-    executable: command.executable,
-    argv: command.argv,
-    reason: `Executable '${command.label}' responded to the smoke command.`,
-    exit_code: 0,
-    stdout: trimOutput(result.stdout),
-    stderr: trimOutput(result.stderr)
-  };
-}
-
-function smokeCommand(host: HostProfile["host"]): { executable: string; argv: string[]; label: string } {
-  if (host === "copilot") {
-    return { executable: "gh", argv: ["copilot", "--version"], label: "gh copilot" };
-  }
-  return { executable: host, argv: ["--version"], label: host };
-}
-
-function resolveExecutable(executable: string): string | null {
-  const path = process.env.PATH ?? "";
-  for (const root of path.split(delimiter)) {
-    if (!root) {
-      continue;
-    }
-    const candidate = join(root, executable);
-    if (existsSync(candidate)) {
-      return candidate;
-    }
-  }
-  return null;
-}
-
-function trimOutput(value: string | null | undefined): string | undefined {
-  const trimmed = value?.trim();
-  return trimmed ? trimmed.slice(0, 1_000) : undefined;
-}
-
-function unavailableOutput(stdout: string | null | undefined, stderr: string | null | undefined): boolean {
-  return /not installed|not found|unavailable|unknown command|no such file/i.test(`${stdout ?? ""}\n${stderr ?? ""}`);
 }
 
 function renderActivationStub(profile: HostProfile, sourceSkillHashes: Record<string, string>): string {
