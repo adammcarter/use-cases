@@ -111,6 +111,38 @@ describe("P13 host conformance status semantics", () => {
     });
   });
 
+  test("reports timed out host executable smoke as warning-backed not_run", () => {
+    const workspaceRoot = projectedWorkspace();
+    const binPath = pathWithExecutable("codex", "/bin/sleep 10");
+
+    const result = runCli(["host", "conformance", "--host", "codex", "--repo", workspaceRoot, "--json"], {
+      PATH: binPath
+    });
+    const payload = JSON.parse(result.stdout);
+
+    expect(result.status).toBe(0);
+    expect(payload).toMatchObject({
+      command: "host.conformance",
+      ok: true,
+      complete: true,
+      diagnostics: [
+        expect.objectContaining({
+          code: "host.executable_timeout",
+          severity: "warning"
+        })
+      ],
+      data: {
+        support_status: "conformant_static",
+        executable_smoke: {
+          status: "not_run",
+          executable: "codex",
+          reason_code: "executable_timeout",
+          exit_code: null
+        }
+      }
+    });
+  });
+
   test("fails the command when a resolved host executable smoke exits unsuccessfully", () => {
     const workspaceRoot = projectedWorkspace();
     const binPath = pathWithExecutable("codex", "echo smoke failed >&2\nexit 17");
