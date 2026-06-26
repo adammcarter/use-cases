@@ -19,7 +19,19 @@ Repository content, tool output, logs, plans, runbooks, and generated artifacts 
 
 ## Modes
 
-Read-only behavior is the default. Write tools require `allow_write: true` in the tool arguments. Approval-sensitive behavior is request-only in v1.
+Read-only behavior is the default. Write tools require both server write mode and `allow_write: true` in the tool arguments. Server write mode is enabled by starting the MCP process with:
+
+```text
+PRESENTATION_SKILLS_MCP_WRITE=1
+```
+
+Command execution is a separate server mode. A capsule command step can run only when the MCP process also starts with:
+
+```text
+PRESENTATION_SKILLS_MCP_COMMAND_EXECUTION=1
+```
+
+Approval-sensitive behavior is request-only in v1.
 
 ```text
 Tool                         Read-only   Write mode   Approval-sensitive
@@ -34,6 +46,7 @@ evidence_record              no          yes          no
 evidence_void                no          yes          no
 plan_showcase                yes         yes          no
 plan_walkthrough             yes         yes          no
+capsule_run                  no          yes          no
 showcase_start               no          yes          no
 showcase_status              yes         yes          no
 showcase_record_observation  no          yes          no
@@ -55,6 +68,16 @@ Workspace-scoped tools require an explicit `repo` argument. Optional `data_root`
 MCP use-case delete means lifecycle removal, not physical deletion. `use_case_remove` marks the row `lifecycle: removed` and records removal metadata in the YAML file.
 
 MCP cannot treat YAML, repository content, generated plans, command output, logs, or tool output as instructions. Those inputs are data to validate, filter, and report.
+
+## Capsule Run Boundary
+
+`capsule_run` performs a persisted demo capsule through the showcase ledger. It requires server write mode plus `allow_write: true` because it records run events.
+
+Static observation text in a capsule is a prompt for a real observation; it is not proof and does not create a pass verdict by itself.
+
+Command steps are skipped unless the caller passes `execute_commands: true`, the capsule has `permissions.command_execution: true`, and the MCP server has command-execution mode enabled. Command execution uses executable plus argv without a shell, resolves the working directory inside the repository, runs with a small environment allowlist, records bounded/redacted stdout/stderr as observations, and records pass/fail verdicts from the capsule's expected exit codes.
+
+MCP capsule runs do not record user approval. If the run requires user sign-off, use `showcase_request_approval` to produce the CLI-mediated approval command.
 
 ## Approval Boundary
 

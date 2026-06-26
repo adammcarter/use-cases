@@ -48,12 +48,12 @@ describe("P14 MCP use-case mutation tools", () => {
   test("adds and removes a planned use case through MCP write tools", () => {
     const workspaceRoot = fixtureWorkspace("minimal-valid");
     const useCaseId = "auth.login.mcp_mutation";
-    const created = callTool("use_case_upsert", {
+    const created = withMcpWriteMode(() => callTool("use_case_upsert", {
       repo: workspaceRoot,
       allow_write: true,
       file: "use-cases/auth-login.yml",
       use_case: plannedUseCase(useCaseId)
-    });
+    }));
 
     expect(created).toMatchObject({
       command: "matrix.upsert",
@@ -65,12 +65,12 @@ describe("P14 MCP use-case mutation tools", () => {
       }
     });
 
-    const removed = callTool("use_case_remove", {
+    const removed = withMcpWriteMode(() => callTool("use_case_remove", {
       repo: workspaceRoot,
       allow_write: true,
       use_case: useCaseId,
       reason: "MCP mutation test cleanup."
-    });
+    }));
 
     expect(removed).toMatchObject({
       command: "matrix.remove",
@@ -86,13 +86,13 @@ describe("P14 MCP use-case mutation tools", () => {
 
   test("rejects model-controlled user claims before mutation", () => {
     const workspaceRoot = fixtureWorkspace("minimal-valid");
-    const envelope = callTool("use_case_upsert", {
+    const envelope = withMcpWriteMode(() => callTool("use_case_upsert", {
       repo: workspaceRoot,
       allow_write: true,
       actor_type: "user",
       file: "use-cases/auth-login.yml",
       use_case: plannedUseCase("auth.login.user_claim")
-    });
+    }));
 
     expect(envelope).toMatchObject({
       command: "matrix.upsert",
@@ -103,12 +103,12 @@ describe("P14 MCP use-case mutation tools", () => {
 
   test("rejects path escapes through MCP mutation", () => {
     const workspaceRoot = fixtureWorkspace("minimal-valid");
-    const envelope = callTool("use_case_upsert", {
+    const envelope = withMcpWriteMode(() => callTool("use_case_upsert", {
       repo: workspaceRoot,
       allow_write: true,
       file: "../escape.yml",
       use_case: plannedUseCase("auth.login.escape")
-    });
+    }));
 
     expect(envelope).toMatchObject({
       command: "matrix.upsert",
@@ -147,4 +147,18 @@ function plannedUseCase(id: string): Record<string, unknown> {
     usage_frequency: "occasional",
     tags: ["mcp", "mutation"]
   };
+}
+
+function withMcpWriteMode<T>(fn: () => T): T {
+  const previous = process.env.PRESENTATION_SKILLS_MCP_WRITE;
+  process.env.PRESENTATION_SKILLS_MCP_WRITE = "1";
+  try {
+    return fn();
+  } finally {
+    if (previous === undefined) {
+      delete process.env.PRESENTATION_SKILLS_MCP_WRITE;
+    } else {
+      process.env.PRESENTATION_SKILLS_MCP_WRITE = previous;
+    }
+  }
 }

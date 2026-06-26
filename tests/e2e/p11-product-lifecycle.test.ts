@@ -10,7 +10,7 @@ const zeroHash = "sha256:0000000000000000000000000000000000000000000000000000000
 
 beforeAll(() => {
   requireSuccess(run("corepack", ["pnpm", "build"]));
-});
+}, 60_000);
 
 describe("P11 product lifecycle examples", () => {
   test("runs the complete product lifecycle on the clean example", () => {

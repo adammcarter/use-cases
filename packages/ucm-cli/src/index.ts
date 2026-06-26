@@ -21,6 +21,7 @@ const {
   queryUseCases,
   replayEvidence,
   resolveWorkspaceContext,
+  runDemoCapsule,
   runHostConformance: runHostConformanceCore,
   runHostDoctor: runHostDoctorCore,
   replayShowcaseRun,
@@ -532,6 +533,9 @@ function runCapsule(argv: string[]): number {
   if (action === "plan") {
     return runCapsulePlan(argv);
   }
+  if (action === "run") {
+    return runCapsuleRun(argv);
+  }
   return writeError("capsule.unknown", "command.unknown", "Unknown capsule command.");
 }
 
@@ -615,6 +619,56 @@ function runCapsulePlan(argv: string[]): number {
     )}\n`
   );
   return result.outcome === "generated" ? 0 : result.outcome === "integrity_blocked" ? 3 : 1;
+}
+
+function runCapsuleRun(argv: string[]): number {
+  const contextResult = contextFromArgs(argv, "capsule.run");
+  if ("exitCode" in contextResult) {
+    return contextResult.exitCode;
+  }
+  const capsuleId = valueAfter(argv, "--capsule");
+  if (!capsuleId) {
+    return writeError("capsule.run", "cli_invalid_arguments", "Missing --capsule.");
+  }
+  try {
+    const result = runDemoCapsule({
+      context: contextResult,
+      capsuleId,
+      executeCommands: argv.includes("--execute-commands"),
+      actorType: "agent",
+      hostSurface: "codex.cli",
+      idempotencyKey: valueAfter(argv, "--idempotency-key") ?? undefined,
+      recordedAt: valueAfter(argv, "--recorded-at") ?? undefined,
+      commandTimeoutMs: numberAfter(argv, "--command-timeout-ms") ?? undefined
+    });
+    return writeCapsuleRunResult(result, contextResult);
+  } catch (error) {
+    const code = error instanceof Error && "code" in error ? String(error.code) : "internal_error";
+    return writeError("capsule.run", code, error instanceof Error ? error.message : String(error), 1);
+  }
+}
+
+function writeCapsuleRunResult(
+  result: ReturnType<typeof runDemoCapsule>,
+  context: ResolvedWorkspaceContext
+): number {
+  const ok = result.outcome !== "blocked";
+  process.stdout.write(
+    `${JSON.stringify(
+      createCliResult("capsule.run", result, {
+        ok,
+        complete: result.complete,
+        diagnostics: result.diagnostics,
+        workspaceRoot: context.workspace_root,
+        dataRoot: context.data_root,
+        componentId: context.component_id
+      })
+    )}\n`
+  );
+  if (!ok) {
+    return result.diagnostics.some((item) => item.code === "capsule.command_cwd_escape") ? 4 : 1;
+  }
+  return result.command_results.some((item) => !item.matched_expected_exit_code) ? 1 : 0;
 }
 
 function runShowcase(argv: string[]): number {

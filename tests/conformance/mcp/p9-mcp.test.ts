@@ -63,14 +63,14 @@ describe("P9 MCP wrapper contract", () => {
   test("showcase_record_verdict cannot claim a trusted user actor", () => {
     const { fixture, runId, planItemId, ledgerPath } = completedShowcaseRun();
     const before = readFileSync(ledgerPath, "utf8");
-    const envelope = callTool("showcase_record_verdict", {
+    const envelope = withMcpWriteMode(() => callTool("showcase_record_verdict", {
       repo: fixture,
       allow_write: true,
       run: runId,
       item: planItemId,
       verdict: "pass",
       actor_type: "user"
-    });
+    }));
 
     expect(envelope).toMatchObject({
       command: "showcase.record-verdict",
@@ -206,4 +206,18 @@ function readTreeBytes(root: string): string {
     }
   }
   return parts.join("\n");
+}
+
+function withMcpWriteMode<T>(fn: () => T): T {
+  const previous = process.env.PRESENTATION_SKILLS_MCP_WRITE;
+  process.env.PRESENTATION_SKILLS_MCP_WRITE = "1";
+  try {
+    return fn();
+  } finally {
+    if (previous === undefined) {
+      delete process.env.PRESENTATION_SKILLS_MCP_WRITE;
+    } else {
+      process.env.PRESENTATION_SKILLS_MCP_WRITE = previous;
+    }
+  }
 }

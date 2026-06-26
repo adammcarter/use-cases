@@ -109,7 +109,11 @@ type McpEnvelope = {
 async function startMcpServer() {
   const child = spawn(process.execPath, ["packages/ucm-mcp/dist/index.js", "--stdio"], {
     cwd: repoRoot,
-    stdio: ["pipe", "pipe", "pipe"]
+    stdio: ["pipe", "pipe", "pipe"],
+    env: {
+      ...process.env,
+      PRESENTATION_SKILLS_MCP_WRITE: "1"
+    }
   });
   const lines: string[] = [];
   child.stdout.setEncoding("utf8");

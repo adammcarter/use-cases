@@ -86,6 +86,31 @@ export function appendShowcaseObservation(options: {
   return appendResult(options.context, event);
 }
 
+export function appendShowcaseAction(options: {
+  context: ResolvedWorkspaceContext;
+  runId: string;
+  planItemId: string;
+  action: Record<string, unknown>;
+  actorType: ShowcaseActorType;
+  hostSurface: HostSurface;
+  idempotencyKey: string;
+  recordedAt?: string;
+}): ShowcaseAppendResult {
+  const event = appendEvent(options.context, options.runId, {
+    eventType: "action_recorded",
+    actorType: options.actorType,
+    hostSurface: options.hostSurface,
+    idempotencyKey: options.idempotencyKey,
+    recordedAt: options.recordedAt,
+    payload: {
+      plan_item_id: options.planItemId,
+      epoch_id: "epoch.1",
+      action: options.action
+    }
+  });
+  return appendResult(options.context, event);
+}
+
 export function appendShowcaseVerdict(options: {
   context: ResolvedWorkspaceContext;
   runId: string;
