@@ -1,0 +1,49 @@
+schema_version: 1
+feature:
+  id: capsule.live_runner
+  name: Demo capsule runner
+  summary: Persisted capsules can be performed as script-led or agent-led live demos.
+use_cases:
+  - id: capsule.live_runner.scripted
+    title: Run a command-backed demo capsule as a real showcase gate
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    tags: [capsule, showcase, live-demo, command]
+    source_refs:
+      - kind: file
+        path: packages/ucm-core/src/capsules/runCapsule.ts
+      - kind: file
+        path: packages/ucm-core/src/showcase/appendShowcaseEvent.ts
+    actor: agent
+    intent: Perform a persisted demo capsule in front of the user or reviewer and record command-backed proof in the showcase ledger.
+    preconditions:
+      - The capsule resolves to active use-case rows.
+      - Command execution is explicitly requested.
+      - The capsule permits command execution.
+    trigger: Agent reaches a final release or feature gate that needs a live, repeatable demo.
+    scenarios:
+      - id: capsule.live_runner.scripted.cli
+        kind: steps
+        steps:
+          - Run capsule run with --execute-commands and a stable idempotency key.
+          - Confirm the runner starts a showcase run from the capsule plan.
+          - Confirm command stdout, stderr, exit code, and verdict are recorded.
+          - Confirm the run finishes only when all command-backed items pass and no runtime observations remain pending.
+    observable_outcomes:
+      - A showcase JSONL ledger contains run_started, action_recorded, observation_recorded, verdict_recorded, and run_finished events.
+      - The run status is completed and passed without recording user approval unless the selected row requires it.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+      - host_surface: claude.cli
+        supported: true
+      - host_surface: copilot.cli
+        supported: true
+      - host_surface: opencode.cli
+        supported: true
+    verification_policy:
+      mode: none
+    approval_policy:
+      mode: none

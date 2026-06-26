@@ -264,7 +264,7 @@ describe("P11 host and project acceptance", () => {
       complete: true,
       data: {
         counts: {
-          use_cases_addressable: 8
+          use_cases_addressable: 12
         }
       }
     });
@@ -272,12 +272,16 @@ describe("P11 host and project acceptance", () => {
     const listed = runCliJson(["matrix", "list", "--repo", repoRoot, "--json"]);
     expect(listed.status).toBe(0);
     expect((listed.payload.data.use_cases as Array<{ id: string }>).map((item) => item.id)).toEqual([
+      "capsule.live_runner.scripted",
       "evidence.core.record",
       "hosts.projections.all",
+      "hosts.projections.static_conformance",
+      "matrix.core.mutate",
       "matrix.core.validate",
       "mcp.use_case_mutation.safe",
       "mcp.wrapper.parity",
       "migration.test_matrix.draft",
+      "release.ci_gate.sequential",
       "release.package.installable_artifact",
       "showcase.live.user_signoff"
     ]);

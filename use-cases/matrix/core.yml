@@ -10,21 +10,81 @@ use_cases:
     value_tier: critical
     journey_role: golden
     usage_frequency: common
-    tags: [matrix, acceptance]
+    tags:
+      - matrix
+      - acceptance
     source_refs:
       - kind: file
         path: packages/ucm-core/src/useCases/loadUseCaseMatrix.ts
     actor: agent
     intent: Confirm the matrix is current and structurally clean.
-    preconditions: [Use cases are stored under use-cases.]
+    preconditions:
+      - Use cases are stored under use-cases.
     trigger: Agent plans or verifies work.
     scenarios:
       - id: matrix.core.validate.cli
         kind: steps
-        steps: [Run matrix validate.]
-    observable_outcomes: [The matrix reports clean integrity.]
+        steps:
+          - Run matrix validate.
+    observable_outcomes:
+      - The matrix reports clean integrity.
     host_applicability:
       - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: none
+    approval_policy:
+      mode: none
+  - id: matrix.core.mutate
+    title: Add, update, or retire use-case rows safely
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    tags:
+      - matrix
+      - mutation
+      - cli
+      - lifecycle
+    source_refs:
+      - kind: file
+        path: packages/ucm-core/src/useCases/mutateUseCaseMatrix.ts
+      - kind: file
+        path: packages/ucm-cli/src/index.ts
+    actor: agent
+    intent: Keep the living use-case matrix current during planning, implementation, and review without bypassing validation.
+    preconditions:
+      - The current use-case matrix is complete enough to mutate safely.
+      - The target YAML file stays under use-cases.
+    trigger: Agent or user adds, updates, or retires an acceptance row.
+    scenarios:
+      - id: matrix.core.mutate.upsert
+        kind: steps
+        steps:
+          - Run matrix upsert with a target use-cases YAML file and one use_case object.
+          - Validate that the matrix remains complete after the write.
+      - id: matrix.core.mutate.remove
+        kind: steps
+        steps:
+          - Run matrix remove with a use-case id and reason.
+          - Confirm the row is marked lifecycle removed rather than physically deleted.
+      - id: matrix.core.mutate.safety
+        kind: steps
+        steps:
+          - Try a path escape, damaged matrix, or stale expected hash.
+          - Confirm the mutation is blocked and no unsafe write is committed.
+    observable_outcomes:
+      - Mutation commands return matrix.upsert or matrix.remove envelopes with before and after hashes.
+      - The matrix remains structurally clean after accepted writes.
+      - Removal preserves accidental history as a lifecycle transition.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+      - host_surface: claude.cli
+        supported: true
+      - host_surface: copilot.cli
+        supported: true
+      - host_surface: opencode.cli
         supported: true
     verification_policy:
       mode: none
