@@ -22,10 +22,11 @@ use_cases:
       - id: showcase.live.user_signoff.cli
         kind: steps
         steps:
-          - Start a showcase run.
+          - Generate a showcase plan and start the run from the saved plan file.
           - Record observation and verdict.
-          - Finish and record user approval.
-    observable_outcomes: [The run status shows passed and approved.]
+          - Finish the run.
+          - Request approval through MCP if needed, then record user approval through trusted interactive CLI confirmation.
+    observable_outcomes: [The run status shows passed with approval bound to the generated plan hash and finish event.]
     host_applicability:
       - host_surface: codex.cli
         supported: true

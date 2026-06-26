@@ -14,3 +14,7 @@ host families, but profile existence is not proof of support.
 can be `passed`, `failed`, or `not_run`. `not_run` is an exact reason, not a
 support claim. `evidence_event_ids` must stay empty until real host evidence is
 recorded.
+
+Missing or unavailable executables produce warning-backed `not_run` results.
+Resolved executables that fail their smoke command produce failed conformance and
+exit non-zero, even when static projection files are present.

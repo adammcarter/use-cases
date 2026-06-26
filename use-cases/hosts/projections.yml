@@ -21,8 +21,11 @@ use_cases:
     scenarios:
       - id: hosts.projections.all.cli
         kind: steps
-        steps: [Run host conformance for all supported host profiles.]
-    observable_outcomes: [Each host reports static conformance or exact not-run reasons.]
+        steps:
+          - Run host conformance with a passing executable smoke.
+          - Run host conformance with a missing or unavailable executable.
+          - Run host conformance with a resolved executable that fails.
+    observable_outcomes: [Hosts report passed, warning-backed not_run, or failed smoke semantics without claiming verified support.]
     host_applicability:
       - host_surface: codex.cli
         supported: true
