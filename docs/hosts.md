@@ -15,6 +15,16 @@ can be `passed`, `failed`, or `not_run`. `not_run` is an exact reason, not a
 support claim. `evidence_event_ids` must stay empty until real host evidence is
 recorded.
 
+Each host row includes a `support` table:
+
+```text
+profile_available      profile was loaded as expectation data
+projected              this host's managed projection file matches expected content
+static_conformant      projection and canonical skill hashes match
+executable_smoke       passed | failed | not_run
+verified_with_evidence true only when evidence_event_ids is non-empty
+```
+
 Missing or unavailable executables produce warning-backed `not_run` results.
 Resolved executables that fail their smoke command produce failed conformance and
 exit non-zero, even when static projection files are present.
