@@ -33,6 +33,7 @@ const expectedSchemaIds = [
   "https://presentation-skills.dev/schemas/v1/workflow-mode.schema.json",
   "https://presentation-skills.dev/schemas/v1/matrix-validation-result.schema.json",
   "https://presentation-skills.dev/schemas/v1/matrix-list-result.schema.json",
+  "https://presentation-skills.dev/schemas/v1/matrix-mutation-result.schema.json",
   "https://presentation-skills.dev/schemas/v1/evidence-append-result.schema.json",
   "https://presentation-skills.dev/schemas/v1/evidence-status-result.schema.json",
   "https://presentation-skills.dev/schemas/v1/migration-test-matrix-result.schema.json"

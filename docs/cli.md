@@ -12,6 +12,11 @@ All commands use JSON envelopes with `schema_version`, `protocol_version`,
   `--changed-path`.
 - `matrix status --repo <path> --json`: combine matrix integrity and evidence
   replay status.
+- `matrix upsert --repo <path> --file <path> --use-case-json <json> --json`:
+  add or update one use-case entry in an existing feature file.
+- `matrix remove --repo <path> --use-case <id> --reason <text> --json`:
+  mark a use case as `removed`. This is a lifecycle change, not physical
+  deletion.
 
 ## Evidence
 

@@ -2,7 +2,7 @@
 import { accessSync, constants, readFileSync, realpathSync, renameSync, writeFileSync } from "node:fs";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { HostName, HostProfile, UseCaseQuery } from "@presentation-skills/ucm-core";
+import type { HostName, HostProfile, ResolvedWorkspaceContext, UseCaseQuery } from "@presentation-skills/ucm-core";
 
 type UcmCoreModule = typeof import("@presentation-skills/ucm-core");
 
@@ -33,6 +33,7 @@ const {
   correctShowcaseVerdict,
   finishShowcaseRun,
   loadPresentationPlanFile,
+  mutateUseCaseMatrix,
   pauseShowcaseRun,
   rejectShowcaseApproval,
   resumeShowcaseRun,
@@ -124,6 +125,14 @@ export function runCli(argv: string[]): number {
 
   if (normalizedArgv[0] === "matrix" && normalizedArgv[1] === "status" && wantsJson) {
     return runMatrixStatus(normalizedArgv);
+  }
+
+  if (normalizedArgv[0] === "matrix" && normalizedArgv[1] === "upsert" && wantsJson) {
+    return runMatrixUpsert(normalizedArgv);
+  }
+
+  if (normalizedArgv[0] === "matrix" && normalizedArgv[1] === "remove" && wantsJson) {
+    return runMatrixRemove(normalizedArgv);
   }
 
   if (normalizedArgv[0] === "plan" && normalizedArgv[1] === "showcase" && wantsJson) {
@@ -394,6 +403,79 @@ function runMatrixStatus(argv: string[]): number {
     )}\n`
   );
   return data.complete ? 0 : 1;
+}
+
+function runMatrixUpsert(argv: string[]): number {
+  const contextResult = contextFromArgs(argv, "matrix.upsert");
+  if ("exitCode" in contextResult) {
+    return contextResult.exitCode;
+  }
+  const targetFile = valueAfter(argv, "--file");
+  const useCaseJson = valueAfter(argv, "--use-case-json");
+  if (!targetFile || !useCaseJson) {
+    return writeError("matrix.upsert", "cli_invalid_arguments", "Missing --file or --use-case-json.");
+  }
+  let useCase: Record<string, unknown>;
+  try {
+    useCase = JSON.parse(useCaseJson) as Record<string, unknown>;
+  } catch (error) {
+    return writeError("matrix.upsert", "matrix.mutation_invalid_json", error instanceof Error ? error.message : String(error));
+  }
+  const result = mutateUseCaseMatrix({
+    context: contextResult,
+    operation: "upsert",
+    targetFile,
+    useCase,
+    expectedSemanticHash: valueAfter(argv, "--expected-hash") ?? undefined,
+    actor: "agent"
+  });
+  return writeMutationResult("matrix.upsert", result, contextResult);
+}
+
+function runMatrixRemove(argv: string[]): number {
+  const contextResult = contextFromArgs(argv, "matrix.remove");
+  if ("exitCode" in contextResult) {
+    return contextResult.exitCode;
+  }
+  const useCaseId = valueAfter(argv, "--use-case");
+  const reason = valueAfter(argv, "--reason");
+  if (!useCaseId || !reason) {
+    return writeError("matrix.remove", "cli_invalid_arguments", "Missing --use-case or --reason.");
+  }
+  const result = mutateUseCaseMatrix({
+    context: contextResult,
+    operation: "remove",
+    useCaseId,
+    reason,
+    expectedSemanticHash: valueAfter(argv, "--expected-hash") ?? undefined,
+    actor: "agent"
+  });
+  return writeMutationResult("matrix.remove", result, contextResult);
+}
+
+function writeMutationResult(
+  command: string,
+  result: ReturnType<typeof mutateUseCaseMatrix>,
+  context: ResolvedWorkspaceContext
+): number {
+  const ok = result.status !== "blocked";
+  process.stdout.write(
+    `${JSON.stringify(
+      createCliResult(command, result, {
+        ok,
+        complete: ok,
+        diagnostics: result.diagnostics,
+        workspaceRoot: context.workspace_root,
+        dataRoot: context.data_root,
+        componentId: context.component_id
+      })
+    )}\n`
+  );
+  if (ok) {
+    return 0;
+  }
+  const pathEscape = result.diagnostics.some((item) => item.code === "matrix.mutation_path_escape");
+  return pathEscape ? 4 : 1;
 }
 
 function runPlan(argv: string[], mode: "showcase" | "walkthrough"): number {

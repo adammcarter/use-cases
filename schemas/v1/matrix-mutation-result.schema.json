@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://presentation-skills.dev/schemas/v1/matrix-mutation-result.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "operation": { "enum": ["upsert", "remove"] },
+    "status": { "enum": ["created", "updated", "removed", "blocked"] },
+    "use_case_id": {
+      "anyOf": [
+        { "$ref": "common.schema.json#/$defs/id" },
+        { "type": "null" }
+      ]
+    },
+    "file_path": {
+      "anyOf": [
+        { "type": "string", "minLength": 1 },
+        { "type": "null" }
+      ]
+    },
+    "before_hash": {
+      "anyOf": [
+        { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        { "type": "null" }
+      ]
+    },
+    "after_hash": {
+      "anyOf": [
+        { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        { "type": "null" }
+      ]
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": { "$ref": "common.schema.json#/$defs/diagnostic" }
+    }
+  },
+  "required": [
+    "schema_version",
+    "operation",
+    "status",
+    "use_case_id",
+    "file_path",
+    "before_hash",
+    "after_hash",
+    "diagnostics"
+  ]
+}
