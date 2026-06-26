@@ -9,6 +9,7 @@ import {
   finishShowcaseRun,
   loadHostProfile,
   loadUseCaseMatrix,
+  loadPresentationPlanFile,
   queryUseCases,
   readShowcaseEvents,
   replayEvidence,
@@ -289,6 +290,20 @@ function planPresentation(args: JsonObject, mode: "showcase" | "walkthrough"): C
 function showcaseStart(args: JsonObject): CliResult<unknown> {
   const context = contextFromArgs(args, "showcase.start");
   if ("envelope" in context) return context.envelope;
+  const planFile = stringArg(args, "plan_file");
+  if (planFile) {
+    const planPath = isAbsolute(planFile) ? planFile : resolve(context.workspace_root, planFile);
+    const plan = loadPresentationPlanFile(planPath);
+    return showcaseEnvelope("showcase.start", startShowcaseRun({
+      context,
+      plan,
+      controlMode: "agent_led",
+      actorType: actorArg(args),
+      hostSurface: hostSurfaceArg(args),
+      idempotencyKey: stringArg(args, "idempotency_key") ?? `mcp:start-plan:${plan.plan_content_hash}`,
+      recordedAt: stringArg(args, "recorded_at") ?? "2026-06-25T12:00:00.000Z"
+    }), context);
+  }
   const selected = stringArg(args, "select");
   if (!selected) return errorEnvelope("showcase.start", "showcase.plan_required", "Only ad hoc select starts are supported.");
   const matrix = loadUseCaseMatrix({ context });
