@@ -95,6 +95,7 @@ export type HostExecutableSmoke = {
   status: "passed" | "failed" | "not_run";
   executable: string;
   argv: string[];
+  reason_code?: "ok" | "executable_not_found" | "executable_unavailable" | "executable_run_error" | "nonzero_exit";
   reason: string;
   exit_code: number | null;
   stdout?: string;

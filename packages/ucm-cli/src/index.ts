@@ -1084,6 +1084,7 @@ function runHostConformance(argv: string[]): number {
       return runHostConformanceCore({ context: contextResult, profile: profile.profile });
     });
     const diagnostics = hosts.flatMap((host) => "diagnostics" in host ? host.diagnostics : []);
+    const hasBlockingDiagnostics = diagnostics.some((diagnostic) => diagnostic.severity === "error");
     const failedExecutableSmokes = hosts.filter(
       (host) => "executable_smoke" in host && host.executable_smoke.status === "failed"
     ).length;
@@ -1092,12 +1093,12 @@ function runHostConformance(argv: string[]): number {
     ).length;
     const data = {
       schema_version: 1,
-      complete: diagnostics.length === 0,
+      complete: !hasBlockingDiagnostics,
       hosts,
       summary: {
         total_hosts: SUPPORTED_HOSTS.length,
         static_conformant: hosts.filter(
-          (host) => "support_status" in host && host.support_status === "conformant_static"
+          (host) => "checks" in host && hostStaticChecksPass(host.checks)
         ).length,
         executable_smoke_passed: hosts.filter(
           (host) => "executable_smoke" in host && host.executable_smoke.status === "passed"
@@ -1109,8 +1110,8 @@ function runHostConformance(argv: string[]): number {
     process.stdout.write(
       `${JSON.stringify(
         createCliResult("host.conformance", data, {
-          ok: diagnostics.length === 0,
-          complete: diagnostics.length === 0,
+          ok: !hasBlockingDiagnostics,
+          complete: !hasBlockingDiagnostics,
           diagnostics,
           workspaceRoot: contextResult.workspace_root,
           dataRoot: contextResult.data_root,
@@ -1118,7 +1119,7 @@ function runHostConformance(argv: string[]): number {
         })
       )}\n`
     );
-    return diagnostics.length === 0 ? 0 : 1;
+    return hasBlockingDiagnostics ? 1 : 0;
   }
   const profileResult = profileFromArgs(argv, contextResult.plugin_root, "host.conformance");
   if (profileResult.exitCode !== undefined) {
@@ -1128,8 +1129,8 @@ function runHostConformance(argv: string[]): number {
   process.stdout.write(
     `${JSON.stringify(
       createCliResult("host.conformance", result, {
-        ok: true,
-        complete: true,
+        ok: !hasBlockingHostDiagnostics(result.diagnostics),
+        complete: !hasBlockingHostDiagnostics(result.diagnostics),
         diagnostics: result.diagnostics,
         workspaceRoot: contextResult.workspace_root,
         dataRoot: contextResult.data_root,
@@ -1137,7 +1138,16 @@ function runHostConformance(argv: string[]): number {
       })
     )}\n`
   );
-  return 0;
+  return hasBlockingHostDiagnostics(result.diagnostics) ? 1 : 0;
+}
+
+function hasBlockingHostDiagnostics(diagnostics: Array<{ severity: string }>): boolean {
+  return diagnostics.some((diagnostic) => diagnostic.severity === "error");
+}
+
+function hostStaticChecksPass(checks: Array<{ id: string; result: string }>): boolean {
+  const staticChecks = checks.filter((check) => check.id === "projected_files_match_manifest" || check.id === "canonical_skill_hashes_match");
+  return staticChecks.length > 0 && staticChecks.every((check) => check.result === "pass");
 }
 
 function profileFromArgs(
