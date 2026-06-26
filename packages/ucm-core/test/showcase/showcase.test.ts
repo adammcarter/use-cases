@@ -14,6 +14,7 @@ import {
   appendShowcaseVerdict,
   correctShowcaseVerdict,
   finishShowcaseRun,
+  readShowcaseEvents,
   replayShowcaseRun,
   startShowcaseRun
 } from "../../src/showcase/index.js";
@@ -194,6 +195,55 @@ describe("P6 showcase run replay", () => {
     expect(status.diagnostic_summary).toMatchObject({
       ignored_approval_events: ["evt_untrusted_user_rejection"]
     });
+  });
+
+  test("trusted user approval requires a finished run and binds to the finish event", () => {
+    const workspaceRoot = fixtureWorkspace("evidence-basic");
+    const context = resolveWorkspaceContext({ workspaceRoot });
+    const unfinished = startShowcaseRun({
+      context,
+      plan: planFor(context),
+      controlMode: "agent_led",
+      actorType: "agent",
+      hostSurface: "codex.cli",
+      idempotencyKey: "p6-unfinished-approval-start",
+      recordedAt: "2026-06-25T12:00:00.000Z"
+    });
+
+    expect(() =>
+      appendShowcaseApproval({
+        context,
+        runId: unfinished.run_id,
+        decision: "approved",
+        actorType: "user",
+        hostSurface: "codex.cli",
+        statement: "Trusted approval still requires finish.",
+        idempotencyKey: "p6-unfinished-approval",
+        recordedAt: "2026-06-25T12:01:00.000Z",
+        authority: { kind: "trusted_host_token", token: "test-token", verified: true }
+      })
+    ).toThrow(/finish/i);
+
+    const finished = completePassingRun(context);
+    const finishEvent = readShowcaseEvents(context, finished.run_id).events.find((event) => event.event_type === "run_finished");
+    const approval = appendShowcaseApproval({
+      context,
+      runId: finished.run_id,
+      decision: "approved",
+      actorType: "user",
+      hostSurface: "codex.cli",
+      statement: "Trusted user accepted the finished run.",
+      idempotencyKey: "p6-finished-approval",
+      recordedAt: "2026-06-25T12:04:00.000Z",
+      authority: { kind: "trusted_host_token", token: "test-token", verified: true }
+    });
+
+    expect(approval.event.payload.scope).toMatchObject({
+      plan_content_hash: finished.event.payload.plan_content_hash,
+      finish_event_id: finishEvent?.event_id,
+      run_outcome: "passed"
+    });
+    expect(approval.status.approval_state).toBe("approved");
   });
 
   test("revision epoch stales previous verdicts until they are rerun or carried forward", () => {

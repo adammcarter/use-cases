@@ -1,12 +1,13 @@
 import { existsSync } from "node:fs";
 import { computeSemanticHash } from "../schema/index.js";
 import { PresentationSkillsError } from "../errors.js";
-import { computePresentationPlanHash, type PresentationPlan } from "../presentation/index.js";
+import type { PresentationPlan } from "../presentation/index.js";
 import type { ResolvedWorkspaceContext } from "../roots.js";
 import type { HostSurface } from "../useCases/types.js";
 import { appendShowcaseEventLine, readShowcaseEvents, showcaseLedgerPath } from "./jsonlLedger.js";
 import { replayShowcaseEvents, replayShowcaseRun } from "./replayRun.js";
 import { requireTrustedUserApprovalAuthority, type TrustedApprovalAuthority } from "./approvalAuthority.js";
+import { assertPresentationPlanHash } from "./planBinding.js";
 import type {
   ShowcaseActorType,
   ShowcaseAppendResult,
@@ -17,9 +18,7 @@ import type {
 } from "./types.js";
 
 export function startShowcaseRun(options: ShowcaseStartOptions): ShowcaseAppendResult {
-  if (computePresentationPlanHash(options.plan) !== options.plan.plan_content_hash) {
-    throw new PresentationSkillsError("Plan content hash does not match plan body.", "showcase_plan_hash_mismatch");
-  }
+  assertPresentationPlanHash(options.plan);
   if (options.plan.integrity_acknowledgement_required && !options.knownGapAcknowledgement?.acknowledged) {
     throw new PresentationSkillsError("Partial plan requires known-gap acknowledgement.", "showcase_known_gap_ack_required");
   }
@@ -275,6 +274,11 @@ export function appendShowcaseApproval(options: {
     authority: options.authority,
     userApprovalRequired: planRequiresUserApproval(plan)
   });
+  const finish = read.events.slice().reverse().find((event) => event.event_type === "run_finished");
+  if (!finish) {
+    throw new PresentationSkillsError("User approval requires a finished showcase run.", "showcase.finish_required_for_approval");
+  }
+  const status = replayShowcaseRun({ context: options.context, runId: options.runId });
   const event = appendEvent(options.context, options.runId, {
     eventType: "approval_recorded",
     actorType: options.actorType,
@@ -288,7 +292,9 @@ export function appendShowcaseApproval(options: {
       approval_statement: options.statement,
       scope: {
         plan_content_hash: plan?.plan_content_hash ?? "",
-        run_outcome: replayShowcaseRun({ context: options.context, runId: options.runId }).run_outcome
+        finish_event_id: finish.event_id,
+        run_outcome: status.run_outcome,
+        known_gap_count: status.known_gaps.length
       }
     }
   });
@@ -313,6 +319,11 @@ export function rejectShowcaseApproval(options: {
     authority: options.authority,
     userApprovalRequired: planRequiresUserApproval(plan)
   });
+  const finish = read.events.slice().reverse().find((event) => event.event_type === "run_finished");
+  if (!finish) {
+    throw new PresentationSkillsError("User rejection requires a finished showcase run.", "showcase.finish_required_for_approval");
+  }
+  const status = replayShowcaseRun({ context: options.context, runId: options.runId });
   const event = appendEvent(options.context, options.runId, {
     eventType: "approval_rejected",
     actorType: options.actorType,
@@ -323,7 +334,13 @@ export function rejectShowcaseApproval(options: {
       decision: "rejected",
       approver: { type: options.actorType },
       capture_method: options.actorType === "user" ? "trusted_user_interactive_cli" : "command_handler",
-      rejection_statement: options.statement
+      rejection_statement: options.statement,
+      scope: {
+        plan_content_hash: plan?.plan_content_hash ?? "",
+        finish_event_id: finish.event_id,
+        run_outcome: status.run_outcome,
+        known_gap_count: status.known_gaps.length
+      }
     }
   });
   return appendResult(options.context, event);
