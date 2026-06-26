@@ -50,6 +50,18 @@ export function runExecutableSmoke(profile: HostProfile): HostExecutableSmoke {
     timeout: 5_000
   });
   if (result.error) {
+    if (isTimeoutError(result.error)) {
+      return {
+        status: "not_run",
+        executable: command.executable,
+        argv: command.argv,
+        reason_code: "executable_timeout",
+        reason: `Executable '${command.label}' did not respond within the smoke timeout; host smoke was not run to completion.`,
+        exit_code: result.status ?? null,
+        stdout: trimOutput(result.stdout),
+        stderr: trimOutput(result.stderr)
+      };
+    }
     return {
       status: "failed",
       executable: command.executable,
@@ -118,8 +130,17 @@ function diagnosticsForExecutableSmoke(profile: HostProfile, smoke: HostExecutab
   if (smoke.status === "failed") {
     return [diagnostic("host.executable_smoke_failed", "error", smoke.reason, profile.profile_id)];
   }
-  const code = smoke.reason_code === "executable_unavailable" ? "host.executable_unavailable" : "host.executable_not_found";
+  const code =
+    smoke.reason_code === "executable_unavailable"
+      ? "host.executable_unavailable"
+      : smoke.reason_code === "executable_timeout"
+        ? "host.executable_timeout"
+        : "host.executable_not_found";
   return [diagnostic(code, "warning", smoke.reason, profile.profile_id)];
+}
+
+function isTimeoutError(error: Error): boolean {
+  return (error as NodeJS.ErrnoException).code === "ETIMEDOUT";
 }
 
 function diagnostic(code: string, severity: Diagnostic["severity"], message: string, sourcePath: string): Diagnostic {
