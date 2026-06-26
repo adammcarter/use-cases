@@ -24,6 +24,7 @@ const {
   loadHostProfile,
   loadUseCaseMatrix,
   loadPresentationPlanFile,
+  mutateUseCaseMatrix,
   queryUseCases,
   readShowcaseEvents,
   replayEvidence,
@@ -95,6 +96,8 @@ const toolDefinitions: ToolDefinition[] = [
   tool("matrix_validate", "matrix.validate", "Validate use-case matrix files.", "read", toolInputBase, matrixValidate),
   tool("matrix_list", "matrix.list", "List and filter use cases.", "read", toolInputBase, matrixList),
   tool("matrix_status", "matrix.status", "Summarize matrix and evidence status.", "read", toolInputBase, matrixStatus),
+  tool("use_case_upsert", "matrix.upsert", "Add or update one use-case entry. Requires allow_write=true.", "write", toolInputBase, useCaseUpsert),
+  tool("use_case_remove", "matrix.remove", "Mark one use case removed. Requires allow_write=true.", "write", toolInputBase, useCaseRemove),
   tool("evidence_status", "evidence.status", "Replay evidence status.", "read", toolInputBase, evidenceStatus),
   tool("evidence_record", "evidence.record", "Append an evidence record. Requires allow_write=true.", "write", toolInputBase, evidenceRecord),
   tool("evidence_void", "evidence.void", "Void an active evidence record. Requires allow_write=true.", "write", toolInputBase, evidenceVoid),
@@ -221,6 +224,44 @@ function matrixStatus(args: JsonObject): CliResult<unknown> {
     complete: data.complete,
     diagnostics: [...matrix.diagnostics, ...evidence.diagnostics]
   });
+}
+
+function useCaseUpsert(args: JsonObject): CliResult<unknown> {
+  const context = contextFromArgs(args, "matrix.upsert");
+  if ("envelope" in context) return context.envelope;
+  const targetFile = stringArg(args, "file");
+  const useCase = objectArg(args, "use_case");
+  if (!targetFile || !useCase) {
+    return errorEnvelope("matrix.upsert", "cli_invalid_arguments", "Missing file or use_case.");
+  }
+  const result = mutateUseCaseMatrix({
+    context,
+    operation: "upsert",
+    targetFile,
+    useCase,
+    expectedSemanticHash: stringArg(args, "expected_hash") ?? undefined,
+    actor: actorArg(args)
+  });
+  return useCaseMutationEnvelope("matrix.upsert", result, context);
+}
+
+function useCaseRemove(args: JsonObject): CliResult<unknown> {
+  const context = contextFromArgs(args, "matrix.remove");
+  if ("envelope" in context) return context.envelope;
+  const useCaseId = stringArg(args, "use_case");
+  const reason = stringArg(args, "reason");
+  if (!useCaseId || !reason) {
+    return errorEnvelope("matrix.remove", "cli_invalid_arguments", "Missing use_case or reason.");
+  }
+  const result = mutateUseCaseMatrix({
+    context,
+    operation: "remove",
+    useCaseId,
+    reason,
+    expectedSemanticHash: stringArg(args, "expected_hash") ?? undefined,
+    actor: actorArg(args)
+  });
+  return useCaseMutationEnvelope("matrix.remove", result, context);
 }
 
 function evidenceStatus(args: JsonObject): CliResult<unknown> {
@@ -500,6 +541,19 @@ function showcaseEnvelope(command: string, result: ShowcaseAppendResult, context
   return envelope(command, result, context, { complete: result.status.complete });
 }
 
+function useCaseMutationEnvelope(
+  command: string,
+  result: ReturnType<typeof mutateUseCaseMatrix>,
+  context: ResolvedWorkspaceContext
+): CliResult<unknown> {
+  const ok = result.status !== "blocked";
+  return envelope(command, result, context, {
+    ok,
+    complete: ok,
+    diagnostics: result.diagnostics
+  });
+}
+
 function envelope(
   command: string,
   data: unknown,
@@ -571,6 +625,11 @@ function hostSurfaceArg(args: JsonObject): HostSurface {
 function stringArg(args: JsonObject, name: string): string | null {
   const value = args[name];
   return typeof value === "string" && value.length > 0 ? value : null;
+}
+
+function objectArg(args: JsonObject, name: string): Record<string, unknown> | null {
+  const value = args[name];
+  return typeof value === "object" && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : null;
 }
 
 function numberArg(args: JsonObject, name: string): number | null {

@@ -34,3 +34,56 @@ use_cases:
       mode: none
     approval_policy:
       mode: none
+  - id: mcp.use_case_mutation.safe
+    title: MCP safely mutates use-case rows through core policy
+    lifecycle: active
+    value_tier: core
+    journey_role: golden
+    usage_frequency: common
+    tags: [mcp, matrix, mutation, safety]
+    source_refs:
+      - kind: file
+        path: packages/ucm-mcp/src/tools.ts
+      - kind: file
+        path: packages/ucm-core/src/useCases/mutateUseCaseMatrix.ts
+    actor: agent
+    intent: Add, update, or retire use-case rows from an MCP host without bypassing CLI-equivalent validation.
+    preconditions:
+      - The caller passes an explicit repo root.
+      - Write tools are called with allow_write true.
+      - The current use-case matrix is complete enough to mutate safely.
+    trigger: Agent calls use_case_upsert or use_case_remove through MCP.
+    scenarios:
+      - id: mcp.use_case_mutation.safe.upsert
+        kind: steps
+        steps:
+          - Call use_case_upsert with a target use-cases YAML file and one use_case object.
+          - Validate that the matrix remains complete after the write.
+      - id: mcp.use_case_mutation.safe.remove
+        kind: steps
+        steps:
+          - Call use_case_remove with a use-case id and removal reason.
+          - Confirm the row is marked lifecycle removed rather than physically deleted.
+      - id: mcp.use_case_mutation.safe.boundary
+        kind: steps
+        steps:
+          - Try a path escape, damaged matrix, or actor_type user claim.
+          - Confirm MCP returns a blocked CLI envelope and does not write.
+    observable_outcomes:
+      - MCP returns matrix.upsert or matrix.remove envelopes.
+      - Write mode is required before any mutation.
+      - User approval or user actor claims are rejected without trusted host confirmation.
+      - Delete is lifecycle removal, not physical deletion.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+      - host_surface: claude.cli
+        supported: true
+      - host_surface: copilot.cli
+        supported: true
+      - host_surface: opencode.cli
+        supported: true
+    verification_policy:
+      mode: none
+    approval_policy:
+      mode: none

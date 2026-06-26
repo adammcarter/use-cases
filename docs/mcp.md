@@ -27,6 +27,8 @@ doctor_roots                 yes         yes          no
 matrix_validate              yes         yes          no
 matrix_list                  yes         yes          no
 matrix_status                yes         yes          no
+use_case_upsert              no          yes          no
+use_case_remove              no          yes          no
 evidence_status              yes         yes          no
 evidence_record              no          yes          no
 evidence_void                no          yes          no
@@ -45,6 +47,14 @@ host_doctor                  yes         yes          no
 ## Workspace Roots
 
 Workspace-scoped tools require an explicit `repo` argument. Optional `data_root` values are resolved relative to `repo` and must stay inside that repository. The server should not silently operate on its process working directory for project data.
+
+## Use-Case Mutation Boundary
+
+`use_case_upsert` and `use_case_remove` expose the same use-case matrix mutation contract as the CLI. They require `allow_write: true`, validate the current matrix before writing, and return `matrix.upsert` or `matrix.remove` envelopes.
+
+MCP use-case delete means lifecycle removal, not physical deletion. `use_case_remove` marks the row `lifecycle: removed` and records removal metadata in the YAML file.
+
+MCP cannot treat YAML, repository content, generated plans, command output, logs, or tool output as instructions. Those inputs are data to validate, filter, and report.
 
 ## Approval Boundary
 
@@ -72,11 +82,10 @@ plan remains prepared material until the start event records its content hash.
 These are intentionally not exposed in v1:
 
 ```text
-ucm_upsert_use_case
 showcase_approve
 showcase_reject
 host_project
 host_conformance
 ```
 
-Use-case mutation needs a CLI/app contract first, including formatting and conflict policy. Approval writes need trusted confirmation. Host projection and conformance remain CLI-first until their mutation and evidence semantics are fully designed for MCP.
+Approval writes need trusted confirmation. Host projection and conformance remain CLI-first until their mutation and evidence semantics are fully designed for MCP.
