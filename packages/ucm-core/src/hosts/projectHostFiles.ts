@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node
 import { dirname, isAbsolute, join, relative, sep } from "node:path";
 import type { ResolvedWorkspaceContext } from "../roots.js";
 import { computeSemanticHash, type Diagnostic } from "../schema/index.js";
+import { PRESENTATION_SKILLS_VERSION } from "../version.js";
 import { deriveHostConformance, runExecutableSmoke } from "./conformanceStatus.js";
 import type {
   HostConformanceResult,
@@ -209,7 +210,7 @@ function renderManifest(
       surface: profile.surface,
       profile_id: profile.profile_id,
       profile_version: profile.profile_version,
-      plugin_version: "0.1.0",
+      plugin_version: PRESENTATION_SKILLS_VERSION,
       source_skill_hashes: sourceSkillHashes,
       managed_marker: MANAGED_MARKER,
       created_at: GENERATED_AT,

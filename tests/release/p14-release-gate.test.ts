@@ -38,4 +38,28 @@ describe("P14 production release gate", () => {
     expect(manifest.files).toContain("packages/ucm-mcp/dist");
     expect(manifest.files).toContain("schemas/v1");
   });
+
+  test("all published version surfaces report v1", () => {
+    const rootManifest = JSON.parse(readFileSync("package.json", "utf8")) as { version: string };
+    const cliManifest = JSON.parse(readFileSync("packages/ucm-cli/package.json", "utf8")) as { version: string };
+    const coreManifest = JSON.parse(readFileSync("packages/ucm-core/package.json", "utf8")) as { version: string };
+    const mcpManifest = JSON.parse(readFileSync("packages/ucm-mcp/package.json", "utf8")) as { version: string };
+    const rootPlugin = JSON.parse(readFileSync("plugin.json", "utf8")) as { version: string };
+    const codexPlugin = JSON.parse(readFileSync(".codex-plugin/plugin.json", "utf8")) as { version: string };
+    const claudePlugin = JSON.parse(readFileSync(".claude-plugin/plugin.json", "utf8")) as { version: string };
+    const versionSource = readFileSync("packages/ucm-core/src/version.ts", "utf8");
+    const hostProjection = readFileSync("packages/ucm-core/src/hosts/projectHostFiles.ts", "utf8");
+    const changelog = readFileSync("CHANGELOG.md", "utf8");
+
+    expect(rootManifest.version).toBe("1.0.0");
+    expect(cliManifest.version).toBe(rootManifest.version);
+    expect(coreManifest.version).toBe(rootManifest.version);
+    expect(mcpManifest.version).toBe(rootManifest.version);
+    expect(rootPlugin.version).toBe(rootManifest.version);
+    expect(codexPlugin.version).toBe(rootManifest.version);
+    expect(claudePlugin.version).toBe(rootManifest.version);
+    expect(versionSource).toContain('PRESENTATION_SKILLS_VERSION = "1.0.0"');
+    expect(hostProjection).toContain("plugin_version: PRESENTATION_SKILLS_VERSION");
+    expect(changelog).toContain("## 1.0.0");
+  });
 });
