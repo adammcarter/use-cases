@@ -264,7 +264,7 @@ describe("P11 host and project acceptance", () => {
       complete: true,
       data: {
         counts: {
-          use_cases_addressable: 7
+          use_cases_addressable: 8
         }
       }
     });
@@ -275,6 +275,7 @@ describe("P11 host and project acceptance", () => {
       "evidence.core.record",
       "hosts.projections.all",
       "matrix.core.validate",
+      "mcp.use_case_mutation.safe",
       "mcp.wrapper.parity",
       "migration.test_matrix.draft",
       "release.package.installable_artifact",
