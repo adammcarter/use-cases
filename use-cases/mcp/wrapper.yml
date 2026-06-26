@@ -5,7 +5,7 @@ feature:
   summary: MCP tools preserve the CLI envelope contract.
 use_cases:
   - id: mcp.wrapper.parity
-    title: MCP matrix validation matches the CLI envelope
+    title: Compiled MCP stdio preserves generated-plan showcase parity
     lifecycle: active
     value_tier: core
     journey_role: alternate
@@ -15,14 +15,18 @@ use_cases:
       - kind: file
         path: packages/ucm-mcp/src/tools.ts
     actor: agent
-    intent: Use MCP without inventing separate behavior.
-    preconditions: [The MCP server can load the core package.]
-    trigger: Agent calls a matrix validation tool.
+    intent: Use MCP without inventing separate showcase or approval behavior.
+    preconditions: [The compiled MCP server can load the packaged core.]
+    trigger: Agent runs a showcase through MCP stdio.
     scenarios:
       - id: mcp.wrapper.parity.cli
         kind: steps
-        steps: [Call matrix_validate through MCP and matrix validate through CLI.]
-    observable_outcomes: [Both surfaces return matching CLI envelopes.]
+        steps:
+          - Generate a showcase plan through MCP.
+          - Start from the generated plan file through compiled stdio MCP.
+          - Record observation, verdict, and finish through MCP.
+          - Request approval through MCP without appending approval.
+    observable_outcomes: [MCP returns CLI envelopes, records the same lifecycle events, and keeps approval pending.]
     host_applicability:
       - host_surface: codex.cli
         supported: true

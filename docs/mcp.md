@@ -63,6 +63,10 @@ status
 
 The user approval write remains CLI-mediated unless a host later provides a trusted non-model confirmation path.
 
+`showcase_start` accepts generated plan files through `plan_file`, so compiled
+stdio MCP can run the same generated-plan lifecycle as the CLI. The generated
+plan remains prepared material until the start event records its content hash.
+
 ## Deferred V1 Tools
 
 These are intentionally not exposed in v1:

@@ -15,7 +15,9 @@ finish -> approval when required
 
 Use `plan showcase` for a short, high-value demo and `plan walkthrough` for
 broader coverage. Use `capsule plan` when a persisted smoke demo or golden path
-script already exists.
+script already exists. A generated plan is prepared material until
+`showcase start --plan-file` records a run against its content hash.
 
 User-required approval cannot be recorded by an agent or MCP tool. The trusted
-path is the CLI-mediated user approval command.
+path is the interactive CLI-mediated user approval command. Approval is only
+valid after finish, and is bound to the plan hash and finish event.
