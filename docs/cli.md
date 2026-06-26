@@ -32,6 +32,9 @@ All commands use JSON envelopes with `schema_version`, `protocol_version`,
 - `plan walkthrough --repo <path> --json` selects broader review coverage.
 - `capsule validate|list|plan --repo <path> --json` works with persisted demo
   capsules.
+- `capsule run --repo <path> --capsule <id> --json` performs a persisted demo
+  capsule as a live showcase run. Command steps stay pending unless
+  `--execute-commands` is passed and the capsule permits command execution.
 - `showcase start|record-observation|record-verdict|decide|pause|resume|finish|approve|reject|correct`
   records a mechanical showcase run ledger.
 

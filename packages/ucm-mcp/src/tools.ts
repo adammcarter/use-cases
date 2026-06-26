@@ -30,6 +30,7 @@ const {
   replayEvidence,
   replayShowcaseRun,
   resolveWorkspaceContext,
+  runDemoCapsule,
   runHostDoctor,
   selectShowcasePlan,
   selectWalkthroughPlan,
@@ -103,6 +104,7 @@ const toolDefinitions: ToolDefinition[] = [
   tool("evidence_void", "evidence.void", "Void an active evidence record. Requires allow_write=true.", "write", toolInputBase, evidenceVoid),
   tool("plan_showcase", "plan.showcase", "Generate a showcase plan.", "read", toolInputBase, (args) => planPresentation(args, "showcase")),
   tool("plan_walkthrough", "plan.walkthrough", "Generate a walkthrough plan.", "read", toolInputBase, (args) => planPresentation(args, "walkthrough")),
+  tool("capsule_run", "capsule.run", "Run a persisted demo capsule. Requires allow_write=true.", "write", toolInputBase, capsuleRun),
   tool("showcase_start", "showcase.start", "Start an ad hoc showcase run. Requires allow_write=true.", "write", toolInputBase, showcaseStart),
   tool("showcase_status", "showcase.status", "Replay showcase run status.", "read", toolInputBase, showcaseStatus),
   tool("showcase_record_observation", "showcase.record-observation", "Append a showcase observation. Requires allow_write=true.", "write", toolInputBase, showcaseObservation),
@@ -132,6 +134,16 @@ export function callMcpTool(name: string, args: JsonObject): CliResult<unknown> 
   }
   if (definition.mutability === "write" && args.allow_write !== true) {
     return errorEnvelope(definition.command, "mcp.write_mode_required", "Write tools require allow_write=true.");
+  }
+  if (definition.mutability === "write" && !mcpServerWriteModeEnabled()) {
+    return errorEnvelope(definition.command, "mcp.server_write_mode_required", "MCP server was not started with write mode enabled.");
+  }
+  if (definition.name === "capsule_run" && boolArg(args, "execute_commands") && !mcpServerCommandExecutionEnabled()) {
+    return errorEnvelope(
+      definition.command,
+      "mcp.server_command_execution_mode_required",
+      "MCP server was not started with command execution enabled."
+    );
   }
   if (isTrustedUserClaim(args)) {
     return errorEnvelope(definition.command, "mcp.trusted_confirmation_required", "MCP cannot claim a trusted user actor without host confirmation.");
@@ -346,6 +358,30 @@ function planPresentation(args: JsonObject, mode: "showcase" | "walkthrough"): C
     ok: result.outcome !== "integrity_blocked",
     complete: result.plan?.complete ?? (result.outcome === "no_eligible_items" && matrix.complete && evidence.complete),
     diagnostics: [...matrix.diagnostics, ...evidence.diagnostics]
+  });
+}
+
+function capsuleRun(args: JsonObject): CliResult<unknown> {
+  const context = contextFromArgs(args, "capsule.run");
+  if ("envelope" in context) return context.envelope;
+  const capsuleId = stringArg(args, "capsule");
+  if (!capsuleId) {
+    return errorEnvelope("capsule.run", "cli_invalid_arguments", "Missing capsule.");
+  }
+  const result = runDemoCapsule({
+    context,
+    capsuleId,
+    executeCommands: boolArg(args, "execute_commands"),
+    actorType: actorArg(args),
+    hostSurface: hostSurfaceArg(args),
+    idempotencyKey: stringArg(args, "idempotency_key") ?? undefined,
+    recordedAt: stringArg(args, "recorded_at") ?? undefined,
+    commandTimeoutMs: numberArg(args, "command_timeout_ms") ?? undefined
+  });
+  return envelope("capsule.run", result, context, {
+    ok: result.outcome !== "blocked",
+    complete: result.complete,
+    diagnostics: result.diagnostics
   });
 }
 
@@ -611,6 +647,14 @@ function isTrustedUserClaim(args: JsonObject): boolean {
   return stringArg(args, "actor_type") === "user" ||
     stringArg(args, "approver_type") === "user" ||
     stringArg(args, "trusted_confirmation") === "user";
+}
+
+function mcpServerWriteModeEnabled(): boolean {
+  return process.env.PRESENTATION_SKILLS_MCP_WRITE === "1";
+}
+
+function mcpServerCommandExecutionEnabled(): boolean {
+  return process.env.PRESENTATION_SKILLS_MCP_COMMAND_EXECUTION === "1";
 }
 
 function actorArg(args: JsonObject): Exclude<ShowcaseActorType, "user"> {

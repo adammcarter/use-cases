@@ -17,3 +17,7 @@ items:
         text: Confirm that matching results and a selectable product are visible.
 permissions:
   command_execution: false
+extensions:
+  presentation-skills.dev/runner:
+    command: presentation-skills capsule run --repo examples/basic-product --capsule capsule.basic.product_search --json
+    command_steps: none
