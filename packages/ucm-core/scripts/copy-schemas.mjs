@@ -8,7 +8,7 @@ const source = join(repoRoot, "schemas/v1");
 const destination = join(repoRoot, "packages/ucm-core/dist/schemas/v1");
 const hostProfileSource = join(repoRoot, "hosts");
 const hostProfileDestination = join(repoRoot, "packages/ucm-core/dist/host-profiles");
-const lockDir = join(repoRoot, "packages/ucm-core/dist/.copy-schemas.lock");
+const lockDir = join(repoRoot, "packages/ucm-core/.copy-schemas.lock");
 
 mkdirSync(dirname(lockDir), { recursive: true });
 withDirectoryLock(lockDir, () => {
