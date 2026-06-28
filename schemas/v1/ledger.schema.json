@@ -14,6 +14,16 @@
         "schema": { "const": "ucase-proof-event-v1" },
         "event_id": { "type": "string", "minLength": 1 },
         "created_at": { "type": "string", "minLength": 1 },
+        "entry_index": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "OPTIONAL tamper-evident chain field: the entry's absolute 0-based position in the ledger. When present it MUST equal the line's index. Omitted on legacy proofs minted before the chain existed."
+        },
+        "previous_entry_hash": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "description": "OPTIONAL tamper-evident chain field: sha256 of the previous entry's full canonical JSON, or the genesis sentinel (sha256:<64 zeros>) for the first entry. Omitted on legacy proofs."
+        },
         "row": {
           "type": "object",
           "additionalProperties": true,

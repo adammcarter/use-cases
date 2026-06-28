@@ -18,6 +18,7 @@
 // The core `validateEvidenceLedger` is pure (text in, result out). The only
 // impure helper is a thin git base-ref read that reuses Phase 3's `readBaseRefFile`.
 import { computeBindingSetHash } from "./bindingSetHash.js";
+import { canonicalJsonSha256 } from "./canonicalJson.js";
 import { validateProofEvent } from "./validators.js";
 import {
   appendOnly,
@@ -79,6 +80,32 @@ export interface ProofEvent {
     context_hash: string;
   };
   signature: { alg: string; key_id: string; value: string };
+  // --- Tamper-evident hash chain (v1, ADDITIVE / OPTIONAL) ---------------------
+  // These two fields chain each entry to its predecessor so the ledger is
+  // tamper-evident: removing or reordering an entry breaks the chain. They are
+  // OPTIONAL because the committed ledger and many fixtures contain proof events
+  // minted before the chain existed; those must still validate and stay FRESH.
+  // When present (every freshly-proved entry), they are signed (built into the
+  // event before signing), so they cannot be forged or altered after the fact.
+  //
+  // `entry_index`         — the entry's absolute 0-based position in the ledger.
+  // `previous_entry_hash` — computeLedgerEntryHash of the immediately-preceding
+  //                         entry, or GENESIS_ENTRY_HASH for the first entry.
+  entry_index?: number;
+  previous_entry_hash?: string;
+}
+
+// Genesis sentinel for `previous_entry_hash` on the first ledger entry. It is a
+// well-formed "sha256:<hex>" string (64 zeros) so it satisfies the proof-event
+// schema's hash pattern while being unmistakably the chain's root.
+export const GENESIS_ENTRY_HASH = `sha256:${"0".repeat(64)}`;
+
+// The canonical entry hash for the tamper-evident chain: sha256(canonicalJson)
+// over the FULL signed proof event (signature and chain fields included). The
+// next entry embeds this as its `previous_entry_hash`, so any edit to a prior
+// entry — including its signature — invalidates every following link.
+export function computeLedgerEntryHash(entry: unknown): string {
+  return canonicalJsonSha256(entry);
 }
 
 // The trusted producer kind (spec 5.3 rule 4).
