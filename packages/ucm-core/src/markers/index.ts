@@ -25,6 +25,8 @@ export * from "./reconcile.js";
 // Phase 5: evidence ledger validation + trusted-CI proof signatures.
 export * from "./proofSignature.js";
 export * from "./evidenceLedger.js";
+// Public-v1: opt-in multi-key keyring resolver (rotation / revocation).
+export * from "./keyring.js";
 // Phase 6: freshness state machine (status derivation + policy gate).
 export * from "./freshness.js";
 // Phase 7: CLI command cores (bind / scan / prove / validate-ledger).

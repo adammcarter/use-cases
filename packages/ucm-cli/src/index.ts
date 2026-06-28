@@ -59,7 +59,8 @@ const {
   runProveCommand,
   runVerifyCommand,
   runValidateLedgerCommand,
-  singleKeyResolver
+  singleKeyResolver,
+  keyringPublicKeyResolverFromFile
 } = await loadUcmCore();
 
 const SUPPORTED_HOSTS: HostName[] = ["claude", "codex", "copilot", "opencode"];
@@ -1545,6 +1546,13 @@ function markerPaths(argv: string[], context: ResolvedWorkspaceContext) {
 }
 
 function markerPublicKeyResolver(argv: string[]): ReturnType<typeof singleKeyResolver> {
+  // Opt-in multi-key path: --keyring builds a resolver that enforces per-key
+  // status (active/revoked) and validity windows against the proof's created_at.
+  // When both flags are present the keyring wins over the single --public-key.
+  const keyringPath = valueAfter(argv, "--keyring");
+  if (keyringPath) {
+    return keyringPublicKeyResolverFromFile(resolve(process.cwd(), keyringPath));
+  }
   const keyPath = valueAfter(argv, "--public-key");
   if (!keyPath) {
     // No configured key: any proof signature fails (ledger with proofs is invalid).
