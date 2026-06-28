@@ -34,7 +34,7 @@ These are versioned contracts:
 - **The use-case marker grammar** (`//: @use-case: <slug>` … `//: @use-case: end <slug>`) and slug rules.
 - **The proof/trust model**: ed25519 signed proof events, the hashed inputs (row, binding-set, span, verification-context), and the freshness states (`FRESH`, `SUSPECT`, `UNPROVEN`, `UNBOUND`, `INVALID`).
 - **Documented `@use-case-matrix/core` TypeScript exports.** Undocumented internals are not public.
-- **Error codes** declared in the error-code registry (`UCM_*`).
+- **Error codes** declared in the [error-code registry](./error-codes.md) (`UCM_*`).
 
 ### Result envelope
 
@@ -57,7 +57,7 @@ Every CLI `--json` response and MCP structured result uses this envelope:
 - `command` — stable dotted command id.
 - `ok` — success boolean. `complete` — whether the operation ran to completion.
 - `data` — the command-specific payload (validated against that command's schema).
-- `diagnostics` — array of structured items, each with a stable `code` (see error codes).
+- `diagnostics` — array of structured items, each with a stable `code` (see [error codes](./error-codes.md)).
 - `context` — workspace/component metadata.
 
 ### Exit codes

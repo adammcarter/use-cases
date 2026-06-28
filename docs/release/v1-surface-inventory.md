@@ -53,5 +53,5 @@ Present (under `schemas/v1/`): cli-result, common, demo-capsule, evidence-append
 - [ ] Close the 5 schema gaps + register their `$id`s.
 - [ ] Conformance test: every CLI `--json` output validates against a schema.
 - [ ] `--json` consistency across all commands.
-- [ ] `UCM_*` error-code registry (additive) + generated error-code docs page.
+- [x] `UCM_*` error-code registry (additive) + generated error-code docs page — `packages/ucm-core/src/errors/registry.ts` + `docs/reference/error-codes.md`.
 - [ ] (Phase 4) MCP resources + prompts; rate-limit/size caps.
