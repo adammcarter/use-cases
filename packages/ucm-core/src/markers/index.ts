@@ -24,3 +24,5 @@ export * from "./proofSignature.js";
 export * from "./evidenceLedger.js";
 // Phase 6: freshness state machine (status derivation + policy gate).
 export * from "./freshness.js";
+// Phase 7: CLI command cores (bind / scan / prove / validate-ledger).
+export * from "./cli/index.js";

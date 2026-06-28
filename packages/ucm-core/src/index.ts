@@ -16,3 +16,5 @@ export * from "./skills/index.js";
 export * from "./hosts/index.js";
 export * from "./migration/index.js";
 export * from "./package/index.js";
+// Phase 7: use-case-marker CLI command cores (bind / scan / prove / validate-ledger).
+export * from "./markers/cli/index.js";
