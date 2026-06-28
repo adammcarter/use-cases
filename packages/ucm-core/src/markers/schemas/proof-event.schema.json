@@ -136,6 +136,15 @@
         "key_id": { "type": "string", "minLength": 1 },
         "value": { "type": "string", "minLength": 1 }
       }
+    },
+    "entry_index": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "OPTIONAL tamper-evident chain field: the entry's absolute 0-based position in the ledger. Omitted on legacy proofs minted before the chain existed."
+    },
+    "previous_entry_hash": {
+      "$ref": "#/$defs/hash",
+      "description": "OPTIONAL tamper-evident chain field: sha256 of the previous entry's full canonical JSON, or the genesis sentinel (sha256:<64 zeros>) for the first entry. Omitted on legacy proofs."
     }
   }
 }

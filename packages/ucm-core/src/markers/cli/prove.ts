@@ -30,7 +30,13 @@ import {
   VERIFICATION_CONTEXT_HASH_ID,
   computeRowVerificationContextHash
 } from "../verificationContextHash.js";
-import { TRUSTED_CI_PRODUCER_KIND, type ProofEvent } from "../evidenceLedger.js";
+import {
+  GENESIS_ENTRY_HASH,
+  TRUSTED_CI_PRODUCER_KIND,
+  computeLedgerEntryHash,
+  readEvidenceJsonl,
+  type ProofEvent
+} from "../evidenceLedger.js";
 import {
   signEvent,
   type PemOrKeyObject,
@@ -409,6 +415,11 @@ function proveOneRow(args: ProveOneRowArgs): ProveRowResult {
 
   // Trusted append (signingKey guaranteed present by the pre-flight check).
   const signingKey = options.signingKey as ProveSigningKey;
+  // Tamper-evident chain: read the CURRENT ledger tail so the new entry's
+  // entry_index / previous_entry_hash chain onto whatever is already appended.
+  // Re-reading here (not caching) keeps a multi-row `--all` run correct: each
+  // earlier append in the SAME run is on disk by the time the next row chains.
+  const tail = readLedgerTail(fs, options.evidencePath);
   const unsigned = buildProofEvent({
     eventId: idFactory(),
     createdAt: options.generatedAt,
@@ -420,8 +431,14 @@ function proveOneRow(args: ProveOneRowArgs): ProveRowResult {
     contextHash,
     bindings,
     verification,
-    producer: options.producer
+    producer: options.producer,
+    entryIndex: tail.count,
+    previousEntryHash: tail.lastEntry
+      ? computeLedgerEntryHash(tail.lastEntry)
+      : GENESIS_ENTRY_HASH
   });
+  // The chain fields live INSIDE the event before signing, so the signature
+  // covers them and they cannot be forged or reordered after the fact.
   const signed = signEvent(unsigned, signingKey.privateKey, signingKey.keyId);
   appendJsonlLine(fs, options.evidencePath, JSON.stringify(signed));
 
@@ -430,6 +447,19 @@ function proveOneRow(args: ProveOneRowArgs): ProveRowResult {
     proof_event_appended: true,
     event_id: signed.event_id
   });
+}
+
+// The current ledger tail for the tamper-evident chain: the entry count (the
+// next entry's absolute index) and the last parsed entry (to hash as the next
+// entry's previous_entry_hash). A missing/empty ledger yields count 0 / null.
+function readLedgerTail(
+  fs: MarkerFs,
+  path: string
+): { count: number; lastEntry: ProofEvent | null } {
+  const read = readEvidenceJsonl(fs.readText(path) ?? "");
+  const count = read.lines.length;
+  const lastEntry = count > 0 ? (read.lines[count - 1].value as ProofEvent) : null;
+  return { count, lastEntry };
 }
 
 // The latest (last-written) verification-result record for a row, or undefined.
@@ -479,6 +509,9 @@ interface BuildProofArgs {
   bindings: CurrentBindingRecord[];
   verification: ProofVerification;
   producer?: ProveProducerInfo;
+  // Tamper-evident chain fields (additive). Built into the event before signing.
+  entryIndex: number;
+  previousEntryHash: string;
 }
 
 // Build the unsigned proof event. producer.kind is ALWAYS forced to the trusted
@@ -528,6 +561,8 @@ function buildProofEvent(args: BuildProofArgs): Omit<ProofEvent, "signature"> {
       artifacts: args.verification.artifacts,
       context_hash_id: VERIFICATION_CONTEXT_HASH_ID,
       context_hash: args.contextHash
-    }
+    },
+    entry_index: args.entryIndex,
+    previous_entry_hash: args.previousEntryHash
   };
 }
