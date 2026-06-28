@@ -186,6 +186,23 @@ const REGISTRY = {
     "UCM_EVIDENCE_LOCK_TIMEOUT"
   ),
 
+  // --- tamper-evident hash chain (surface: evidence) ----------------------
+  UCM_LEDGER_CHAIN_BROKEN: entry(
+    "evidence",
+    "Evidence ledger hash chain is broken: an entry's previous_entry_hash does not match the preceding entry.",
+    "UCM_LEDGER_CHAIN_BROKEN"
+  ),
+  UCM_LEDGER_INDEX_GAP: entry(
+    "evidence",
+    "Evidence ledger entry_index does not match its actual position (gap, reorder, or truncation).",
+    "UCM_LEDGER_INDEX_GAP"
+  ),
+  UCM_LEDGER_DUPLICATE_INDEX: entry(
+    "evidence",
+    "Evidence ledger contains a duplicate entry_index.",
+    "UCM_LEDGER_DUPLICATE_INDEX"
+  ),
+
   // --- signature / proof verification (surface: signature) ----------------
   UCM_SIGNATURE_MISSING: entry(
     "signature",

@@ -12,7 +12,11 @@ import {
   splitJsonlLines,
   type GitRunner
 } from "../appendOnly.js";
-import { validateEvidenceLedger } from "../evidenceLedger.js";
+import {
+  readEvidenceJsonl,
+  validateEvidenceLedger,
+  verifyLedgerChain
+} from "../evidenceLedger.js";
 import { validateBindingsJsonl } from "../registry.js";
 import type { PublicKeyResolver } from "../proofSignature.js";
 import { nodeMarkerFs, type MarkerFs } from "./io.js";
@@ -45,6 +49,13 @@ export interface ValidateLedgerCommandResult {
   append_only: boolean;
   proof_events_checked: number;
   registry_events_checked: number;
+  // Tamper-evident hash-chain result over the contiguous chained suffix. A
+  // purely-legacy ledger (no chained entries) is ok=true (backward compatible).
+  chain: {
+    ok: boolean;
+    verified_entries: number;
+    legacy_prefix_count: number;
+  };
   errors: LedgerErrorOut[];
 }
 
@@ -70,6 +81,14 @@ export function runValidateLedgerCommand(
     baseRefOldText: evidenceBaseText
   });
   for (const error of evidenceResult.errors) {
+    errors.push({ scope: "evidence", code: error.code, line: error.line, message: error.message });
+  }
+
+  // --- Tamper-evident hash chain (v1 ledger chain, Piece 2) ---
+  // Verify the contiguous chained suffix, tolerating a leading legacy prefix.
+  // Operates over the same parsed-JSONL line ordering the chain was minted on.
+  const chainResult = verifyLedgerChain(readEvidenceJsonl(evidenceText).lines);
+  for (const error of chainResult.errors) {
     errors.push({ scope: "evidence", code: error.code, line: error.line, message: error.message });
   }
 
@@ -99,7 +118,7 @@ export function runValidateLedgerCommand(
     }
   }
 
-  const evidenceValid = evidenceResult.errors.length === 0;
+  const evidenceValid = evidenceResult.errors.length === 0 && chainResult.ok;
   const registryValid = registryResult.errors.length === 0 && registryAppendOnly;
   const appendOnlyOk = evidenceResult.append_only && registryAppendOnly;
   const ok = evidenceValid && registryValid;
@@ -113,6 +132,11 @@ export function runValidateLedgerCommand(
     append_only: appendOnlyOk,
     proof_events_checked: evidenceResult.summary.proof_events_checked,
     registry_events_checked: countJsonlLines(bindingsText),
+    chain: {
+      ok: chainResult.ok,
+      verified_entries: chainResult.verified_entries,
+      legacy_prefix_count: chainResult.legacy_prefix_count
+    },
     errors
   };
 }

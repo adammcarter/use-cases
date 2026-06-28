@@ -9,7 +9,7 @@ code below is a versioned contract: a code is only removed or repurposed in a
 **major** release; new codes ship additively in a **minor**. Diagnostics carry
 the code in their `code` field.
 
-There are **62** codes across **9** surfaces.
+There are **65** codes across **9** surfaces.
 
 ## Marker grammar
 
@@ -51,6 +51,9 @@ There are **62** codes across **9** surfaces.
 | `UCM_EVIDENCE_ROW_MISSING` | error | Referenced evidence row is missing. |
 | `UCM_EVIDENCE_SCHEMA_INVALID` | error | Evidence event does not match its schema. |
 | `UCM_EVIDENCE_VERIFICATION_NOT_PASS` | error | Evidence verification did not pass. |
+| `UCM_LEDGER_CHAIN_BROKEN` | error | Evidence ledger hash chain is broken: an entry's previous_entry_hash does not match the preceding entry. |
+| `UCM_LEDGER_DUPLICATE_INDEX` | error | Evidence ledger contains a duplicate entry_index. |
+| `UCM_LEDGER_INDEX_GAP` | error | Evidence ledger entry_index does not match its actual position (gap, reorder, or truncation). |
 
 ## Signature / proof verification
 

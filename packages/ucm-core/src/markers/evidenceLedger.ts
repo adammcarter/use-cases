@@ -108,6 +108,164 @@ export function computeLedgerEntryHash(entry: unknown): string {
   return canonicalJsonSha256(entry);
 }
 
+// --- tamper-evident hash chain verification (v1) -----------------------------
+//
+// Stable `UCM_*` diagnostic codes for the chain tamper classes. These are
+// declared as plain string literals here (not imported from the error registry)
+// so evidenceLedger has NO dependency on the registry — the registry already
+// imports `EvidenceErrorCode` from this module, and a back-import would be a
+// cycle. The same literals are registered in `errors/registry.ts`.
+export const LedgerChainErrorCode = Object.freeze({
+  CHAIN_BROKEN: "UCM_LEDGER_CHAIN_BROKEN",
+  INDEX_GAP: "UCM_LEDGER_INDEX_GAP",
+  DUPLICATE_INDEX: "UCM_LEDGER_DUPLICATE_INDEX"
+} as const);
+
+export type LedgerChainErrorCode =
+  (typeof LedgerChainErrorCode)[keyof typeof LedgerChainErrorCode];
+
+export interface LedgerChainError {
+  code: LedgerChainErrorCode;
+  line: number | null; // 1-based source line of the offending entry
+  message: string;
+  entry_index?: number;
+}
+
+export interface LedgerChainResult {
+  // True when the chained suffix is internally consistent (or there is no chain
+  // at all — a purely-legacy ledger is backward-compatible OK).
+  ok: boolean;
+  // Number of chained entries that verified with no chain error.
+  verified_entries: number;
+  // Number of leading legacy entries (no chain fields) tolerated before the chain.
+  legacy_prefix_count: number;
+  errors: LedgerChainError[];
+}
+
+// Does this parsed entry carry the (optional) tamper-evident chain fields? An
+// entry "carries the chain" if EITHER field is present; a legacy entry has
+// neither. A half-present entry counts as chained and is reported as broken.
+function carriesChainFields(value: unknown): boolean {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+  const record = value as Record<string, unknown>;
+  return record.entry_index !== undefined || record.previous_entry_hash !== undefined;
+}
+
+function readEntryIndex(value: unknown): number | undefined {
+  const raw = (value as Record<string, unknown> | null)?.entry_index;
+  return typeof raw === "number" && Number.isInteger(raw) ? raw : undefined;
+}
+
+function readPreviousEntryHash(value: unknown): string | undefined {
+  const raw = (value as Record<string, unknown> | null)?.previous_entry_hash;
+  return typeof raw === "string" ? raw : undefined;
+}
+
+// Verify the tamper-evident hash chain over the CONTIGUOUS CHAINED SUFFIX of a
+// parsed evidence ledger, tolerating and reporting a leading legacy un-chained
+// prefix (spec: v1 tamper-evident ledger, Piece 2).
+//
+// For each chained entry at actual position `pos`:
+//   - `entry_index` MUST equal `pos` (monotonic, no gaps). A mismatch is an
+//     INDEX_GAP (gap / reorder / truncation) or a DUPLICATE_INDEX when the index
+//     was already seen.
+//   - `previous_entry_hash` MUST equal `computeLedgerEntryHash` of the
+//     immediately preceding entry — which may itself be the last LEGACY entry
+//     (the chain can start mid-ledger) — or the genesis sentinel at position 0.
+//     A mismatch is a CHAIN_BROKEN (an in-place edit of a prior entry breaks the
+//     NEXT entry's link; a truncation breaks the following entry's link).
+//
+// Pure: parsed lines in, result out. Does NOT verify signatures or schema (those
+// are the existing per-event rules) — it only checks chain integrity.
+export function verifyLedgerChain(lines: readonly EvidenceLine[]): LedgerChainResult {
+  const errors: LedgerChainError[] = [];
+
+  // The legacy prefix: leading entries with NO chain fields. The chain starts at
+  // the first entry that carries chain fields.
+  let legacyPrefixCount = 0;
+  while (
+    legacyPrefixCount < lines.length &&
+    !carriesChainFields(lines[legacyPrefixCount].value)
+  ) {
+    legacyPrefixCount += 1;
+  }
+
+  let verifiedEntries = 0;
+  const seenIndices = new Set<number>();
+
+  for (let pos = legacyPrefixCount; pos < lines.length; pos += 1) {
+    const { line, value } = lines[pos];
+    const entryErrors: LedgerChainError[] = [];
+
+    const idx = readEntryIndex(value);
+    const prevHash = readPreviousEntryHash(value);
+
+    // An entry inside the chained suffix must carry BOTH fields.
+    if (idx === undefined || prevHash === undefined) {
+      entryErrors.push({
+        code: LedgerChainErrorCode.CHAIN_BROKEN,
+        line,
+        message: `chained ledger entry at position ${pos} is missing a chain field (entry_index/previous_entry_hash)`
+      });
+    } else {
+      // entry_index must equal the entry's actual position.
+      if (idx !== pos) {
+        if (seenIndices.has(idx)) {
+          entryErrors.push({
+            code: LedgerChainErrorCode.DUPLICATE_INDEX,
+            line,
+            entry_index: idx,
+            message: `duplicate entry_index ${idx} at ledger position ${pos}`
+          });
+        } else {
+          entryErrors.push({
+            code: LedgerChainErrorCode.INDEX_GAP,
+            line,
+            entry_index: idx,
+            message: `entry_index ${idx} does not match its ledger position ${pos} (gap, reorder, or truncation)`
+          });
+        }
+      } else if (seenIndices.has(idx)) {
+        entryErrors.push({
+          code: LedgerChainErrorCode.DUPLICATE_INDEX,
+          line,
+          entry_index: idx,
+          message: `duplicate entry_index ${idx} at ledger position ${pos}`
+        });
+      }
+      seenIndices.add(idx);
+
+      // previous_entry_hash must match the hash of the immediately preceding
+      // entry (or the genesis sentinel at the very first ledger position).
+      const expectedPrev =
+        pos === 0 ? GENESIS_ENTRY_HASH : computeLedgerEntryHash(lines[pos - 1].value);
+      if (prevHash !== expectedPrev) {
+        entryErrors.push({
+          code: LedgerChainErrorCode.CHAIN_BROKEN,
+          line,
+          entry_index: idx,
+          message: `previous_entry_hash does not match the preceding entry (chain broken at position ${pos})`
+        });
+      }
+    }
+
+    if (entryErrors.length === 0) {
+      verifiedEntries += 1;
+    } else {
+      errors.push(...entryErrors);
+    }
+  }
+
+  return {
+    ok: errors.length === 0,
+    verified_entries: verifiedEntries,
+    legacy_prefix_count: legacyPrefixCount,
+    errors
+  };
+}
+
 // The trusted producer kind (spec 5.3 rule 4).
 export const TRUSTED_CI_PRODUCER_KIND = "trusted-ci-prover";
 // The only accepted verification result on an appended proof (spec 5.3 rule 5).
