@@ -45,8 +45,22 @@ export function findRow(rows: ReadonlyArray<FreshnessInputRow>, rowId: string): 
   return rows.find((row) => row.row_id === rowId);
 }
 
-// Directory names never walked for markers (noise + the data dir itself).
-const DEFAULT_SKIP_DIRS = new Set([".git", "node_modules", ".use-cases"]);
+// Directory names never walked for markers: VCS/deps, the data dir itself, and
+// common build-output dirs. Build output (e.g. tsc's dist/) can carry COPIES of
+// a marker comment from source, which would otherwise read as a duplicate slug.
+const DEFAULT_SKIP_DIRS = new Set([
+  ".git",
+  "node_modules",
+  ".use-cases",
+  "dist",
+  "dist-ts",
+  "build",
+  "out",
+  "coverage",
+  ".next",
+  ".turbo",
+  ".svelte-kit"
+]);
 
 export interface CollectSourceOptions {
   fs?: MarkerFs;
