@@ -19,3 +19,6 @@ export * from "./swiftFuncRecognizer.js";
 export * from "./registry.js";
 export * from "./appendOnly.js";
 export * from "./reconcile.js";
+// Phase 5: evidence ledger validation + trusted-CI proof signatures.
+export * from "./proofSignature.js";
+export * from "./evidenceLedger.js";
