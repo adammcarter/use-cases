@@ -87,4 +87,65 @@ describe("verification_policy schema", () => {
       })
     ).toBe(false);
   });
+
+  test("accepts a preset-reference verifier (minimal)", () => {
+    expect(
+      validate({
+        mode: "requirements",
+        verifiers: {
+          acceptance: { preset: "js.vitest" }
+        },
+        requirements: [
+          { evidence_kind: "test_result", required_verifiers: ["acceptance"], minimum_count: 1 }
+        ]
+      })
+    ).toBe(true);
+  });
+
+  test("accepts a preset-reference verifier with overrides", () => {
+    expect(
+      validate({
+        mode: "requirements",
+        verifiers: {
+          py: {
+            preset: "python.pytest",
+            evidence_kind: "test_result",
+            inputs: ["tests/use_cases/{slug}_test.py"],
+            timeout_seconds: 120
+          }
+        },
+        requirements: [
+          { evidence_kind: "test_result", required_verifiers: ["py"], minimum_count: 1 }
+        ]
+      })
+    ).toBe(true);
+  });
+
+  test("rejects a preset-reference with an unknown preset id", () => {
+    expect(
+      validate({
+        mode: "requirements",
+        verifiers: {
+          acceptance: { preset: "ruby.rspec" }
+        },
+        requirements: [
+          { evidence_kind: "test_result", required_verifiers: ["acceptance"], minimum_count: 1 }
+        ]
+      })
+    ).toBe(false);
+  });
+
+  test("rejects a preset-reference that also carries a command (ambiguous)", () => {
+    expect(
+      validate({
+        mode: "requirements",
+        verifiers: {
+          acceptance: { preset: "command.generic", command: ["echo", "hi"] }
+        },
+        requirements: [
+          { evidence_kind: "test_result", required_verifiers: ["acceptance"], minimum_count: 1 }
+        ]
+      })
+    ).toBe(false);
+  });
 });
