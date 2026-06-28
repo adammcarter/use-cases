@@ -239,6 +239,12 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command: [pnpm, -s, vitest, run, tests/use-cases/crash_durable_ledger_writes.test.ts]
+          inputs: [tests/use-cases/crash_durable_ledger_writes.test.ts]
       requirements:
         - evidence_kind: test_result
           required_verifiers: [script]
