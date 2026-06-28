@@ -142,6 +142,11 @@
           "additionalProperties": false,
           "properties": {
             "mode": { "const": "requirements" },
+            "verifiers": {
+              "type": "object",
+              "propertyNames": { "$ref": "#/$defs/id" },
+              "additionalProperties": { "$ref": "#/$defs/verifier" }
+            },
             "requirements": {
               "type": "array",
               "minItems": 1,
@@ -154,7 +159,7 @@
                     "type": "array",
                     "minItems": 1,
                     "uniqueItems": true,
-                    "items": { "enum": ["user", "agent", "script"] }
+                    "items": { "$ref": "#/$defs/id" }
                   },
                   "minimum_count": { "type": "integer", "minimum": 1 }
                 },
@@ -165,6 +170,25 @@
           "required": ["mode", "requirements"]
         }
       ]
+    },
+    "verifier": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "const": "script" },
+        "evidence_kind": { "$ref": "#/$defs/evidence_kind" },
+        "command": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "inputs": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "timeout_seconds": { "type": "number", "exclusiveMinimum": 0 }
+      },
+      "required": ["kind", "evidence_kind", "command"]
     },
     "approval_policy": {
       "oneOf": [

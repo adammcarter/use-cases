@@ -5,6 +5,7 @@ export * from "./constants.js";
 export * from "./canonicalJson.js";
 export * from "./rowHash.js";
 export * from "./policyHash.js";
+export * from "./verifierResolver.js";
 export * from "./bindingSetHash.js";
 export * from "./validators.js";
 // Phase 2: marker parser + explicit-span scanner.
