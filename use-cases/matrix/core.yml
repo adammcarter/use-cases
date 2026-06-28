@@ -7,7 +7,7 @@ use_cases:
   - id: matrix.core.validate
     title: Validate the use-case matrix without summaries
     lifecycle: active
-    value_tier: critical
+    value_tier: core
     journey_role: golden
     usage_frequency: common
     tags:
@@ -38,7 +38,7 @@ use_cases:
   - id: matrix.core.mutate
     title: Add, update, or retire use-case rows safely
     lifecycle: active
-    value_tier: critical
+    value_tier: core
     journey_role: golden
     usage_frequency: common
     tags:

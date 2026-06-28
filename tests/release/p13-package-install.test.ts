@@ -227,11 +227,19 @@ function extractPackageRoot(tarball: string): string {
 function installRootTarball(tarball: string): { consumer: string; installedRoot: string } {
   const consumer = mkdtempSync(join(tmpdir(), "presentation-skills-root-consumer-"));
   writeFileSync(join(consumer, "package.json"), JSON.stringify({ type: "module", dependencies: {} }, null, 2));
-  requireSuccess(run("corepack", ["pnpm", "add", tarball], consumer));
+  requireSuccess(run("npm", ["install", "--cache", npmCacheDir(), "--no-audit", "--no-fund", tarball], consumer));
   return {
     consumer,
     installedRoot: realpathSync(join(consumer, "node_modules", "presentation-skills"))
   };
+}
+
+function npmCacheDir(): string {
+  return mkdtempSync(join(stableCacheRoot(), "presentation-skills-npm-cache-"));
+}
+
+function stableCacheRoot(): string {
+  return process.platform === "darwin" ? "/tmp" : tmpdir();
 }
 
 function fixtureWorkspace(name: string): string {
@@ -277,7 +285,7 @@ function run(command: string, args: string[], cwd = repoRoot): SpawnSyncReturns<
   return spawnSync(command, args, {
     cwd,
     encoding: "utf8",
-    env: { ...process.env, COREPACK_ENABLE_DOWNLOAD_PROMPT: "0", NODE_PATH: "" }
+    env: childEnv()
   });
 }
 
@@ -286,8 +294,16 @@ function runWithInput(command: string, args: string[], input: string, cwd = repo
     cwd,
     input,
     encoding: "utf8",
-    env: { ...process.env, COREPACK_ENABLE_DOWNLOAD_PROMPT: "0", NODE_PATH: "" }
+    env: childEnv()
   });
+}
+
+function childEnv(): NodeJS.ProcessEnv {
+  return {
+    ...process.env,
+    COREPACK_ENABLE_DOWNLOAD_PROMPT: "0",
+    NODE_PATH: ""
+  };
 }
 
 function requireSuccess(result: SpawnSyncReturns<string>): void {

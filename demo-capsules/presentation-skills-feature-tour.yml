@@ -1,0 +1,84 @@
+schema_version: 1
+capsule_id: capsule.presentation_skills.feature_tour
+title: Presentation Skills feature tour
+mode: showcase
+description: Perform a high-level showcase of the product-level Presentation Skills matrix, proof model, live showcase flow, MCP boundary, host truthfulness, and release dogfood loop.
+audience: reviewer
+timebox_seconds: 1200
+items:
+  - use_case_id: presentation_skills.matrix.product_inventory
+    scenario_ids: [presentation_skills.matrix.product_inventory.cli]
+    runbook:
+      - kind: instruction
+        text: Show that the repo has product-level presentation_skills rows, not only primitive mechanics.
+      - kind: observation
+        text: Matrix list includes product rows grouped by lifecycle, matrix, evidence, planning, showcase, capsules, MCP, hosts, migration, and release.
+  - use_case_id: presentation_skills.planning.showcase_selection
+    scenario_ids: [presentation_skills.planning.showcase_selection.cli]
+    runbook:
+      - kind: instruction
+        text: Generate a showcase plan and explain selected rows, reasons, exclusions, and evidence gaps.
+      - kind: observation
+        text: The plan is prepared_not_performed and favors high-value golden product rows.
+  - use_case_id: presentation_skills.evidence.product_proof_map
+    scenario_ids: [presentation_skills.evidence.product_proof_map.record]
+    runbook:
+      - kind: instruction
+        text: Show evidence status and explain how evidence IDs map back to stable use-case IDs and semantic hashes.
+      - kind: observation
+        text: Evidence is append-only proof data and does not become approval or instruction.
+  - use_case_id: presentation_skills.showcase.live_acceptance_flow
+    scenario_ids: [presentation_skills.showcase.live_acceptance_flow.cli]
+    runbook:
+      - kind: instruction
+        text: Start or inspect a showcase run and show observation, verdict, finish, and status replay events.
+      - kind: observation
+        text: The run status is derived from events and remains separate from user approval.
+  - use_case_id: presentation_skills.showcase.status_separation
+    scenario_ids: [presentation_skills.showcase.status_separation.status]
+    runbook:
+      - kind: instruction
+        text: Show verdict, verification, completion, and approval as separate status dimensions.
+      - kind: observation
+        text: A run can be performed, incomplete, blocked, or unapproved without collapsing those states.
+  - use_case_id: presentation_skills.mcp.cli_contract_transport
+    scenario_ids: [presentation_skills.mcp.cli_contract_transport.parity]
+    runbook:
+      - kind: instruction
+        text: Compare CLI and MCP contract semantics for a read command.
+      - kind: observation
+        text: MCP wraps the CLI/core contract rather than reimplementing product logic.
+  - use_case_id: presentation_skills.mcp.approval_request_only
+    scenario_ids: [presentation_skills.mcp.approval_request_only.boundary]
+    runbook:
+      - kind: instruction
+        text: Show that MCP can request a trusted approval path but cannot write user approval.
+      - kind: observation
+        text: User approval requires a trusted user confirmation path outside model-controlled MCP writes.
+  - use_case_id: presentation_skills.hosts.conformance_status_truth
+    scenario_ids: [presentation_skills.hosts.conformance_status_truth.status]
+    runbook:
+      - kind: instruction
+        text: Show host conformance status and distinguish passed, failed, not_run, static conformance, and live support proof.
+      - kind: observation
+        text: Host profile existence is not overstated as verified live host support.
+  - use_case_id: presentation_skills.release.installable_artifact_provenance
+    scenario_ids: [presentation_skills.release.installable_artifact_provenance.doctor]
+    runbook:
+      - kind: instruction
+        text: Show package doctor or artifact inspection proof for the installable package, not only the checkout.
+      - kind: observation
+        text: Release proof is bound to packaged files and runtime entrypoints.
+  - use_case_id: presentation_skills.release.self_dogfood_evidence_bundle
+    scenario_ids: [presentation_skills.release.self_dogfood_evidence_bundle.bundle]
+    runbook:
+      - kind: instruction
+        text: Summarize how this repo uses its own matrix, evidence, and showcase run as release proof for the demonstrated scope.
+      - kind: observation
+        text: The dogfood bundle shows demonstrated scope, evidence gaps, and any user sign-off still required.
+permissions:
+  command_execution: false
+extensions:
+  presentation-skills.dev/runner:
+    command: presentation-skills capsule run --repo . --capsule capsule.presentation_skills.feature_tour --idempotency-key self-matrix:feature-tour --json
+    command_steps: none

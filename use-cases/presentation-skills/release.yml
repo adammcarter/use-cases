@@ -1,0 +1,244 @@
+schema_version: 1
+feature:
+  id: presentation_skills.release
+  name: Release proof
+  summary: Production release gates that bind claims to installable artifacts, evidence, host caveats, and self-dogfood demos.
+use_cases:
+  - id: presentation_skills.release.sequential_gate_story
+    title: Sequential production release gate
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    tags: [release, ci, gate]
+    source_refs:
+      - kind: file
+        path: docs/release.md
+      - kind: file
+        path: scripts/release-gate.mjs
+    actor: script
+    intent: Prove frozen install, typecheck, build, full tests, package doctor, matrix checks, and pack.
+    preconditions:
+      - Dependencies are installed from the lockfile.
+    trigger: Agent prepares to merge, tag, publish, or hand off a release candidate.
+    scenarios:
+      - id: presentation_skills.release.sequential_gate_story.gate
+        kind: steps
+        steps:
+          - Run the release gate script.
+          - Confirm install, typecheck, build, tests, doctor, matrix, and pack steps run in sequence.
+          - Stop on first failing gate and report exact failure.
+    observable_outcomes:
+      - Release readiness is based on a deterministic gate, not memory of earlier checks.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: command_result
+          required_verifiers: [script]
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  - id: presentation_skills.release.installable_artifact_provenance
+    title: Installable artifact provenance
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    tags: [release, package, provenance]
+    source_refs:
+      - kind: file
+        path: docs/release.md
+      - kind: file
+        path: packages/ucm-core/src/package/inspectPackage.ts
+    actor: script
+    intent: Bind release proof to the actual packed or installed artifact, not just the checkout.
+    preconditions:
+      - A package tarball or installed package root exists.
+    trigger: Agent verifies package release readiness.
+    scenarios:
+      - id: presentation_skills.release.installable_artifact_provenance.doctor
+        kind: steps
+        steps:
+          - Pack the root package or inspect an installed root.
+          - Verify required files, binaries, schemas, skills, docs, hosts, and use cases are present.
+          - Reject forbidden source, test, or local session artifacts.
+    observable_outcomes:
+      - The release claim points at the artifact users will install.
+      - Package contents match docs and manifest claims.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: command_result
+          required_verifiers: [script]
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  - id: presentation_skills.release.self_dogfood_evidence_bundle
+    title: Self-dogfood release evidence bundle
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    tags: [release, dogfood, evidence]
+    source_refs:
+      - kind: file
+        path: docs/acceptance.md
+      - kind: file
+        path: docs/release.md
+      - kind: file
+        path: use-cases/matrix/core.yml
+    actor: agent
+    intent: Use this repo's own matrix, evidence, and showcase run as release proof for the demonstrated scope.
+    preconditions:
+      - Product-level use cases, safe evidence, and a showcase run exist for the release scope.
+    trigger: Agent prepares final release or merge readiness summary.
+    scenarios:
+      - id: presentation_skills.release.self_dogfood_evidence_bundle.bundle
+        kind: steps
+        steps:
+          - Validate the repo's own matrix.
+          - Inspect evidence status for selected product rows.
+          - Run or inspect a self-showcase that demonstrates the release scope.
+          - State residual gaps and user sign-off status.
+    observable_outcomes:
+      - The product demonstrates its own lifecycle rather than only unit tests.
+      - The bundle distinguishes demonstrated scope from untested or future rows.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: live_demo
+          required_verifiers: [user]
+          minimum_count: 1
+    approval_policy:
+      mode: ask
+
+  - id: presentation_skills.release.documentation_claim_precision
+    title: Documentation claim precision
+    lifecycle: active
+    value_tier: critical
+    journey_role: negative
+    usage_frequency: common
+    tags: [release, docs, claims]
+    source_refs:
+      - kind: file
+        path: README.md
+      - kind: file
+        path: docs/hosts.md
+      - kind: file
+        path: docs/mcp.md
+      - kind: file
+        path: docs/showcase.md
+    actor: agent
+    intent: Keep README, host, MCP, showcase, and release claims aligned with recorded evidence.
+    preconditions:
+      - Documentation describes support, proof, approval, host status, or release readiness.
+    trigger: Agent updates docs or summarizes release claims.
+    scenarios:
+      - id: presentation_skills.release.documentation_claim_precision.review
+        kind: steps
+        steps:
+          - Compare docs against matrix and evidence status.
+          - Identify claims that are not backed by proof.
+          - Caveat or remove unsupported claims before merge.
+    observable_outcomes:
+      - Docs do not overstate host support, MCP authority, approval, or release readiness.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: agent_observation
+          required_verifiers: [agent]
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  - id: presentation_skills.release.version_manifest_alignment
+    title: Version and manifest alignment
+    lifecycle: active
+    value_tier: core
+    journey_role: alternate
+    usage_frequency: occasional
+    tags: [release, version, manifests]
+    source_refs:
+      - kind: file
+        path: package.json
+      - kind: file
+        path: plugin.json
+      - kind: file
+        path: packages/ucm-core/src/version.ts
+    actor: script
+    intent: Keep package, manifests, CLI/MCP version output, and projection plugin_version consistent.
+    preconditions:
+      - Release metadata or generated host projections exist.
+    trigger: Agent prepares a release candidate or package artifact.
+    scenarios:
+      - id: presentation_skills.release.version_manifest_alignment.check
+        kind: steps
+        steps:
+          - Inspect package and plugin manifests.
+          - Inspect CLI and MCP version surfaces.
+          - Report mismatches before release.
+    observable_outcomes:
+      - Version and manifest claims point at the same release identity.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers: [script]
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  - id: presentation_skills.release.clean_snapshot
+    title: Clean release snapshot
+    lifecycle: active
+    value_tier: core
+    journey_role: alternate
+    usage_frequency: occasional
+    tags: [release, git, provenance]
+    source_refs:
+      - kind: file
+        path: docs/release.md
+      - kind: file
+        path: scripts/release-gate.mjs
+    actor: script
+    intent: Record clean git status, commit, branch, matrix status, and release-gate evidence IDs.
+    preconditions:
+      - Release checks have run or are about to run.
+    trigger: Agent reports final merge or release readiness.
+    scenarios:
+      - id: presentation_skills.release.clean_snapshot.status
+        kind: steps
+        steps:
+          - Capture branch, commit, and git status.
+          - Capture matrix status and release-gate result.
+          - Report any dirty state or missing evidence before final claim.
+    observable_outcomes:
+      - Final readiness is tied to a concrete source snapshot.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: command_result
+          required_verifiers: [script]
+          minimum_count: 1
+    approval_policy:
+      mode: none

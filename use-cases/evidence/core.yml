@@ -7,7 +7,7 @@ use_cases:
   - id: evidence.core.record
     title: Record evidence for a use case
     lifecycle: active
-    value_tier: critical
+    value_tier: core
     journey_role: golden
     usage_frequency: common
     tags: [evidence, ledger]

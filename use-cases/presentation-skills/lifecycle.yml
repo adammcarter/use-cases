@@ -1,0 +1,211 @@
+schema_version: 1
+feature:
+  id: presentation_skills.lifecycle
+  name: Presentation Skills lifecycle
+  summary: Recommended but optional workflows for keeping use cases, evidence, and showcases current.
+use_cases:
+  - id: presentation_skills.lifecycle.continuous_loop
+    title: Continuous product-proof-demo loop
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    tags: [lifecycle, dogfood, planning, evidence, showcase]
+    source_refs:
+      - kind: file
+        path: docs/activation.md
+      - kind: file
+        path: bootstrap/presentation-skills.md
+    actor: agent
+    intent: Keep behavior rows, proof, and showcase readiness connected during normal work.
+    preconditions:
+      - A repo has behavior worth tracking beyond a trivial edit.
+    trigger: Agent plans, implements, verifies, or prepares to show product work.
+    scenarios:
+      - id: presentation_skills.lifecycle.continuous_loop.default
+        kind: steps
+        steps:
+          - Add or update use-case rows during planning or implementation.
+          - Record safe evidence when behavior is proved.
+          - Select a focused showcase from high-value rows near completion.
+    observable_outcomes:
+      - The matrix, evidence, and showcase plan describe the same demonstrated scope.
+      - The workflow is recommended without being mandatory for every edit.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+      - host_surface: claude.cli
+        supported: true
+      - host_surface: copilot.cli
+        supported: true
+      - host_surface: opencode.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: agent_observation
+          required_verifiers: [agent]
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  - id: presentation_skills.lifecycle.workflow_modes
+    title: First-class non-continuous workflows
+    lifecycle: active
+    value_tier: core
+    journey_role: alternate
+    usage_frequency: occasional
+    tags: [lifecycle, workflow, adoption]
+    source_refs:
+      - kind: file
+        path: docs/activation.md
+      - kind: file
+        path: schemas/v1/workflow-mode.schema.json
+    actor: agent
+    intent: Support backfill, showcase-only, audit-only, and migration workflows without weakening integrity gates.
+    preconditions:
+      - The user prefers a lifecycle other than continuous upkeep.
+    trigger: User asks to backfill, audit, migrate, or demo work outside the recommended default loop.
+    scenarios:
+      - id: presentation_skills.lifecycle.workflow_modes.alternates
+        kind: steps
+        steps:
+          - Identify the requested workflow mode.
+          - Use matrix, evidence, plan, or showcase commands that fit that mode.
+          - Preserve normal validation, evidence safety, and approval boundaries.
+    observable_outcomes:
+      - The tool supports the chosen workflow without treating it as lower quality.
+      - Advisory workflow configuration never bypasses schema or trust checks.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: agent_observation
+          required_verifiers: [agent]
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  - id: presentation_skills.lifecycle.agent_matrix_stewardship
+    title: Agent owns matrix upkeep
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    tags: [lifecycle, ownership, agent-boundary]
+    source_refs:
+      - kind: file
+        path: .agents/skills/use-case-matrix/SKILL.md
+      - kind: file
+        path: docs/activation.md
+    actor: agent
+    intent: Agent creates and maintains rows while escalating subjective judgment to the user.
+    preconditions:
+      - The agent has enough context to identify behavior rows.
+    trigger: Product behavior is added, changed, migrated, or reviewed.
+    scenarios:
+      - id: presentation_skills.lifecycle.agent_matrix_stewardship.default
+        kind: steps
+        steps:
+          - Infer candidate behavior rows from product work.
+          - Add or update rows with value, journey, frequency, and host applicability.
+          - Ask the user only for subjective scope, audience, or approval decisions.
+    observable_outcomes:
+      - The user does not have to manually author mechanical matrix rows.
+      - The agent does not fabricate user judgment or sign-off.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+      - host_surface: claude.cli
+        supported: true
+      - host_surface: copilot.cli
+        supported: true
+      - host_surface: opencode.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: agent_observation
+          required_verifiers: [agent]
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  - id: presentation_skills.lifecycle.user_feature_printout
+    title: User-facing feature printout
+    lifecycle: active
+    value_tier: core
+    journey_role: golden
+    usage_frequency: common
+    tags: [lifecycle, user-visible, summary]
+    source_refs:
+      - kind: file
+        path: docs/activation.md
+      - kind: file
+        path: packages/ucm-core/src/presentation/selectPlan.ts
+    actor: agent
+    intent: Show the user high-level feature status and gaps without exposing YAML mechanics by default.
+    preconditions:
+      - The matrix contains product-level rows with meaningful titles and tags.
+    trigger: User asks what the product can show, accept, or prove.
+    scenarios:
+      - id: presentation_skills.lifecycle.user_feature_printout.default
+        kind: steps
+        steps:
+          - Summarize high-value active rows by feature area.
+          - Distinguish ready, evidence-missing, planned, and user-sign-off cases.
+          - Link the summary back to row IDs for mechanical follow-up.
+    observable_outcomes:
+      - The user can scan the important product behaviors without reading every YAML file.
+      - Planned or unproved items are clearly separated from accepted scope.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: manual_observation
+          required_verifiers: [user]
+          minimum_count: 1
+    approval_policy:
+      mode: ask
+
+  - id: presentation_skills.lifecycle.opt_out_or_tiny_change
+    title: Respect opt-out and tiny-scope work
+    lifecycle: active
+    value_tier: supporting
+    journey_role: negative
+    usage_frequency: rare
+    tags: [lifecycle, opt-out, scope-control]
+    source_refs:
+      - kind: file
+        path: .agents/skills/use-case-matrix/SKILL.md
+      - kind: file
+        path: docs/activation.md
+    actor: agent
+    intent: Avoid invoking the workflow for trivial non-behavior edits or when the user opts out.
+    preconditions:
+      - Work is trivial, non-behavioral, or explicitly outside the plugin lifecycle.
+    trigger: User opts out or the agent detects that matrix upkeep would add noise.
+    scenarios:
+      - id: presentation_skills.lifecycle.opt_out_or_tiny_change.skip
+        kind: steps
+        steps:
+          - Identify the reason the lifecycle should not run.
+          - Avoid adding rows, evidence, or showcase artifacts.
+          - Continue ordinary repo work and report that no matrix update was needed.
+    observable_outcomes:
+      - The workflow remains useful because it is not forced onto tiny changes.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: agent_observation
+          required_verifiers: [agent]
+          minimum_count: 1
+    approval_policy:
+      mode: none

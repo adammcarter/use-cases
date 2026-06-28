@@ -1,0 +1,199 @@
+schema_version: 1
+feature:
+  id: presentation_skills.planning
+  name: Presentation planning
+  summary: Deterministic showcase and walkthrough selection from matrix value, journey, evidence, and user context.
+use_cases:
+  - id: presentation_skills.planning.showcase_selection
+    title: High-value showcase selection
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    tags: [planning, showcase, selection]
+    source_refs:
+      - kind: file
+        path: packages/ucm-core/src/presentation/selectShowcasePlan.ts
+      - kind: file
+        path: packages/ucm-core/src/presentation/scoring.ts
+    actor: agent
+    intent: Select a short demo from high-value, live-verifiable rows with reasons and exclusions.
+    preconditions:
+      - The matrix contains active rows with value and journey metadata.
+    trigger: User or agent asks what to show in a focused live demo.
+    scenarios:
+      - id: presentation_skills.planning.showcase_selection.cli
+        kind: steps
+        steps:
+          - Run plan showcase with a max item limit.
+          - Confirm selected rows prioritize critical or core golden paths.
+          - Review reasons, exclusions, evidence gaps, and prepared-not-performed status.
+    observable_outcomes:
+      - The plan is concise and reasoned.
+      - It remains prepared material until a showcase run records events.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: command_result
+          required_verifiers: [script]
+          minimum_count: 1
+    approval_policy:
+      mode: ask
+
+  - id: presentation_skills.planning.walkthrough_coverage
+    title: Broader walkthrough coverage
+    lifecycle: active
+    value_tier: core
+    journey_role: alternate
+    usage_frequency: occasional
+    tags: [planning, walkthrough, caveats]
+    source_refs:
+      - kind: file
+        path: packages/ucm-core/src/presentation/selectWalkthroughPlan.ts
+      - kind: file
+        path: .agents/skills/presentation-walkthrough/SKILL.md
+    actor: agent
+    intent: Select alternate, edge, negative, and failure cases for a deeper evidence-backed walkthrough.
+    preconditions:
+      - The user wants broad explanation rather than a short sign-off demo.
+    trigger: User asks for an extensive walkthrough, caveats, gaps, or provenance.
+    scenarios:
+      - id: presentation_skills.planning.walkthrough_coverage.cli
+        kind: steps
+        steps:
+          - Run plan walkthrough.
+          - Confirm selection includes more than golden paths.
+          - Include caveats, evidence state, and exclusions in the explanation.
+    observable_outcomes:
+      - The walkthrough covers product breadth without pretending to be sign-off.
+      - Edge, negative, and failure rows are visible when useful.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: agent_observation
+          required_verifiers: [agent]
+          minimum_count: 1
+    approval_policy:
+      mode: ask
+
+  - id: presentation_skills.planning.prepared_not_performed
+    title: Generated plans are not proof
+    lifecycle: active
+    value_tier: critical
+    journey_role: negative
+    usage_frequency: common
+    tags: [planning, proof-boundary, safety]
+    source_refs:
+      - kind: file
+        path: docs/showcase.md
+      - kind: file
+        path: packages/ucm-core/src/presentation/selectPlan.ts
+    actor: agent
+    intent: Keep generated plans in prepared_not_performed state until a run records performed events.
+    preconditions:
+      - A plan, capsule plan, or walkthrough has been generated.
+    trigger: Agent reports plan status or prepares a showcase from generated material.
+    scenarios:
+      - id: presentation_skills.planning.prepared_not_performed.guard
+        kind: steps
+        steps:
+          - Generate a plan.
+          - Confirm `prepared_not_performed` is true.
+          - Avoid claiming proof until showcase run events exist.
+    observable_outcomes:
+      - Generated plans do not become evidence or approval by themselves.
+      - A run must bind to the plan hash before performed proof exists.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers: [script]
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  - id: presentation_skills.planning.audience_timebox_fit
+    title: Audience and timebox fit
+    lifecycle: active
+    value_tier: supporting
+    journey_role: alternate
+    usage_frequency: occasional
+    tags: [planning, audience, timebox]
+    source_refs:
+      - kind: file
+        path: docs/showcase.md
+      - kind: file
+        path: packages/ucm-core/src/presentation/selectPlan.ts
+    actor: agent
+    intent: Adapt selected items and exclusions to the user's audience, available time, and review goal.
+    preconditions:
+      - The user has an audience, timebox, or review intent.
+    trigger: User asks for a demo, review, walkthrough, or sign-off run with practical constraints.
+    scenarios:
+      - id: presentation_skills.planning.audience_timebox_fit.adjust
+        kind: steps
+        steps:
+          - Capture audience and timebox.
+          - Generate a plan within the limit.
+          - Explain excluded rows that were lower priority or out of scope.
+    observable_outcomes:
+      - The plan fits the user's review context.
+      - Important exclusions are explicit instead of hidden.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: manual_observation
+          required_verifiers: [user]
+          minimum_count: 1
+    approval_policy:
+      mode: ask
+
+  - id: presentation_skills.planning.partial_matrix_warning
+    title: Partial matrix warning in plans
+    lifecycle: active
+    value_tier: core
+    journey_role: edge
+    usage_frequency: occasional
+    tags: [planning, partial, diagnostics]
+    source_refs:
+      - kind: file
+        path: packages/ucm-core/src/presentation/selectPlan.ts
+      - kind: file
+        path: tests/fixtures/workspaces/presentation-partial/use-cases/damaged.yml
+    actor: agent
+    intent: Make damaged or incomplete matrix state visible before a plan is used for a demo.
+    preconditions:
+      - The matrix or evidence snapshot is partial.
+    trigger: Agent generates a plan while integrity is not clean.
+    scenarios:
+      - id: presentation_skills.planning.partial_matrix_warning.strict
+        kind: steps
+        steps:
+          - Generate a plan against partial matrix input.
+          - Confirm the plan requires integrity acknowledgement or blocks in strict mode.
+          - Report diagnostics before any live run.
+    observable_outcomes:
+      - Partial input cannot masquerade as ordinary full readiness.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers: [script]
+          minimum_count: 1
+    approval_policy:
+      mode: none
