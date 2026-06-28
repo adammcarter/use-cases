@@ -24,6 +24,9 @@ env:
   UCM_EVIDENCE: .use-cases/evidence.jsonl
   UCM_BINDINGS: .use-cases/bindings.jsonl
   UCM_PUBLIC_KEY: .use-cases/trusted-ci-public-key.pem
+  # Transient, per-run unsigned verification results (verify -> prove handoff).
+  # Never committed -- gitignored; only the signed EVIDENCE ledger persists.
+  UCM_VERIFICATION_RESULTS: .use-cases/verification-results.jsonl
 
 jobs:
   policy:
@@ -148,14 +151,35 @@ jobs:
           cache: pnpm
       - run: corepack pnpm install --frozen-lockfile
       - run: corepack pnpm build
-      # Mints a signed proof event from the trusted CI signing key (held only in
-      # the secret). The key never leaves CI; agents cannot manufacture green.
-      - name: prove (trusted CI)
+      # Phase 1 -- VERIFY: run each bound row's resolved verifier(s) and write an
+      # UNSIGNED results ledger (one JSONL line per row). This step runs arbitrary
+      # repo test commands, so for key hygiene it MUST NOT see the signing key --
+      # it is blanked in this step's own process env. Exits nonzero (failing the
+      # job) if any targeted row's verifier fails.
+      - name: verify use-case rows
+        if: ${{ env.UCM_CI_SIGNING_KEY != '' }}
+        env:
+          UCM_CI_SIGNING_KEY: ""
+        run: |
+          key_args=()
+          if [ -f "$UCM_PUBLIC_KEY" ]; then key_args=(--public-key "$UCM_PUBLIC_KEY"); fi
+          corepack pnpm cli -- verify \
+            --repo . \
+            --product-root . \
+            --evidence "$UCM_EVIDENCE" \
+            --bindings "$UCM_BINDINGS" \
+            "${key_args[@]}" \
+            --all \
+            --out "$UCM_VERIFICATION_RESULTS" \
+            --json
+      # Phase 2 -- PROVE: consume the unsigned results and mint a SIGNED proof for
+      # every passing row. This step runs NO scripts -- it only recomputes hashes
+      # and signs -- so it is the ONLY place the trusted CI signing key (held only
+      # in the secret) is in scope. The key never leaves CI; agents cannot
+      # manufacture green because prove re-derives every hash itself.
+      - name: prove use-case rows
         if: ${{ env.UCM_CI_SIGNING_KEY != '' }}
         run: |
-          row="${UCM_PROVE_ROW:-}"
-          args=(--trusted-ci --append --signing-key-env UCM_CI_SIGNING_KEY)
-          if [ -n "$row" ]; then args+=(--row "$row"); else args+=(--all); fi
           key_args=()
           if [ -f "$UCM_PUBLIC_KEY" ]; then key_args=(--public-key "$UCM_PUBLIC_KEY"); fi
           corepack pnpm cli -- prove \
@@ -164,7 +188,11 @@ jobs:
             --evidence "$UCM_EVIDENCE" \
             --bindings "$UCM_BINDINGS" \
             "${key_args[@]}" \
-            "${args[@]}" \
+            --all \
+            --trusted-ci \
+            --append \
+            --verification-results "$UCM_VERIFICATION_RESULTS" \
+            --signing-key-env UCM_CI_SIGNING_KEY \
             --json
       # Persist the freshly minted proof events back to the repo. Without this the
       # signed proof dies with the runner and rows never reach FRESH (spec 10.2:
