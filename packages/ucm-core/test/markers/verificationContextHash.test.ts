@@ -27,13 +27,16 @@ const ROOT = "/repo";
 const GENERATED_AT = "2026-06-28T12:10:00Z";
 const HASH_RE = /^sha256:[0-9a-f]{64}$/;
 
-// The default-convention "acceptance" verifier resolves its input to
-// `tests/use-cases/<slug>.test.ts`; here the slug is the row id.
+// The `acceptance` verifier is declared as the `js.vitest` preset, which resolves
+// its input to `tests/use-cases/<slug>.test.ts`; here the slug is the row id.
 const ACCEPTANCE_INPUT = `${ROOT}/tests/use-cases/${ROW_ID}.test.ts`;
 const LOCKFILE = `${ROOT}/pnpm-lock.yaml`;
 
 const VERIFICATION_POLICY = {
   mode: "requirements",
+  verifiers: {
+    acceptance: { preset: "js.vitest" }
+  },
   requirements: [
     { evidence_kind: "test_result", required_verifiers: ["acceptance"], minimum_count: 1 }
   ]

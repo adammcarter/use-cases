@@ -129,7 +129,8 @@ export function prepareScan(options: ScanCommandOptions): ScanPreparation {
         slug: row.row_id,
         verificationPolicy: row.verification_policy,
         rootDir: contextRoot,
-        fs
+        fs,
+        workspaceVerifiers: options.context.verifiers
       })
     );
   }
