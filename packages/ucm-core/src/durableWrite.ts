@@ -4,6 +4,7 @@ import { isAbsolute, relative, resolve } from "node:path";
 
 const BEST_EFFORT_TEMP_SYNC_CODES = new Set(["EIO", "EINVAL", "ENOSYS", "ENOTSUP"]);
 
+//: @use-case: presentation_skills.evidence.crash_durable_ledger_writes
 export function fsyncBestEffortForTemp(fd: number, path: string): void {
   try {
     fsyncSync(fd);
@@ -14,6 +15,7 @@ export function fsyncBestEffortForTemp(fd: number, path: string): void {
     throw error;
   }
 }
+//: @use-case: end presentation_skills.evidence.crash_durable_ledger_writes
 
 function isBestEffortTempSyncError(error: unknown, path: string): boolean {
   const code = (error as NodeJS.ErrnoException).code;
