@@ -204,3 +204,42 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
+
+  - id: presentation_skills.matrix.status_summary
+    title: One-shot matrix and evidence health summary
+    lifecycle: active
+    value_tier: supporting
+    journey_role: alternate
+    usage_frequency: occasional
+    tags: [matrix, status, summary]
+    source_refs:
+      - kind: file
+        path: packages/ucm-core/src/useCases/query.ts
+      - kind: file
+        path: docs/cli.md
+    actor: agent
+    intent: Summarize matrix population, integrity state, and linked evidence status in a single read-only command for a quick health check.
+    preconditions:
+      - A use-case matrix exists, possibly with partial or missing evidence.
+    trigger: Agent wants a fast readiness read before planning, release, or showcase.
+    scenarios:
+      - id: presentation_skills.matrix.status_summary.report
+        kind: steps
+        steps:
+          - Run matrix status.
+          - Inspect row counts, integrity state, and evidence coverage.
+          - Confirm the summary is derived from current files, not a cached claim.
+    observable_outcomes:
+      - Matrix and evidence health are readable in one command.
+      - Integrity or evidence gaps are visible without a full plan run.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: command_result
+          required_verifiers: [script]
+          minimum_count: 1
+    approval_policy:
+      mode: none

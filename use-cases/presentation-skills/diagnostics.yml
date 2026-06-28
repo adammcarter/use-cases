@@ -1,0 +1,85 @@
+schema_version: 1
+feature:
+  id: presentation_skills.diagnostics
+  name: Diagnostics and contracts
+  summary: Resolve roots deterministically and publish a versioned, validatable schema contract so the tool can be pointed anywhere and integrated against safely.
+use_cases:
+  - id: presentation_skills.diagnostics.root_resolution
+    title: Workspace and data roots resolve safely
+    lifecycle: active
+    value_tier: core
+    journey_role: golden
+    usage_frequency: occasional
+    tags: [diagnostics, roots, configuration]
+    source_refs:
+      - kind: file
+        path: packages/ucm-core/src/roots.ts
+      - kind: file
+        path: docs/data-model.md
+    actor: agent
+    intent: Resolve the workspace root and data root deterministically, allowing the data root to differ from the workspace root for monorepo or CI layouts.
+    preconditions:
+      - A workspace config declares a data root that may differ from the repository root.
+    trigger: Agent points the CLI or MCP server at a repository and inspects resolved roots.
+    scenarios:
+      - id: presentation_skills.diagnostics.root_resolution.doctor
+        kind: steps
+        steps:
+          - Run doctor roots against the repository.
+          - Confirm workspace root and data root are reported distinctly.
+          - Confirm a separated data root resolves and unsafe or symlinked roots are rejected.
+    observable_outcomes:
+      - The data root can be relocated without breaking matrix, evidence, or showcase paths.
+      - Unsafe roots are refused rather than silently followed.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: command_result
+          required_verifiers: [script]
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  - id: presentation_skills.diagnostics.schema_contract_surface
+    title: Versioned schema contract is published and validated
+    lifecycle: active
+    value_tier: core
+    journey_role: golden
+    usage_frequency: occasional
+    tags: [diagnostics, schema, contract]
+    source_refs:
+      - kind: file
+        path: packages/ucm-core/src/schema/index.ts
+      - kind: file
+        path: schemas/v1/cli-result.schema.json
+      - kind: file
+        path: docs/cli.md
+    actor: script
+    intent: Expose every result envelope as a listable, versioned JSON schema and validate fixtures against it so integrators can depend on the contract.
+    preconditions:
+      - The package ships versioned v1 result and entity schemas.
+    trigger: Integrator or release gate enumerates the contract and validates fixtures.
+    scenarios:
+      - id: presentation_skills.diagnostics.schema_contract_surface.validate
+        kind: steps
+        steps:
+          - Run schema list to enumerate published v1 schemas.
+          - Run schema validate-fixtures against the bundled fixtures.
+          - Confirm CLI and MCP results validate against their declared schema IDs.
+    observable_outcomes:
+      - Every command result is backed by a published, versioned schema.
+      - A drifted result or fixture fails validation rather than passing silently.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers: [script]
+          minimum_count: 1
+    approval_policy:
+      mode: none

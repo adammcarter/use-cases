@@ -204,3 +204,44 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
+
+  - id: presentation_skills.evidence.crash_durable_ledger_writes
+    title: Crash-durable ledger writes
+    lifecycle: active
+    value_tier: core
+    journey_role: edge
+    usage_frequency: rare
+    tags: [evidence, durability, jsonl, integrity]
+    source_refs:
+      - kind: file
+        path: packages/ucm-core/src/durableWrite.ts
+      - kind: file
+        path: packages/ucm-core/src/evidence/appendEvidenceEvent.ts
+      - kind: file
+        path: packages/ucm-core/src/showcase/jsonlLedger.ts
+    actor: script
+    intent: Append evidence and showcase events through an atomic temp-file write with best-effort fsync so a crash or interruption cannot leave a half-written or truncated ledger.
+    preconditions:
+      - An append to an evidence or showcase JSONL ledger is in progress.
+    trigger: Agent or script records an evidence or showcase event, possibly on a flaky or interruptible filesystem.
+    scenarios:
+      - id: presentation_skills.evidence.crash_durable_ledger_writes.atomic
+        kind: steps
+        steps:
+          - Append an event so it is staged and flushed before the live ledger is replaced.
+          - Confirm the ledger either contains the whole event or none of it, never a partial line.
+          - Confirm filesystems that cannot fsync a temp file degrade to best-effort instead of failing the write.
+    observable_outcomes:
+      - An interrupted append does not corrupt or truncate the existing ledger.
+      - Durability degrades gracefully rather than throwing on unsupported temp-file sync.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers: [script]
+          minimum_count: 1
+    approval_policy:
+      mode: none
