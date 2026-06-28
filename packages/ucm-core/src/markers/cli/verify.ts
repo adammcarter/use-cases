@@ -221,7 +221,8 @@ export function runVerifyCommand(options: VerifyCommandOptions): VerifyCommandRe
       slug: rowId,
       verificationPolicy: loadedRow.verification_policy,
       rootDir: contextRoot,
-      fs
+      fs,
+      workspaceVerifiers: options.context.verifiers
     });
 
     const base = {
@@ -250,10 +251,12 @@ export function runVerifyCommand(options: VerifyCommandOptions): VerifyCommandRe
       continue;
     }
 
-    const verifiers = resolveRowVerifiers({
-      slug: rowId,
-      verification_policy: loadedRow.verification_policy
-    });
+    // Same workspace verifiers prove/scan use, so the verifier this RUNS is the
+    // one the embedded + recomputed context hashes are derived from.
+    const verifiers = resolveRowVerifiers(
+      { slug: rowId, verification_policy: loadedRow.verification_policy },
+      options.context.verifiers
+    );
 
     // A bound row that demands NO verifier (e.g. mode:none) can't be certified by
     // verify -> blocked (recorded, surfaced, never crashes).

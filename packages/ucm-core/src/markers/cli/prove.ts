@@ -335,7 +335,8 @@ function proveOneRow(args: ProveOneRowArgs): ProveRowResult {
     slug: rowId,
     verificationPolicy: loadedRow.verification_policy,
     rootDir: contextRoot,
-    fs
+    fs,
+    workspaceVerifiers: options.context.verifiers
   });
 
   const hashes = { row_hash: rowHash, binding_set_hash: bindingSetHash };

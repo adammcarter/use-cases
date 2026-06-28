@@ -22,6 +22,10 @@ export type ResolvedWorkspaceContext = {
   use_cases_root: string;
   component_id: string;
   config_path: string | null;
+  // The workspace config's verifiers map+default, normalized for the verifier
+  // resolver. Threaded identically into verify/prove/scan so a row's resolved
+  // verifier (and thus its verification context hash) is computed consistently.
+  verifiers: ResolvedWorkspaceVerifiers;
   provenance: {
     workspace_root: "explicit" | "cwd";
     data_root: "override" | "workspace_config" | "default";
@@ -55,6 +59,14 @@ export type WorkspaceVerifiersConfig = {
   default?: string;
 } & {
   [verifierId: string]: WorkspaceVerifierEntry | string | undefined;
+};
+
+// The normalized verifiers config carried on a ResolvedWorkspaceContext: the
+// `default` id split out from the entry map. Structurally compatible with the
+// resolver's WorkspaceVerifierContext, so it threads straight through.
+export type ResolvedWorkspaceVerifiers = {
+  default?: string;
+  verifiers: Record<string, WorkspaceVerifierEntry>;
 };
 
 type WorkspaceConfig = {
@@ -95,6 +107,7 @@ export function resolveWorkspaceContext(
     use_cases_root: useCasesRoot,
     component_id: options.component ?? config?.value.component_id ?? "presentation-skills",
     config_path: existsSync(configPath) ? "presentation-skills.yml" : null,
+    verifiers: normalizeWorkspaceVerifiers(config?.value.verifiers),
     provenance: {
       workspace_root: options.workspaceRoot ? "explicit" : "cwd",
       data_root: options.dataRootOverride ? "override" : config?.value.data_root ? "workspace_config" : "default",
@@ -140,6 +153,29 @@ function readWorkspaceConfig(
       source_path: relative(workspaceRoot, configPath).split(sep).join("/")
     }))
   };
+}
+
+// Split the raw `verifiers` config into { default, verifiers } — the shape the
+// verifier resolver consumes. The schema guarantees entries are objects and
+// `default` is a string, but we re-check defensively (config may be hand-edited).
+function normalizeWorkspaceVerifiers(
+  raw: WorkspaceVerifiersConfig | undefined
+): ResolvedWorkspaceVerifiers {
+  if (!isRecord(raw)) {
+    return { verifiers: {} };
+  }
+  const verifiers: Record<string, WorkspaceVerifierEntry> = {};
+  for (const [id, entry] of Object.entries(raw)) {
+    if (id === "default") {
+      continue;
+    }
+    if (isRecord(entry)) {
+      verifiers[id] = entry as WorkspaceVerifierEntry;
+    }
+  }
+  return typeof raw.default === "string"
+    ? { default: raw.default, verifiers }
+    : { verifiers };
 }
 
 function resolveRelative(root: string, value: string): string {

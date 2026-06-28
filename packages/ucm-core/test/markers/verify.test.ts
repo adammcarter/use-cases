@@ -7,6 +7,7 @@ import { resolveWorkspaceContext } from "../../src/index.js";
 import {
   runBindCommand,
   runProveCommand,
+  runScanCommand,
   runVerifyCommand,
   singleKeyResolver,
   type VerifySpawnRunner
@@ -364,5 +365,187 @@ describe("verify command", () => {
     const records = lines.map((line) => JSON.parse(line));
     expect(records.map((record) => record.row_id)).toEqual([ROW_A, ROW_B]);
     expect(records.every((record) => record.schema === "ucase-verification-result-v1")).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Config-driven verifier resolution: a row whose `acceptance` verifier comes
+// from the WORKSPACE config's default (a preset) must produce the SAME
+// verification_context_hash in verify, prove, AND scan — so prove embeds it,
+// scan re-derives it, and the row reaches FRESH. And with NO config default and
+// NO row verifier, `acceptance` is BLOCKED (never silently pnpm/vitest).
+// ---------------------------------------------------------------------------
+
+const ROW_PRESET = "checkout.preset_default";
+
+const USE_CASE_ACCEPTANCE_YAML = `schema_version: 1
+feature:
+  id: checkout
+  name: Checkout
+  summary: Shoppers can apply coupons during checkout.
+metadata:
+  owner: product
+  lifecycle: active
+use_cases:
+  - id: ${ROW_PRESET}
+    title: A row whose acceptance verifier comes from workspace config
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    actor: shopper
+    intent: Apply a valid coupon to a cart.
+    preconditions:
+      - A cart exists.
+    trigger: The shopper submits a coupon code.
+    scenarios:
+      - id: ${ROW_PRESET}.web
+        kind: steps
+        steps:
+          - The shopper submits a coupon code.
+    observable_outcomes:
+      - The cart total reflects the discount.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers: [acceptance]
+          minimum_count: 1
+    approval_policy:
+      mode: none
+`;
+
+const CONFIG_WITH_DEFAULT_YAML = `schema_version: 1
+workspace_id: markers.fixture
+data_root: .
+use_cases_dir: use-cases
+evidence_dir: evidence
+demo_capsules_dir: demo-capsules
+showcase_runs_dir: showcase-runs
+component_id: presentation-skills
+default_workflow_mode: continuous
+verifiers:
+  default: acceptance
+  acceptance:
+    preset: js.vitest
+`;
+
+const SWIFT_PRESET = `import Foundation
+
+@MainActor
+public func presetDefault(_ code: String) async throws -> Int {
+    return 7
+}
+`;
+
+function makeCustomWorkspace(configYaml: string): Workspace {
+  const root = mkdtempSync(join(tmpdir(), "ucm-verify-cfg-"));
+  tempDirs.push(root);
+  writeFile(root, "presentation-skills.yml", configYaml);
+  writeFile(root, "use-cases/checkout.yml", USE_CASE_ACCEPTANCE_YAML);
+  writeFile(root, "Sources/Checkout/PresetService.swift", SWIFT_PRESET);
+  // The js.vitest preset declares this acceptance test as an input.
+  writeFile(root, `tests/use-cases/${ROW_PRESET}.test.ts`, "// the acceptance test\n");
+  const context = resolveWorkspaceContext({ workspaceRoot: root });
+  return {
+    productRoot: context.workspace_root,
+    bindingsPath: join(context.data_root, ".use-cases", "bindings.jsonl"),
+    evidencePath: join(context.data_root, ".use-cases", "evidence.jsonl"),
+    context
+  };
+}
+
+function scanStatus(ws: Workspace, rowId: string): string {
+  const result = runScanCommand({
+    context: ws.context,
+    productRoot: ws.productRoot,
+    bindingsPath: ws.bindingsPath,
+    evidencePath: ws.evidencePath,
+    policyMode: "feature",
+    publicKeyResolver: resolver,
+    generatedAt: GENERATED_AT
+  });
+  const row = result.status.rows.find((entry) => entry.row_id === rowId);
+  if (!row) {
+    throw new Error(`row ${rowId} missing from status`);
+  }
+  return row.status;
+}
+
+describe("config-driven verifier resolution (verify/prove/scan agreement)", () => {
+  test("a config-default preset verifier yields ONE context hash across verify, prove, and scan => FRESH", () => {
+    const ws = makeCustomWorkspace(CONFIG_WITH_DEFAULT_YAML);
+    bind(ws, ROW_PRESET, "Sources/Checkout/PresetService.swift");
+
+    // verify resolves `acceptance` via the workspace config default (a preset),
+    // runs it (injected pass), and stamps a context hash.
+    const verifyResult = runVerifyCommand({
+      ...verifyBase(ws),
+      rowId: ROW_PRESET,
+      spawnRunner: passSpawn
+    });
+    expect(verifyResult.results).toHaveLength(1);
+    const record = verifyResult.results[0];
+    expect(record.status).toBe("pass");
+    expect(record.verifier_id).toBe("acceptance");
+    const verifyHash: string = record.verification_context_hash;
+
+    // prove CONSUMES that result and embeds the SAME context hash in the proof.
+    const proof = runProveCommand({
+      context: ws.context,
+      productRoot: ws.productRoot,
+      bindingsPath: ws.bindingsPath,
+      evidencePath: ws.evidencePath,
+      publicKeyResolver: resolver,
+      rowId: ROW_PRESET,
+      trustedCi: true,
+      verificationResults: verifyResult.results,
+      signingKey: { privateKey: PRIVATE_KEY, keyId: KEY_ID },
+      generatedAt: GENERATED_AT,
+      idFactory: makeId("01JPROVE")
+    });
+    expect(proof.proof_events_appended).toBe(1);
+    const event = JSON.parse(readFileSync(ws.evidencePath, "utf8").trim());
+    const embeddedHash: string = event.verification.context_hash;
+    expect(embeddedHash).toBe(verifyHash);
+
+    // scan RE-DERIVES the context hash with the same config; matching => FRESH.
+    expect(scanStatus(ws, ROW_PRESET)).toBe("FRESH");
+  });
+
+  test("with NO config default and NO row verifier, `acceptance` is BLOCKED (not silently pnpm/vitest)", () => {
+    const ws = makeCustomWorkspace(CONFIG_YAML); // base config has no verifiers section
+    bind(ws, ROW_PRESET, "Sources/Checkout/PresetService.swift");
+
+    const verifyResult = runVerifyCommand({
+      ...verifyBase(ws),
+      rowId: ROW_PRESET,
+      spawnRunner: passSpawn
+    });
+    expect(verifyResult.exit_code).not.toBe(0);
+    expect(verifyResult.results).toHaveLength(1);
+    expect(verifyResult.results[0].status).toBe("blocked");
+    expect(verifyResult.results[0].verifier_id).toBe("acceptance");
+
+    // prove cannot certify a blocked verification.
+    const proof = runProveCommand({
+      context: ws.context,
+      productRoot: ws.productRoot,
+      bindingsPath: ws.bindingsPath,
+      evidencePath: ws.evidencePath,
+      publicKeyResolver: resolver,
+      rowId: ROW_PRESET,
+      trustedCi: true,
+      verificationResults: verifyResult.results,
+      signingKey: { privateKey: PRIVATE_KEY, keyId: KEY_ID },
+      generatedAt: GENERATED_AT,
+      idFactory: makeId("01JPROVE")
+    });
+    expect(proof.exit_code).toBe(5);
+    expect(proof.rows[0].status).toBe("failed");
+    expect(proof.rows[0].reason).toBe("RESULT_BLOCKED");
   });
 });

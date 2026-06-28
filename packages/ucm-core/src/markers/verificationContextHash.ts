@@ -19,7 +19,11 @@
 // never on unrelated files in the tree.
 import { isAbsolute, join } from "node:path";
 import { canonicalJsonSha256, sha256 } from "./canonicalJson.js";
-import { resolveRowVerifiers, type VerifierResolution } from "./verifierResolver.js";
+import {
+  resolveRowVerifiers,
+  type VerifierResolution,
+  type WorkspaceVerifierContext
+} from "./verifierResolver.js";
 
 // The id of this hashing algorithm, embedded alongside the hash in proof events.
 export const VERIFICATION_CONTEXT_HASH_ID = "ucase-verification-context-hash-v1";
@@ -117,13 +121,20 @@ export interface RowVerificationContextHashArgs {
   rootDir: string;
   fs: VerificationContextFs;
   lockfileName?: string;
+  // The workspace config's verifiers map+default. MUST be threaded identically by
+  // prove (embed) and scan (re-derive) — sourced from the same resolved workspace
+  // context — or the embedded and recomputed hashes diverge and FRESH breaks.
+  workspaceVerifiers?: WorkspaceVerifierContext;
 }
 
 // Convenience: resolve a row's verifiers, then compute its context hash. This is
 // the single entry point both `prove` (to embed) and `scan` (to re-derive) use,
 // so the embedded and recomputed hashes are guaranteed to agree byte-for-byte.
 export function computeRowVerificationContextHash(args: RowVerificationContextHashArgs): string {
-  const verifiers = resolveRowVerifiers({ slug: args.slug, verification_policy: args.verificationPolicy });
+  const verifiers = resolveRowVerifiers(
+    { slug: args.slug, verification_policy: args.verificationPolicy },
+    args.workspaceVerifiers ?? {}
+  );
   return computeVerificationContextHash({
     verificationPolicy: args.verificationPolicy,
     verifiers,
