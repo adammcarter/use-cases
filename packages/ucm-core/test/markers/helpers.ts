@@ -12,9 +12,11 @@ import { dirname, join } from "node:path";
 import { resolveWorkspaceContext } from "../../src/index.js";
 import {
   singleKeyResolver,
-  type ProveCommandOptions,
-  type VerificationRunner
+  type ProveCommandOptions
 } from "../../src/markers/index.js";
+
+// The env var that gates prove's dangerous "assume verification passed" seam.
+export const ALLOW_UNSAFE_ENV = "UCM_ALLOW_UNSAFE_VERIFICATION";
 
 export const ROW_ID = "checkout.apply_coupon";
 export const ROW_ID_2 = "checkout.remove_coupon";
@@ -181,21 +183,7 @@ export function makeId(prefix: string): () => string {
   return () => `${prefix}${String(idCounter++).padStart(26 - prefix.length, "0")}`;
 }
 
-export const passRunner: VerificationRunner = () => ({
-  result: "pass",
-  command_id: "acceptance.checkout.apply_coupon",
-  started_at: "2026-06-28T12:04:10.000Z",
-  completed_at: "2026-06-28T12:04:59.000Z"
-});
-
-export const failRunner: VerificationRunner = () => ({
-  result: "fail",
-  command_id: "acceptance.checkout.apply_coupon",
-  started_at: "2026-06-28T12:04:10.000Z",
-  completed_at: "2026-06-28T12:04:59.000Z"
-});
-
 export type ProveBase = Omit<
   ProveCommandOptions,
-  "trustedCi" | "verificationRunner" | "signingKey"
+  "trustedCi" | "signingKey"
 >;

@@ -11,7 +11,7 @@
 // authoritative guard; nothing in the core is changed.
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { afterEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import {
   appendOnly,
   computeApprovalPolicyHash,
@@ -36,11 +36,11 @@ import {
   type ScanResult
 } from "../../src/markers/index.js";
 import {
+  ALLOW_UNSAFE_ENV,
   cleanupWorkspaces,
   makeClock,
   makeId,
   makeWorkspace,
-  passRunner,
   resolver,
   GENERATED_AT,
   KEY_ID,
@@ -51,6 +51,21 @@ import {
 } from "./helpers.js";
 
 afterEach(cleanupWorkspaces);
+
+// prove consumes verification results now; this suite only needs a real signed
+// proof to mutate, so it drives prove via the env-gated unsafe-assume seam.
+let previousUnsafe: string | undefined;
+beforeEach(() => {
+  previousUnsafe = process.env[ALLOW_UNSAFE_ENV];
+  process.env[ALLOW_UNSAFE_ENV] = "1";
+});
+afterEach(() => {
+  if (previousUnsafe === undefined) {
+    delete process.env[ALLOW_UNSAFE_ENV];
+  } else {
+    process.env[ALLOW_UNSAFE_ENV] = previousUnsafe;
+  }
+});
 
 // ---------------------------------------------------------------------------
 // Pure fixture builders (rows / bindings / proofs / registry) for the marker,
@@ -451,10 +466,10 @@ describe("11.4 evidence laundering -> validate-ledger fails / test fails", () =>
       generatedAt: GENERATED_AT,
       idFactory: makeId("01JPROVE"),
       trustedCi: true,
-      verificationRunner: passRunner,
+      unsafeAssumeVerificationResult: "pass",
       signingKey: { privateKey: PRIVATE_KEY, keyId: KEY_ID }
     });
-    expect(prove.proof_event_appended).toBe(true);
+    expect(prove.proof_events_appended).toBe(1);
     return { ws, provedEventLine: readFileSync(ws.evidencePath, "utf8").trim() };
   }
 

@@ -2,7 +2,7 @@ import { generateKeyPairSync, type KeyObject } from "node:crypto";
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, existsSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { afterEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { resolveWorkspaceContext } from "../../src/index.js";
 import {
   runBindCommand,
@@ -12,8 +12,12 @@ import {
   signEvent,
   singleKeyResolver,
   type ProveCommandOptions,
-  type VerificationRunner
+  type VerificationResultRecord
 } from "../../src/markers/index.js";
+
+// prove no longer runs verifiers; it consumes verification-result records. The
+// env var that gates prove's dangerous "assume verification passed" seam.
+const ALLOW_UNSAFE_ENV = "UCM_ALLOW_UNSAFE_VERIFICATION";
 
 // ---------------------------------------------------------------------------
 // Fixtures: an on-disk tmp workspace + a generated ed25519 keypair, so the CLI
@@ -113,6 +117,21 @@ afterEach(() => {
   }
 });
 
+// The unsafe-assume seam needs the env var; set it for the whole file (it only
+// activates when a test passes `unsafeAssumeVerificationResult`).
+let previousUnsafe: string | undefined;
+beforeEach(() => {
+  previousUnsafe = process.env[ALLOW_UNSAFE_ENV];
+  process.env[ALLOW_UNSAFE_ENV] = "1";
+});
+afterEach(() => {
+  if (previousUnsafe === undefined) {
+    delete process.env[ALLOW_UNSAFE_ENV];
+  } else {
+    process.env[ALLOW_UNSAFE_ENV] = previousUnsafe;
+  }
+});
+
 interface Workspace {
   productRoot: string;
   bindingsPath: string;
@@ -151,19 +170,27 @@ function makeId(prefix: string): () => string {
   return () => `${prefix}${String(idCounter++).padStart(26 - prefix.length, "0")}`;
 }
 
-const passRunner: VerificationRunner = () => ({
-  result: "pass",
-  command_id: "acceptance.checkout.apply_coupon",
-  started_at: "2026-06-28T12:04:10.000Z",
-  completed_at: "2026-06-28T12:04:59.000Z"
-});
-
-const failRunner: VerificationRunner = () => ({
-  result: "fail",
-  command_id: "acceptance.checkout.apply_coupon",
-  started_at: "2026-06-28T12:04:10.000Z",
-  completed_at: "2026-06-28T12:04:59.000Z"
-});
+// A status:fail verification-result record for ROW_ID. status:fail means prove
+// refuses regardless of hashes, so placeholder hashes are fine here.
+function failRecord(rowId: string): VerificationResultRecord {
+  return {
+    schema: "ucase-verification-result-v1",
+    row_id: rowId,
+    slug: rowId,
+    status: "fail",
+    evidence_kind: "test_result",
+    verifier_id: "acceptance",
+    verifier_kind: "script",
+    exit_code: 1,
+    row_hash: `sha256:${"0".repeat(64)}`,
+    binding_set_hash: `sha256:${"0".repeat(64)}`,
+    span_sha256s: [],
+    verification_context_hash: `sha256:${"0".repeat(64)}`,
+    stdout_sha256: `sha256:${"0".repeat(64)}`,
+    stderr_sha256: `sha256:${"0".repeat(64)}`,
+    created_at: GENERATED_AT
+  };
+}
 
 function bindSwiftFunc(ws: Workspace): ReturnType<typeof runBindCommand> {
   return runBindCommand({
@@ -191,7 +218,7 @@ function scan(ws: Workspace, policyMode: "feature" | "release" = "feature") {
   });
 }
 
-function proveBase(ws: Workspace): Omit<ProveCommandOptions, "trustedCi" | "verificationRunner" | "signingKey"> {
+function proveBase(ws: Workspace): Omit<ProveCommandOptions, "trustedCi" | "signingKey"> {
   return {
     context: ws.context,
     productRoot: ws.productRoot,
@@ -288,10 +315,14 @@ describe("prove command", () => {
   test("acceptance 5: prove WITHOUT --trusted-ci does not append to evidence.jsonl", () => {
     const ws = makeWorkspace({ "Sources/Checkout/CouponService.swift": SWIFT_FUNC_SOURCE });
     bindSwiftFunc(ws);
-    const result = runProveCommand({ ...proveBase(ws), trustedCi: false, verificationRunner: passRunner });
+    const result = runProveCommand({
+      ...proveBase(ws),
+      trustedCi: false,
+      unsafeAssumeVerificationResult: "pass"
+    });
     expect(result.exit_code).toBe(0);
-    expect(result.verification_result).toBe("pass");
-    expect(result.proof_event_appended).toBe(false);
+    expect(result.rows[0].status).toBe("candidate");
+    expect(result.proof_events_appended).toBe(0);
     expect(existsSync(ws.evidencePath)).toBe(false);
   });
 
@@ -301,12 +332,12 @@ describe("prove command", () => {
     const result = runProveCommand({
       ...proveBase(ws),
       trustedCi: true,
-      verificationRunner: passRunner,
+      unsafeAssumeVerificationResult: "pass",
       signingKey: { privateKey: PRIVATE_KEY, keyId: KEY_ID }
     });
     expect(result.exit_code).toBe(0);
-    expect(result.proof_event_appended).toBe(true);
-    expect(result.event_id).toBeTruthy();
+    expect(result.proof_events_appended).toBe(1);
+    expect(result.rows[0].event_id).toBeTruthy();
 
     const evidence = readFileSync(ws.evidencePath, "utf8").trim().split("\n");
     expect(evidence).toHaveLength(1);
@@ -322,17 +353,19 @@ describe("prove command", () => {
     expect(rowStatus(scan(ws), ROW_ID)).toBe("FRESH");
   });
 
-  test("acceptance 7: prove on a FAILING verification does not append (exit 5)", () => {
+  test("acceptance 7: prove on a FAILING verification result does not append (exit 5)", () => {
     const ws = makeWorkspace({ "Sources/Checkout/CouponService.swift": SWIFT_FUNC_SOURCE });
     bindSwiftFunc(ws);
     const result = runProveCommand({
       ...proveBase(ws),
       trustedCi: true,
-      verificationRunner: failRunner,
+      verificationResults: [failRecord(ROW_ID)],
       signingKey: { privateKey: PRIVATE_KEY, keyId: KEY_ID }
     });
     expect(result.exit_code).toBe(5);
-    expect(result.proof_event_appended).toBe(false);
+    expect(result.rows[0].status).toBe("failed");
+    expect(result.rows[0].reason).toBe("RESULT_FAILED");
+    expect(result.proof_events_appended).toBe(0);
     expect(existsSync(ws.evidencePath)).toBe(false);
   });
 
@@ -343,7 +376,7 @@ describe("prove command", () => {
       ...proveBase(ws),
       trustedCi: false,
       append: true,
-      verificationRunner: passRunner
+      unsafeAssumeVerificationResult: "pass"
     });
     expect(result.exit_code).toBe(6);
     expect(existsSync(ws.evidencePath)).toBe(false);
@@ -358,10 +391,10 @@ describe("validate-ledger command", () => {
     const result = runProveCommand({
       ...proveBase(ws),
       trustedCi: true,
-      verificationRunner: passRunner,
+      unsafeAssumeVerificationResult: "pass",
       signingKey: { privateKey: PRIVATE_KEY, keyId: KEY_ID }
     });
-    expect(result.proof_event_appended).toBe(true);
+    expect(result.proof_events_appended).toBe(1);
     return ws;
   }
 

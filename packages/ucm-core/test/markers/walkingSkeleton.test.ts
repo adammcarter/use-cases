@@ -6,7 +6,7 @@
 // prove -> drift -> reprove -> bypass story runs deterministically and offline.
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { afterEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import {
   runBindCommand,
   runProveCommand,
@@ -14,11 +14,11 @@ import {
   type FreshnessRowOut
 } from "../../src/markers/index.js";
 import {
+  ALLOW_UNSAFE_ENV,
   cleanupWorkspaces,
   makeClock,
   makeId,
   makeWorkspace,
-  passRunner,
   resolver,
   GENERATED_AT,
   KEY_ID,
@@ -30,6 +30,24 @@ import {
 } from "./helpers.js";
 
 afterEach(cleanupWorkspaces);
+
+// prove no longer runs the verifier itself; it consumes verification results. The
+// walking skeleton just needs a signed proof to exist, so it drives prove via the
+// env-gated unsafe-assume seam (the documented test path) rather than minting a
+// results ledger for the fixture's user-actor verifier (which never resolves to a
+// runnable script).
+let previousUnsafe: string | undefined;
+beforeEach(() => {
+  previousUnsafe = process.env[ALLOW_UNSAFE_ENV];
+  process.env[ALLOW_UNSAFE_ENV] = "1";
+});
+afterEach(() => {
+  if (previousUnsafe === undefined) {
+    delete process.env[ALLOW_UNSAFE_ENV];
+  } else {
+    process.env[ALLOW_UNSAFE_ENV] = previousUnsafe;
+  }
+});
 
 const SWIFT_REL = "Sources/Checkout/CouponService.swift";
 
@@ -56,7 +74,7 @@ function prove(ws: Workspace) {
     generatedAt: GENERATED_AT,
     idFactory: makeId("01JPROVE"),
     trustedCi: true,
-    verificationRunner: passRunner,
+    unsafeAssumeVerificationResult: "pass",
     signingKey: { privateKey: PRIVATE_KEY, keyId: KEY_ID }
   });
 }
@@ -113,7 +131,7 @@ describe("walking skeleton (spec section 13)", () => {
     // (c) prove (trusted, pass) -> one signed proof appended; scan -> FRESH.
     const proveResult = prove(ws);
     expect(proveResult.exit_code).toBe(0);
-    expect(proveResult.proof_event_appended).toBe(true);
+    expect(proveResult.proof_events_appended).toBe(1);
     const evidenceLines = readFileSync(ws.evidencePath, "utf8").trim().split("\n");
     expect(evidenceLines).toHaveLength(1);
     const proofEvent = JSON.parse(evidenceLines[0]);
@@ -140,7 +158,7 @@ describe("walking skeleton (spec section 13)", () => {
     // (e) reprove (trusted, pass) -> scan -> FRESH again.
     const reprove = prove(ws);
     expect(reprove.exit_code).toBe(0);
-    expect(reprove.proof_event_appended).toBe(true);
+    expect(reprove.proof_events_appended).toBe(1);
     expect(readFileSync(ws.evidencePath, "utf8").trim().split("\n")).toHaveLength(2);
 
     const afterReprove = scan(ws);
