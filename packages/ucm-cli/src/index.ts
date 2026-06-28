@@ -3,7 +3,13 @@ import { accessSync, constants, readFileSync, realpathSync, renameSync, writeFil
 import { createPrivateKey, createPublicKey } from "node:crypto";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { HostName, HostProfile, ResolvedWorkspaceContext, UseCaseQuery } from "@presentation-skills/ucm-core";
+import type {
+  HostName,
+  HostProfile,
+  ResolvedWorkspaceContext,
+  UseCaseQuery,
+  VerificationResultRecord
+} from "@presentation-skills/ucm-core";
 
 type UcmCoreModule = typeof import("@presentation-skills/ucm-core");
 
@@ -1627,11 +1633,50 @@ function runMarkerProve(argv: string[]): number {
   if ("exitCode" in contextResult) {
     return contextResult.exitCode;
   }
+  const all = argv.includes("--all");
   const rowId = valueAfter(argv, "--row");
-  if (!rowId) {
-    return writeError("markers.prove", "cli_invalid_arguments", "Missing --row.");
+  if (!all && !rowId) {
+    return writeError("markers.prove", "cli_invalid_arguments", "Missing --row or --all.");
   }
   const paths = markerPaths(argv, contextResult);
+
+  // prove no longer runs verifiers; it CONSUMES the unsigned verification-results
+  // ledger that `verify --out` produced (one JSONL record per row).
+  let verificationResults: VerificationResultRecord[] | undefined;
+  const resultsPathRaw = valueAfter(argv, "--verification-results");
+  if (resultsPathRaw) {
+    const resultsPath = resolve(process.cwd(), resultsPathRaw);
+    let text: string;
+    try {
+      text = readFileSync(resultsPath, "utf8");
+    } catch {
+      return writeError(
+        "markers.prove",
+        "cli_invalid_arguments",
+        `Could not read --verification-results file: ${resultsPath}`
+      );
+    }
+    try {
+      verificationResults = text
+        .split("\n")
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0)
+        .map((line) => JSON.parse(line) as VerificationResultRecord);
+    } catch {
+      return writeError(
+        "markers.prove",
+        "cli_invalid_arguments",
+        `--verification-results file is not valid JSONL: ${resultsPath}`
+      );
+    }
+  }
+
+  // DANGEROUS seam (renamed from --verification-result): assume the row's
+  // verification passed. The core honours it ONLY when env
+  // UCM_ALLOW_UNSAFE_VERIFICATION=1 is set; otherwise it is ignored.
+  const unsafeAssume =
+    valueAfter(argv, "--unsafe-assume-verification-result") === "pass" ? ("pass" as const) : undefined;
+
   const result = runProveCommand({
     context: contextResult,
     productRoot: paths.productRoot,
@@ -1639,18 +1684,13 @@ function runMarkerProve(argv: string[]): number {
     evidencePath: paths.evidencePath,
     publicKeyResolver: markerPublicKeyResolver(argv),
     rowId,
+    all,
+    refresh: argv.includes("--refresh"),
     trustedCi: argv.includes("--trusted-ci"),
     append: argv.includes("--append"),
     dryRun: argv.includes("--dry-run"),
-    // The verification result is supplied by the harness that actually ran the
-    // row's tests (--verification-result pass|fail). It defaults to "fail" so the
-    // CLI can never trivially manufacture a green proof.
-    verificationRunner: () => ({
-      result: valueAfter(argv, "--verification-result") === "pass" ? "pass" : "fail",
-      command_id: valueAfter(argv, "--command-id") ?? `acceptance.${rowId}`,
-      started_at: valueAfter(argv, "--started-at") ?? new Date().toISOString(),
-      completed_at: new Date().toISOString()
-    }),
+    verificationResults,
+    unsafeAssumeVerificationResult: unsafeAssume,
     signingKey: markerSigningKey(argv),
     producer: {
       ci_run_id: process.env.GITHUB_RUN_ID,

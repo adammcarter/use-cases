@@ -326,6 +326,11 @@ describe("verify command", () => {
     const ws = makeWorkspace();
     bind(ws, ROW_A, "Sources/Checkout/CouponService.swift");
 
+    // verify mints the result, then a trusted prove CONSUMES it and embeds the
+    // same context hash in the signed proof.
+    const result = runVerifyCommand({ ...verifyBase(ws), rowId: ROW_A, spawnRunner: passSpawn });
+    const recordHash: string = result.results[0].verification_context_hash;
+
     const proof = runProveCommand({
       context: ws.context,
       productRoot: ws.productRoot,
@@ -334,23 +339,16 @@ describe("verify command", () => {
       publicKeyResolver: resolver,
       rowId: ROW_A,
       trustedCi: true,
-      verificationRunner: () => ({
-        result: "pass",
-        command_id: `acceptance.${ROW_A}`,
-        started_at: GENERATED_AT,
-        completed_at: GENERATED_AT
-      }),
+      verificationResults: result.results,
       signingKey: { privateKey: PRIVATE_KEY, keyId: KEY_ID },
       generatedAt: GENERATED_AT,
       idFactory: makeId("01JPROVE")
     });
-    expect(proof.proof_event_appended).toBe(true);
+    expect(proof.proof_events_appended).toBe(1);
     const event = JSON.parse(readFileSync(ws.evidencePath, "utf8").trim());
     const embeddedContextHash: string = event.verification.context_hash;
     expect(embeddedContextHash).toMatch(/^sha256:[0-9a-f]{64}$/);
-
-    const result = runVerifyCommand({ ...verifyBase(ws), rowId: ROW_A, spawnRunner: passSpawn });
-    expect(result.results[0].verification_context_hash).toBe(embeddedContextHash);
+    expect(embeddedContextHash).toBe(recordHash);
   });
 
   test("writes one JSONL record per targeted row to --out", () => {
