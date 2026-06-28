@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { accessSync, constants, readFileSync, realpathSync, renameSync, writeFileSync } from "node:fs";
+import { createPrivateKey, createPublicKey } from "node:crypto";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { HostName, HostProfile, ResolvedWorkspaceContext, UseCaseQuery } from "@presentation-skills/ucm-core";
@@ -46,7 +47,12 @@ const {
   toMatrixValidationResult,
   validateSkillAssets,
   validateFixtureWorkspace,
-  inspectPackageArtifact
+  inspectPackageArtifact,
+  runBindCommand,
+  runScanCommand,
+  runProveCommand,
+  runValidateLedgerCommand,
+  singleKeyResolver
 } = await loadUcmCore();
 
 const SUPPORTED_HOSTS: HostName[] = ["claude", "codex", "copilot", "opencode"];
@@ -195,6 +201,22 @@ export function runCli(argv: string[]): number {
 
   if (normalizedArgv[0] === "doctor" && normalizedArgv[1] === "roots" && wantsJson) {
     return runDoctorRoots(normalizedArgv);
+  }
+
+  if (normalizedArgv[0] === "bind") {
+    return runMarkerBind(normalizedArgv);
+  }
+
+  if (normalizedArgv[0] === "scan") {
+    return runMarkerScan(normalizedArgv);
+  }
+
+  if (normalizedArgv[0] === "prove") {
+    return runMarkerProve(normalizedArgv);
+  }
+
+  if (normalizedArgv[0] === "validate-ledger") {
+    return runMarkerValidateLedger(normalizedArgv);
   }
 
   process.stderr.write(
@@ -1491,6 +1513,200 @@ function runDoctorPackage(argv: string[]): number {
   } catch (error) {
     return writeError("doctor.package", "package.inspection_failed", error instanceof Error ? error.message : String(error));
   }
+}
+
+// ---------------------------------------------------------------------------
+// Phase 7 use-case-marker commands (bind / scan / prove / validate-ledger).
+// Thin wiring: parse argv, resolve paths + injected key material, call the core.
+// ---------------------------------------------------------------------------
+
+function markerPaths(argv: string[], context: ResolvedWorkspaceContext) {
+  const productRoot = valueAfter(argv, "--product-root")
+    ? resolve(process.cwd(), valueAfter(argv, "--product-root") as string)
+    : context.workspace_root;
+  const bindingsPath = valueAfter(argv, "--bindings")
+    ? resolve(process.cwd(), valueAfter(argv, "--bindings") as string)
+    : join(context.data_root, ".use-cases", "bindings.jsonl");
+  const evidencePath = valueAfter(argv, "--evidence")
+    ? resolve(process.cwd(), valueAfter(argv, "--evidence") as string)
+    : join(context.data_root, ".use-cases", "evidence.jsonl");
+  return { productRoot, bindingsPath, evidencePath };
+}
+
+function markerPublicKeyResolver(argv: string[]): ReturnType<typeof singleKeyResolver> {
+  const keyPath = valueAfter(argv, "--public-key");
+  if (!keyPath) {
+    // No configured key: any proof signature fails (ledger with proofs is invalid).
+    return () => undefined;
+  }
+  const pem = readFileSync(resolve(process.cwd(), keyPath), "utf8");
+  return singleKeyResolver(createPublicKey(pem));
+}
+
+function markerSigningKey(argv: string[]): { privateKey: ReturnType<typeof createPrivateKey>; keyId: string } | undefined {
+  const envName = valueAfter(argv, "--signing-key-env");
+  if (!envName) {
+    return undefined;
+  }
+  const pem = process.env[envName];
+  if (!pem) {
+    return undefined;
+  }
+  return { privateKey: createPrivateKey(pem), keyId: valueAfter(argv, "--key-id") ?? "trusted-ci" };
+}
+
+function runMarkerBind(argv: string[]): number {
+  const contextResult = contextFromArgs(argv, "markers.bind");
+  if ("exitCode" in contextResult) {
+    return contextResult.exitCode;
+  }
+  const rowId = valueAfter(argv, "--row");
+  const file = valueAfter(argv, "--file");
+  const modeRaw = valueAfter(argv, "--mode");
+  if (!rowId || !file || (modeRaw !== "explicit" && modeRaw !== "swift-func")) {
+    return writeError("markers.bind", "cli_invalid_arguments", "Missing --row, --file, or --mode (explicit|swift-func).");
+  }
+  const paths = markerPaths(argv, contextResult);
+  const result = runBindCommand({
+    context: contextResult,
+    productRoot: paths.productRoot,
+    bindingsPath: paths.bindingsPath,
+    rowId,
+    suffix: valueAfter(argv, "--suffix"),
+    file,
+    mode: modeRaw,
+    line: numberAfter(argv, "--line"),
+    startLine: numberAfter(argv, "--start-line"),
+    endLine: numberAfter(argv, "--end-line"),
+    commentPrefix: valueAfter(argv, "--comment-prefix"),
+    registerExisting: argv.includes("--register-existing"),
+    dryRun: argv.includes("--dry-run"),
+    clock: () => new Date().toISOString(),
+    idFactory: generateUlid,
+    version: getVersionInfo().version
+  });
+  emitMarkerResult("markers.bind", result, contextResult, result.exit_code === 0);
+  return result.exit_code;
+}
+
+function runMarkerScan(argv: string[]): number {
+  const contextResult = contextFromArgs(argv, "markers.scan");
+  if ("exitCode" in contextResult) {
+    return contextResult.exitCode;
+  }
+  const paths = markerPaths(argv, contextResult);
+  const policyModeRaw = valueAfter(argv, "--policy-mode") ?? "feature";
+  const policyMode = ["feature", "release", "custom"].includes(policyModeRaw)
+    ? (policyModeRaw as "feature" | "release" | "custom")
+    : "feature";
+  const result = runScanCommand({
+    context: contextResult,
+    productRoot: paths.productRoot,
+    bindingsPath: paths.bindingsPath,
+    evidencePath: paths.evidencePath,
+    policyMode,
+    publicKeyResolver: markerPublicKeyResolver(argv),
+    generatedAt: valueAfter(argv, "--generated-at") ?? new Date().toISOString(),
+    baseRef: valueAfter(argv, "--base-ref"),
+    repoCwd: contextResult.workspace_root
+  });
+  if (argv.includes("--ci") && result.inferred_spans.length > 0) {
+    process.stderr.write(`${result.inferred_spans.join("\n\n")}\n`);
+  }
+  emitMarkerResult("markers.scan", result, contextResult, result.exit_code === 0);
+  return result.exit_code;
+}
+
+function runMarkerProve(argv: string[]): number {
+  const contextResult = contextFromArgs(argv, "markers.prove");
+  if ("exitCode" in contextResult) {
+    return contextResult.exitCode;
+  }
+  const rowId = valueAfter(argv, "--row");
+  if (!rowId) {
+    return writeError("markers.prove", "cli_invalid_arguments", "Missing --row.");
+  }
+  const paths = markerPaths(argv, contextResult);
+  const result = runProveCommand({
+    context: contextResult,
+    productRoot: paths.productRoot,
+    bindingsPath: paths.bindingsPath,
+    evidencePath: paths.evidencePath,
+    publicKeyResolver: markerPublicKeyResolver(argv),
+    rowId,
+    trustedCi: argv.includes("--trusted-ci"),
+    append: argv.includes("--append"),
+    dryRun: argv.includes("--dry-run"),
+    // The verification result is supplied by the harness that actually ran the
+    // row's tests (--verification-result pass|fail). It defaults to "fail" so the
+    // CLI can never trivially manufacture a green proof.
+    verificationRunner: () => ({
+      result: valueAfter(argv, "--verification-result") === "pass" ? "pass" : "fail",
+      command_id: valueAfter(argv, "--command-id") ?? `acceptance.${rowId}`,
+      started_at: valueAfter(argv, "--started-at") ?? new Date().toISOString(),
+      completed_at: new Date().toISOString()
+    }),
+    signingKey: markerSigningKey(argv),
+    producer: {
+      ci_run_id: process.env.GITHUB_RUN_ID,
+      repo: process.env.GITHUB_REPOSITORY,
+      commit: process.env.GITHUB_SHA
+    },
+    generatedAt: valueAfter(argv, "--generated-at") ?? new Date().toISOString(),
+    idFactory: generateUlid,
+    baseRef: valueAfter(argv, "--base-ref"),
+    repoCwd: contextResult.workspace_root
+  });
+  emitMarkerResult("markers.prove", result, contextResult, result.exit_code === 0);
+  return result.exit_code;
+}
+
+function runMarkerValidateLedger(argv: string[]): number {
+  const contextResult = contextFromArgs(argv, "markers.validate-ledger");
+  if ("exitCode" in contextResult) {
+    return contextResult.exitCode;
+  }
+  const paths = markerPaths(argv, contextResult);
+  const result = runValidateLedgerCommand({
+    context: contextResult,
+    evidencePath: paths.evidencePath,
+    bindingsPath: paths.bindingsPath,
+    publicKeyResolver: markerPublicKeyResolver(argv),
+    baseRef: valueAfter(argv, "--base-ref"),
+    repoCwd: contextResult.workspace_root
+  });
+  emitMarkerResult("markers.validate-ledger", result, contextResult, result.ok);
+  return result.exit_code;
+}
+
+function emitMarkerResult(
+  command: string,
+  data: { exit_code: number },
+  context: ResolvedWorkspaceContext,
+  ok: boolean
+): void {
+  process.stdout.write(
+    `${JSON.stringify(
+      createCliResult(command, data, {
+        ok,
+        complete: ok,
+        workspaceRoot: context.workspace_root,
+        dataRoot: context.data_root,
+        componentId: context.component_id
+      })
+    )}\n`
+  );
+}
+
+// Minimal ULID-shaped id for registry/proof event ids (uniqueness from the tail).
+function generateUlid(): string {
+  const alphabet = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+  const time = Date.now().toString(32).toUpperCase().padStart(10, "0").slice(0, 10);
+  let tail = "";
+  for (let i = 0; i < 16; i += 1) {
+    tail += alphabet[Math.floor(Math.random() * alphabet.length)];
+  }
+  return `${time}${tail}`.slice(0, 26).padEnd(26, "0");
 }
 
 function contextFromArgs(argv: string[], command: string) {
