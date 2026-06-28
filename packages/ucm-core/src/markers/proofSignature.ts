@@ -21,8 +21,16 @@ export interface ProofSignatureBlock {
 export type PemOrKeyObject = string | KeyObject;
 
 // Maps a signature key_id to its public key. Returning undefined means the
-// key_id is unknown -> the event is INVALID (spec 5.3 rule 2).
-export type PublicKeyResolver = (keyId: string) => PemOrKeyObject | undefined;
+// key_id is unknown (or, for a keyring, revoked / outside its validity window)
+// -> the event is INVALID (spec 5.3 rule 2; fail-closed).
+//
+// `createdAt` is the proof event's own created_at (when present). A single-key
+// resolver ignores it (the explicitly-provided key is trusted as before); a
+// keyring resolver uses it to enforce per-key validity windows / revocation.
+export type PublicKeyResolver = (
+  keyId: string,
+  createdAt?: string
+) => PemOrKeyObject | undefined;
 
 // Stable reasons a signature can fail verification. These line up 1:1 with the
 // signature-related EvidenceErrorCode values so the ledger can forward them.
@@ -110,7 +118,11 @@ export function verifyEvent(
       message: `unsupported signature alg: ${String(signature.alg)} (only ed25519 is allowed)`
     };
   }
-  const publicKey = resolver(signature.key_id);
+  // Thread the event's created_at to the resolver so a keyring can enforce
+  // per-key validity windows / revocation against the moment of signing. A
+  // single-key resolver ignores this argument.
+  const createdAt = typeof event.created_at === "string" ? event.created_at : undefined;
+  const publicKey = resolver(signature.key_id, createdAt);
   if (publicKey === undefined) {
     return {
       ok: false,
