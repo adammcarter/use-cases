@@ -51,6 +51,7 @@ const {
   runBindCommand,
   runScanCommand,
   runProveCommand,
+  runVerifyCommand,
   runValidateLedgerCommand,
   singleKeyResolver
 } = await loadUcmCore();
@@ -213,6 +214,10 @@ export function runCli(argv: string[]): number {
 
   if (normalizedArgv[0] === "prove") {
     return runMarkerProve(normalizedArgv);
+  }
+
+  if (normalizedArgv[0] === "verify") {
+    return runMarkerVerify(normalizedArgv);
   }
 
   if (normalizedArgv[0] === "validate-ledger") {
@@ -1658,6 +1663,35 @@ function runMarkerProve(argv: string[]): number {
     repoCwd: contextResult.workspace_root
   });
   emitMarkerResult("markers.prove", result, contextResult, result.exit_code === 0);
+  return result.exit_code;
+}
+
+function runMarkerVerify(argv: string[]): number {
+  const contextResult = contextFromArgs(argv, "markers.verify");
+  if ("exitCode" in contextResult) {
+    return contextResult.exitCode;
+  }
+  const all = argv.includes("--all");
+  const rowId = valueAfter(argv, "--row");
+  if (!all && !rowId) {
+    return writeError("markers.verify", "cli_invalid_arguments", "Missing --all or --row <slug>.");
+  }
+  const paths = markerPaths(argv, contextResult);
+  const outRaw = valueAfter(argv, "--out");
+  const result = runVerifyCommand({
+    context: contextResult,
+    productRoot: paths.productRoot,
+    bindingsPath: paths.bindingsPath,
+    evidencePath: paths.evidencePath,
+    publicKeyResolver: markerPublicKeyResolver(argv),
+    all,
+    rowId,
+    outPath: outRaw ? resolve(process.cwd(), outRaw) : undefined,
+    generatedAt: valueAfter(argv, "--generated-at") ?? new Date().toISOString(),
+    baseRef: valueAfter(argv, "--base-ref"),
+    repoCwd: contextResult.workspace_root
+  });
+  emitMarkerResult("markers.verify", result, contextResult, result.exit_code === 0);
   return result.exit_code;
 }
 
