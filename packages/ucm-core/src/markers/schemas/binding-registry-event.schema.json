@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ucase-binding-registry-event-v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "event_type",
+    "event_id",
+    "created_at",
+    "created_by",
+    "row_id",
+    "binding_slug",
+    "reason"
+  ],
+  "properties": {
+    "schema": { "const": "ucase-binding-registry-event-v1" },
+    "event_type": { "const": "binding_registered" },
+    "event_id": { "type": "string", "minLength": 1 },
+    "created_at": { "type": "string", "minLength": 1 },
+    "created_by": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tool", "command", "version"],
+      "properties": {
+        "tool": { "type": "string", "minLength": 1 },
+        "command": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "row_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$"
+    },
+    "binding_slug": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*(#[a-z][a-z0-9_-]*(\\.[a-z][a-z0-9_-]*)*)?$"
+    },
+    "reason": { "type": "string", "minLength": 1 }
+  }
+}

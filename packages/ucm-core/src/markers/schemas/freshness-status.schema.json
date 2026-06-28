@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ucase-freshness-status-v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "generated_at",
+    "tool",
+    "product_root",
+    "policy_mode",
+    "guard_ok",
+    "summary",
+    "integrity_errors",
+    "rows"
+  ],
+  "$defs": {
+    "hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "proof_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["event_id", "created_at", "commit"],
+      "properties": {
+        "event_id": { "type": "string", "minLength": 1 },
+        "created_at": { "type": "string", "minLength": 1 },
+        "commit": { "type": "string", "minLength": 1 }
+      }
+    },
+    "reason": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code"],
+      "properties": {
+        "code": { "type": "string", "minLength": 1 },
+        "binding_slug": { "type": "string" },
+        "expected_span_sha256": { "type": "string" },
+        "actual_span_sha256": { "type": "string" },
+        "expected_file_path": { "type": "string" },
+        "actual_file_path": { "type": "string" },
+        "message": { "type": "string" }
+      }
+    },
+    "current_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "binding_slug",
+        "file_path",
+        "extent_kind",
+        "recognizer_id",
+        "span_canon_id",
+        "span_sha256",
+        "span_start_line",
+        "span_end_line"
+      ],
+      "properties": {
+        "binding_slug": { "type": "string", "minLength": 1 },
+        "file_path": { "type": "string", "minLength": 1 },
+        "extent_kind": { "enum": ["explicit", "swift_func_inferred"] },
+        "recognizer_id": { "type": "string", "minLength": 1 },
+        "span_canon_id": { "type": "string", "minLength": 1 },
+        "span_sha256": { "$ref": "#/$defs/hash" },
+        "span_start_line": { "type": "integer", "minimum": 1 },
+        "span_end_line": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["row_id", "status"],
+      "properties": {
+        "row_id": { "type": "string", "minLength": 1 },
+        "row_hash": { "$ref": "#/$defs/hash" },
+        "verification_policy_hash": { "$ref": "#/$defs/hash" },
+        "approval_policy_hash": { "$ref": "#/$defs/hash" },
+        "status": { "enum": ["FRESH", "SUSPECT", "UNPROVEN", "UNBOUND", "INVALID"] },
+        "policy_block": { "type": "boolean" },
+        "reasons": { "type": "array", "items": { "$ref": "#/$defs/reason" } },
+        "known_binding_slugs": { "type": "array", "items": { "type": "string" } },
+        "current_binding_slugs": { "type": "array", "items": { "type": "string" } },
+        "missing_registered_binding_slugs": { "type": "array", "items": { "type": "string" } },
+        "unregistered_current_binding_slugs": { "type": "array", "items": { "type": "string" } },
+        "current_binding_set_hash": { "$ref": "#/$defs/hash" },
+        "current_bindings": { "type": "array", "items": { "$ref": "#/$defs/current_binding" } },
+        "matching_proof_event": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/proof_ref" }]
+        },
+        "latest_trusted_proof_event": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/proof_ref" }]
+        },
+        "required_action": { "type": ["string", "null"] }
+      }
+    }
+  },
+  "properties": {
+    "schema": { "const": "ucase-freshness-status-v1" },
+    "generated_at": { "type": "string", "minLength": 1 },
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "product_root": { "type": "string", "minLength": 1 },
+    "policy_mode": { "enum": ["feature", "release", "custom"] },
+    "guard_ok": { "type": "boolean" },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fresh", "suspect", "unproven", "unbound", "invalid", "policy_blocked"],
+      "properties": {
+        "fresh": { "type": "integer", "minimum": 0 },
+        "suspect": { "type": "integer", "minimum": 0 },
+        "unproven": { "type": "integer", "minimum": 0 },
+        "unbound": { "type": "integer", "minimum": 0 },
+        "invalid": { "type": "integer", "minimum": 0 },
+        "policy_blocked": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "integrity_errors": { "type": "array", "items": { "type": "object" } },
+    "rows": { "type": "array", "items": { "$ref": "#/$defs/row" } }
+  }
+}
