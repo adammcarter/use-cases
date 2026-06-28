@@ -153,14 +153,17 @@ jobs:
       - run: corepack pnpm build
       # Phase 1 -- VERIFY: run each bound row's resolved verifier(s) and write an
       # UNSIGNED results ledger (one JSONL line per row). This step runs arbitrary
-      # repo test commands, so for key hygiene it MUST NOT see the signing key --
-      # it is blanked in this step's own process env. Exits nonzero (failing the
-      # job) if any targeted row's verifier fails.
+      # repo test commands, so for key hygiene the verifier subprocesses MUST NOT
+      # inherit the signing key. We strip it IN-SCRIPT (unset) rather than via a
+      # step-level `env: UCM_CI_SIGNING_KEY: ""` override, because a step's own env
+      # IS visible to its own `if:` (verified empirically: the override made this
+      # step's gate false and skipped it). Exits nonzero (failing the job) if any
+      # targeted row's verifier fails.
       - name: verify use-case rows
         if: ${{ env.UCM_CI_SIGNING_KEY != '' }}
-        env:
-          UCM_CI_SIGNING_KEY: ""
         run: |
+          # Drop the signing key so the spawned verifier processes never see it.
+          unset UCM_CI_SIGNING_KEY
           key_args=()
           if [ -f "$UCM_PUBLIC_KEY" ]; then key_args=(--public-key "$UCM_PUBLIC_KEY"); fi
           corepack pnpm cli -- verify \
