@@ -31,10 +31,37 @@ export type ResolvedWorkspaceContext = {
   diagnostics: Diagnostic[];
 };
 
+// An explicit script verifier or a preset reference, mirroring
+// common.schema.json#/$defs/verifier. Kept structurally loose here (the schema
+// is the source of truth) so additive shape changes don't require lockstep edits.
+export type WorkspaceVerifierEntry =
+  | {
+      kind: "script";
+      evidence_kind: string;
+      command: string[];
+      inputs?: string[];
+      timeout_seconds?: number;
+    }
+  | {
+      preset: string;
+      evidence_kind?: string;
+      inputs?: string[];
+      timeout_seconds?: number;
+    };
+
+// The optional workspace-config `verifiers` section: a map of verifier-id ->
+// entry, plus an optional `default` verifier-id rows can fall back to.
+export type WorkspaceVerifiersConfig = {
+  default?: string;
+} & {
+  [verifierId: string]: WorkspaceVerifierEntry | string | undefined;
+};
+
 type WorkspaceConfig = {
   data_root?: string;
   use_cases_dir?: string;
   component_id?: string;
+  verifiers?: WorkspaceVerifiersConfig;
 };
 
 export function resolveWorkspaceContext(

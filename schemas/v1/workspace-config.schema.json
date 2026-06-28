@@ -15,10 +15,19 @@
     "default_workflow_mode": {
       "enum": ["continuous", "backfill", "showcase_only", "audit_only", "migration", "custom"]
     },
+    "verifiers": { "$ref": "#/$defs/verifiers_config" },
     "extensions": { "$ref": "common.schema.json#/$defs/extensions" }
   },
   "required": ["schema_version", "workspace_id", "data_root", "use_cases_dir", "evidence_dir", "demo_capsules_dir", "showcase_runs_dir", "component_id"],
   "$defs": {
+    "verifiers_config": {
+      "type": "object",
+      "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
+      "properties": {
+        "default": { "$ref": "common.schema.json#/$defs/id" }
+      },
+      "additionalProperties": { "$ref": "common.schema.json#/$defs/verifier" }
+    },
     "relative_path": {
       "type": "string",
       "minLength": 1,
