@@ -1,5 +1,5 @@
 {
-  "name": "presentation-skills",
+  "name": "use-case-matrix",
   "version": "1.0.0",
   "description": "Use-case, evidence, and live showcase infrastructure for agent work.",
   "mcpServers": "./.mcp.json"

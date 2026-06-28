@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://presentation-skills.dev/schemas/v1/common.schema.json",
+  "$id": "https://use-case-matrix.dev/schemas/v1/common.schema.json",
   "title": "Presentation Skills Common Types",
   "type": "object",
   "additionalProperties": false,

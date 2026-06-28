@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { parseYamlToJson, validateBySchemaId, type Diagnostic } from "../schema/index.js";
 import type { HostName, HostProfile, HostProfileLoadResult } from "./types.js";
 
-const HOST_PROFILE_SCHEMA_ID = "https://presentation-skills.dev/schemas/v1/host-profile.schema.json";
+const HOST_PROFILE_SCHEMA_ID = "https://use-case-matrix.dev/schemas/v1/host-profile.schema.json";
 
 export function loadHostProfile(options: { pluginRoot: string; host: HostName }): HostProfileLoadResult {
   const sourcePath = `hosts/${options.host}.yml`;

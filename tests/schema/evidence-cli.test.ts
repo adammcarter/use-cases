@@ -62,7 +62,7 @@ describe("P3 evidence CLI", () => {
     });
     expect(
       validateBySchemaId(
-        "https://presentation-skills.dev/schemas/v1/evidence-append-result.schema.json",
+        "https://use-case-matrix.dev/schemas/v1/evidence-append-result.schema.json",
         recordPayload.data
       )
     ).toMatchObject({ ok: true, diagnostics: [] });
@@ -93,7 +93,7 @@ describe("P3 evidence CLI", () => {
     });
     expect(
       validateBySchemaId(
-        "https://presentation-skills.dev/schemas/v1/evidence-status-result.schema.json",
+        "https://use-case-matrix.dev/schemas/v1/evidence-status-result.schema.json",
         statusPayload.data
       )
     ).toMatchObject({ ok: true, diagnostics: [] });

@@ -74,7 +74,7 @@ describe("P5 plan CLI contract", () => {
     });
     expect(
       validateBySchemaId(
-        "https://presentation-skills.dev/schemas/v1/presentation-plan-result.schema.json",
+        "https://use-case-matrix.dev/schemas/v1/presentation-plan-result.schema.json",
         showcasePayload.data
       )
     ).toMatchObject({ ok: true, diagnostics: [] });

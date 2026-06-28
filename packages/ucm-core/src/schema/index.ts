@@ -63,29 +63,29 @@ export type CliResult<T> = {
 };
 
 export const PUBLIC_SCHEMA_IDS = [
-  "https://presentation-skills.dev/schemas/v1/common.schema.json",
-  "https://presentation-skills.dev/schemas/v1/cli-result.schema.json",
-  "https://presentation-skills.dev/schemas/v1/use-case-file.schema.json",
-  "https://presentation-skills.dev/schemas/v1/evidence-event.schema.json",
-  "https://presentation-skills.dev/schemas/v1/demo-capsule.schema.json",
-  "https://presentation-skills.dev/schemas/v1/presentation-plan.schema.json",
-  "https://presentation-skills.dev/schemas/v1/presentation-plan-result.schema.json",
-  "https://presentation-skills.dev/schemas/v1/showcase-event.schema.json",
-  "https://presentation-skills.dev/schemas/v1/showcase-run-status-result.schema.json",
-  "https://presentation-skills.dev/schemas/v1/showcase-start-result.schema.json",
-  "https://presentation-skills.dev/schemas/v1/showcase-event-append-result.schema.json",
-  "https://presentation-skills.dev/schemas/v1/showcase-finish-result.schema.json",
-  "https://presentation-skills.dev/schemas/v1/showcase-approval-result.schema.json",
-  "https://presentation-skills.dev/schemas/v1/host-profile.schema.json",
-  "https://presentation-skills.dev/schemas/v1/host-status-result.schema.json",
-  "https://presentation-skills.dev/schemas/v1/workspace-config.schema.json",
-  "https://presentation-skills.dev/schemas/v1/workflow-mode.schema.json",
-  "https://presentation-skills.dev/schemas/v1/matrix-validation-result.schema.json",
-  "https://presentation-skills.dev/schemas/v1/matrix-list-result.schema.json",
-  "https://presentation-skills.dev/schemas/v1/matrix-mutation-result.schema.json",
-  "https://presentation-skills.dev/schemas/v1/evidence-append-result.schema.json",
-  "https://presentation-skills.dev/schemas/v1/evidence-status-result.schema.json",
-  "https://presentation-skills.dev/schemas/v1/migration-test-matrix-result.schema.json"
+  "https://use-case-matrix.dev/schemas/v1/common.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/cli-result.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/use-case-file.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/evidence-event.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/demo-capsule.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/presentation-plan.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/presentation-plan-result.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/showcase-event.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/showcase-run-status-result.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/showcase-start-result.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/showcase-event-append-result.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/showcase-finish-result.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/showcase-approval-result.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/host-profile.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/host-status-result.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/workspace-config.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/workflow-mode.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/matrix-validation-result.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/matrix-list-result.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/matrix-mutation-result.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/evidence-append-result.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/evidence-status-result.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/migration-test-matrix-result.schema.json"
 ] as const;
 
 const SCHEMA_FILE_NAMES = [
@@ -745,7 +745,7 @@ function findSchemasDir(): string {
 }
 
 function schemaIdForName(fileName: string): string {
-  return `https://presentation-skills.dev/schemas/v1/${fileName}`;
+  return `https://use-case-matrix.dev/schemas/v1/${fileName}`;
 }
 
 function listFiles(root: string): string[] {

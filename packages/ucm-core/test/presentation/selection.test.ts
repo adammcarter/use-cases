@@ -61,7 +61,7 @@ describe("P5 presentation plan selection", () => {
     });
     expect(
       validateBySchemaId(
-        "https://presentation-skills.dev/schemas/v1/presentation-plan-result.schema.json",
+        "https://use-case-matrix.dev/schemas/v1/presentation-plan-result.schema.json",
         result
       )
     ).toMatchObject({ ok: true, diagnostics: [] });
@@ -76,7 +76,7 @@ describe("P5 presentation plan selection", () => {
     });
     expect(
       validateBySchemaId(
-        "https://presentation-skills.dev/schemas/v1/presentation-plan.schema.json",
+        "https://use-case-matrix.dev/schemas/v1/presentation-plan.schema.json",
         result.plan
       )
     ).toMatchObject({ ok: true, diagnostics: [] });

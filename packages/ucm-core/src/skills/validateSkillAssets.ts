@@ -113,7 +113,7 @@ export function validateSkillAssets(options: { context: ResolvedWorkspaceContext
     });
   }
 
-  const bootstrapPath = "bootstrap/presentation-skills.md";
+  const bootstrapPath = "bootstrap/use-case-matrix.md";
   const bootstrapFullPath = join(root, bootstrapPath);
   const bootstrapSections: string[] = [];
   if (!existsSync(bootstrapFullPath)) {

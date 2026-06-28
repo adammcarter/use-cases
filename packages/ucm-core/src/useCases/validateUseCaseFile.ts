@@ -61,7 +61,7 @@ export function validateUseCaseFile(
   }
 
   const schemaResult = validateBySchemaId(
-    "https://presentation-skills.dev/schemas/v1/use-case-file.schema.json",
+    "https://use-case-matrix.dev/schemas/v1/use-case-file.schema.json",
     parsed.value,
     sourcePath
   );

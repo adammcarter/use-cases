@@ -253,7 +253,7 @@ function renderDraft(featureSlug: string, rows: LegacyRow[], sourcePath: string,
     metadata: {
       lifecycle: "planned",
       extensions: {
-        "presentation-skills.dev/migration": {
+        "use-case-matrix.dev/migration": {
           source_path: sourcePath,
           source_digest: sourceDigest,
           review_required: rows.some((row) => row.warnings.length > 0)
@@ -289,7 +289,7 @@ function useCaseFromRow(row: LegacyRow, featureSlug: string, sourceDigest: strin
     tags: ["migrated"],
     source_refs: [{ kind: "file", path: row.rowRef }],
     extensions: {
-      "presentation-skills.dev/migration": {
+      "use-case-matrix.dev/migration": {
         legacy_id: row.fields.id || null,
         legacy_status: row.fields.status || null,
         legacy_evidence_text: row.fields.evidence || null,

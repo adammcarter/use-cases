@@ -6,7 +6,7 @@ import { computeSemanticHash, validateBySchemaId, type Diagnostic } from "../sch
 import { loadUseCaseMatrix } from "./loadUseCaseMatrix.js";
 import type { UseCaseV1 } from "./types.js";
 
-const USE_CASE_FILE_SCHEMA_ID = "https://presentation-skills.dev/schemas/v1/use-case-file.schema.json";
+const USE_CASE_FILE_SCHEMA_ID = "https://use-case-matrix.dev/schemas/v1/use-case-file.schema.json";
 const RECORDED_AT = "1970-01-01T00:00:00.000Z";
 
 export type UseCaseMutationOperation = "upsert" | "remove";

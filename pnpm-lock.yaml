@@ -36,7 +36,7 @@ importers:
 
   packages/ucm-cli:
     dependencies:
-      '@presentation-skills/ucm-core':
+      '@use-case-matrix/core':
         specifier: workspace:*
         version: link:../ucm-core
 
@@ -60,7 +60,7 @@ importers:
 
   packages/ucm-mcp:
     dependencies:
-      '@presentation-skills/ucm-core':
+      '@use-case-matrix/core':
         specifier: workspace:*
         version: link:../ucm-core
 

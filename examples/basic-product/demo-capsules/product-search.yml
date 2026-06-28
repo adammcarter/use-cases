@@ -18,6 +18,6 @@ items:
 permissions:
   command_execution: false
 extensions:
-  presentation-skills.dev/runner:
+  use-case-matrix.dev/runner:
     command: presentation-skills capsule run --repo examples/basic-product --capsule capsule.basic.product_search --json
     command_steps: none

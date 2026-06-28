@@ -1,10 +1,11 @@
 {
-  "name": "@presentation-skills/ucm-cli",
+  "name": "@use-case-matrix/cli",
   "version": "1.0.0",
   "type": "module",
-  "description": "CLI for presentation-skills.",
+  "description": "CLI for use-case-matrix.",
   "bin": {
-    "presentation-skills": "./dist/index.js"
+    "ucm": "./dist/index.js",
+    "use-case-matrix": "./dist/index.js"
   },
   "exports": {
     ".": {
@@ -14,7 +15,7 @@
   },
   "files": ["dist", "package.json"],
   "dependencies": {
-    "@presentation-skills/ucm-core": "workspace:*"
+    "@use-case-matrix/core": "workspace:*"
   },
   "scripts": {
     "build": "tsc -b",
