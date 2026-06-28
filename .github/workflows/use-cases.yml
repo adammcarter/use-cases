@@ -49,11 +49,17 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      # Node, then Corepack (puts pnpm on PATH), then setup-node again with
+      # cache -- `cache: pnpm` invokes pnpm to find the store, so pnpm must
+      # exist before the cache step runs.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: corepack enable
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: pnpm
-      - run: corepack enable
       - run: corepack pnpm install --frozen-lockfile
       - run: corepack pnpm build
       # Authority gate: append-only discipline, schemas, signatures, internal
@@ -77,11 +83,17 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      # Node, then Corepack (puts pnpm on PATH), then setup-node again with
+      # cache -- `cache: pnpm` invokes pnpm to find the store, so pnpm must
+      # exist before the cache step runs.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: corepack enable
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: pnpm
-      - run: corepack enable
       - run: corepack pnpm install --frozen-lockfile
       - run: corepack pnpm build
       # Feature: blocks INVALID only. Release: also blocks required rows that are
@@ -108,23 +120,33 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    # Hoisted to job scope so the prove step's `if:` can read it -- a step
+    # cannot see env defined in its own `env:` block from its own `if:`. With
+    # the secret unset this is empty, so the prove step is skipped (degrades
+    # gracefully) rather than failing; the rest of the job still succeeds.
+    env:
+      UCM_CI_SIGNING_KEY: ${{ secrets.UCM_CI_SIGNING_KEY }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      # Node, then Corepack (puts pnpm on PATH), then setup-node again with
+      # cache -- `cache: pnpm` invokes pnpm to find the store, so pnpm must
+      # exist before the cache step runs.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: corepack enable
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: pnpm
-      - run: corepack enable
       - run: corepack pnpm install --frozen-lockfile
       - run: corepack pnpm build
       # Mints a signed proof event from the trusted CI signing key (held only in
       # the secret). The key never leaves CI; agents cannot manufacture green.
       - name: prove (trusted CI)
         if: ${{ env.UCM_CI_SIGNING_KEY != '' }}
-        env:
-          UCM_CI_SIGNING_KEY: ${{ secrets.UCM_CI_SIGNING_KEY }}
         run: |
           row="${UCM_PROVE_ROW:-}"
           args=(--trusted-ci --append --signing-key-env UCM_CI_SIGNING_KEY)
