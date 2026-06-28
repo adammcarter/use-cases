@@ -96,12 +96,22 @@
     "verification": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["command_id", "result", "started_at", "completed_at", "artifacts"],
+      "required": [
+        "command_id",
+        "result",
+        "started_at",
+        "completed_at",
+        "artifacts",
+        "context_hash_id",
+        "context_hash"
+      ],
       "properties": {
         "command_id": { "type": "string", "minLength": 1 },
         "result": { "const": "pass" },
         "started_at": { "type": "string", "minLength": 1 },
         "completed_at": { "type": "string", "minLength": 1 },
+        "context_hash_id": { "const": "ucase-verification-context-hash-v1" },
+        "context_hash": { "$ref": "#/$defs/hash" },
         "artifacts": {
           "type": "array",
           "items": {

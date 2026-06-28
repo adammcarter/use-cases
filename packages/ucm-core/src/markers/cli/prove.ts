@@ -15,6 +15,10 @@ import {
   computeVerificationPolicyHash
 } from "../policyHash.js";
 import { computeBindingSetHash } from "../bindingSetHash.js";
+import {
+  VERIFICATION_CONTEXT_HASH_ID,
+  computeRowVerificationContextHash
+} from "../verificationContextHash.js";
 import { TRUSTED_CI_PRODUCER_KIND, type ProofEvent } from "../evidenceLedger.js";
 import {
   signEvent,
@@ -219,6 +223,15 @@ export function runProveCommand(options: ProveCommandOptions): ProveCommandResul
       span_sha256: binding.span.sha256
     }))
   );
+  // Bind the proof to its verifier context (policy + resolved verifier + declared
+  // input contents + lockfile). Re-derived identically at scan time, so the proof
+  // drops out of FRESH if the verifier or its acceptance test is later weakened.
+  const contextHash = computeRowVerificationContextHash({
+    slug: options.rowId,
+    verificationPolicy: row.verification_policy,
+    rootDir: options.repoCwd ?? options.productRoot,
+    fs
+  });
 
   // Candidate-only when not trusted, or when explicitly dry-run (spec 8.3 local
   // behavior). MUST NOT append a proof event.
@@ -253,6 +266,7 @@ export function runProveCommand(options: ProveCommandOptions): ProveCommandResul
     verificationPolicyHash,
     approvalPolicyHash,
     bindingSetHash,
+    contextHash,
     bindings,
     outcome,
     producer: options.producer
@@ -292,6 +306,7 @@ interface BuildProofArgs {
   verificationPolicyHash: string;
   approvalPolicyHash: string;
   bindingSetHash: string;
+  contextHash: string;
   bindings: CurrentBindingRecord[];
   outcome: VerificationOutcome;
   producer?: ProveProducerInfo;
@@ -341,7 +356,9 @@ function buildProofEvent(args: BuildProofArgs): Omit<ProofEvent, "signature"> {
       result: "pass",
       started_at: args.outcome.started_at,
       completed_at: args.outcome.completed_at,
-      artifacts: args.outcome.artifacts ?? []
+      artifacts: args.outcome.artifacts ?? [],
+      context_hash_id: VERIFICATION_CONTEXT_HASH_ID,
+      context_hash: args.contextHash
     }
   };
 }

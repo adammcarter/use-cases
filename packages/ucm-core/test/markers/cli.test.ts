@@ -313,7 +313,12 @@ describe("prove command", () => {
     const event = JSON.parse(evidence[0]);
     expect(event.producer.kind).toBe("trusted-ci-prover");
     expect(event.verification.result).toBe("pass");
+    // The proof is bound to its verifier context, and that hash is signed.
+    expect(event.verification.context_hash_id).toBe("ucase-verification-context-hash-v1");
+    expect(event.verification.context_hash).toMatch(/^sha256:[0-9a-f]{64}$/);
 
+    // FRESH only holds because scan re-derives the SAME context hash the proof
+    // embedded; if prove and scan disagreed, this row would be SUSPECT.
     expect(rowStatus(scan(ws), ROW_ID)).toBe("FRESH");
   });
 

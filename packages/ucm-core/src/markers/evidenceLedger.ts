@@ -72,6 +72,11 @@ export interface ProofEvent {
     started_at: string;
     completed_at: string;
     artifacts: Array<{ kind: string; path: string; sha256: string }>;
+    // Binds the proof to its verifier context (policy + resolved verifier +
+    // declared-input contents + lockfile). Re-derived at scan time; if it drifts
+    // (e.g. the acceptance test was weakened), the proof is no longer FRESH.
+    context_hash_id: string;
+    context_hash: string;
   };
   signature: { alg: string; key_id: string; value: string };
 }

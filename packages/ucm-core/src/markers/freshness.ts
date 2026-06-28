@@ -58,6 +58,14 @@ export interface DeriveFreshnessInput {
   policy_mode: PolicyMode;
   // Only consulted when policy_mode === "custom".
   custom_policy?: CustomPolicyPredicate;
+  // Freshly recomputed verification context hash per row (rowId -> sha), derived
+  // by scan from the CURRENT resolved verifier + declared-input contents. When
+  // provided, a proof is only FRESH if its embedded verification.context_hash
+  // equals the row's recomputed value — so weakening/deleting the row's
+  // acceptance test (which changes this hash) drops the row out of FRESH even
+  // when the production spans are untouched. Omitted only by pure unit callers
+  // that do not exercise the context binding; scan/prove always supply it.
+  current_context_hashes?: ReadonlyMap<string, string>;
   // Injected so the core stays pure and deterministic (no Date.now).
   generated_at: string;
   product_root?: string;
@@ -234,12 +242,22 @@ function deriveStaleReasons(
   hVerify: string,
   hApprove: string,
   hBind: string,
-  current: CurrentBindingRecord[]
+  current: CurrentBindingRecord[],
+  // The freshly recomputed verification context hash, or undefined when the
+  // caller did not supply context hashes (then this drift is not checked).
+  currentContextHash?: string
 ): FreshnessReason[] {
   const reasons: FreshnessReason[] = [];
   if (!latest) {
     reasons.push({ code: "NO_MATCHING_TRUSTED_PROOF" });
     return reasons;
+  }
+
+  if (currentContextHash !== undefined && latest.verification.context_hash !== currentContextHash) {
+    reasons.push({
+      code: "VERIFICATION_CONTEXT_CHANGED",
+      message: `verification context changed since proof (${latest.verification.context_hash} -> ${currentContextHash}); the verifier or its declared inputs were modified`
+    });
   }
 
   if (latest.row.row_hash !== hRow) {
@@ -521,8 +539,13 @@ export function deriveFreshness(input: DeriveFreshnessInput): FreshnessStatus {
       // 7.4 UNPROVEN
       status = "UNPROVEN";
     } else {
-      // 7.5 FRESH if a trusted proof matches the current row + binding set.
+      // 7.5 FRESH if a trusted proof matches the current row + binding set. When
+      // a recomputed verification context hash is supplied for the row, the proof
+      // must ALSO have been minted against that same context (same verifier +
+      // acceptance-test contents + lockfile); otherwise the proof is stale.
       const approval = inputRow?.approval_policy;
+      const contextHashes = input.current_context_hashes;
+      const currentContextHash = contextHashes?.get(rowId);
       const matches = proofs.filter((proof) => {
         if (!hashes) {
           return false;
@@ -530,12 +553,16 @@ export function deriveFreshness(input: DeriveFreshnessInput): FreshnessStatus {
         const itemsSupported = proof.bindings.items.every(
           (item) => item.span_canon_id === SPAN_CANON_ID
         );
+        const contextOk =
+          contextHashes === undefined ||
+          proof.verification.context_hash === currentContextHash;
         return (
           proof.row.row_hash === hashes.row_hash &&
           proof.row.verification_policy_hash === hashes.verification_policy_hash &&
           proof.row.approval_policy_hash === hashes.approval_policy_hash &&
           proof.bindings.binding_set_hash === hBind &&
           itemsSupported &&
+          contextOk &&
           approvalAcceptsProof(approval, proof)
         );
       });
@@ -551,7 +578,8 @@ export function deriveFreshness(input: DeriveFreshnessInput): FreshnessStatus {
           hashes?.verification_policy_hash ?? "",
           hashes?.approval_policy_hash ?? "",
           hBind,
-          currentRegistered
+          currentRegistered,
+          contextHashes === undefined ? undefined : currentContextHash ?? ""
         );
       }
     }
