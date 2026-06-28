@@ -1,8 +1,8 @@
 {
-  "name": "@presentation-skills/ucm-core",
+  "name": "@use-case-matrix/core",
   "version": "1.0.0",
   "type": "module",
-  "description": "Core domain library for presentation-skills.",
+  "description": "Core domain library for use-case-matrix.",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

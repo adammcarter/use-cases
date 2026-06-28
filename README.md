@@ -1,9 +1,16 @@
-# Presentation Skills
+# Use Case Matrix (UCM)
 
-Presentation Skills gives agents a living use-case matrix, append-only proof
-history, and live showcase runs. It replaces static `TEST-MATRIX.md` files with
-behavior rows that can be planned up front, updated during work, and used for a
-final user-visible demo when that is valuable.
+Use Case Matrix keeps an agent's product claims honest. It gives a repo a living
+use-case matrix, binds each row to the code that satisfies it, and marks a row
+**FRESH** only when trusted CI has signed proof that the current code, binding,
+and verifier context still match — so stale claims become visible instead of
+silently trusted. On top of that trust core it adds plans, capsules, host
+applicability, evidence, and live showcase runs, replacing static
+`TEST-MATRIX.md` files with behaviour rows that are planned up front, updated
+during work, proven in CI, and demonstrated when that is valuable.
+
+> Installs as `@use-case-matrix/cli` (binary `ucm`) plus an MCP server
+> (`@use-case-matrix/mcp`, binary `ucm-mcp`) that agents drive directly.
 
 ## Workflows
 
@@ -22,12 +29,12 @@ final user-visible demo when that is valuable.
 ## Main Commands
 
 ```bash
-presentation-skills matrix validate --repo . --json
-presentation-skills evidence record --repo . --use-case matrix.core.validate --kind test_result --result pass --json
-presentation-skills plan showcase --repo . --max-items 3 --json
-presentation-skills showcase start --repo . --adhoc --select matrix.core.validate --json
-presentation-skills host conformance --all --repo . --json
-presentation-skills doctor package --json
+ucm matrix validate --repo . --json
+ucm evidence record --repo . --use-case matrix.core.validate --kind test_result --result pass --json
+ucm plan showcase --repo . --max-items 3 --json
+ucm showcase start --repo . --adhoc --select matrix.core.validate --json
+ucm host conformance --all --repo . --json
+ucm doctor package --json
 ```
 
 MCP tools wrap the same CLI envelopes. Host projections are thin activation

@@ -1,5 +1,5 @@
 {
-  "name": "presentation-skills",
+  "name": "use-case-matrix",
   "version": "1.0.0",
   "private": false,
   "type": "module",
@@ -8,8 +8,10 @@
     "node": ">=22"
   },
   "bin": {
-    "presentation-skills": "./packages/ucm-cli/dist/index.js",
-    "presentation-skills-mcp": "./packages/ucm-mcp/dist/index.js"
+    "ucm": "./packages/ucm-cli/dist/index.js",
+    "use-case-matrix": "./packages/ucm-cli/dist/index.js",
+    "ucm-mcp": "./packages/ucm-mcp/dist/index.js",
+    "use-case-matrix-mcp": "./packages/ucm-mcp/dist/index.js"
   },
   "files": [
     ".agents/skills",

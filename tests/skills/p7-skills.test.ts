@@ -63,7 +63,7 @@ describe("P7 canonical skills and activation bootstrap", () => {
   });
 
   test("bootstrap contains activation, non-activation, trust, lifecycle, command, and claim boundaries", () => {
-    const source = readFileSync(join(repoRoot, "bootstrap", "presentation-skills.md"), "utf8");
+    const source = readFileSync(join(repoRoot, "bootstrap", "use-case-matrix.md"), "utf8");
     for (const heading of [
       "When to apply",
       "When not to apply",

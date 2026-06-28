@@ -38,7 +38,7 @@ describe("P8 host profiles, projections, and conformance", () => {
     };
 
     expect(
-      validateBySchemaId("https://presentation-skills.dev/schemas/v1/host-profile.schema.json", badProfile)
+      validateBySchemaId("https://use-case-matrix.dev/schemas/v1/host-profile.schema.json", badProfile)
     ).toMatchObject({ ok: false });
   });
 

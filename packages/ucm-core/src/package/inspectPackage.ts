@@ -67,7 +67,7 @@ const REQUIRED_PACKAGE_PATHS = [
   ".codex-plugin/plugin.json",
   ".claude-plugin/plugin.json",
   ".mcp.json",
-  "bootstrap/presentation-skills.md",
+  "bootstrap/use-case-matrix.md",
   "docs/release.md",
   "docs/security.md",
   "hosts/codex.yml",
@@ -267,7 +267,7 @@ function packageManifestReferences(root: string): PackageManifestReference[] {
   const mcpPath = join(root, ".mcp.json");
   if (existsSync(mcpPath)) {
     const mcp = readJson(mcpPath) as { mcpServers?: Record<string, { args?: string[] }> };
-    const server = mcp.mcpServers?.["presentation-skills"];
+    const server = mcp.mcpServers?.["use-case-matrix"];
     const target = resolvePackagedReference(root, ".mcp.json", server?.args?.[0] ?? "");
     references.push({
       from: ".mcp.json",

@@ -9,9 +9,9 @@ import type {
   ShowcaseAppendResult,
   ShowcaseVerdict,
   UseCaseQuery
-} from "@presentation-skills/ucm-core";
+} from "@use-case-matrix/core";
 
-type UcmCoreModule = typeof import("@presentation-skills/ucm-core");
+type UcmCoreModule = typeof import("@use-case-matrix/core");
 
 const {
   appendEvidenceEvent,
@@ -43,7 +43,7 @@ const {
 
 async function loadUcmCore(): Promise<UcmCoreModule> {
   try {
-    return await import("@presentation-skills/ucm-core");
+    return await import("@use-case-matrix/core");
   } catch (error) {
     if (!isMissingCorePackage(error)) {
       throw error;
@@ -54,7 +54,7 @@ async function loadUcmCore(): Promise<UcmCoreModule> {
 }
 
 function isMissingCorePackage(error: unknown): boolean {
-  return error instanceof Error && "code" in error && error.code === "ERR_MODULE_NOT_FOUND" && error.message.includes("@presentation-skills/ucm-core");
+  return error instanceof Error && "code" in error && error.code === "ERR_MODULE_NOT_FOUND" && error.message.includes("@use-case-matrix/core");
 }
 
 type JsonObject = Record<string, unknown>;

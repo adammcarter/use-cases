@@ -13,7 +13,7 @@ import { replayEvidence } from "../evidence/index.js";
 import { selectShowcasePlan, selectWalkthroughPlan } from "../presentation/index.js";
 import type { CapsuleFileResult, CapsulePlanResult, CapsuleSnapshot, DemoCapsule, LoadedDemoCapsule } from "./types.js";
 
-const DEMO_CAPSULE_SCHEMA_ID = "https://presentation-skills.dev/schemas/v1/demo-capsule.schema.json";
+const DEMO_CAPSULE_SCHEMA_ID = "https://use-case-matrix.dev/schemas/v1/demo-capsule.schema.json";
 
 export function demoCapsulesRoot(context: ResolvedWorkspaceContext): string {
   return join(context.data_root, "demo-capsules");

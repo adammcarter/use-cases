@@ -88,7 +88,7 @@ function readWorkspaceConfig(
     throw new PresentationSkillsError("Unable to parse presentation-skills.yml.", "workspace_config.parse_error");
   }
   const validation = validateBySchemaId(
-    "https://presentation-skills.dev/schemas/v1/workspace-config.schema.json",
+    "https://use-case-matrix.dev/schemas/v1/workspace-config.schema.json",
     parsed.value,
     "presentation-skills.yml"
   );

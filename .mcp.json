@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "presentation-skills": {
+    "use-case-matrix": {
       "command": "node",
       "args": ["./packages/ucm-mcp/dist/index.js"]
     }
