@@ -85,7 +85,12 @@ export const PUBLIC_SCHEMA_IDS = [
   "https://use-case-matrix.dev/schemas/v1/matrix-mutation-result.schema.json",
   "https://use-case-matrix.dev/schemas/v1/evidence-append-result.schema.json",
   "https://use-case-matrix.dev/schemas/v1/evidence-status-result.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/migration-test-matrix-result.schema.json"
+  "https://use-case-matrix.dev/schemas/v1/migration-test-matrix-result.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/marker.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/release-gate-result.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/ledger.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/keyring.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/mcp-tool-results.schema.json"
 ] as const;
 
 const SCHEMA_FILE_NAMES = [
@@ -111,7 +116,12 @@ const SCHEMA_FILE_NAMES = [
   "matrix-mutation-result.schema.json",
   "evidence-append-result.schema.json",
   "evidence-status-result.schema.json",
-  "migration-test-matrix-result.schema.json"
+  "migration-test-matrix-result.schema.json",
+  "marker.schema.json",
+  "release-gate-result.schema.json",
+  "ledger.schema.json",
+  "keyring.schema.json",
+  "mcp-tool-results.schema.json"
 ] as const;
 
 let schemaCache: Map<string, unknown> | undefined;
@@ -569,6 +579,85 @@ function validateSyntheticCommonContracts(validated: Set<string>, diagnostics: D
       event: sampleShowcaseEvent,
       status: sampleShowcaseStatus
     });
+    validated.add(schemaIdForName(fileName));
+    diagnostics.push(...result.diagnostics);
+  }
+
+  // The five Phase 1 gap schemas have no fixture file (they document in-code /
+  // trust-engine shapes), so they are validated synthetically here against a
+  // representative sample — keeping the "every public schema is validated"
+  // conformance contract whole.
+  const newSchemaSamples: Array<[string, unknown]> = [
+    [
+      "marker.schema.json",
+      {
+        marker_schema_id: "ucase-marker-v1",
+        kind: "start",
+        slug: "checkout.apply_coupon",
+        row_id: "checkout.apply_coupon",
+        suffix: null,
+        role: "row",
+        file: "Sources/Checkout/CouponService.swift",
+        line: 3,
+        column: 1
+      }
+    ],
+    [
+      "release-gate-result.schema.json",
+      {
+        schema_version: 1,
+        policy_mode: "release",
+        passed: false,
+        generated_at: "2026-06-25T00:00:00.000Z",
+        summary: { rows_total: 1, rows_required: 1, rows_blocked: 1 },
+        blocked_row_ids: ["checkout.apply_coupon"],
+        rows: [
+          {
+            row_id: "checkout.apply_coupon",
+            status: "UNPROVEN",
+            required_for_release: true,
+            policy_block: true,
+            reasons: ["row has a registered binding but no trusted proof event"]
+          }
+        ]
+      }
+    ],
+    [
+      "ledger.schema.json",
+      {
+        ledger_schema_id: "ucase-evidence-ledger-v1",
+        append_only: true,
+        entries: [
+          {
+            schema: "ucase-proof-event-v1",
+            event_id: "evt_0001",
+            created_at: "2026-06-25T00:00:00.000Z",
+            row: { row_id: "checkout.apply_coupon" },
+            signature: { alg: "ed25519", key_id: "ci-key-1", value: "c2lnbmF0dXJl" }
+          }
+        ]
+      }
+    ],
+    [
+      "keyring.schema.json",
+      {
+        keyring_schema_id: "ucase-public-key-registry-v1",
+        keys: [
+          {
+            key_id: "ci-key-1",
+            algorithm: "ed25519",
+            public_key: "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAexample=\n-----END PUBLIC KEY-----\n",
+            valid_from: "2026-01-01T00:00:00.000Z",
+            valid_until: null,
+            status: "active"
+          }
+        ]
+      }
+    ],
+    ["mcp-tool-results.schema.json", createCliResult("matrix.status", { use_cases: [] })]
+  ];
+  for (const [fileName, sample] of newSchemaSamples) {
+    const result = validateBySchemaId(schemaIdForName(fileName), sample);
     validated.add(schemaIdForName(fileName));
     diagnostics.push(...result.diagnostics);
   }

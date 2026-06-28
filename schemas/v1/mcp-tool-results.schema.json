@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://use-case-matrix.dev/schemas/v1/mcp-tool-results.schema.json",
+  "title": "ucase-mcp-tool-result-v1",
+  "description": "MCP structured tool results are the shared CLI result envelope. An MCP tool's structured content is exactly a cli-result.schema.json value (same schema_version/protocol_version envelope, command, ok, complete, data, diagnostics, context). This schema composes cli-result so MCP and CLI outputs stay byte-for-byte contract-compatible.",
+  "allOf": [
+    { "$ref": "cli-result.schema.json" }
+  ],
+  "examples": [
+    {
+      "schema_version": 1,
+      "protocol_version": 1,
+      "command": "matrix.status",
+      "ok": true,
+      "complete": true,
+      "data": { "use_cases": [] },
+      "diagnostics": [],
+      "context": {
+        "workspace_root": "/repo",
+        "data_root": "/repo",
+        "component_id": "presentation-skills",
+        "workspace_snapshot": {
+          "repository_id": "example",
+          "vcs": "git",
+          "head_revision": "abc123",
+          "dirty": false,
+          "working_tree_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "component_id": "presentation-skills",
+          "captured_at": "2026-06-28T12:00:00Z"
+        }
+      }
+    }
+  ]
+}
