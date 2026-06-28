@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ucase-proof-event-v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "event_type",
+    "event_id",
+    "created_at",
+    "producer",
+    "row",
+    "bindings",
+    "verification",
+    "signature"
+  ],
+  "$defs": {
+    "hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  },
+  "properties": {
+    "schema": { "const": "ucase-proof-event-v1" },
+    "event_type": { "const": "row_proof_passed" },
+    "event_id": { "type": "string", "minLength": 1 },
+    "created_at": { "type": "string", "minLength": 1 },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id", "version", "ci_run_id", "repo", "commit"],
+      "properties": {
+        "kind": { "const": "trusted-ci-prover" },
+        "id": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "ci_run_id": { "type": "string", "minLength": 1 },
+        "repo": { "type": "string", "minLength": 1 },
+        "commit": { "type": "string", "minLength": 1 }
+      }
+    },
+    "row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "row_id",
+        "row_hash_id",
+        "row_hash",
+        "verification_policy_hash",
+        "approval_policy_hash"
+      ],
+      "properties": {
+        "row_id": { "type": "string", "minLength": 1 },
+        "row_hash_id": { "type": "string", "minLength": 1 },
+        "row_hash": { "$ref": "#/$defs/hash" },
+        "verification_policy_hash": { "$ref": "#/$defs/hash" },
+        "approval_policy_hash": { "$ref": "#/$defs/hash" }
+      }
+    },
+    "bindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["binding_set_hash_id", "binding_set_hash", "span_canon_id", "items"],
+      "properties": {
+        "binding_set_hash_id": { "const": "ucase-binding-set-v1" },
+        "binding_set_hash": { "$ref": "#/$defs/hash" },
+        "span_canon_id": { "type": "string", "minLength": 1 },
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "binding_slug",
+              "row_id",
+              "file_path",
+              "extent_kind",
+              "recognizer_id",
+              "span_canon_id",
+              "span_sha256",
+              "span_start_line",
+              "span_end_line"
+            ],
+            "properties": {
+              "binding_slug": { "type": "string", "minLength": 1 },
+              "row_id": { "type": "string", "minLength": 1 },
+              "file_path": { "type": "string", "minLength": 1 },
+              "extent_kind": { "enum": ["explicit", "swift_func_inferred"] },
+              "recognizer_id": { "type": "string", "minLength": 1 },
+              "span_canon_id": { "type": "string", "minLength": 1 },
+              "span_sha256": { "$ref": "#/$defs/hash" },
+              "span_start_line": { "type": "integer", "minimum": 1 },
+              "span_end_line": { "type": "integer", "minimum": 1 }
+            }
+          }
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command_id", "result", "started_at", "completed_at", "artifacts"],
+      "properties": {
+        "command_id": { "type": "string", "minLength": 1 },
+        "result": { "const": "pass" },
+        "started_at": { "type": "string", "minLength": 1 },
+        "completed_at": { "type": "string", "minLength": 1 },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "path", "sha256"],
+            "properties": {
+              "kind": { "type": "string", "minLength": 1 },
+              "path": { "type": "string", "minLength": 1 },
+              "sha256": { "$ref": "#/$defs/hash" }
+            }
+          }
+        }
+      }
+    },
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["alg", "key_id", "value"],
+      "properties": {
+        "alg": { "const": "ed25519" },
+        "key_id": { "type": "string", "minLength": 1 },
+        "value": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}
