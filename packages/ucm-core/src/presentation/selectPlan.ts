@@ -4,6 +4,8 @@ import { computeSemanticHash } from "../schema/index.js";
 import type { EvidenceSnapshot } from "../evidence/types.js";
 import type { HostSurface, LoadedUseCase, UseCaseV1 } from "../useCases/types.js";
 import { compareCandidates, scoreReasons, scoreUseCase } from "./scoring.js";
+import { choosePresentationFormat, formatToDeliveryKind } from "./presentationFormat.js";
+import type { DeliveryKind } from "./types.js";
 import type {
   CandidateSummary,
   PlanGap,
@@ -257,9 +259,21 @@ function toPlanItem(
   const evidenceSummary = evidenceForUseCase(evidence, useCase);
   const requiredEvidence = requiredEvidenceFor(useCase, evidenceSummary.status);
   const gaps = gapsForItem(useCase, evidenceSummary.readiness, requiredEvidence);
+  const baseDeliveryKind = baseDeliveryKindFor(useCase, profile.mode);
+  const presentationFormat = choosePresentationFormat({
+    baseDeliveryKind,
+    needsUser: needsUserActor(useCase),
+    // v1: auto-selection emits testing / reviewing / explaining / user_led.
+    // `comparing` and `inspecting` are reachable only via hand-authored plans
+    // until row affordances (isContrast / artifact hints) land -- see the spec
+    // open questions.
+    isContrast: false
+  });
+  const deliveryKind = formatToDeliveryKind(presentationFormat, baseDeliveryKind);
   return {
     plan_item_id: `item.${useCase.value.id}`,
-    delivery_kind: profile.mode === "showcase" ? "live_demo" : deliveryKindFor(useCase),
+    presentation_format: presentationFormat,
+    delivery_kind: deliveryKind,
     scenario_scope: useCase.value.scenarios?.length ? "explicit" : "whole_use_case",
     use_case_id: useCase.value.id,
     scenario_ids: (useCase.value.scenarios ?? []).map((scenario) => scenario.id),
@@ -292,7 +306,38 @@ function toPlanItem(
   };
 }
 
-function deliveryKindFor(useCase: LoadedUseCase): "live_demo" | "evidence_review" | "explanation" {
+/**
+ * The base (verification-derived) delivery kind for an item before a
+ * presentation format is chosen. Showcase prefers live-where-safe: it keeps
+ * `live_demo` whenever the row carries live_demo verification, otherwise it
+ * falls back to the same projection walkthrough uses. This replaces the old
+ * hard `showcase ? "live_demo"` force so destructive / external / human-judgment
+ * rows get an honest base kind.
+ */
+function baseDeliveryKindFor(useCase: LoadedUseCase, mode: "showcase" | "walkthrough"): DeliveryKind {
+  if (mode === "showcase") {
+    const requirements = verificationRequirements(useCase);
+    if (requirements.some((requirement) => requirement.evidence_kind === "live_demo")) {
+      return "live_demo";
+    }
+  }
+  return deliveryKindFor(useCase);
+}
+
+/**
+ * True when an item needs a human actor: any verification requirement that
+ * lists `user` among its required verifiers, or an approval policy in `ask`
+ * mode. Such items are presented with the `user_led` (Over to you) format.
+ */
+function needsUserActor(useCase: LoadedUseCase): boolean {
+  const requirements = verificationRequirements(useCase);
+  if (requirements.some((requirement) => requirement.required_verifiers.includes("user"))) {
+    return true;
+  }
+  return policySnapshot(useCase.value.approval_policy).mode === "ask";
+}
+
+function deliveryKindFor(useCase: LoadedUseCase): DeliveryKind {
   const requirements = verificationRequirements(useCase);
   if (requirements.some((requirement) => requirement.evidence_kind === "live_demo")) {
     return "live_demo";

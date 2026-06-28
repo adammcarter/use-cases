@@ -8,9 +8,19 @@ import { loadUseCaseMatrix } from "../../src/useCases/loadUseCaseMatrix.js";
 import { appendEvidenceEvent, replayEvidence } from "../../src/evidence/index.js";
 import {
   computePresentationPlanHash,
+  formatToDeliveryKind,
   selectShowcasePlan,
   selectWalkthroughPlan
 } from "../../src/presentation/index.js";
+
+const PRESENTATION_FORMATS = [
+  "testing",
+  "comparing",
+  "inspecting",
+  "reviewing",
+  "user_led",
+  "explaining"
+];
 
 const repoRoot = resolve(import.meta.dirname, "../../../..");
 const fixturesRoot = join(repoRoot, "tests/fixtures/workspaces");
@@ -75,6 +85,20 @@ describe("P5 presentation plan selection", () => {
     expect(selectedIds?.[0]).toBe("checkout.purchase.golden");
     expect(selectedIds).not.toContain("settings.theme.rare");
     expect(result.plan?.selected_items.every((item) => item.delivery_kind === "live_demo")).toBe(true);
+    expect(
+      result.plan?.selected_items.every((item) => PRESENTATION_FORMATS.includes(item.presentation_format))
+    ).toBe(true);
+    expect(
+      result.plan?.selected_items.find((item) => item.use_case_id === "checkout.purchase.golden")
+    ).toMatchObject({
+      presentation_format: "user_led",
+      delivery_kind: "live_demo"
+    });
+    expect(
+      result.plan?.selected_items.every(
+        (item) => formatToDeliveryKind(item.presentation_format, item.delivery_kind) === item.delivery_kind
+      )
+    ).toBe(true);
     expect(result.plan?.selected_items.every((item) => item.selection_reasons.length > 0)).toBe(true);
     expect(result.plan?.selected_items.every((item) => item.selection_reason_codes.length > 0)).toBe(true);
     expect(result.plan?.selected_items.every((item) => item.plan_item_id.startsWith("item."))).toBe(true);

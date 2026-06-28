@@ -108,6 +108,9 @@
         "additionalProperties": false,
         "properties": {
           "plan_item_id": { "$ref": "common.schema.json#/$defs/id" },
+          "presentation_format": {
+            "enum": ["testing", "comparing", "inspecting", "reviewing", "user_led", "explaining"]
+          },
           "delivery_kind": { "enum": ["live_demo", "evidence_review", "explanation"] },
           "scenario_scope": { "enum": ["whole_use_case", "explicit"] },
           "use_case_id": { "$ref": "common.schema.json#/$defs/id" },

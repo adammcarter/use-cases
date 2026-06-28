@@ -1,4 +1,6 @@
 export * from "./types.js";
+export * from "./presentationFormat.js";
+export * from "./renderCard.js";
 export * from "./scoring.js";
 export * from "./selectPlan.js";
 export * from "./selectShowcasePlan.js";

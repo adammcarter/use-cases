@@ -1,6 +1,7 @@
 import type { ResolvedWorkspaceContext } from "../roots.js";
 import type { EvidenceSnapshot } from "../evidence/types.js";
 import type { HostSurface, LoadedUseCase, MatrixSnapshot, UseCaseV1 } from "../useCases/types.js";
+import type { PresentationFormat } from "./presentationFormat.js";
 
 export type PresentationMode = "showcase" | "walkthrough";
 export type PlanReadiness = "ready" | "ready_with_evidence_gaps" | "partial_due_to_integrity" | "blocked";
@@ -43,6 +44,9 @@ export type EvidenceReadiness = "available_current" | "available_stale" | "missi
 
 export type PresentationPlanItem = {
   plan_item_id: string;
+  /** The chosen presentation format -- the source of truth for how the item is shown. */
+  presentation_format: PresentationFormat;
+  /** Computed compatibility projection of `presentation_format` for legacy consumers. */
   delivery_kind: DeliveryKind;
   scenario_scope: "whole_use_case" | "explicit";
   use_case_id: string;
@@ -179,3 +183,4 @@ export type SelectionProfile = {
 };
 
 export type { EvidenceSnapshot, HostSurface, LoadedUseCase, MatrixSnapshot, UseCaseV1 };
+export type { PresentationFormat };
