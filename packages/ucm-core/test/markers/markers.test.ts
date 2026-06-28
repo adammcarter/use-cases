@@ -245,6 +245,8 @@ describe("proof event schema", () => {
         result: "pass",
         started_at: "2026-06-28T12:04:10Z",
         completed_at: "2026-06-28T12:04:59Z",
+        context_hash_id: "ucase-verification-context-hash-v1",
+        context_hash: ZERO_HASH,
         artifacts: [
           {
             kind: "junit",

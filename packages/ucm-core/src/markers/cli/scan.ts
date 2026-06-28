@@ -28,6 +28,7 @@ import {
   type ScanResult
 } from "../scanner.js";
 import { readBaseRefFile, type GitRunner } from "../appendOnly.js";
+import { computeRowVerificationContextHash } from "../verificationContextHash.js";
 import { nodeMarkerFs, type MarkerFs } from "./io.js";
 import {
   collectSourceInputs,
@@ -114,6 +115,25 @@ export function prepareScan(options: ScanCommandOptions): ScanPreparation {
     }))
   ];
 
+  // Freshly recompute each row's verification context hash from the CURRENT
+  // resolved verifier + declared-input contents + lockfile. Threaded into
+  // freshness so a proof minted against a now-weakened verifier is no longer
+  // FRESH. Computed identically to `prove` (same root + fs), so a just-minted
+  // proof's embedded hash matches its recomputed value.
+  const contextRoot = options.repoCwd ?? options.productRoot;
+  const currentContextHashes = new Map<string, string>();
+  for (const row of loaded.rows) {
+    currentContextHashes.set(
+      row.row_id,
+      computeRowVerificationContextHash({
+        slug: row.row_id,
+        verificationPolicy: row.verification_policy,
+        rootDir: contextRoot,
+        fs
+      })
+    );
+  }
+
   const status = deriveFreshness({
     rows: loaded.rows,
     registry: registryResult.registry,
@@ -122,6 +142,7 @@ export function prepareScan(options: ScanCommandOptions): ScanPreparation {
     policy_mode: options.policyMode,
     generated_at: options.generatedAt,
     product_root: options.productRoot,
+    current_context_hashes: currentContextHashes,
     global_integrity_errors: globalIntegrity
   });
 
