@@ -2,9 +2,9 @@ schema_version: 1
 capsule_id: capsule.presentation_skills.feature_tour
 title: Presentation Skills feature tour
 mode: showcase
-description: Perform a high-level showcase of the product-level Presentation Skills matrix, proof model, live showcase flow, MCP boundary, host truthfulness, and release dogfood loop.
+description: Perform a high-level showcase of the product-level Presentation Skills matrix, proof model, live showcase flow, MCP boundary, host truthfulness, release dogfood loop, diagnostics and schema contract surface, skill-asset validation, crash-durable ledger writes, host smoke resilience, and matrix health summary.
 audience: reviewer
-timebox_seconds: 1200
+timebox_seconds: 3600
 items:
   - use_case_id: presentation_skills.matrix.product_inventory
     scenario_ids: [presentation_skills.matrix.product_inventory.cli]
@@ -76,6 +76,55 @@ items:
         text: Summarize how this repo uses its own matrix, evidence, and showcase run as release proof for the demonstrated scope.
       - kind: observation
         text: The dogfood bundle shows demonstrated scope, evidence gaps, and any user sign-off still required.
+  - use_case_id: presentation_skills.diagnostics.root_resolution
+    scenario_ids: [presentation_skills.diagnostics.root_resolution.doctor]
+    runbook:
+      - kind: instruction
+        text: Run doctor roots and show the workspace root and data root resolving distinctly, including a separated data root.
+      - kind: observation
+        text: Roots resolve deterministically and unsafe or symlinked roots are rejected.
+  - use_case_id: presentation_skills.diagnostics.schema_contract_surface
+    scenario_ids: [presentation_skills.diagnostics.schema_contract_surface.validate]
+    runbook:
+      - kind: instruction
+        text: Run schema list and schema validate-fixtures to show the published, versioned contract surface.
+      - kind: observation
+        text: Every result envelope is backed by a versioned schema and the fixtures validate against it.
+  - use_case_id: presentation_skills.skills.asset_validation
+    scenario_ids: [presentation_skills.skills.asset_validation.doctor]
+    runbook:
+      - kind: instruction
+        text: Run doctor skills and show the shipped showcase, walkthrough, and use-case-matrix skills validating with intact assets.
+      - kind: observation
+        text: Each shipped skill is discovered with a stable name and required files present.
+  - use_case_id: presentation_skills.skills.degraded_assets
+    scenario_ids: [presentation_skills.skills.degraded_assets.report]
+    runbook:
+      - kind: instruction
+        text: Show how a skill missing required assets is reported as a diagnostic rather than passing silently.
+      - kind: observation
+        text: A damaged skill is visible and does not hide the status of healthy skills.
+  - use_case_id: presentation_skills.evidence.crash_durable_ledger_writes
+    scenario_ids: [presentation_skills.evidence.crash_durable_ledger_writes.atomic]
+    runbook:
+      - kind: instruction
+        text: Explain how evidence and showcase appends use an atomic temp-file write with best-effort fsync.
+      - kind: observation
+        text: An interrupted append leaves the ledger whole, and unsupported temp fsync degrades to best-effort instead of failing.
+  - use_case_id: presentation_skills.hosts.smoke_signal_resilience
+    scenario_ids: [presentation_skills.hosts.smoke_signal_resilience.terminated]
+    runbook:
+      - kind: instruction
+        text: Show that a host smoke executable killed by a signal is reported as not_run, never as passed.
+      - kind: observation
+        text: Abnormal termination is treated as inconclusive with a visible reason, not as proof of support.
+  - use_case_id: presentation_skills.matrix.status_summary
+    scenario_ids: [presentation_skills.matrix.status_summary.report]
+    runbook:
+      - kind: instruction
+        text: Run matrix status to show row counts, integrity state, and evidence coverage in one read-only command.
+      - kind: observation
+        text: Matrix and evidence health are readable at a glance and derived from current files.
 permissions:
   command_execution: false
 extensions:
