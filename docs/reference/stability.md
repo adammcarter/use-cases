@@ -32,7 +32,7 @@ These are versioned contracts:
 - **Persisted file formats**, each carrying `schema_version`: the matrix / use-case files, the binding registry (`bindings.jsonl`), the proof/evidence ledger (`evidence.jsonl`), evidence events, showcase specs/runs, capsules, plans, host profiles, and workspace config.
 - **JSON Schemas** published under the `https://use-case-matrix.dev/schemas/v1/...` `$id` namespace (resolved locally; not fetched).
 - **The use-case marker grammar** (`//: @use-case: <slug>` … `//: @use-case: end <slug>`) and slug rules.
-- **The proof/trust model**: ed25519 signed proof events, the hashed inputs (row, binding-set, span, verification-context), and the freshness states (`FRESH`, `SUSPECT`, `UNPROVEN`, `UNBOUND`, `INVALID`).
+- **The proof/trust model**: ed25519 signed proof events, the hashed inputs (row, binding-set, span, verification-context), and the freshness states (`FRESH`, `SUSPECT`, `UNPROVEN`, `UNBOUND`, `INVALID`). Signing-key management — the single `--public-key` path, the opt-in `--keyring` registry, and key rotation/revocation — is documented in [key management](../security/key-management.md).
 - **Documented `@use-case-matrix/core` TypeScript exports.** Undocumented internals are not public.
 - **Error codes** declared in the [error-code registry](./error-codes.md) (`UCM_*`).
 
