@@ -19,6 +19,7 @@ const {
   planDemoCapsule,
   projectHostFiles,
   queryUseCases,
+  renderCard,
   replayEvidence,
   resolveWorkspaceContext,
   runDemoCapsule,
@@ -142,6 +143,10 @@ export function runCli(argv: string[]): number {
 
   if (normalizedArgv[0] === "plan" && normalizedArgv[1] === "walkthrough" && wantsJson) {
     return runPlan(normalizedArgv, "walkthrough");
+  }
+
+  if (normalizedArgv[0] === "plan" && normalizedArgv[1] === "cards" && wantsJson) {
+    return runPlanCards(normalizedArgv);
   }
 
   if (normalizedArgv[0] === "capsule" && wantsJson) {
@@ -520,6 +525,46 @@ function runPlan(argv: string[], mode: "showcase" | "walkthrough"): number {
     return 1;
   }
   return 0;
+}
+
+function runPlanCards(argv: string[]): number {
+  const contextResult = contextFromArgs(argv, "plan.cards");
+  if ("exitCode" in contextResult) {
+    return contextResult.exitCode;
+  }
+  const planFile = valueAfter(argv, "--plan-file");
+  if (!planFile) {
+    return writeError("plan.cards", "cli_invalid_arguments", "Missing --plan-file.");
+  }
+  const planPath = isAbsolute(planFile) ? planFile : resolve(contextResult.workspace_root, planFile);
+  try {
+    const plan = loadPresentationPlanFile(planPath);
+    const data = {
+      schema_version: 1,
+      plan_id: plan.plan_id,
+      cards: plan.selected_items.map((item) => ({
+        plan_item_id: item.plan_item_id,
+        use_case_id: item.use_case_id,
+        presentation_format: item.presentation_format,
+        text: renderCard(item)
+      }))
+    };
+    process.stdout.write(
+      `${JSON.stringify(
+        createCliResult("plan.cards", data, {
+          ok: true,
+          complete: true,
+          workspaceRoot: contextResult.workspace_root,
+          dataRoot: contextResult.data_root,
+          componentId: contextResult.component_id
+        })
+      )}\n`
+    );
+    return 0;
+  } catch (error) {
+    const code = error instanceof Error && "code" in error ? String(error.code) : "internal_error";
+    return writeError("plan.cards", code, error instanceof Error ? error.message : String(error), 1);
+  }
 }
 
 function runCapsule(argv: string[]): number {

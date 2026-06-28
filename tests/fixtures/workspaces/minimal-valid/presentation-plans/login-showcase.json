@@ -21,6 +21,8 @@
   "selected_items": [
     {
       "use_case_id": "auth.login.success",
+      "presentation_format": "testing",
+      "delivery_kind": "live_demo",
       "scenario_ids": ["auth.login.success.web"],
       "use_case_content_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
       "resolved_steps": ["Open the login page.", "Submit valid credentials."],

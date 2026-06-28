@@ -36,6 +36,23 @@ Generated plans, walkthroughs, capsules, and runbooks are prepared material only
 - Correct mistaken entries with `presentation-skills showcase correct --json`; do not edit JSONL history by hand.
 - Finish with `presentation-skills showcase finish --json` and inspect state with `presentation-skills showcase status --json`.
 
+## Presentation Formats
+
+Every plan item carries a chosen `presentation_format`. Present each item in exactly one of the six fixed formats, reading the choice from the plan item (never inventing one):
+
+- Testing (emoji tube) - runs it live: Run / Expect / Got.
+- Comparing (emoji scales) - guardrail or before-after: a blocked row and an allowed row.
+- Inspecting (emoji magnifier) - examine the real artifact: In / Look.
+- Reviewing (emoji scroll) - cite an earlier run: From / Shows (not re-run now).
+- Over to you (emoji raised hand) - needs the human: numbered steps then Confirm: yes / no.
+- Explaining (emoji speech balloon) - description only: plain text then "not run - explanation only".
+
+Render the fixed emoji + verb header for the chosen format so the user can scan the mode at a glance. The header verb is a promise and must not lie:
+
+- A failed Testing item shows Got with a cross mark. It must never be re-narrated as Explaining; a live failure stays a live failure.
+- Over to you stays open on Confirm: yes / no until a real human answers. The agent can never fill that answer in.
+- A check mark, a Reviewing "Shows", or a "Confirm: yes" must correspond to a real recorded result, never to agent prose alone.
+
 ## Approval Boundary
 
 Agents may record agent observations and agent verdicts when allowed. Agents must not claim user approval, user sign-off, or user verification. User approval requires the designated trusted confirmation path, such as `presentation-skills showcase approve --json` with an explicit user actor in a context where the user actually confirms.
