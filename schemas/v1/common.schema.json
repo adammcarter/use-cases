@@ -172,7 +172,8 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "mode": { "const": "none" }
+            "mode": { "const": "none" },
+            "required_for_release": { "type": "boolean" }
           },
           "required": ["mode"]
         },
@@ -180,7 +181,8 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "mode": { "const": "ask" }
+            "mode": { "const": "ask" },
+            "required_for_release": { "type": "boolean" }
           },
           "required": ["mode"]
         },
@@ -189,6 +191,7 @@
           "additionalProperties": false,
           "properties": {
             "mode": { "const": "predefined" },
+            "required_for_release": { "type": "boolean" },
             "requirements": {
               "type": "array",
               "minItems": 1,
