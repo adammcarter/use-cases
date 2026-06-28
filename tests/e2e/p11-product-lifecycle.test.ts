@@ -248,7 +248,13 @@ describe("P11 host and project acceptance", () => {
         })
       );
       if ((host.executable_smoke as { status: string }).status === "not_run") {
-        expect((host.executable_smoke as { reason: string }).reason).toMatch(/not found|unavailable/i);
+        // not_run covers any inconclusive smoke: the executable is not on PATH
+        // ("not found"), is present but did not respond within the smoke timeout
+        // ("did not respond" / "was not run"), or is otherwise unavailable. CI
+        // runners (which DO ship gh) hit the timeout path, not the not-found one.
+        expect((host.executable_smoke as { reason: string }).reason).toMatch(
+          /not found|unavailable|did not respond|was not run/i
+        );
       }
     }
   });
