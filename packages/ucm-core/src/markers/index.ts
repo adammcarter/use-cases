@@ -22,3 +22,5 @@ export * from "./reconcile.js";
 // Phase 5: evidence ledger validation + trusted-CI proof signatures.
 export * from "./proofSignature.js";
 export * from "./evidenceLedger.js";
+// Phase 6: freshness state machine (status derivation + policy gate).
+export * from "./freshness.js";
