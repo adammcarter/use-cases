@@ -7,3 +7,8 @@ export * from "./rowHash.js";
 export * from "./policyHash.js";
 export * from "./bindingSetHash.js";
 export * from "./validators.js";
+// Phase 2: marker parser + explicit-span scanner.
+export * from "./commentPrefix.js";
+export * from "./markerLine.js";
+export * from "./spanCanon.js";
+export * from "./scanner.js";
