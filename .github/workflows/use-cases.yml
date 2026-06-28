@@ -120,6 +120,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    # Serialise prove runs per ref: the persist step below pushes the ledger back,
+    # so two concurrent release runs must not race the same branch tip.
+    concurrency:
+      group: use-cases-ledger-${{ github.ref }}
+      cancel-in-progress: false
     # Hoisted to job scope so the prove step's `if:` can read it -- a step
     # cannot see env defined in its own `env:` block from its own `if:`. With
     # the secret unset this is empty, so the prove step is skipped (degrades
@@ -161,3 +166,22 @@ jobs:
             "${key_args[@]}" \
             "${args[@]}" \
             --json
+      # Persist the freshly minted proof events back to the repo. Without this the
+      # signed proof dies with the runner and rows never reach FRESH (spec 10.2:
+      # CI is the authority, and its authority has to be durable). The ledger is
+      # append-only, so this is a pure append; [skip ci] avoids re-triggering.
+      - name: persist proof ledger
+        if: ${{ env.UCM_CI_SIGNING_KEY != '' }}
+        run: |
+          if ! git status --porcelain "$UCM_EVIDENCE" | grep -q .; then
+            echo "no new proof events to persist"
+            exit 0
+          fi
+          git config user.name "use-cases-ci[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$UCM_EVIDENCE"
+          git commit -m "ci: persist use-case proof ledger [skip ci]"
+          # Rebase onto the latest tip in case the branch advanced, then push the
+          # append back to the same branch the release run is on.
+          git pull --rebase origin "$GITHUB_REF_NAME"
+          git push origin "HEAD:$GITHUB_REF_NAME"
