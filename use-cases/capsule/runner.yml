@@ -7,7 +7,7 @@ use_cases:
   - id: capsule.live_runner.scripted
     title: Run a command-backed demo capsule as a real showcase gate
     lifecycle: active
-    value_tier: critical
+    value_tier: core
     journey_role: golden
     usage_frequency: common
     tags: [capsule, showcase, live-demo, command]

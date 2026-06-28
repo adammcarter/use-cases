@@ -7,7 +7,7 @@ use_cases:
   - id: release.package.installable_artifact
     title: Verify the root package tarball and installed runtime
     lifecycle: active
-    value_tier: critical
+    value_tier: core
     journey_role: golden
     usage_frequency: occasional
     tags:
@@ -42,7 +42,7 @@ use_cases:
   - id: release.ci_gate.sequential
     title: Run the sequential production release gate
     lifecycle: active
-    value_tier: critical
+    value_tier: core
     journey_role: golden
     usage_frequency: occasional
     tags:

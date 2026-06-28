@@ -1,0 +1,159 @@
+schema_version: 1
+feature:
+  id: presentation_skills.migration
+  name: TEST-MATRIX migration
+  summary: Reviewable migration from legacy test matrices into use-case rows without laundering old proof.
+use_cases:
+  - id: presentation_skills.migration.reviewable_draft_import
+    title: Reviewable TEST-MATRIX draft import
+    lifecycle: active
+    value_tier: core
+    journey_role: alternate
+    usage_frequency: occasional
+    tags: [migration, test-matrix, backfill]
+    source_refs:
+      - kind: file
+        path: docs/migration.md
+      - kind: file
+        path: packages/ucm-core/src/migration/testMatrix.ts
+    actor: agent
+    intent: Convert legacy TEST-MATRIX rows into draft use-case YAML with review warnings.
+    preconditions:
+      - A legacy TEST-MATRIX.md file exists.
+    trigger: User or agent backfills an existing project into Presentation Skills.
+    scenarios:
+      - id: presentation_skills.migration.reviewable_draft_import.dry_run
+        kind: steps
+        steps:
+          - Run migrate test-matrix in dry-run mode.
+          - Inspect generated draft rows and diagnostics.
+          - Write drafts only when the output is reviewable.
+    observable_outcomes:
+      - Legacy rows become draft use cases, not silent active acceptance.
+      - Review warnings identify ambiguous titles, old statuses, and missing detail.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: command_result
+          required_verifiers: [script]
+          minimum_count: 1
+    approval_policy:
+      mode: ask
+
+  - id: presentation_skills.migration.no_legacy_pass_as_proof
+    title: Legacy pass marks are not evidence
+    lifecycle: active
+    value_tier: critical
+    journey_role: negative
+    usage_frequency: common
+    tags: [migration, evidence, proof-boundary]
+    source_refs:
+      - kind: file
+        path: docs/migration.md
+      - kind: file
+        path: packages/ucm-core/src/migration/testMatrix.ts
+    actor: agent
+    intent: Prevent old pass or status cells from becoming current evidence or approval.
+    preconditions:
+      - Legacy matrix rows include status text such as pass, fail, done, or accepted.
+    trigger: Agent migrates legacy matrix content.
+    scenarios:
+      - id: presentation_skills.migration.no_legacy_pass_as_proof.guard
+        kind: steps
+        steps:
+          - Parse legacy rows with old status marks.
+          - Generate use-case rows without evidence IDs.
+          - Preserve old status only as review context when safe.
+    observable_outcomes:
+      - Current evidence must be recorded separately through the evidence ledger.
+      - Migration cannot invent modern proof or user approval.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers: [script]
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  - id: presentation_skills.migration.source_traceability
+    title: Migration source traceability
+    lifecycle: active
+    value_tier: supporting
+    journey_role: alternate
+    usage_frequency: rare
+    tags: [migration, traceability]
+    source_refs:
+      - kind: file
+        path: docs/migration.md
+      - kind: file
+        path: tests/fixtures/workspaces/test-matrix-source/TEST-MATRIX.md
+    actor: agent
+    intent: Preserve original markdown row references so reviewers can audit generated draft rows.
+    preconditions:
+      - A migration source file has identifiable source rows.
+    trigger: Agent writes or reviews migrated draft use-case YAML.
+    scenarios:
+      - id: presentation_skills.migration.source_traceability.refs
+        kind: steps
+        steps:
+          - Generate draft rows from a TEST-MATRIX source.
+          - Include source references or diagnostics for the original rows.
+          - Let reviewers compare generated rows to source intent.
+    observable_outcomes:
+      - Migration output can be audited against its source.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: agent_observation
+          required_verifiers: [agent]
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  - id: presentation_skills.migration.human_review_activation
+    title: Human review before activation
+    lifecycle: active
+    value_tier: core
+    journey_role: alternate
+    usage_frequency: occasional
+    tags: [migration, review, activation]
+    source_refs:
+      - kind: file
+        path: docs/migration.md
+      - kind: file
+        path: .agents/skills/use-case-matrix/SKILL.md
+    actor: agent
+    intent: Keep migrated rows draft or planned until a human reviews the high-level feature printout.
+    preconditions:
+      - Migration output contains draft or uncertain rows.
+    trigger: Agent considers activating migrated rows.
+    scenarios:
+      - id: presentation_skills.migration.human_review_activation.review
+        kind: steps
+        steps:
+          - Present a concise feature printout of migrated rows.
+          - Ask the user to confirm high-value behavior and scope.
+          - Activate only rows that are reviewed and structurally usable.
+    observable_outcomes:
+      - Migration review separates mechanical parsing from product acceptance.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: manual_observation
+          required_verifiers: [user]
+          minimum_count: 1
+    approval_policy:
+      mode: ask

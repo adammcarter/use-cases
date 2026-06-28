@@ -1,5 +1,6 @@
-import { closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, writeSync } from "node:fs";
+import { closeSync, existsSync, mkdirSync, openSync, readFileSync, writeSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { fsyncBestEffortForTemp } from "../durableWrite.js";
 import type { ResolvedWorkspaceContext } from "../roots.js";
 import type { ShowcaseEvent } from "./types.js";
 
@@ -49,7 +50,7 @@ export function appendShowcaseEventLine(context: ResolvedWorkspaceContext, event
   const fd = openSync(path, "a");
   try {
     writeSync(fd, `${JSON.stringify(event)}\n`);
-    fsyncSync(fd);
+    fsyncBestEffortForTemp(fd, path);
   } finally {
     closeSync(fd);
   }

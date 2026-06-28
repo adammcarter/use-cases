@@ -1,0 +1,197 @@
+schema_version: 1
+feature:
+  id: presentation_skills.capsules
+  name: Demo capsules
+  summary: Optional persisted smoke and golden-path runbooks that become proof only when performed as showcase runs.
+use_cases:
+  - id: presentation_skills.capsules.persisted_smoke_runbook
+    title: Persisted smoke demo runbook
+    lifecycle: active
+    value_tier: core
+    journey_role: golden
+    usage_frequency: common
+    tags: [capsules, smoke, runbook]
+    source_refs:
+      - kind: file
+        path: docs/showcase.md
+      - kind: file
+        path: packages/ucm-core/src/capsules/loadCapsule.ts
+    actor: agent
+    intent: Provide a reusable capsule that references use-case IDs and supports repeatable demos.
+    preconditions:
+      - A common smoke or golden path deserves a persisted runbook.
+    trigger: Agent or user wants a repeatable demonstration without reselecting rows manually.
+    scenarios:
+      - id: presentation_skills.capsules.persisted_smoke_runbook.plan
+        kind: steps
+        steps:
+          - Validate a capsule file.
+          - Generate a capsule plan.
+          - Confirm referenced use-case and scenario IDs resolve.
+    observable_outcomes:
+      - The capsule is reusable prepared material.
+      - It is not proof until a run records performed events.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: command_result
+          required_verifiers: [script]
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  - id: presentation_skills.capsules.adhoc_release_demo
+    title: Ad hoc release demo plan
+    lifecycle: active
+    value_tier: core
+    journey_role: alternate
+    usage_frequency: occasional
+    tags: [capsules, adhoc, release]
+    source_refs:
+      - kind: file
+        path: docs/showcase.md
+      - kind: file
+        path: packages/ucm-core/src/showcase/startRun.ts
+    actor: agent
+    intent: Generate a one-run plan for release proof without saving it as a reusable recipe.
+    preconditions:
+      - The demo is specific to a release, PR, or changed scope.
+    trigger: Agent prepares a one-off live run.
+    scenarios:
+      - id: presentation_skills.capsules.adhoc_release_demo.start
+        kind: steps
+        steps:
+          - Select ad hoc use-case IDs.
+          - Start a showcase run from that selection.
+          - Record the normalized plan in run_started.
+    observable_outcomes:
+      - One-off demos are supported without accumulating unnecessary capsule files.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: agent_observation
+          required_verifiers: [agent]
+          minimum_count: 1
+    approval_policy:
+      mode: ask
+
+  - id: presentation_skills.capsules.runner_command_safety
+    title: Hardened scripted capsule execution
+    lifecycle: active
+    value_tier: critical
+    journey_role: negative
+    usage_frequency: common
+    tags: [capsules, command-runner, security]
+    source_refs:
+      - kind: file
+        path: packages/ucm-core/src/capsules/runCapsule.ts
+      - kind: file
+        path: docs/security.md
+    actor: script
+    intent: Run scripted capsule commands with explicit controls and no committed local-path leakage.
+    preconditions:
+      - A capsule contains command steps.
+    trigger: Agent runs a capsule with command execution enabled.
+    scenarios:
+      - id: presentation_skills.capsules.runner_command_safety.command
+        kind: steps
+        steps:
+          - Require command execution permission at the capsule and caller level.
+          - Resolve working directory inside the repo.
+          - Execute without a shell and record bounded output.
+    observable_outcomes:
+      - Unsafe commands do not run by default.
+      - Command results are recorded as observations and verdicts without leaking uncontrolled local state.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers: [script]
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  - id: presentation_skills.capsules.stale_reference_warning
+    title: Stale or missing capsule references
+    lifecycle: active
+    value_tier: supporting
+    journey_role: edge
+    usage_frequency: rare
+    tags: [capsules, stale, diagnostics]
+    source_refs:
+      - kind: file
+        path: packages/ucm-core/src/capsules/loadCapsule.ts
+      - kind: file
+        path: packages/ucm-core/src/capsules/index.ts
+    actor: agent
+    intent: Warn when a persisted capsule points at missing, removed, or semantically changed rows.
+    preconditions:
+      - A capsule references use-case or scenario IDs.
+    trigger: Agent validates or plans a capsule after matrix changes.
+    scenarios:
+      - id: presentation_skills.capsules.stale_reference_warning.validate
+        kind: steps
+        steps:
+          - Validate a capsule after related rows changed.
+          - Detect missing or stale row references.
+          - Report diagnostics before running the capsule.
+    observable_outcomes:
+      - Persisted runbooks do not silently drift away from the matrix.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers: [script]
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  - id: presentation_skills.capsules.runbook_not_proof
+    title: Capsule is runbook, not proof
+    lifecycle: active
+    value_tier: critical
+    journey_role: negative
+    usage_frequency: common
+    tags: [capsules, proof-boundary]
+    source_refs:
+      - kind: file
+        path: docs/showcase.md
+      - kind: file
+        path: packages/ucm-core/src/capsules/runCapsule.ts
+    actor: agent
+    intent: Never treat a persisted or generated capsule as evidence until a live run records events.
+    preconditions:
+      - A capsule exists or a capsule plan has been generated.
+    trigger: Agent summarizes proof, readiness, or release state.
+    scenarios:
+      - id: presentation_skills.capsules.runbook_not_proof.guard
+        kind: steps
+        steps:
+          - Inspect a capsule or capsule plan.
+          - Confirm it is prepared material.
+          - Require showcase run events before claiming proof.
+    observable_outcomes:
+      - Capsule files are not confused with performed demonstrations.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: agent_observation
+          required_verifiers: [agent]
+          minimum_count: 1
+    approval_policy:
+      mode: none

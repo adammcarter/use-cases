@@ -73,6 +73,19 @@ export function runExecutableSmoke(profile: HostProfile): HostExecutableSmoke {
       stderr: trimOutput(result.stderr)
     };
   }
+  if (result.status === null) {
+    const detail = result.signal ? `terminated by signal ${result.signal}` : "exited without a status";
+    return {
+      status: "not_run",
+      executable: command.executable,
+      argv: command.argv,
+      reason_code: "executable_unavailable",
+      reason: `Executable '${command.label}' is unavailable: ${detail}.`,
+      exit_code: null,
+      stdout: trimOutput(result.stdout),
+      stderr: trimOutput(result.stderr)
+    };
+  }
   if (result.status !== 0 && unavailableOutput(result.stdout, result.stderr)) {
     return {
       status: "not_run",

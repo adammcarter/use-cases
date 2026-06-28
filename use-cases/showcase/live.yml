@@ -7,7 +7,7 @@ use_cases:
   - id: showcase.live.user_signoff
     title: Run a live showcase through user sign-off
     lifecycle: active
-    value_tier: critical
+    value_tier: core
     journey_role: golden
     usage_frequency: common
     tags: [showcase, signoff]

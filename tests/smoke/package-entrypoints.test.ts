@@ -10,7 +10,7 @@ function run(command: string, args: string[], cwd = repoRoot) {
   return spawnSync(command, args, {
     cwd,
     encoding: "utf8",
-    env: { ...process.env, COREPACK_ENABLE_DOWNLOAD_PROMPT: "0" }
+    env: childEnv()
   });
 }
 
@@ -19,8 +19,23 @@ function runWithInput(command: string, args: string[], input: string, cwd = repo
     cwd,
     encoding: "utf8",
     input,
-    env: { ...process.env, COREPACK_ENABLE_DOWNLOAD_PROMPT: "0" }
+    env: childEnv()
   });
+}
+
+function childEnv(): NodeJS.ProcessEnv {
+  return {
+    ...process.env,
+    COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
+  };
+}
+
+function npmCacheDir(): string {
+  return mkdtempSync(join(stableCacheRoot(), "presentation-skills-npm-cache-"));
+}
+
+function stableCacheRoot(): string {
+  return process.platform === "darwin" ? "/tmp" : tmpdir();
 }
 
 function requireSuccess(result: ReturnType<typeof run>) {
@@ -105,16 +120,7 @@ describe("P0 package entrypoints", () => {
       "presentation-skills-ucm-cli-1.0.0.tgz",
       "presentation-skills-ucm-mcp-1.0.0.tgz"
     ].map((name) => join(packDir, name));
-    writeFileSync(
-      join(consumer, "pnpm-workspace.yaml"),
-      [
-        "overrides:",
-        `  "@presentation-skills/ucm-core": "file:${tarballs[0]}"`,
-        ""
-      ].join("\n")
-    );
-
-    requireSuccess(run("corepack", ["pnpm", "add", ...tarballs], consumer));
+    requireSuccess(run("npm", ["install", "--cache", npmCacheDir(), "--no-audit", "--no-fund", ...tarballs], consumer));
 
     writeFileSync(
       join(consumer, "check.mjs"),

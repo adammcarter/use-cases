@@ -1,0 +1,248 @@
+schema_version: 1
+feature:
+  id: presentation_skills.showcase
+  name: Live showcase runner
+  summary: Performed demo runs that record observations, verdicts, decisions, finish state, and approval boundaries.
+use_cases:
+  - id: presentation_skills.showcase.live_acceptance_flow
+    title: Performed live acceptance flow
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    tags: [showcase, live-demo, acceptance]
+    source_refs:
+      - kind: file
+        path: docs/showcase.md
+      - kind: file
+        path: packages/ucm-core/src/showcase/startRun.ts
+      - kind: file
+        path: packages/ucm-core/src/showcase/appendShowcaseEvent.ts
+    actor: agent
+    intent: Start a run, perform items, record observations and verdicts, finish, and derive status from events.
+    preconditions:
+      - A selected plan or ad hoc use-case set exists.
+    trigger: Agent is ready to prove work in front of the user or reviewer.
+    scenarios:
+      - id: presentation_skills.showcase.live_acceptance_flow.cli
+        kind: steps
+        steps:
+          - Start a showcase run from a selected plan or ad hoc item list.
+          - Record observation events for each item.
+          - Record pass, partial, fail, blocked, or waived verdicts.
+          - Finish the run and inspect status.
+    observable_outcomes:
+      - Run status is derived from events in the JSONL ledger.
+      - User approval is absent until a trusted approval event exists.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: live_demo
+          required_verifiers: [user]
+          minimum_count: 1
+    approval_policy:
+      mode: predefined
+      requirements:
+        - approver_type: user
+          minimum_count: 1
+      statement: User accepts the demonstrated showcase scope.
+
+  - id: presentation_skills.showcase.control_modes
+    title: Agent, user, script, and mixed control
+    lifecycle: active
+    value_tier: core
+    journey_role: alternate
+    usage_frequency: occasional
+    tags: [showcase, control-mode, collaboration]
+    source_refs:
+      - kind: file
+        path: docs/showcase.md
+      - kind: file
+        path: packages/ucm-core/src/showcase/types.ts
+    actor: agent
+    intent: Support agent-led, user-led, script-led, and mixed demonstrations without changing proof semantics.
+    preconditions:
+      - A showcase item can be driven by an agent, user, script, or combination.
+    trigger: User preference or feature mechanics determine who should run the demo.
+    scenarios:
+      - id: presentation_skills.showcase.control_modes.mixed
+        kind: steps
+        steps:
+          - Choose the control mode for each item.
+          - Record the actor for observations and verdicts.
+          - Preserve the same status and approval rules across modes.
+    observable_outcomes:
+      - Agent-led and script-led runs cannot claim user approval.
+      - Mixed runs still replay from the same JSONL event model.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: agent_observation
+          required_verifiers: [agent]
+          minimum_count: 1
+    approval_policy:
+      mode: ask
+
+  - id: presentation_skills.showcase.failure_decisions
+    title: Failure decision path
+    lifecycle: active
+    value_tier: core
+    journey_role: failure
+    usage_frequency: occasional
+    tags: [showcase, failure, waiver, pause]
+    source_refs:
+      - kind: file
+        path: docs/showcase.md
+      - kind: file
+        path: packages/ucm-core/src/showcase/replayRun.ts
+    actor: agent
+    intent: When an item fails, require continue, pause_to_fix, waive_with_reason, or abort.
+    preconditions:
+      - A showcase item has failed, blocked, or partially satisfied its expected outcome.
+    trigger: Agent records a non-pass verdict during a live run.
+    scenarios:
+      - id: presentation_skills.showcase.failure_decisions.branch
+        kind: steps
+        steps:
+          - Record a failed or blocked verdict.
+          - Ask for or record a decision to continue, pause, waive, or abort.
+          - Keep final status honest about the decision path.
+    observable_outcomes:
+      - Failed items are not silently skipped.
+      - Waivers and pauses are visible in replayed status.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: manual_observation
+          required_verifiers: [user]
+          minimum_count: 1
+    approval_policy:
+      mode: ask
+
+  - id: presentation_skills.showcase.revision_epoch_staleness
+    title: Revision epoch and stale verdicts
+    lifecycle: active
+    value_tier: core
+    journey_role: edge
+    usage_frequency: occasional
+    tags: [showcase, revision, freshness]
+    source_refs:
+      - kind: file
+        path: packages/ucm-core/src/showcase/revisionEpochs.ts
+      - kind: file
+        path: packages/ucm-core/src/showcase/replayRun.ts
+    actor: agent
+    intent: Mark affected verdicts stale when relevant code or data changes during a paused or resumed run.
+    preconditions:
+      - A paused or resumed showcase run crosses a relevant revision change.
+    trigger: Agent resumes a run after source, matrix, or plan inputs changed.
+    scenarios:
+      - id: presentation_skills.showcase.revision_epoch_staleness.resume
+        kind: steps
+        steps:
+          - Start or resume a run with a revision snapshot.
+          - Detect changed relevant inputs.
+          - Mark affected verdicts stale until re-performed.
+    observable_outcomes:
+      - Old verdicts do not silently remain current after relevant changes.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers: [script]
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  - id: presentation_skills.showcase.approval_authority_boundary
+    title: Trusted approval boundary
+    lifecycle: active
+    value_tier: critical
+    journey_role: negative
+    usage_frequency: common
+    tags: [showcase, approval, trust-boundary, mcp]
+    source_refs:
+      - kind: file
+        path: docs/security.md
+      - kind: file
+        path: packages/ucm-core/src/showcase/approvalAuthority.ts
+      - kind: file
+        path: packages/ucm-core/src/showcase/approval.ts
+    actor: agent
+    intent: Ensure agents, scripts, and MCP cannot fabricate user approval or rejection.
+    preconditions:
+      - A showcase run has reached a state where approval might be requested.
+    trigger: Agent or MCP attempts to record or request user approval.
+    scenarios:
+      - id: presentation_skills.showcase.approval_authority_boundary.negative
+        kind: steps
+        steps:
+          - Attempt noninteractive user approval.
+          - Confirm it is rejected or converted to a trusted confirmation requirement.
+          - Confirm no user approval event is appended by an untrusted path.
+    observable_outcomes:
+      - User approval requires the trusted interactive confirmation path.
+      - MCP can request approval but cannot write it directly.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers: [script]
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  - id: presentation_skills.showcase.status_separation
+    title: Verdict, verification, run, and approval separated
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    tags: [showcase, status, approval]
+    source_refs:
+      - kind: file
+        path: docs/showcase.md
+      - kind: file
+        path: packages/ucm-core/src/showcase/results.ts
+      - kind: file
+        path: packages/ucm-core/src/showcase/replayRun.ts
+    actor: agent
+    intent: Keep item verdict, verification state, run completion, and approval state distinct.
+    preconditions:
+      - A run has observations, verdicts, finish state, or approval state.
+    trigger: Agent inspects or reports showcase status.
+    scenarios:
+      - id: presentation_skills.showcase.status_separation.status
+        kind: steps
+        steps:
+          - Replay a showcase run.
+          - Report item verdicts, verification gaps, run completion, and approval separately.
+          - Avoid collapsing those states into one pass/fail label.
+    observable_outcomes:
+      - A run can be performed but unapproved, passed but missing user sign-off, or blocked with a clear reason.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: agent_observation
+          required_verifiers: [agent]
+          minimum_count: 1
+    approval_policy:
+      mode: none

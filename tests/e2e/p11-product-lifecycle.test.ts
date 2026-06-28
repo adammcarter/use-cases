@@ -264,27 +264,29 @@ describe("P11 host and project acceptance", () => {
       complete: true,
       data: {
         counts: {
-          use_cases_addressable: 12
+          use_cases_addressable: 75
         }
       }
     });
 
     const listed = runCliJson(["matrix", "list", "--repo", repoRoot, "--json"]);
     expect(listed.status).toBe(0);
-    expect((listed.payload.data.use_cases as Array<{ id: string }>).map((item) => item.id)).toEqual([
+    const ids = (listed.payload.data.use_cases as Array<{ id: string }>).map((item) => item.id);
+    expect(ids).toHaveLength(75);
+    expect(ids).toEqual(expect.arrayContaining([
       "capsule.live_runner.scripted",
-      "evidence.core.record",
-      "hosts.projections.all",
-      "hosts.projections.static_conformance",
-      "matrix.core.mutate",
       "matrix.core.validate",
-      "mcp.use_case_mutation.safe",
-      "mcp.wrapper.parity",
-      "migration.test_matrix.draft",
-      "release.ci_gate.sequential",
-      "release.package.installable_artifact",
-      "showcase.live.user_signoff"
-    ]);
+      "presentation_skills.lifecycle.continuous_loop",
+      "presentation_skills.matrix.product_inventory",
+      "presentation_skills.evidence.product_proof_map",
+      "presentation_skills.planning.showcase_selection",
+      "presentation_skills.showcase.live_acceptance_flow",
+      "presentation_skills.capsules.persisted_smoke_runbook",
+      "presentation_skills.mcp.cli_contract_transport",
+      "presentation_skills.hosts.conformance_status_truth",
+      "presentation_skills.migration.no_legacy_pass_as_proof",
+      "presentation_skills.release.self_dogfood_evidence_bundle"
+    ]));
   });
 });
 

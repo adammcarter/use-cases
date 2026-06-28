@@ -1,0 +1,235 @@
+schema_version: 1
+feature:
+  id: presentation_skills.mcp
+  name: MCP wrapper
+  summary: Agent tool access that wraps the CLI contract without weakening write gates or approval boundaries.
+use_cases:
+  - id: presentation_skills.mcp.cli_contract_transport
+    title: MCP mirrors CLI contract
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    tags: [mcp, cli-parity, contract]
+    source_refs:
+      - kind: file
+        path: docs/mcp.md
+      - kind: file
+        path: packages/ucm-mcp/src/tools.ts
+    actor: agent
+    intent: Return the same semantic envelopes as the CLI without reimplementing product logic.
+    preconditions:
+      - The CLI command exists and returns a structured envelope.
+    trigger: An agent calls the MCP tool equivalent of a CLI command.
+    scenarios:
+      - id: presentation_skills.mcp.cli_contract_transport.parity
+        kind: steps
+        steps:
+          - Run a CLI command.
+          - Run the equivalent MCP tool.
+          - Compare semantic result fields rather than transport details.
+    observable_outcomes:
+      - MCP output preserves command semantics.
+      - Core product logic remains in the CLI/core layer.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+      - host_surface: claude.cli
+        supported: true
+      - host_surface: copilot.cli
+        supported: true
+      - host_surface: opencode.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers: [script]
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  - id: presentation_skills.mcp.write_gating
+    title: MCP read-only default and explicit writes
+    lifecycle: active
+    value_tier: critical
+    journey_role: negative
+    usage_frequency: common
+    tags: [mcp, write-gate, safety]
+    source_refs:
+      - kind: file
+        path: docs/mcp.md
+      - kind: file
+        path: packages/ucm-mcp/src/index.ts
+    actor: agent
+    intent: Require explicit write permission and workspace roots for mutating MCP tools.
+    preconditions:
+      - MCP server is running in read-only or write-enabled mode.
+    trigger: An agent calls a mutating MCP tool.
+    scenarios:
+      - id: presentation_skills.mcp.write_gating.block
+        kind: steps
+        steps:
+          - Call a mutating MCP tool without write permission.
+          - Confirm the tool returns a structured refusal.
+          - Enable writes explicitly and repeat only inside the workspace root.
+    observable_outcomes:
+      - Read-only MCP sessions cannot mutate workspace records.
+      - Mutations are constrained to configured roots.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+      - host_surface: claude.cli
+        supported: true
+      - host_surface: copilot.cli
+        supported: true
+      - host_surface: opencode.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers: [script]
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  - id: presentation_skills.mcp.safe_matrix_mutation_workflow
+    title: Safe matrix mutation through wrapper
+    lifecycle: active
+    value_tier: core
+    journey_role: alternate
+    usage_frequency: occasional
+    tags: [mcp, matrix, mutation]
+    source_refs:
+      - kind: file
+        path: docs/mcp.md
+      - kind: file
+        path: packages/ucm-core/src/useCases/mutateUseCaseMatrix.ts
+      - kind: file
+        path: packages/ucm-mcp/src/tools.ts
+    actor: agent
+    intent: Allow safe row upkeep through the same command contract without wholesale YAML clobbering.
+    preconditions:
+      - The caller has an updated use-case object and explicit write permission.
+    trigger: Agent maintains rows through MCP instead of direct file editing.
+    scenarios:
+      - id: presentation_skills.mcp.safe_matrix_mutation_workflow.upsert
+        kind: steps
+        steps:
+          - Validate current matrix integrity.
+          - Upsert a single row through the MCP wrapper.
+          - Validate after-hash and changed file status.
+    observable_outcomes:
+      - MCP mutation preserves the same safe upsert/remove behavior as the CLI.
+      - Damaged input or path escape prevents mutation.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+      - host_surface: claude.cli
+        supported: true
+      - host_surface: copilot.cli
+        supported: true
+      - host_surface: opencode.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers: [script]
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  - id: presentation_skills.mcp.approval_request_only
+    title: MCP approval request only
+    lifecycle: active
+    value_tier: critical
+    journey_role: negative
+    usage_frequency: common
+    tags: [mcp, approval, trust-boundary]
+    source_refs:
+      - kind: file
+        path: docs/mcp.md
+      - kind: file
+        path: packages/ucm-mcp/src/tools.ts
+      - kind: file
+        path: packages/ucm-core/src/showcase/approvalAuthority.ts
+    actor: agent
+    intent: Let MCP request approval and suggest the trusted CLI path, but never write user approval.
+    preconditions:
+      - A showcase run has finished and user approval may be needed.
+    trigger: An agent calls the MCP approval request tool.
+    scenarios:
+      - id: presentation_skills.mcp.approval_request_only.boundary
+        kind: steps
+        steps:
+          - Call the approval request MCP tool.
+          - Confirm the tool returns a trusted CLI-mediated approval command.
+          - Confirm no user approval event is appended by MCP.
+    observable_outcomes:
+      - MCP cannot approve or reject on behalf of the user.
+      - The user-facing trusted path remains explicit.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+      - host_surface: claude.cli
+        supported: true
+      - host_surface: copilot.cli
+        supported: true
+      - host_surface: opencode.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers: [script]
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  - id: presentation_skills.mcp.domain_results_not_transport_failures
+    title: Domain-negative results stay structured
+    lifecycle: active
+    value_tier: supporting
+    journey_role: edge
+    usage_frequency: occasional
+    tags: [mcp, diagnostics, envelope]
+    source_refs:
+      - kind: file
+        path: docs/mcp.md
+      - kind: file
+        path: docs/adr/0005-p4-cli-contract.md
+      - kind: file
+        path: packages/ucm-mcp/src/tools.ts
+    actor: agent
+    intent: Return validation failures, warnings, and integrity gaps as structured command results.
+    preconditions:
+      - A domain command detects invalid matrix, partial evidence, or missing preconditions.
+    trigger: An MCP caller invokes a command that has domain-level diagnostics.
+    scenarios:
+      - id: presentation_skills.mcp.domain_results_not_transport_failures.envelope
+        kind: steps
+        steps:
+          - Call an MCP tool against damaged or incomplete input.
+          - Confirm transport remains successful when the tool can report diagnostics.
+          - Inspect the structured command envelope for domain outcome and diagnostics.
+    observable_outcomes:
+      - Agents receive actionable diagnostics instead of opaque transport failure.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+      - host_surface: claude.cli
+        supported: true
+      - host_surface: copilot.cli
+        supported: true
+      - host_surface: opencode.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers: [script]
+          minimum_count: 1
+    approval_policy:
+      mode: none

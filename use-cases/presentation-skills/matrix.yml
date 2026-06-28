@@ -1,0 +1,206 @@
+schema_version: 1
+feature:
+  id: presentation_skills.matrix
+  name: Product use-case matrix
+  summary: Human-readable behavior inventory for product planning, acceptance, and showcase selection.
+use_cases:
+  - id: presentation_skills.matrix.product_inventory
+    title: Living product behavior inventory
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    tags: [matrix, product-behavior, dogfood]
+    source_refs:
+      - kind: file
+        path: docs/data-model.md
+      - kind: file
+        path: packages/ucm-core/src/useCases/loadUseCaseMatrix.ts
+    actor: agent
+    intent: Represent Presentation Skills product behavior as stable, addressable use-case rows.
+    preconditions:
+      - Product behavior has been identified at feature level.
+    trigger: Agent or user needs acceptance, proof, or demo coverage for the product.
+    scenarios:
+      - id: presentation_skills.matrix.product_inventory.cli
+        kind: steps
+        steps:
+          - Run matrix list.
+          - Confirm product-level presentation_skills rows exist alongside primitive support rows.
+          - Confirm each row has value, journey, usage, and scenario data.
+    observable_outcomes:
+      - Product behavior can be selected by row ID without reading implementation code.
+      - Primitive rows remain available as supporting proof rather than the whole product map.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: command_result
+          required_verifiers: [script]
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  - id: presentation_skills.matrix.sharded_human_readable_files
+    title: Sharded readable feature files
+    lifecycle: active
+    value_tier: core
+    journey_role: golden
+    usage_frequency: common
+    tags: [matrix, yaml, maintainability]
+    source_refs:
+      - kind: file
+        path: docs/data-model.md
+      - kind: file
+        path: schemas/v1/use-case-file.schema.json
+    actor: agent
+    intent: Keep rows in readable feature-area YAML files under use-cases.
+    preconditions:
+      - A workspace has a `use-cases/` directory.
+    trigger: Agent adds, updates, reviews, or repairs use-case rows.
+    scenarios:
+      - id: presentation_skills.matrix.sharded_human_readable_files.layout
+        kind: steps
+        steps:
+          - Place related rows in a feature shard.
+          - Keep one feature summary per file.
+          - Validate all shards as one matrix.
+    observable_outcomes:
+      - Users can inspect or edit a feature shard without opening one large matrix file.
+      - Validation reports each loaded or damaged file separately.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: command_result
+          required_verifiers: [script]
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  - id: presentation_skills.matrix.integrity_degraded_nonfatal
+    title: Degraded-but-nonfatal diagnostics
+    lifecycle: active
+    value_tier: critical
+    journey_role: edge
+    usage_frequency: occasional
+    tags: [matrix, diagnostics, partial]
+    source_refs:
+      - kind: file
+        path: packages/ucm-core/src/useCases/loadUseCaseMatrix.ts
+      - kind: file
+        path: packages/ucm-core/src/useCases/integrity.ts
+    actor: agent
+    intent: Load valid rows despite damaged files while clearly blocking full coverage or sign-off when relevant.
+    preconditions:
+      - At least one use-case YAML file is damaged, duplicated, or partially invalid.
+    trigger: Validation, planning, or status reads a partially damaged matrix.
+    scenarios:
+      - id: presentation_skills.matrix.integrity_degraded_nonfatal.partial
+        kind: steps
+        steps:
+          - Validate a workspace with one valid shard and one damaged shard.
+          - Confirm valid rows are still addressable.
+          - Confirm integrity is partial and diagnostics identify the damaged file.
+    observable_outcomes:
+      - Damaged YAML does not bring down the whole system.
+      - Plans and status outputs surface partial integrity before any final claim.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers: [script]
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  - id: presentation_skills.matrix.coverage_by_value_and_journey
+    title: Coverage by value and journey role
+    lifecycle: active
+    value_tier: core
+    journey_role: alternate
+    usage_frequency: occasional
+    tags: [matrix, coverage, prioritization]
+    source_refs:
+      - kind: file
+        path: packages/ucm-core/src/useCases/query.ts
+      - kind: file
+        path: packages/ucm-core/src/presentation/scoring.ts
+    actor: agent
+    intent: Let agents select and report rows by value tier, journey role, lifecycle, tags, and host relevance.
+    preconditions:
+      - Rows are tagged with value, journey, usage, lifecycle, and host applicability.
+    trigger: Agent prepares a showcase, walkthrough, acceptance pass, or gap report.
+    scenarios:
+      - id: presentation_skills.matrix.coverage_by_value_and_journey.selection
+        kind: steps
+        steps:
+          - List rows by value and journey metadata.
+          - Select critical golden rows for a short showcase.
+          - Include alternate, edge, negative, and failure rows for deeper walkthrough coverage.
+    observable_outcomes:
+      - High-value rows are easy to separate from long-tail or future rows.
+      - Showcase and walkthrough cuts can explain why rows were included or excluded.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: agent_observation
+          required_verifiers: [agent]
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  - id: presentation_skills.matrix.claim_guardrails
+    title: Unsupported-claim guardrails
+    lifecycle: active
+    value_tier: critical
+    journey_role: negative
+    usage_frequency: common
+    tags: [matrix, claims, safety]
+    source_refs:
+      - kind: file
+        path: docs/security.md
+      - kind: file
+        path: .agents/skills/presentation-showcase/SKILL.md
+    actor: agent
+    intent: Prevent verified, supported, signed-off, or release-ready claims when evidence or approval is missing.
+    preconditions:
+      - A row, plan, host profile, capsule, or generated output could be mistaken for proof.
+    trigger: Agent summarizes readiness, support, approval, or release status.
+    scenarios:
+      - id: presentation_skills.matrix.claim_guardrails.negative
+        kind: steps
+        steps:
+          - Inspect the matrix and related evidence status.
+          - Identify rows with missing proof or approval.
+          - State the exact gap instead of claiming acceptance.
+    observable_outcomes:
+      - Prepared material is not described as performed proof.
+      - Host support and user sign-off claims require recorded evidence.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+      - host_surface: claude.cli
+        supported: true
+      - host_surface: copilot.cli
+        supported: true
+      - host_surface: opencode.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: agent_observation
+          required_verifiers: [agent]
+          minimum_count: 1
+    approval_policy:
+      mode: none

@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
-import { closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, rmSync, writeSync } from "node:fs";
+import { closeSync, existsSync, mkdirSync, openSync, readFileSync, rmSync, writeSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { fsyncBestEffortForTemp } from "../durableWrite.js";
 import { PresentationSkillsError } from "../errors.js";
 import type { ResolvedWorkspaceContext } from "../roots.js";
 import type { EvidenceAppendResultData, EvidenceEvent, EvidenceKind, EvidenceResult, EvidenceTarget } from "./types.js";
@@ -69,7 +70,7 @@ function appendUnderLock(options: AppendEvidenceEventOptions): AppendEvidenceEve
   const fd = openSync(ledgerPath, "a");
   try {
     writeSync(fd, `${JSON.stringify(event)}\n`);
-    fsyncSync(fd);
+    fsyncBestEffortForTemp(fd, ledgerPath);
   } finally {
     closeSync(fd);
   }
@@ -145,7 +146,7 @@ function voidUnderLock(options: VoidEvidenceEventOptions): AppendEvidenceEventRe
   const fd = openSync(ledgerPath, "a");
   try {
     writeSync(fd, `${JSON.stringify(event)}\n`);
-    fsyncSync(fd);
+    fsyncBestEffortForTemp(fd, ledgerPath);
   } finally {
     closeSync(fd);
   }
