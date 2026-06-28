@@ -1,0 +1,85 @@
+schema_version: 1
+feature:
+  id: presentation_skills.skills
+  name: Skill assets
+  summary: Ship and validate the agent skill assets (showcase, walkthrough, use-case matrix) so hosts can discover and run them without silent breakage.
+use_cases:
+  - id: presentation_skills.skills.asset_validation
+    title: Shipped skill assets validate
+    lifecycle: active
+    value_tier: core
+    journey_role: golden
+    usage_frequency: occasional
+    tags: [skills, doctor, assets]
+    source_refs:
+      - kind: file
+        path: packages/ucm-core/src/skills/validateSkillAssets.ts
+      - kind: file
+        path: .agents/skills/use-case-matrix/SKILL.md
+      - kind: file
+        path: docs/activation.md
+    actor: script
+    intent: Confirm the shipped showcase, walkthrough, and use-case-matrix skills have required files and well-formed front-matter.
+    preconditions:
+      - The plugin ships one or more agent skill directories under .agents/skills.
+    trigger: Agent or release gate runs doctor skills before publishing or activating a host.
+    scenarios:
+      - id: presentation_skills.skills.asset_validation.doctor
+        kind: steps
+        steps:
+          - Run doctor skills.
+          - Inspect each discovered skill name, required asset, and front-matter.
+          - Confirm every shipped skill reports as valid.
+    observable_outcomes:
+      - Each shipped skill is discovered with a stable name and intact assets.
+      - A skill cannot be published while its required files are missing.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: command_result
+          required_verifiers: [script]
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  - id: presentation_skills.skills.degraded_assets
+    title: Damaged skill assets surface as diagnostics
+    lifecycle: active
+    value_tier: supporting
+    journey_role: edge
+    usage_frequency: rare
+    tags: [skills, doctor, diagnostics]
+    source_refs:
+      - kind: file
+        path: packages/ucm-core/src/skills/validateSkillAssets.ts
+      - kind: file
+        path: tests/skills/p7-skills.test.ts
+    actor: script
+    intent: Report missing or malformed skill files as diagnostics instead of silently passing them as healthy.
+    preconditions:
+      - A skill directory is missing a required file or carries malformed front-matter.
+    trigger: Agent runs doctor skills against a damaged or incomplete skill set.
+    scenarios:
+      - id: presentation_skills.skills.degraded_assets.report
+        kind: steps
+        steps:
+          - Run doctor skills against a skill missing required assets.
+          - Confirm the damaged skill is reported with a diagnostic.
+          - Confirm healthy skills remain usable and the run is non-fatal.
+    observable_outcomes:
+      - Damaged skills are visible rather than silently treated as valid.
+      - One damaged skill does not hide the status of the others.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers: [script]
+          minimum_count: 1
+    approval_policy:
+      mode: none
