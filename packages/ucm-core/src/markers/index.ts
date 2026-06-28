@@ -12,3 +12,7 @@ export * from "./commentPrefix.js";
 export * from "./markerLine.js";
 export * from "./spanCanon.js";
 export * from "./scanner.js";
+// Phase 3: append-only binding registry + reconciliation.
+export * from "./registry.js";
+export * from "./appendOnly.js";
+export * from "./reconcile.js";
