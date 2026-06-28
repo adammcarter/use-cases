@@ -11,7 +11,10 @@ export * from "./validators.js";
 export * from "./commentPrefix.js";
 export * from "./markerLine.js";
 export * from "./spanCanon.js";
+export * from "./physicalLines.js";
 export * from "./scanner.js";
+// Phase 4: Swift function recognizer (inferred-end spans).
+export * from "./swiftFuncRecognizer.js";
 // Phase 3: append-only binding registry + reconciliation.
 export * from "./registry.js";
 export * from "./appendOnly.js";

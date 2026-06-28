@@ -1,14 +1,23 @@
-// Explicit-span scanner (spec sections 2.1, 3, 4.4).
+// Explicit-span scanner + Swift inferred-span wiring (spec sections 2, 3, 4.4, 9).
 //
 // Pure core: given a file path and its contents, find use-case markers, pair
 // explicit start/end markers, canonicalize each span, and emit a current
-// binding record per matched span (spec 4.4, explicit variant). Every integrity
-// problem is reported as a distinct INVALID with a stable error code; nothing is
-// best-effort. This phase implements explicit spans only -- a start marker with
-// no matching end is rejected as unsupported inference (the Swift recognizer is
-// a later phase).
+// binding record per matched span (spec 4.4). Every integrity problem is
+// reported as a distinct INVALID with a stable error code; nothing is
+// best-effort.
+//
+// A start marker with no explicit end is resolved as follows:
+//   * Swift file (`//` prefix, `.swift`)  -> the Swift function recognizer
+//     (spec section 9). It either proves an inferred span (extent_kind
+//     "swift_func_inferred") or fails closed with a 9.4 code.
+//   * any other file                       -> UNSUPPORTED_INFERENCE (spec 2.1
+//     rule 5). Explicit end always wins (spec 2.1 rule 6).
 import { sha256 } from "./canonicalJson.js";
-import { EXPLICIT_RECOGNIZER_ID, SPAN_CANON_ID } from "./constants.js";
+import {
+  EXPLICIT_RECOGNIZER_ID,
+  SPAN_CANON_ID,
+  SWIFT_FUNC_RECOGNIZER_ID
+} from "./constants.js";
 import {
   MarkerErrorCode,
   parseMarkerLine,
@@ -17,26 +26,46 @@ import {
 } from "./markerLine.js";
 import { canonicalizeSpanLines } from "./spanCanon.js";
 import {
+  fileExtension,
   resolveCommentPrefix,
   type CommentPrefixConfig
 } from "./commentPrefix.js";
+import { splitPhysicalLines, type PhysicalLine } from "./physicalLines.js";
+import {
+  recognizeSwiftFuncSpan,
+  SwiftFuncErrorCode
+} from "./swiftFuncRecognizer.js";
+
+// A marker / span error code is either a marker-pairing code or a Swift
+// recognizer (9.4) code; every one denotes an INVALID condition.
+export type ScanErrorCode = MarkerErrorCode | SwiftFuncErrorCode;
 
 export interface MarkerError {
-  code: MarkerErrorCode;
+  code: ScanErrorCode;
   message: string;
   file_path: string;
   line: number; // 1-based
   slug?: string;
 }
 
-// Current binding record, explicit-span variant (spec section 4.4).
+export interface ExplicitBindingDiagnostic {
+  inferred: false;
+}
+
+export interface InferredBindingDiagnostic {
+  symbol_kind: "swift_func";
+  symbol_name: string;
+  inferred: true;
+}
+
+// Current binding record (spec section 4.4), explicit or inferred variant.
 export interface CurrentBindingRecord {
   binding_slug: string;
   row_id: string;
   suffix: string | null;
   file_path: string;
   comment_prefix: string;
-  extent_kind: "explicit";
+  extent_kind: "explicit" | "swift_func_inferred";
   recognizer_id: string;
   span_canon_id: string;
   start_marker: { line: number; column: number };
@@ -48,7 +77,7 @@ export interface CurrentBindingRecord {
     end_byte: number;
     sha256: string;
   };
-  diagnostic: { inferred: false };
+  diagnostic: ExplicitBindingDiagnostic | InferredBindingDiagnostic;
 }
 
 export interface ScanFileResult {
@@ -73,46 +102,12 @@ export interface ScanInput {
   contents: string;
 }
 
-interface PhysicalLine {
-  text: string; // line content, terminator excluded
-  byteStart: number; // UTF-8 byte offset of the first byte of the line
-  byteEnd: number; // UTF-8 byte offset just past the line terminator
-}
-
-// Split content into physical lines with UTF-8 byte offsets. Handles LF, CR and
-// CRLF terminators; a file ending in a terminator does not yield a trailing
-// empty line, while an interior blank line is preserved.
-function splitPhysicalLines(content: string): PhysicalLine[] {
-  const lines: PhysicalLine[] = [];
-  const n = content.length;
-  let pos = 0;
-  let byteStart = 0;
-  while (pos < n) {
-    let eol = pos;
-    while (eol < n && content[eol] !== "\n" && content[eol] !== "\r") {
-      eol += 1;
-    }
-    const text = content.slice(pos, eol);
-    let termLen = 0;
-    if (eol < n) {
-      termLen = content[eol] === "\r" && content[eol + 1] === "\n" ? 2 : 1;
-    }
-    const textBytes = Buffer.byteLength(text, "utf8");
-    // CR / LF / CRLF are all ASCII, so terminator bytes == terminator length.
-    const byteEnd = byteStart + textBytes + termLen;
-    lines.push({ text, byteStart, byteEnd });
-    byteStart = byteEnd;
-    pos = eol + termLen;
-  }
-  return lines;
-}
-
 interface MarkerHit {
   lineIndex: number; // 0-based
   parse: Extract<MarkerLineParse, { kind: "start" | "end" }>;
 }
 
-function buildRecord(
+function buildExplicitRecord(
   filePath: string,
   commentPrefix: string,
   lines: PhysicalLine[],
@@ -173,7 +168,77 @@ function buildRecord(
   };
 }
 
-// Scan a single file's contents for explicit-span markers (pure; no filesystem).
+// Resolve a lone start marker (no explicit end). Swift files go through the
+// function recognizer; everything else is unsupported inference. Returns either
+// an inferred binding record or a MarkerError (fail-closed).
+function resolveLoneStart(
+  filePath: string,
+  commentPrefix: string,
+  contents: string,
+  lines: PhysicalLine[],
+  start: MarkerHit
+): { binding?: CurrentBindingRecord; error?: MarkerError } {
+  const slug = start.parse.slug;
+  const isSwift = commentPrefix === "//" && fileExtension(filePath) === ".swift";
+
+  if (!isSwift) {
+    return {
+      error: {
+        code: MarkerErrorCode.UNSUPPORTED_INFERENCE,
+        message: `start marker for ${slug} has no explicit end; inferred end is only supported for Swift func, requires explicit end`,
+        file_path: filePath,
+        line: start.lineIndex + 1,
+        slug
+      }
+    };
+  }
+
+  const result = recognizeSwiftFuncSpan(contents, start.lineIndex, {
+    markerCommentPrefix: commentPrefix
+  });
+  if (!result.ok) {
+    return {
+      error: {
+        code: result.code,
+        message: `${result.message}; fix: add an explicit "${commentPrefix}: @use-case: end ${slug}" or move the marker`,
+        file_path: filePath,
+        line: start.lineIndex + 1,
+        slug
+      }
+    };
+  }
+
+  const parts = splitSlug(slug);
+  const canonical = canonicalizeSpanLines(result.body_lines);
+  return {
+    binding: {
+      binding_slug: slug,
+      row_id: parts ? parts.row_id : slug,
+      suffix: parts ? parts.suffix : null,
+      file_path: filePath,
+      comment_prefix: commentPrefix,
+      extent_kind: "swift_func_inferred",
+      recognizer_id: SWIFT_FUNC_RECOGNIZER_ID,
+      span_canon_id: SPAN_CANON_ID,
+      start_marker: { line: start.lineIndex + 1, column: start.parse.column },
+      end_marker: null,
+      span: {
+        start_line: result.span.start_line,
+        end_line: result.span.end_line,
+        start_byte: result.span.start_byte,
+        end_byte: result.span.end_byte,
+        sha256: sha256(canonical)
+      },
+      diagnostic: {
+        symbol_kind: "swift_func",
+        symbol_name: result.symbol_name,
+        inferred: true
+      }
+    }
+  };
+}
+
+// Scan a single file's contents for markers (pure; no filesystem).
 export function scanFileForMarkers(
   filePath: string,
   contents: string,
@@ -231,28 +296,21 @@ export function scanFileForMarkers(
     }
   }
 
-  // Pass 3: pair explicit start/end markers. Nested and overlapping spans are
-  // invalid, so at most one span may be open at a time.
-  let open: MarkerHit | null = null;
+  // Pass 3: pair explicit start/end markers with a stack. Nested and overlapping
+  // spans are invalid in v1, so a matched end that leaves another span open is a
+  // NESTED_SPAN and suppresses every involved binding. Starts that are never
+  // closed are lone starts -> inference candidates.
+  const stack: MarkerHit[] = [];
+  const tainted = new Set<MarkerHit>();
+  const explicitPairs: Array<{ start: MarkerHit; end: MarkerHit }> = [];
   for (const hit of markers) {
     if (hit.parse.kind === "start") {
-      if (open !== null) {
-        errors.push({
-          code: MarkerErrorCode.NESTED_SPAN,
-          message: `nested span: start ${hit.parse.slug} while ${open.parse.slug} is still open (line ${
-            open.lineIndex + 1
-          })`,
-          file_path: filePath,
-          line: hit.lineIndex + 1,
-          slug: hit.parse.slug
-        });
-        continue; // keep the outer span open; the inner start is rejected
-      }
-      open = hit;
+      stack.push(hit);
       continue;
     }
     // end marker
-    if (open === null) {
+    const startHit = stack.pop();
+    if (startHit === undefined) {
       errors.push({
         code: MarkerErrorCode.END_WITHOUT_START,
         message: `end marker for ${hit.parse.slug} has no matching start`,
@@ -262,33 +320,54 @@ export function scanFileForMarkers(
       });
       continue;
     }
-    if (hit.parse.slug !== open.parse.slug) {
+    if (startHit.parse.slug !== hit.parse.slug) {
       errors.push({
         code: MarkerErrorCode.MISMATCHED_END_MARKER,
-        message: `end slug ${hit.parse.slug} does not match start slug ${open.parse.slug} (line ${
-          open.lineIndex + 1
+        message: `end slug ${hit.parse.slug} does not match start slug ${startHit.parse.slug} (line ${
+          startHit.lineIndex + 1
         })`,
         file_path: filePath,
         line: hit.lineIndex + 1,
         slug: hit.parse.slug
       });
-      open = null; // the span is broken; do not emit a binding
+      continue; // span broken; do not emit a binding
+    }
+    if (stack.length > 0) {
+      // The just-closed span sits inside another still-open span.
+      errors.push({
+        code: MarkerErrorCode.NESTED_SPAN,
+        message: `nested span: ${hit.parse.slug} closes inside ${
+          stack[stack.length - 1].parse.slug
+        } (line ${stack[stack.length - 1].lineIndex + 1})`,
+        file_path: filePath,
+        line: hit.lineIndex + 1,
+        slug: hit.parse.slug
+      });
+      tainted.add(startHit);
+      for (const open of stack) {
+        tainted.add(open);
+      }
       continue;
     }
-    bindings.push(buildRecord(filePath, commentPrefix, lines, open, hit));
-    open = null;
+    if (tainted.has(startHit)) {
+      continue; // container of a nested span; binding suppressed
+    }
+    explicitPairs.push({ start: startHit, end: hit });
   }
 
-  // A start with no end is unsupported inference in this phase (no inferred form
-  // exists yet); it requires an explicit `end <slug>`.
-  if (open !== null) {
-    errors.push({
-      code: MarkerErrorCode.UNSUPPORTED_INFERENCE,
-      message: `start marker for ${open.parse.slug} has no explicit end; unsupported inference, requires explicit end`,
-      file_path: filePath,
-      line: open.lineIndex + 1,
-      slug: open.parse.slug
-    });
+  for (const pair of explicitPairs) {
+    bindings.push(buildExplicitRecord(filePath, commentPrefix, lines, pair.start, pair.end));
+  }
+
+  // Pass 4: lone (unclosed) start markers -> Swift inference or unsupported.
+  for (const lone of stack) {
+    const { binding, error } = resolveLoneStart(filePath, commentPrefix, contents, lines, lone);
+    if (binding) {
+      bindings.push(binding);
+    }
+    if (error) {
+      errors.push(error);
+    }
   }
 
   return { file_path: filePath, comment_prefix: commentPrefix, bindings, errors };
@@ -322,4 +401,21 @@ export function scanFiles(inputs: ReadonlyArray<ScanInput>, options?: ScannerOpt
   }
 
   return { files, bindings, errors };
+}
+
+// Format the spec 8.2 "INFERRED SWIFT SPAN" CI report block for an inferred
+// binding record. Returns null for explicit bindings (nothing to print).
+export function formatInferredSwiftSpanReport(binding: CurrentBindingRecord): string | null {
+  if (binding.extent_kind !== "swift_func_inferred" || !binding.diagnostic.inferred) {
+    return null;
+  }
+  return [
+    "INFERRED SWIFT SPAN",
+    `row: ${binding.row_id}`,
+    `binding: ${binding.binding_slug}`,
+    `file: ${binding.file_path}`,
+    `symbol: ${binding.diagnostic.symbol_name}`,
+    `span: lines ${binding.span.start_line}-${binding.span.end_line}`,
+    `span_sha256: ${binding.span.sha256}`
+  ].join("\n");
 }

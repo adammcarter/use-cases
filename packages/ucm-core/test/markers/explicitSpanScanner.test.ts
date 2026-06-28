@@ -229,12 +229,16 @@ describe("explicit span scan -- INVALID detections (acceptance #3-#8)", () => {
     );
   });
 
-  test("#8 single marker with no explicit end fails (UNSUPPORTED_INFERENCE)", () => {
+  test("#8 single marker with no explicit end fails for non-Swift (UNSUPPORTED_INFERENCE)", () => {
+    // Phase 4 note: a single Swift `func` marker now resolves via the inferred
+    // recognizer, so the "unsupported inference" case is a non-Swift file. A
+    // TypeScript function without an explicit end stays unsupported (spec 2.1
+    // rule 5 / 11.3).
     const file = [
       "//: @use-case: checkout.apply_coupon",
-      "public func applyCoupon() {}"
+      "export function applyCoupon() {}"
     ].join("\n");
-    const result = scanFileForMarkers("f.swift", file);
+    const result = scanFileForMarkers("f.ts", file);
     expect(result.errors.map((e) => e.code)).toContain("UNSUPPORTED_INFERENCE");
     expect(result.bindings).toHaveLength(0);
   });
