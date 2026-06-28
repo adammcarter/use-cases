@@ -9,3 +9,5 @@ export * from "./scan.js";
 export * from "./bind.js";
 export * from "./prove.js";
 export * from "./validateLedger.js";
+// Phase 8: precommit orchestrator + PR-summary formatter (pure, unit-tested).
+export * from "./precommit.js";

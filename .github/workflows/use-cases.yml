@@ -1,0 +1,141 @@
+name: use-cases
+
+# CI is authority (spec 10.2). validate-ledger + scan run on every push/PR; the
+# policy mode (feature vs release) is selected from the branch / a manual input,
+# reusing scan's --policy-mode. The optional prove job mints signed proof events
+# on the release branch from the trusted CI signing key held in a secret.
+
+on:
+  push:
+    branches:
+      - main
+      - "release/**"
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      policy_mode:
+        description: "Policy mode for the scan gate (feature | release)."
+        required: false
+        default: "feature"
+
+# Release policy applies on the release branch(es) or when explicitly requested;
+# every other ref is gated as a feature branch (block INVALID only).
+env:
+  UCM_EVIDENCE: .use-cases/evidence.jsonl
+  UCM_BINDINGS: .use-cases/bindings.jsonl
+  UCM_PUBLIC_KEY: .use-cases/trusted-ci-public-key.pem
+
+jobs:
+  policy:
+    runs-on: ubuntu-latest
+    outputs:
+      mode: ${{ steps.select.outputs.mode }}
+    steps:
+      - id: select
+        run: |
+          mode="feature"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.policy_mode }}" ]; then
+            mode="${{ github.event.inputs.policy_mode }}"
+          elif [ "${{ github.ref }}" = "refs/heads/main" ] || [[ "${{ github.ref }}" == refs/heads/release/* ]]; then
+            mode="release"
+          fi
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+          echo "Selected policy mode: $mode"
+
+  validate-ledger:
+    needs: policy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: corepack enable
+      - run: corepack pnpm install --frozen-lockfile
+      - run: corepack pnpm build
+      # Authority gate: append-only discipline, schemas, signatures, internal
+      # hash consistency. Blocks the build on any failure (exit 4).
+      - name: validate-ledger
+        run: |
+          key_args=()
+          if [ -f "$UCM_PUBLIC_KEY" ]; then key_args=(--public-key "$UCM_PUBLIC_KEY"); fi
+          corepack pnpm cli -- validate-ledger \
+            --repo . \
+            --evidence "$UCM_EVIDENCE" \
+            --bindings "$UCM_BINDINGS" \
+            --base-ref origin/${{ github.event.repository.default_branch }} \
+            "${key_args[@]}" \
+            --json
+
+  scan:
+    needs: policy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: corepack enable
+      - run: corepack pnpm install --frozen-lockfile
+      - run: corepack pnpm build
+      # Feature: blocks INVALID only. Release: also blocks required rows that are
+      # not FRESH. --ci makes scan print the inferred Swift spans (spec 10.2).
+      - name: scan (${{ needs.policy.outputs.mode }})
+        run: |
+          key_args=()
+          if [ -f "$UCM_PUBLIC_KEY" ]; then key_args=(--public-key "$UCM_PUBLIC_KEY"); fi
+          corepack pnpm cli -- scan \
+            --repo . \
+            --product-root . \
+            --evidence "$UCM_EVIDENCE" \
+            --bindings "$UCM_BINDINGS" \
+            --policy-mode "${{ needs.policy.outputs.mode }}" \
+            "${key_args[@]}" \
+            --ci \
+            --json
+
+  prove:
+    needs: [policy, validate-ledger, scan]
+    # Optional: only the release policy mints signed proof events, and only when a
+    # signing key secret is configured. Never runs on feature branches.
+    if: needs.policy.outputs.mode == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: corepack enable
+      - run: corepack pnpm install --frozen-lockfile
+      - run: corepack pnpm build
+      # Mints a signed proof event from the trusted CI signing key (held only in
+      # the secret). The key never leaves CI; agents cannot manufacture green.
+      - name: prove (trusted CI)
+        if: ${{ env.UCM_CI_SIGNING_KEY != '' }}
+        env:
+          UCM_CI_SIGNING_KEY: ${{ secrets.UCM_CI_SIGNING_KEY }}
+        run: |
+          row="${UCM_PROVE_ROW:-}"
+          args=(--trusted-ci --append --signing-key-env UCM_CI_SIGNING_KEY)
+          if [ -n "$row" ]; then args+=(--row "$row"); else args+=(--all); fi
+          key_args=()
+          if [ -f "$UCM_PUBLIC_KEY" ]; then key_args=(--public-key "$UCM_PUBLIC_KEY"); fi
+          corepack pnpm cli -- prove \
+            --repo . \
+            --product-root . \
+            --evidence "$UCM_EVIDENCE" \
+            --bindings "$UCM_BINDINGS" \
+            "${key_args[@]}" \
+            "${args[@]}" \
+            --json
