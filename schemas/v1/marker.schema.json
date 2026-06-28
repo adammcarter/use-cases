@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://use-case-matrix.dev/schemas/v1/marker.schema.json",
+  "title": "ucase-marker-v1",
+  "description": "A single parsed in-code use-case marker (the `ucase-marker-v1` shape). Markers carry identity ONLY: a start (begin) or `end` marker for a slug at a physical source location. The slug grammar and the row/binding distinction follow the marker grammar (spec 1.2/1.3); the const ids mirror packages/ucm-core/src/markers/constants.ts.",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "row_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)*$"
+    },
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)*(?:#[a-z][a-z0-9_-]*(?:\\.[a-z][a-z0-9_-]*)*)?$"
+    }
+  },
+  "properties": {
+    "marker_schema_id": {
+      "const": "ucase-marker-v1",
+      "description": "Identity-only marker schema id (MARKER_SCHEMA_ID in constants.ts)."
+    },
+    "kind": {
+      "enum": ["start", "end"],
+      "description": "start = a begin marker (`<prefix>: @use-case: <slug>`); end = `<prefix>: @use-case: end <slug>`."
+    },
+    "slug": {
+      "$ref": "#/$defs/slug",
+      "description": "The full marker slug: row-id with an optional `#binding-suffix`."
+    },
+    "row_id": {
+      "$ref": "#/$defs/row_id",
+      "description": "The row-id portion of the slug (the part before any `#`)."
+    },
+    "suffix": {
+      "type": ["string", "null"],
+      "description": "The binding-suffix after `#`, or null for a bare row-id marker."
+    },
+    "role": {
+      "enum": ["row", "binding"],
+      "description": "row = a bare row-id slug (no suffix); binding = the slug carries a `#suffix`."
+    },
+    "file": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Workspace-relative POSIX path of the file the marker was found in."
+    },
+    "line": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "1-based physical line number of the marker."
+    },
+    "column": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "1-based column where the comment prefix begins."
+    }
+  },
+  "required": ["marker_schema_id", "kind", "slug", "row_id", "suffix", "role", "file", "line", "column"],
+  "examples": [
+    {
+      "marker_schema_id": "ucase-marker-v1",
+      "kind": "start",
+      "slug": "checkout.apply_coupon",
+      "row_id": "checkout.apply_coupon",
+      "suffix": null,
+      "role": "row",
+      "file": "Sources/Checkout/CouponService.swift",
+      "line": 3,
+      "column": 1
+    },
+    {
+      "marker_schema_id": "ucase-marker-v1",
+      "kind": "end",
+      "slug": "checkout.apply_coupon#web",
+      "row_id": "checkout.apply_coupon",
+      "suffix": "web",
+      "role": "binding",
+      "file": "Sources/Checkout/CouponService.swift",
+      "line": 11,
+      "column": 1
+    }
+  ]
+}

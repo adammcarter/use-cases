@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://use-case-matrix.dev/schemas/v1/keyring.schema.json",
+  "title": "ucase-public-key-registry-v1",
+  "description": "The public-key registry (keyring) for verifying trusted-CI proof-event signatures. Documents the intended key-management shape: a keyId resolves to an ed25519 public key with a validity window and a status. v1 trusts a single active key (see proofSignature.ts verifyEvent + singleKeyResolver in markers/cli/shared.ts); this keyring generalises that to a registry of keys.",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "key": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable identifier referenced by a proof-event signature's key_id."
+        },
+        "algorithm": {
+          "const": "ed25519",
+          "description": "Only ed25519 is supported (matches proofSignature.ts)."
+        },
+        "public_key": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The PEM-encoded ed25519 public key."
+        },
+        "valid_from": { "$ref": "common.schema.json#/$defs/timestamp" },
+        "valid_until": {
+          "anyOf": [
+            { "$ref": "common.schema.json#/$defs/timestamp" },
+            { "type": "null" }
+          ],
+          "description": "End of the validity window, or null for open-ended."
+        },
+        "status": {
+          "enum": ["active", "revoked"],
+          "description": "active keys may verify new proofs; revoked keys must not."
+        }
+      },
+      "required": ["key_id", "algorithm", "public_key", "valid_from", "valid_until", "status"]
+    }
+  },
+  "properties": {
+    "keyring_schema_id": {
+      "const": "ucase-public-key-registry-v1"
+    },
+    "keys": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/key" }
+    }
+  },
+  "required": ["keyring_schema_id", "keys"],
+  "examples": [
+    {
+      "keyring_schema_id": "ucase-public-key-registry-v1",
+      "keys": [
+        {
+          "key_id": "ci-key-1",
+          "algorithm": "ed25519",
+          "public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAexampleexampleexampleexampleexampleexampleAB=\n-----END PUBLIC KEY-----\n",
+          "valid_from": "2026-01-01T00:00:00Z",
+          "valid_until": null,
+          "status": "active"
+        },
+        {
+          "key_id": "ci-key-0",
+          "algorithm": "ed25519",
+          "public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAoldoldoldoldoldoldoldoldoldoldoldoldoldoldAB=\n-----END PUBLIC KEY-----\n",
+          "valid_from": "2025-01-01T00:00:00Z",
+          "valid_until": "2026-01-01T00:00:00Z",
+          "status": "revoked"
+        }
+      ]
+    }
+  ]
+}

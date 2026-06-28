@@ -36,7 +36,12 @@ const expectedSchemaIds = [
   "https://use-case-matrix.dev/schemas/v1/matrix-mutation-result.schema.json",
   "https://use-case-matrix.dev/schemas/v1/evidence-append-result.schema.json",
   "https://use-case-matrix.dev/schemas/v1/evidence-status-result.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/migration-test-matrix-result.schema.json"
+  "https://use-case-matrix.dev/schemas/v1/migration-test-matrix-result.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/marker.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/release-gate-result.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/ledger.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/keyring.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/mcp-tool-results.schema.json"
 ];
 
 describe("P1 schema registry", () => {

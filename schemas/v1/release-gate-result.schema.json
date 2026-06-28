@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://use-case-matrix.dev/schemas/v1/release-gate-result.schema.json",
+  "title": "ucase-release-gate-result-v1",
+  "description": "The decision emitted by the release gate: per-row required_for_release status, the pass/fail verdict, the set of blocked rows, and the policy mode. In release mode a required (required_for_release: true) row that is not FRESH sets policy_block and fails the gate (see deriveFreshness policy_block and releaseGating.test.ts).",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "status": {
+      "enum": ["FRESH", "SUSPECT", "UNPROVEN", "UNBOUND", "INVALID"],
+      "description": "Freshness status of a row at gate time."
+    },
+    "row": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "row_id": { "$ref": "common.schema.json#/$defs/id" },
+        "status": { "$ref": "#/$defs/status" },
+        "required_for_release": {
+          "type": "boolean",
+          "description": "Whether the row's approval_policy declares required_for_release."
+        },
+        "policy_block": {
+          "type": "boolean",
+          "description": "True when this row blocks release (required + not FRESH in release mode)."
+        },
+        "reasons": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "description": "Human-readable reasons the row is not FRESH (optional)."
+        }
+      },
+      "required": ["row_id", "status", "required_for_release", "policy_block"]
+    }
+  },
+  "properties": {
+    "schema_version": { "const": 1 },
+    "policy_mode": {
+      "enum": ["feature", "release", "custom"],
+      "description": "The freshness/gate policy mode the decision was evaluated under."
+    },
+    "passed": {
+      "type": "boolean",
+      "description": "Pass/fail verdict: true when no row sets policy_block."
+    },
+    "generated_at": { "$ref": "common.schema.json#/$defs/timestamp" },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "rows_total": { "type": "integer", "minimum": 0 },
+        "rows_required": { "type": "integer", "minimum": 0 },
+        "rows_blocked": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["rows_total", "rows_required", "rows_blocked"]
+    },
+    "blocked_row_ids": {
+      "type": "array",
+      "items": { "$ref": "common.schema.json#/$defs/id" },
+      "description": "Ordered row ids that block the release."
+    },
+    "rows": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/row" }
+    }
+  },
+  "required": ["schema_version", "policy_mode", "passed", "generated_at", "summary", "blocked_row_ids", "rows"],
+  "examples": [
+    {
+      "schema_version": 1,
+      "policy_mode": "release",
+      "passed": false,
+      "generated_at": "2026-06-28T12:10:00Z",
+      "summary": { "rows_total": 2, "rows_required": 1, "rows_blocked": 1 },
+      "blocked_row_ids": ["checkout.apply_coupon"],
+      "rows": [
+        {
+          "row_id": "checkout.apply_coupon",
+          "status": "UNPROVEN",
+          "required_for_release": true,
+          "policy_block": true,
+          "reasons": ["row has a registered binding but no trusted proof event"]
+        },
+        {
+          "row_id": "checkout.view_cart",
+          "status": "FRESH",
+          "required_for_release": false,
+          "policy_block": false
+        }
+      ]
+    }
+  ]
+}
