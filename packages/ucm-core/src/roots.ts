@@ -7,6 +7,7 @@ import {
   validateBySchemaId,
   type Diagnostic
 } from "./schema/index.js";
+import { DEFAULT_COMPONENT_ID } from "./version.js";
 
 export type ResolveWorkspaceContextOptions = {
   workspaceRoot?: string;
@@ -119,7 +120,7 @@ export function resolveWorkspaceContext(
     workspace_root: workspaceRoot,
     data_root: dataRoot,
     use_cases_root: useCasesRoot,
-    component_id: options.component ?? config?.value.component_id ?? "presentation-skills",
+    component_id: options.component ?? config?.value.component_id ?? DEFAULT_COMPONENT_ID,
     config_path: existsSync(configPath) ? "use-cases-plugin.yml" : null,
     verifiers: normalizeWorkspaceVerifiers(config?.value.verifiers),
     release_gate: normalizeReleaseGate(config?.value.release_gate),

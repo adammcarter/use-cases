@@ -1,6 +1,6 @@
 schema_version: 1
-workspace_id: presentation-skills-plugin
-component_id: presentation-skills
+workspace_id: use-cases-plugin
+component_id: use-cases-plugin
 data_root: .
 use_cases_dir: use-cases
 evidence_dir: evidence

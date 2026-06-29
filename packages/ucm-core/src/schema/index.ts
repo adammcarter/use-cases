@@ -4,6 +4,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, cpSync } from
 import { basename, extname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseDocument } from "yaml";
+import { DEFAULT_COMPONENT_ID } from "../version.js";
 
 export type Diagnostic = {
   code: string;
@@ -287,7 +288,7 @@ export function createCliResult<T>(
 ): CliResult<T> {
   const workspaceRoot = options.workspaceRoot ?? process.cwd();
   const dataRoot = options.dataRoot ?? workspaceRoot;
-  const componentId = options.componentId ?? "presentation-skills";
+  const componentId = options.componentId ?? DEFAULT_COMPONENT_ID;
   return {
     schema_version: 1,
     protocol_version: 1,
@@ -493,7 +494,7 @@ function validateSyntheticCommonContracts(validated: Set<string>, diagnostics: D
       head_revision: "unknown",
       dirty: false,
       working_tree_digest: "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-      component_id: "presentation-skills",
+      component_id: DEFAULT_COMPONENT_ID,
       captured_at: "2026-06-25T00:00:00.000Z"
     },
     environment_expectations: { host_surfaces: ["codex.cli"] },
