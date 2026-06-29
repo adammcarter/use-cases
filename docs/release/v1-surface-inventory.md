@@ -5,9 +5,9 @@ Factual inventory of the current public surface, produced by a read-only audit
 (`docs/reference/stability.md`) and the remaining Phase 1 gap-fill work. Update
 it as the surface changes.
 
-## CLI — 43 commands
+## CLI — 44 commands
 
-Groups: `version`, `schema {list,validate-fixtures}`, `matrix
+Groups: `version`, `init`, `schema {list,validate-fixtures}`, `matrix
 {validate,list,status,upsert,remove}`, `plan {showcase,walkthrough,cards}`,
 `capsule {validate,list,plan,run}`, `evidence {record,status,void}`, `showcase
 {start,record-observation,record-verdict,decide,pause,resume,finish,…}`, `host

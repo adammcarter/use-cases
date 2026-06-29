@@ -3,6 +3,17 @@
 All commands use JSON envelopes with `schema_version`, `protocol_version`,
 `command`, `ok`, `complete`, `data`, `diagnostics`, and `context`.
 
+## Onboarding
+
+- `ucm init [--repo <dir>] [--template generic|js-vitest|python-pytest|go-test] [--component <id>] [--force] [--json]`:
+  scaffold a minimal working workspace — a `presentation-skills.yml` (with a
+  `verifiers.default` matching the template) and a `use-cases/example.yml` whose
+  one row already validates. The scaffolded workspace passes `matrix validate`
+  immediately. `init` never generates or writes a private key and never creates
+  the GitHub workflow; it prints the next steps (key setup, CI workflow) instead.
+  It refuses to overwrite an existing `presentation-skills.yml` unless `--force`
+  is given. Omit `--json` for a human-readable summary.
+
 ## Matrix
 
 - `matrix validate --repo <path> --json`: load all sharded YAML use cases and
