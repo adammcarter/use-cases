@@ -91,6 +91,7 @@ function appendUnderLock(options: AppendEvidenceEventOptions): AppendEvidenceEve
   };
 }
 
+//: @use-case: presentation_skills.evidence.append_only_corrections
 function voidUnderLock(options: VoidEvidenceEventOptions): AppendEvidenceEventResult {
   const snapshot = replayEvidence({ context: options.context });
   if (!snapshot.complete) {
@@ -165,6 +166,7 @@ function voidUnderLock(options: VoidEvidenceEventOptions): AppendEvidenceEventRe
     ledgerPath
   };
 }
+//: @use-case: end presentation_skills.evidence.append_only_corrections
 
 function recordedEventFromOptions(
   options: AppendEvidenceEventOptions,
