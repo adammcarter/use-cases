@@ -1,16 +1,19 @@
 schema_version: 1
 feature:
-  id: presentation_skills.release
+  id: release.proof
   name: Release proof
   summary: Production release gates that bind claims to installable artifacts, evidence, host caveats, and self-dogfood demos.
 use_cases:
-  - id: presentation_skills.release.sequential_gate_story
+  - id: release.proof.sequential_gate_story
     title: Sequential production release gate
     lifecycle: active
     value_tier: critical
     journey_role: golden
     usage_frequency: common
-    tags: [release, ci, gate]
+    tags:
+      - release
+      - ci
+      - gate
     source_refs:
       - kind: file
         path: docs/release.md
@@ -22,7 +25,7 @@ use_cases:
       - Dependencies are installed from the lockfile.
     trigger: Agent prepares to merge, tag, publish, or hand off a release candidate.
     scenarios:
-      - id: presentation_skills.release.sequential_gate_story.gate
+      - id: release.proof.sequential_gate_story.gate
         kind: steps
         steps:
           - Run the release gate script.
@@ -37,18 +40,21 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: command_result
-          required_verifiers: [script]
+          required_verifiers:
+            - script
           minimum_count: 1
     approval_policy:
       mode: none
-
-  - id: presentation_skills.release.installable_artifact_provenance
+  - id: release.proof.installable_artifact_provenance
     title: Installable artifact provenance
     lifecycle: active
     value_tier: critical
     journey_role: golden
     usage_frequency: common
-    tags: [release, package, provenance]
+    tags:
+      - release
+      - package
+      - provenance
     source_refs:
       - kind: file
         path: docs/release.md
@@ -60,7 +66,7 @@ use_cases:
       - A package tarball or installed package root exists.
     trigger: Agent verifies package release readiness.
     scenarios:
-      - id: presentation_skills.release.installable_artifact_provenance.doctor
+      - id: release.proof.installable_artifact_provenance.doctor
         kind: steps
         steps:
           - Pack the root package or inspect an installed root.
@@ -76,18 +82,21 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: command_result
-          required_verifiers: [script]
+          required_verifiers:
+            - script
           minimum_count: 1
     approval_policy:
       mode: none
-
-  - id: presentation_skills.release.self_dogfood_evidence_bundle
+  - id: release.proof.self_dogfood_evidence_bundle
     title: Self-dogfood release evidence bundle
     lifecycle: active
     value_tier: critical
     journey_role: golden
     usage_frequency: common
-    tags: [release, dogfood, evidence]
+    tags:
+      - release
+      - dogfood
+      - evidence
     source_refs:
       - kind: file
         path: docs/acceptance.md
@@ -101,7 +110,7 @@ use_cases:
       - Product-level use cases, safe evidence, and a showcase run exist for the release scope.
     trigger: Agent prepares final release or merge readiness summary.
     scenarios:
-      - id: presentation_skills.release.self_dogfood_evidence_bundle.bundle
+      - id: release.proof.self_dogfood_evidence_bundle.bundle
         kind: steps
         steps:
           - Validate the repo's own matrix.
@@ -118,18 +127,21 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: live_demo
-          required_verifiers: [user]
+          required_verifiers:
+            - user
           minimum_count: 1
     approval_policy:
       mode: ask
-
-  - id: presentation_skills.release.documentation_claim_precision
+  - id: release.proof.documentation_claim_precision
     title: Documentation claim precision
     lifecycle: active
     value_tier: critical
     journey_role: negative
     usage_frequency: common
-    tags: [release, docs, claims]
+    tags:
+      - release
+      - docs
+      - claims
     source_refs:
       - kind: file
         path: README.md
@@ -145,7 +157,7 @@ use_cases:
       - Documentation describes support, proof, approval, host status, or release readiness.
     trigger: Agent updates docs or summarizes release claims.
     scenarios:
-      - id: presentation_skills.release.documentation_claim_precision.review
+      - id: release.proof.documentation_claim_precision.review
         kind: steps
         steps:
           - Compare docs against matrix and evidence status.
@@ -160,18 +172,21 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: agent_observation
-          required_verifiers: [agent]
+          required_verifiers:
+            - agent
           minimum_count: 1
     approval_policy:
       mode: none
-
-  - id: presentation_skills.release.version_manifest_alignment
+  - id: release.proof.version_manifest_alignment
     title: Version and manifest alignment
     lifecycle: active
     value_tier: core
     journey_role: alternate
     usage_frequency: occasional
-    tags: [release, version, manifests]
+    tags:
+      - release
+      - version
+      - manifests
     source_refs:
       - kind: file
         path: package.json
@@ -185,7 +200,7 @@ use_cases:
       - Release metadata or generated host projections exist.
     trigger: Agent prepares a release candidate or package artifact.
     scenarios:
-      - id: presentation_skills.release.version_manifest_alignment.check
+      - id: release.proof.version_manifest_alignment.check
         kind: steps
         steps:
           - Inspect package and plugin manifests.
@@ -200,18 +215,21 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: test_result
-          required_verifiers: [script]
+          required_verifiers:
+            - script
           minimum_count: 1
     approval_policy:
       mode: none
-
-  - id: presentation_skills.release.clean_snapshot
+  - id: release.proof.clean_snapshot
     title: Clean release snapshot
     lifecycle: active
     value_tier: core
     journey_role: alternate
     usage_frequency: occasional
-    tags: [release, git, provenance]
+    tags:
+      - release
+      - git
+      - provenance
     source_refs:
       - kind: file
         path: docs/release.md
@@ -223,7 +241,7 @@ use_cases:
       - Release checks have run or are about to run.
     trigger: Agent reports final merge or release readiness.
     scenarios:
-      - id: presentation_skills.release.clean_snapshot.status
+      - id: release.proof.clean_snapshot.status
         kind: steps
         steps:
           - Capture branch, commit, and git status.
@@ -238,7 +256,8 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: command_result
-          required_verifiers: [script]
+          required_verifiers:
+            - script
           minimum_count: 1
     approval_policy:
       mode: none

@@ -1,16 +1,19 @@
 schema_version: 1
 feature:
-  id: presentation_skills.diagnostics
+  id: diagnostics.contracts
   name: Diagnostics and contracts
   summary: Resolve roots deterministically and publish a versioned, validatable schema contract so the tool can be pointed anywhere and integrated against safely.
 use_cases:
-  - id: presentation_skills.diagnostics.root_resolution
+  - id: diagnostics.contracts.root_resolution
     title: Workspace and data roots resolve safely
     lifecycle: active
     value_tier: core
     journey_role: golden
     usage_frequency: occasional
-    tags: [diagnostics, roots, configuration]
+    tags:
+      - diagnostics
+      - roots
+      - configuration
     source_refs:
       - kind: file
         path: packages/ucm-core/src/roots.ts
@@ -22,7 +25,7 @@ use_cases:
       - A workspace config declares a data root that may differ from the repository root.
     trigger: Agent points the CLI or MCP server at a repository and inspects resolved roots.
     scenarios:
-      - id: presentation_skills.diagnostics.root_resolution.doctor
+      - id: diagnostics.contracts.root_resolution.doctor
         kind: steps
         steps:
           - Run doctor roots against the repository.
@@ -38,18 +41,21 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: command_result
-          required_verifiers: [script]
+          required_verifiers:
+            - script
           minimum_count: 1
     approval_policy:
       mode: none
-
-  - id: presentation_skills.diagnostics.schema_contract_surface
+  - id: diagnostics.contracts.schema_contract_surface
     title: Versioned schema contract is published and validated
     lifecycle: active
     value_tier: core
     journey_role: golden
     usage_frequency: occasional
-    tags: [diagnostics, schema, contract]
+    tags:
+      - diagnostics
+      - schema
+      - contract
     source_refs:
       - kind: file
         path: packages/ucm-core/src/schema/index.ts
@@ -63,7 +69,7 @@ use_cases:
       - The package ships versioned v1 result and entity schemas.
     trigger: Integrator or release gate enumerates the contract and validates fixtures.
     scenarios:
-      - id: presentation_skills.diagnostics.schema_contract_surface.validate
+      - id: diagnostics.contracts.schema_contract_surface.validate
         kind: steps
         steps:
           - Run schema list to enumerate published v1 schemas.
@@ -79,7 +85,50 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: test_result
-          required_verifiers: [script]
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none
+  - id: diagnostics.contracts.identity_consistency
+    title: Product identity is consistent across every envelope
+    lifecycle: active
+    value_tier: core
+    journey_role: golden
+    usage_frequency: common
+    tags:
+      - diagnostics
+      - identity
+      - contract
+    source_refs:
+      - kind: file
+        path: packages/ucm-core/src/version.ts
+      - kind: file
+        path: use-cases-plugin.yml
+    actor: agent
+    intent: Emit the configured component identity (use-cases-plugin) in every CLI and MCP result envelope, falling back to the same default when no workspace config is present, so a published build never leaks a stale product name.
+    preconditions:
+      - The workspace config declares a component id, or none is set and the default applies.
+    trigger: Any CLI or MCP command runs and returns a result envelope.
+    scenarios:
+      - id: diagnostics.contracts.identity_consistency.envelope
+        kind: steps
+        steps:
+          - Run any command with --json and read context.component_id.
+          - Confirm it equals the configured component id, or the use-cases-plugin default when unconfigured.
+          - Confirm no envelope, schema default, or version surface reports the pre-rename name.
+    observable_outcomes:
+      - Every envelope reports component_id use-cases-plugin for this repository.
+      - An unconfigured workspace still defaults to use-cases-plugin rather than a stale name.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: command_result
+          required_verifiers:
+            - script
           minimum_count: 1
     approval_policy:
       mode: none

@@ -1,16 +1,19 @@
 schema_version: 1
 feature:
-  id: presentation_skills.skills
+  id: skills.assets
   name: Skill assets
   summary: Ship and validate the agent skill assets (showcase, walkthrough, use-case matrix) so hosts can discover and run them without silent breakage.
 use_cases:
-  - id: presentation_skills.skills.asset_validation
+  - id: skills.assets.asset_validation
     title: Shipped skill assets validate
     lifecycle: active
     value_tier: core
     journey_role: golden
     usage_frequency: occasional
-    tags: [skills, doctor, assets]
+    tags:
+      - skills
+      - doctor
+      - assets
     source_refs:
       - kind: file
         path: packages/ucm-core/src/skills/validateSkillAssets.ts
@@ -24,7 +27,7 @@ use_cases:
       - The plugin ships one or more agent skill directories under .agents/skills.
     trigger: Agent or release gate runs doctor skills before publishing or activating a host.
     scenarios:
-      - id: presentation_skills.skills.asset_validation.doctor
+      - id: skills.assets.asset_validation.doctor
         kind: steps
         steps:
           - Run doctor skills.
@@ -40,18 +43,21 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: command_result
-          required_verifiers: [script]
+          required_verifiers:
+            - script
           minimum_count: 1
     approval_policy:
       mode: none
-
-  - id: presentation_skills.skills.degraded_assets
+  - id: skills.assets.degraded_assets
     title: Damaged skill assets surface as diagnostics
     lifecycle: active
     value_tier: supporting
     journey_role: edge
     usage_frequency: rare
-    tags: [skills, doctor, diagnostics]
+    tags:
+      - skills
+      - doctor
+      - diagnostics
     source_refs:
       - kind: file
         path: packages/ucm-core/src/skills/validateSkillAssets.ts
@@ -63,7 +69,7 @@ use_cases:
       - A skill directory is missing a required file or carries malformed front-matter.
     trigger: Agent runs doctor skills against a damaged or incomplete skill set.
     scenarios:
-      - id: presentation_skills.skills.degraded_assets.report
+      - id: skills.assets.degraded_assets.report
         kind: steps
         steps:
           - Run doctor skills against a skill missing required assets.
@@ -79,7 +85,8 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: test_result
-          required_verifiers: [script]
+          required_verifiers:
+            - script
           minimum_count: 1
     approval_policy:
       mode: none

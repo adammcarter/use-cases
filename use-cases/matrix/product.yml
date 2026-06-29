@@ -1,32 +1,35 @@
 schema_version: 1
 feature:
-  id: presentation_skills.matrix
+  id: matrix.product
   name: Product use-case matrix
   summary: Human-readable behavior inventory for product planning, acceptance, and showcase selection.
 use_cases:
-  - id: presentation_skills.matrix.product_inventory
+  - id: matrix.product.product_inventory
     title: Living product behavior inventory
     lifecycle: active
     value_tier: critical
     journey_role: golden
     usage_frequency: common
-    tags: [matrix, product-behavior, dogfood]
+    tags:
+      - matrix
+      - product-behavior
+      - dogfood
     source_refs:
       - kind: file
         path: docs/data-model.md
       - kind: file
         path: packages/ucm-core/src/useCases/loadUseCaseMatrix.ts
     actor: agent
-    intent: Represent Presentation Skills product behavior as stable, addressable use-case rows.
+    intent: Represent Use Cases Plugin product behavior as stable, addressable use-case rows.
     preconditions:
       - Product behavior has been identified at feature level.
     trigger: Agent or user needs acceptance, proof, or demo coverage for the product.
     scenarios:
-      - id: presentation_skills.matrix.product_inventory.cli
+      - id: matrix.product.product_inventory.cli
         kind: steps
         steps:
           - Run matrix list.
-          - Confirm product-level presentation_skills rows exist alongside primitive support rows.
+          - Confirm product-level use-cases-plugin rows exist alongside primitive support rows.
           - Confirm each row has value, journey, usage, and scenario data.
     observable_outcomes:
       - Product behavior can be selected by row ID without reading implementation code.
@@ -38,18 +41,21 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: command_result
-          required_verifiers: [script]
+          required_verifiers:
+            - script
           minimum_count: 1
     approval_policy:
       mode: none
-
-  - id: presentation_skills.matrix.sharded_human_readable_files
+  - id: matrix.product.sharded_human_readable_files
     title: Sharded readable feature files
     lifecycle: active
     value_tier: core
     journey_role: golden
     usage_frequency: common
-    tags: [matrix, yaml, maintainability]
+    tags:
+      - matrix
+      - yaml
+      - maintainability
     source_refs:
       - kind: file
         path: docs/data-model.md
@@ -61,7 +67,7 @@ use_cases:
       - A workspace has a `use-cases/` directory.
     trigger: Agent adds, updates, reviews, or repairs use-case rows.
     scenarios:
-      - id: presentation_skills.matrix.sharded_human_readable_files.layout
+      - id: matrix.product.sharded_human_readable_files.layout
         kind: steps
         steps:
           - Place related rows in a feature shard.
@@ -77,18 +83,21 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: command_result
-          required_verifiers: [script]
+          required_verifiers:
+            - script
           minimum_count: 1
     approval_policy:
       mode: none
-
-  - id: presentation_skills.matrix.integrity_degraded_nonfatal
+  - id: matrix.product.integrity_degraded_nonfatal
     title: Degraded-but-nonfatal diagnostics
     lifecycle: active
     value_tier: critical
     journey_role: edge
     usage_frequency: occasional
-    tags: [matrix, diagnostics, partial]
+    tags:
+      - matrix
+      - diagnostics
+      - partial
     source_refs:
       - kind: file
         path: packages/ucm-core/src/useCases/loadUseCaseMatrix.ts
@@ -100,7 +109,7 @@ use_cases:
       - At least one use-case YAML file is damaged, duplicated, or partially invalid.
     trigger: Validation, planning, or status reads a partially damaged matrix.
     scenarios:
-      - id: presentation_skills.matrix.integrity_degraded_nonfatal.partial
+      - id: matrix.product.integrity_degraded_nonfatal.partial
         kind: steps
         steps:
           - Validate a workspace with one valid shard and one damaged shard.
@@ -118,23 +127,32 @@ use_cases:
         script:
           kind: script
           evidence_kind: test_result
-          command: [pnpm, -s, vitest, run, tests/use-cases/integrity_degraded_nonfatal.test.ts]
-          inputs: [tests/use-cases/integrity_degraded_nonfatal.test.ts]
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/use-cases/integrity_degraded_nonfatal.test.ts
+          inputs:
+            - tests/use-cases/integrity_degraded_nonfatal.test.ts
       requirements:
         - evidence_kind: test_result
-          required_verifiers: [script]
+          required_verifiers:
+            - script
           minimum_count: 1
     approval_policy:
       mode: none
       required_for_release: true
-
-  - id: presentation_skills.matrix.coverage_by_value_and_journey
+  - id: matrix.product.coverage_by_value_and_journey
     title: Coverage by value and journey role
     lifecycle: active
     value_tier: core
     journey_role: alternate
     usage_frequency: occasional
-    tags: [matrix, coverage, prioritization]
+    tags:
+      - matrix
+      - coverage
+      - prioritization
     source_refs:
       - kind: file
         path: packages/ucm-core/src/useCases/query.ts
@@ -146,7 +164,7 @@ use_cases:
       - Rows are tagged with value, journey, usage, lifecycle, and host applicability.
     trigger: Agent prepares a showcase, walkthrough, acceptance pass, or gap report.
     scenarios:
-      - id: presentation_skills.matrix.coverage_by_value_and_journey.selection
+      - id: matrix.product.coverage_by_value_and_journey.selection
         kind: steps
         steps:
           - List rows by value and journey metadata.
@@ -164,22 +182,31 @@ use_cases:
         script:
           kind: script
           evidence_kind: test_result
-          command: [pnpm, -s, vitest, run, tests/use-cases/coverage_by_value_and_journey.test.ts]
-          inputs: [tests/use-cases/coverage_by_value_and_journey.test.ts]
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/use-cases/coverage_by_value_and_journey.test.ts
+          inputs:
+            - tests/use-cases/coverage_by_value_and_journey.test.ts
       requirements:
         - evidence_kind: test_result
-          required_verifiers: [script]
+          required_verifiers:
+            - script
           minimum_count: 1
     approval_policy:
       mode: none
-
-  - id: presentation_skills.matrix.claim_guardrails
+  - id: matrix.product.claim_guardrails
     title: Unsupported-claim guardrails
     lifecycle: active
     value_tier: critical
     journey_role: negative
     usage_frequency: common
-    tags: [matrix, claims, safety]
+    tags:
+      - matrix
+      - claims
+      - safety
     source_refs:
       - kind: file
         path: docs/security.md
@@ -191,7 +218,7 @@ use_cases:
       - A row, plan, host profile, capsule, or generated output could be mistaken for proof.
     trigger: Agent summarizes readiness, support, approval, or release status.
     scenarios:
-      - id: presentation_skills.matrix.claim_guardrails.negative
+      - id: matrix.product.claim_guardrails.negative
         kind: steps
         steps:
           - Inspect the matrix and related evidence status.
@@ -213,18 +240,21 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: agent_observation
-          required_verifiers: [agent]
+          required_verifiers:
+            - agent
           minimum_count: 1
     approval_policy:
       mode: none
-
-  - id: presentation_skills.matrix.status_summary
+  - id: matrix.product.status_summary
     title: One-shot matrix and evidence health summary
     lifecycle: active
     value_tier: supporting
     journey_role: alternate
     usage_frequency: occasional
-    tags: [matrix, status, summary]
+    tags:
+      - matrix
+      - status
+      - summary
     source_refs:
       - kind: file
         path: packages/ucm-core/src/useCases/query.ts
@@ -236,7 +266,7 @@ use_cases:
       - A use-case matrix exists, possibly with partial or missing evidence.
     trigger: Agent wants a fast readiness read before planning, release, or showcase.
     scenarios:
-      - id: presentation_skills.matrix.status_summary.report
+      - id: matrix.product.status_summary.report
         kind: steps
         steps:
           - Run matrix status.
@@ -252,7 +282,8 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: command_result
-          required_verifiers: [script]
+          required_verifiers:
+            - script
           minimum_count: 1
     approval_policy:
       mode: none
