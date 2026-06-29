@@ -1,6 +1,6 @@
 // PIECE 2 (v1 tamper-evident ledger): validate-ledger VERIFIES the hash chain
 // over the contiguous chained suffix and detects every tamper class with stable
-// UCM_LEDGER_* codes, while tolerating (and reporting) a leading legacy
+// UCP_LEDGER_* codes, while tolerating (and reporting) a leading legacy
 // un-chained prefix.
 //
 // Each test builds a real signed ledger on disk via prove (so the chain fields
@@ -167,9 +167,9 @@ function writeFile(root: string, relPath: string, contents: string): void {
 }
 
 function makeWorkspace(): Workspace {
-  const root = mkdtempSync(join(tmpdir(), "ucm-ledger-chain-validate-"));
+  const root = mkdtempSync(join(tmpdir(), "ucp-ledger-chain-validate-"));
   tempDirs.push(root);
-  writeFile(root, "presentation-skills.yml", CONFIG_YAML);
+  writeFile(root, "use-cases-plugin.yml", CONFIG_YAML);
   writeFile(root, "use-cases/checkout.yml", USE_CASE_YAML);
   writeFile(root, "Sources/Checkout/CouponService.swift", SWIFT_A);
   writeFile(root, "Sources/Checkout/RefundService.swift", SWIFT_B);
@@ -327,7 +327,7 @@ describe("validate-ledger verifies the tamper-evident hash chain", () => {
     expect(result.exit_code).toBe(4);
     expect(result.ok).toBe(false);
     expect(result.chain.ok).toBe(false);
-    expect(codes(result)).toContain("UCM_LEDGER_CHAIN_BROKEN");
+    expect(codes(result)).toContain("UCP_LEDGER_CHAIN_BROKEN");
   });
 
   test("reordering two chained entries fails", () => {
@@ -341,7 +341,7 @@ describe("validate-ledger verifies the tamper-evident hash chain", () => {
     const result = validate(ws);
     expect(result.exit_code).toBe(4);
     expect(result.chain.ok).toBe(false);
-    expect(codes(result)).toContain("UCM_LEDGER_INDEX_GAP");
+    expect(codes(result)).toContain("UCP_LEDGER_INDEX_GAP");
   });
 
   test("truncating a middle chained entry fails", () => {
@@ -355,7 +355,7 @@ describe("validate-ledger verifies the tamper-evident hash chain", () => {
     const result = validate(ws);
     expect(result.exit_code).toBe(4);
     expect(result.chain.ok).toBe(false);
-    expect(codes(result)).toContain("UCM_LEDGER_CHAIN_BROKEN");
+    expect(codes(result)).toContain("UCP_LEDGER_CHAIN_BROKEN");
   });
 
   test("a duplicate entry_index fails", () => {
@@ -369,7 +369,7 @@ describe("validate-ledger verifies the tamper-evident hash chain", () => {
     const result = validate(ws);
     expect(result.exit_code).toBe(4);
     expect(result.chain.ok).toBe(false);
-    expect(codes(result)).toContain("UCM_LEDGER_DUPLICATE_INDEX");
+    expect(codes(result)).toContain("UCP_LEDGER_DUPLICATE_INDEX");
   });
 });
 

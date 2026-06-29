@@ -1,6 +1,6 @@
 # Security Policy
 
-Use Case Matrix (UCM) keeps an agent's product claims honest: a row is marked
+Use Cases Plugin (UCM) keeps an agent's product claims honest: a row is marked
 **FRESH** only when trusted CI has signed proof that the current code, binding,
 span, and verifier context still match. Because that trust signal is the whole
 point of the tool, we take its threat model seriously — and we are explicit
@@ -12,9 +12,9 @@ about what it does **not** guarantee.
 
 Report privately through GitHub's private security advisories:
 
-> https://github.com/adammcarter/presentation-skills/security/advisories/new
+> https://github.com/adammcarter/use-cases-plugin/security/advisories/new
 
-Please include the affected version (`ucm --version --json`), a description of
+Please include the affected version (`ucp --version --json`), a description of
 the issue, reproduction steps, and the impact you observed. We will acknowledge
 the report, work with you on a fix, and coordinate disclosure. Public issues are
 for bugs and feature requests only.

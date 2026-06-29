@@ -1,19 +1,19 @@
-# @use-case-matrix/mcp
+# @use-cases-plugin/mcp
 
 Local stdio [Model Context Protocol](https://modelcontextprotocol.io) server for
-**Use Case Matrix (UCM)** — exposing the full UCM workflow (matrix, freshness,
+**Use Cases Plugin (UCM)** — exposing the full UCM workflow (matrix, freshness,
 evidence, showcase, host applicability, and more) to coding agents without a GUI.
 
 ## Install
 
 ```bash
-npm install @use-case-matrix/mcp
+npm install @use-cases-plugin/mcp
 ```
 
 This installs two binaries:
 
-- `ucm-mcp` — primary binary.
-- `use-case-matrix-mcp` — long-form alias.
+- `ucp-mcp` — primary binary.
+- `use-cases-plugin-mcp` — long-form alias.
 
 ## Usage
 
@@ -22,9 +22,9 @@ Configure your MCP client to launch the server over stdio:
 ```json
 {
   "mcpServers": {
-    "use-case-matrix": {
+    "use-cases-plugin": {
       "command": "npx",
-      "args": ["-y", "@use-case-matrix/mcp"]
+      "args": ["-y", "@use-cases-plugin/mcp"]
     }
   }
 }
@@ -38,9 +38,9 @@ is locked. MCP **tool names** and their input/output schemas are versioned publi
 contracts.
 
 See the
-[MCP reference](https://github.com/adammcarter/presentation-skills/blob/main/docs/mcp.md)
+[MCP reference](https://github.com/adammcarter/use-cases-plugin/blob/main/docs/mcp.md)
 and the
-[stability & versioning policy](https://github.com/adammcarter/presentation-skills/blob/main/docs/reference/stability.md).
+[stability & versioning policy](https://github.com/adammcarter/use-cases-plugin/blob/main/docs/reference/stability.md).
 
 ## License
 

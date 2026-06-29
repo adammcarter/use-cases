@@ -6,7 +6,7 @@ import { parseYamlToJson } from "../../packages/ucm-core/src/schema/index.js";
 
 const repoRoot = resolve(import.meta.dirname, "../..");
 const skillRoot = join(repoRoot, ".agents", "skills");
-const canonicalSkillNames = ["use-case-matrix", "presentation-showcase", "presentation-walkthrough"];
+const canonicalSkillNames = ["use-cases-plugin", "presentation-showcase", "presentation-walkthrough"];
 const knownCliCommands = new Set([
   "capsule list",
   "capsule plan",
@@ -63,7 +63,7 @@ describe("P7 canonical skills and activation bootstrap", () => {
   });
 
   test("bootstrap contains activation, non-activation, trust, lifecycle, command, and claim boundaries", () => {
-    const source = readFileSync(join(repoRoot, "bootstrap", "use-case-matrix.md"), "utf8");
+    const source = readFileSync(join(repoRoot, "bootstrap", "use-cases-plugin.md"), "utf8");
     for (const heading of [
       "When to apply",
       "When not to apply",
@@ -95,7 +95,7 @@ describe("P7 canonical skills and activation bootstrap", () => {
   test("activation docs include an ASCII skill-selection decision tree", () => {
     const source = readFileSync(join(repoRoot, "docs", "activation.md"), "utf8");
     expect(source).toContain("Decision Tree");
-    expect(source).toContain("-> use-case-matrix");
+    expect(source).toContain("-> use-cases-plugin");
     expect(source).toContain("-> presentation-showcase");
     expect(source).toContain("-> presentation-walkthrough");
     expect(source).toContain("-> do not activate");

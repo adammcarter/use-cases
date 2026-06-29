@@ -97,7 +97,7 @@ use_cases:
     tags: [lifecycle, ownership, agent-boundary]
     source_refs:
       - kind: file
-        path: .agents/skills/use-case-matrix/SKILL.md
+        path: .agents/skills/use-cases-plugin/SKILL.md
       - kind: file
         path: docs/activation.md
     actor: agent
@@ -181,7 +181,7 @@ use_cases:
     tags: [lifecycle, opt-out, scope-control]
     source_refs:
       - kind: file
-        path: .agents/skills/use-case-matrix/SKILL.md
+        path: .agents/skills/use-cases-plugin/SKILL.md
       - kind: file
         path: docs/activation.md
     actor: agent

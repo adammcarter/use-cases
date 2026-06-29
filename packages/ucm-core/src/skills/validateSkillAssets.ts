@@ -4,7 +4,7 @@ import type { ResolvedWorkspaceContext } from "../roots.js";
 import { parseYamlToJson, type Diagnostic } from "../schema/index.js";
 import type { SkillAssetSummary, SkillAssetValidationResult, SkillCommandReference } from "./types.js";
 
-const CANONICAL_SKILLS = ["use-case-matrix", "presentation-showcase", "presentation-walkthrough"] as const;
+const CANONICAL_SKILLS = ["use-cases-plugin", "presentation-showcase", "presentation-walkthrough"] as const;
 const BOOTSTRAP_SECTIONS = [
   "When to apply",
   "When not to apply",
@@ -113,7 +113,7 @@ export function validateSkillAssets(options: { context: ResolvedWorkspaceContext
     });
   }
 
-  const bootstrapPath = "bootstrap/use-case-matrix.md";
+  const bootstrapPath = "bootstrap/use-cases-plugin.md";
   const bootstrapFullPath = join(root, bootstrapPath);
   const bootstrapSections: string[] = [];
   if (!existsSync(bootstrapFullPath)) {
@@ -142,7 +142,7 @@ export function validateSkillAssets(options: { context: ResolvedWorkspaceContext
     diagnostics.push(diagnostic("skills.activation_missing", "Missing activation docs.", activationPath));
   } else {
     const source = readFileSync(activationFullPath, "utf8");
-    for (const marker of ["Decision Tree", "-> use-case-matrix", "-> presentation-showcase", "-> presentation-walkthrough", "-> do not activate"]) {
+    for (const marker of ["Decision Tree", "-> use-cases-plugin", "-> presentation-showcase", "-> presentation-walkthrough", "-> do not activate"]) {
       if (!source.includes(marker)) {
         diagnostics.push(diagnostic("skills.activation_tree_missing", `Activation docs missing '${marker}'.`, activationPath));
       }

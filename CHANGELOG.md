@@ -12,15 +12,15 @@ release. At a high level:
 
 ### Changed
 
-- Renamed the project to **Use Case Matrix (UCM)**, published under the
-  `@use-case-matrix/{core,cli,mcp}` scope with the `ucm` CLI (alias
-  `use-case-matrix`) and `ucm-mcp` MCP server.
+- Renamed the project to **Use Cases Plugin (UCM)**, published under the
+  `@use-cases-plugin/{core,cli,mcp}` scope with the `ucp` CLI (alias
+  `use-cases-plugin`) and `ucp-mcp` MCP server.
 
 ### Added
 
 - Declared **public API + SemVer contract**: CLI command/flag names and `--json`
   envelopes, exit codes, MCP tool names/schemas, persisted file formats, and the
-  documented `@use-case-matrix/core` exports are now versioned surfaces.
+  documented `@use-cases-plugin/core` exports are now versioned surfaces.
 - **Tamper-evident, hash-chained ledger** — append-only proof/evidence ledger
   that detects edited, reordered, or truncated entries.
 - **Keyring** with fail-closed key resolution: signing keys carry status and

@@ -63,35 +63,35 @@ export type CliResult<T> = {
 };
 
 export const PUBLIC_SCHEMA_IDS = [
-  "https://use-case-matrix.dev/schemas/v1/common.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/cli-result.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/use-case-file.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/evidence-event.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/demo-capsule.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/presentation-plan.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/presentation-plan-result.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/showcase-event.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/showcase-run-status-result.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/showcase-start-result.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/showcase-event-append-result.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/showcase-finish-result.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/showcase-approval-result.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/host-profile.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/host-status-result.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/workspace-config.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/workflow-mode.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/matrix-validation-result.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/matrix-list-result.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/matrix-mutation-result.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/evidence-append-result.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/evidence-status-result.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/migration-test-matrix-result.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/marker.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/release-gate-result.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/ledger.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/keyring.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/authority.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/mcp-tool-results.schema.json"
+  "https://use-cases-plugin.dev/schemas/v1/common.schema.json",
+  "https://use-cases-plugin.dev/schemas/v1/cli-result.schema.json",
+  "https://use-cases-plugin.dev/schemas/v1/use-case-file.schema.json",
+  "https://use-cases-plugin.dev/schemas/v1/evidence-event.schema.json",
+  "https://use-cases-plugin.dev/schemas/v1/demo-capsule.schema.json",
+  "https://use-cases-plugin.dev/schemas/v1/presentation-plan.schema.json",
+  "https://use-cases-plugin.dev/schemas/v1/presentation-plan-result.schema.json",
+  "https://use-cases-plugin.dev/schemas/v1/showcase-event.schema.json",
+  "https://use-cases-plugin.dev/schemas/v1/showcase-run-status-result.schema.json",
+  "https://use-cases-plugin.dev/schemas/v1/showcase-start-result.schema.json",
+  "https://use-cases-plugin.dev/schemas/v1/showcase-event-append-result.schema.json",
+  "https://use-cases-plugin.dev/schemas/v1/showcase-finish-result.schema.json",
+  "https://use-cases-plugin.dev/schemas/v1/showcase-approval-result.schema.json",
+  "https://use-cases-plugin.dev/schemas/v1/host-profile.schema.json",
+  "https://use-cases-plugin.dev/schemas/v1/host-status-result.schema.json",
+  "https://use-cases-plugin.dev/schemas/v1/workspace-config.schema.json",
+  "https://use-cases-plugin.dev/schemas/v1/workflow-mode.schema.json",
+  "https://use-cases-plugin.dev/schemas/v1/matrix-validation-result.schema.json",
+  "https://use-cases-plugin.dev/schemas/v1/matrix-list-result.schema.json",
+  "https://use-cases-plugin.dev/schemas/v1/matrix-mutation-result.schema.json",
+  "https://use-cases-plugin.dev/schemas/v1/evidence-append-result.schema.json",
+  "https://use-cases-plugin.dev/schemas/v1/evidence-status-result.schema.json",
+  "https://use-cases-plugin.dev/schemas/v1/migration-test-matrix-result.schema.json",
+  "https://use-cases-plugin.dev/schemas/v1/marker.schema.json",
+  "https://use-cases-plugin.dev/schemas/v1/release-gate-result.schema.json",
+  "https://use-cases-plugin.dev/schemas/v1/ledger.schema.json",
+  "https://use-cases-plugin.dev/schemas/v1/keyring.schema.json",
+  "https://use-cases-plugin.dev/schemas/v1/authority.schema.json",
+  "https://use-cases-plugin.dev/schemas/v1/mcp-tool-results.schema.json"
 ] as const;
 
 const SCHEMA_FILE_NAMES = [
@@ -661,7 +661,7 @@ function validateSyntheticCommonContracts(validated: Set<string>, diagnostics: D
       {
         type: "ci",
         provider: "github-actions",
-        repository: "use-case-matrix/presentation-skills",
+        repository: "use-cases-plugin/presentation-skills",
         ref: "refs/heads/main",
         commit: "0123456789abcdef0123456789abcdef01234567",
         run_id: "1234567890",
@@ -761,7 +761,7 @@ function collectUseCaseIds(
 }
 
 function schemaIdForFixturePath(relPath: string): string | undefined {
-  if (relPath === "presentation-skills.yml") {
+  if (relPath === "use-cases-plugin.yml") {
     return schemaIdForName("workspace-config.schema.json");
   }
   if (relPath.startsWith("workflow-modes/") || basename(relPath) === "valid-sibling.yml") {
@@ -850,7 +850,7 @@ function findSchemasDir(): string {
 }
 
 function schemaIdForName(fileName: string): string {
-  return `https://use-case-matrix.dev/schemas/v1/${fileName}`;
+  return `https://use-cases-plugin.dev/schemas/v1/${fileName}`;
 }
 
 function listFiles(root: string): string[] {

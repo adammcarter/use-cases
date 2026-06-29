@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { validateBySchemaId } from "../../src/schema/index.js";
 
 const WORKSPACE_CONFIG_SCHEMA_ID =
-  "https://use-case-matrix.dev/schemas/v1/workspace-config.schema.json";
+  "https://use-cases-plugin.dev/schemas/v1/workspace-config.schema.json";
 
 const BASE = {
   schema_version: 1 as const,

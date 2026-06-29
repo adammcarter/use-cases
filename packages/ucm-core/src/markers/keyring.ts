@@ -15,7 +15,7 @@ import { readFileSync } from "node:fs";
 import { validateBySchemaId } from "../schema/index.js";
 import type { PublicKeyResolver } from "./proofSignature.js";
 
-export const KEYRING_SCHEMA_ID = "https://use-case-matrix.dev/schemas/v1/keyring.schema.json";
+export const KEYRING_SCHEMA_ID = "https://use-cases-plugin.dev/schemas/v1/keyring.schema.json";
 
 export interface KeyringKey {
   key_id: string;

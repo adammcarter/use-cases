@@ -1,13 +1,13 @@
-# Use Case Matrix — documentation
+# Use Cases Plugin — documentation
 
-Use Case Matrix (UCM) keeps an agent's product claims honest: it gives a repo a
+Use Cases Plugin (UCM) keeps an agent's product claims honest: it gives a repo a
 living use-case matrix, binds each row to the code that satisfies it, and marks a
 row **FRESH** only when trusted CI has signed proof that the current code,
 binding, and verifier context still match. Stale claims become visible instead of
 silently trusted.
 
-Ships as `@use-case-matrix/cli` (binary `ucm`) plus an MCP server
-`@use-case-matrix/mcp` (binary `ucm-mcp`).
+Ships as `@use-cases-plugin/cli` (binary `ucp`) plus an MCP server
+`@use-cases-plugin/mcp` (binary `ucp-mcp`).
 
 ## Start here
 
@@ -42,7 +42,7 @@ Read these in order for the full mental model:
 - [MCP contract](./mcp.md) — the MCP tools, modes, and safety boundaries.
 - [Stability & versioning policy](./reference/stability.md) — what is a v1
   contract and how versions move.
-- [Error-code registry](./reference/error-codes.md) — the stable `UCM_*` codes.
+- [Error-code registry](./reference/error-codes.md) — the stable `UCP_*` codes.
 - [Data model](./data-model.md) — the persisted file shapes.
 
 ## Security

@@ -209,15 +209,15 @@ function readTreeBytes(root: string): string {
 }
 
 function withMcpWriteMode<T>(fn: () => T): T {
-  const previous = process.env.PRESENTATION_SKILLS_MCP_WRITE;
-  process.env.PRESENTATION_SKILLS_MCP_WRITE = "1";
+  const previous = process.env.UCP_MCP_WRITE;
+  process.env.UCP_MCP_WRITE = "1";
   try {
     return fn();
   } finally {
     if (previous === undefined) {
-      delete process.env.PRESENTATION_SKILLS_MCP_WRITE;
+      delete process.env.UCP_MCP_WRITE;
     } else {
-      process.env.PRESENTATION_SKILLS_MCP_WRITE = previous;
+      process.env.UCP_MCP_WRITE = previous;
     }
   }
 }

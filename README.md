@@ -1,6 +1,6 @@
-# Use Case Matrix (UCM)
+# Use Cases Plugin (UCM)
 
-Use Case Matrix keeps an agent's product claims honest. It gives a repo a living
+Use Cases Plugin keeps an agent's product claims honest. It gives a repo a living
 use-case matrix, binds each row to the code that satisfies it, and marks a row
 **FRESH** only when trusted CI has signed proof that the current code, binding,
 and verifier context still match — so stale claims become visible instead of
@@ -9,8 +9,8 @@ applicability, evidence, and live showcase runs, replacing static
 `TEST-MATRIX.md` files with behaviour rows that are planned up front, updated
 during work, proven in CI, and demonstrated when that is valuable.
 
-> Installs as `@use-case-matrix/cli` (binary `ucm`) plus an MCP server
-> (`@use-case-matrix/mcp`, binary `ucm-mcp`) that agents drive directly.
+> Installs as `@use-cases-plugin/cli` (binary `ucp`) plus an MCP server
+> (`@use-cases-plugin/mcp`, binary `ucp-mcp`) that agents drive directly.
 
 New here? Start with [the documentation index](docs/README.md) and the
 [getting-started tutorial](docs/getting-started.md).
@@ -32,12 +32,12 @@ New here? Start with [the documentation index](docs/README.md) and the
 ## Main Commands
 
 ```bash
-ucm matrix validate --repo . --json
-ucm evidence record --repo . --use-case matrix.core.validate --kind test_result --result pass --json
-ucm plan showcase --repo . --max-items 3 --json
-ucm showcase start --repo . --adhoc --select matrix.core.validate --json
-ucm host conformance --all --repo . --json
-ucm doctor package --json
+ucp matrix validate --repo . --json
+ucp evidence record --repo . --use-case matrix.core.validate --kind test_result --result pass --json
+ucp plan showcase --repo . --max-items 3 --json
+ucp showcase start --repo . --adhoc --select matrix.core.validate --json
+ucp host conformance --all --repo . --json
+ucp doctor package --json
 ```
 
 MCP tools wrap the same CLI envelopes. Host projections are thin activation
@@ -64,5 +64,5 @@ is wired into both a local precommit hook and CI:
   (blocks on failure), `scan` (feature blocks INVALID only; release also blocks
   required rows that are not FRESH, and prints inferred Swift spans), and an
   optional `prove` job that mints signed proof events on the release branch from
-  the `UCM_CI_SIGNING_KEY` secret. The policy mode is selected from the branch
+  the `UCP_CI_SIGNING_KEY` secret. The policy mode is selected from the branch
   (release on `main` / `release/**`, feature elsewhere) or a manual input.

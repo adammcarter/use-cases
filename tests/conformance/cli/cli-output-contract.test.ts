@@ -34,13 +34,13 @@ import { validateBySchemaId } from "../../../packages/ucm-core/src/schema/index.
 const repoRoot = resolve(import.meta.dirname, "../../..");
 const fixturesRoot = join(repoRoot, "tests/fixtures/workspaces");
 
-const ENVELOPE_SCHEMA_ID = "https://use-case-matrix.dev/schemas/v1/cli-result.schema.json";
-const schemaId = (name: string) => `https://use-case-matrix.dev/schemas/v1/${name}.schema.json`;
+const ENVELOPE_SCHEMA_ID = "https://use-cases-plugin.dev/schemas/v1/cli-result.schema.json";
+const schemaId = (name: string) => `https://use-cases-plugin.dev/schemas/v1/${name}.schema.json`;
 
 const tempDirs: string[] = [];
 
 function copyFixture(name: string): string {
-  const workspaceRoot = mkdtempSync(join(tmpdir(), `ucm-conf-${name}-`));
+  const workspaceRoot = mkdtempSync(join(tmpdir(), `ucp-conf-${name}-`));
   tempDirs.push(workspaceRoot);
   cpSync(join(fixturesRoot, name), workspaceRoot, { recursive: true });
   return workspaceRoot;
@@ -182,7 +182,7 @@ const independentCases: IndependentCase[] = [
     command: "init",
     // Scaffolds into a fresh temp dir (never an existing fixture). data is the
     // scaffold result (created files + template + next steps); envelope only.
-    build: () => ["init", "--repo", mkdtempSync(join(tmpdir(), "ucm-conf-init-")), "--json"]
+    build: () => ["init", "--repo", mkdtempSync(join(tmpdir(), "ucp-conf-init-")), "--json"]
   },
   {
     command: "matrix.validate",
@@ -255,7 +255,7 @@ const independentCases: IndependentCase[] = [
   },
   {
     command: "workflow.set-mode",
-    // Mutating (rewrites presentation-skills.yml) → copy. data is an ad-hoc shape.
+    // Mutating (rewrites use-cases-plugin.yml) → copy. data is an ad-hoc shape.
     build: () => ["workflow", "set-mode", "--repo", copyFixture("minimal-valid"), "--mode", "showcase-only", "--json"]
   },
   {
@@ -660,10 +660,10 @@ describe("v1 CLI output conformance", () => {
     // chain runs end-to-end without git or a real CI signer. Exit codes vary
     // (verify returns non-zero because the policy wants a real user verifier); the
     // envelope is the contract under test, so exit status is not asserted.
-    const workspaceRoot = mkdtempSync(join(tmpdir(), "ucm-conf-markers-"));
+    const workspaceRoot = mkdtempSync(join(tmpdir(), "ucp-conf-markers-"));
     tempDirs.push(workspaceRoot);
     writeFileSync(
-      join(workspaceRoot, "presentation-skills.yml"),
+      join(workspaceRoot, "use-cases-plugin.yml"),
       [
         "schema_version: 1",
         "workspace_id: conformance.markers",
@@ -789,14 +789,14 @@ describe("v1 CLI output conformance", () => {
             "--all",
             "--trusted-ci",
             "--signing-key-env",
-            "UCM_CONFORMANCE_KEY",
+            "UCP_CONFORMANCE_KEY",
             "--unsafe-assume-verification-result",
             "pass",
             "--public-key",
             publicKeyPath,
             "--json"
           ],
-          { UCM_ALLOW_UNSAFE_VERIFICATION: "1", UCM_CONFORMANCE_KEY: privateKeyPem }
+          { UCP_ALLOW_UNSAFE_VERIFICATION: "1", UCP_CONFORMANCE_KEY: privateKeyPem }
         ),
         "markers.prove"
       )

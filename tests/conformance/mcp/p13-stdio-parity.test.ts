@@ -112,7 +112,7 @@ async function startMcpServer() {
     stdio: ["pipe", "pipe", "pipe"],
     env: {
       ...process.env,
-      PRESENTATION_SKILLS_MCP_WRITE: "1"
+      UCP_MCP_WRITE: "1"
     }
   });
   const lines: string[] = [];

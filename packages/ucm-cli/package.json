@@ -1,17 +1,17 @@
 {
-  "name": "@use-case-matrix/cli",
+  "name": "@use-cases-plugin/cli",
   "version": "1.0.0",
   "type": "module",
-  "description": "CLI for use-case-matrix.",
+  "description": "CLI for use-cases-plugin.",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/adammcarter/presentation-skills.git",
+    "url": "git+https://github.com/adammcarter/use-cases-plugin.git",
     "directory": "packages/ucm-cli"
   },
   "bin": {
-    "ucm": "./dist/index.js",
-    "use-case-matrix": "./dist/index.js"
+    "ucp": "./dist/index.js",
+    "use-cases-plugin": "./dist/index.js"
   },
   "exports": {
     ".": {
@@ -28,7 +28,7 @@
     "provenance": true
   },
   "dependencies": {
-    "@use-case-matrix/core": "workspace:*"
+    "@use-cases-plugin/core": "workspace:*"
   },
   "scripts": {
     "build": "tsc -b",

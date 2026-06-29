@@ -76,10 +76,10 @@ presentation-skills/
     skills/
       presentation-showcase/
       presentation-walkthrough/
-      use-case-matrix/
+      use-cases-plugin/
 
   bootstrap/
-    presentation-skills.md
+    use-cases-plugin.md
 
   packages/
     ucm-core/
@@ -619,7 +619,7 @@ presentation-skills
 Command groups:
 
 ```text
-ucm
+ucp
   intended behavior and matrix health
 
 evidence
@@ -635,8 +635,8 @@ host
 MVP command set:
 
 ```text
-presentation-skills ucm validate
-presentation-skills ucm status
+presentation-skills ucp validate
+presentation-skills ucp status
 presentation-skills evidence add
 presentation-skills present capsule generate
 presentation-skills present showcase run
@@ -683,7 +683,7 @@ Canonical skill source:
   skills/
     presentation-showcase/
     presentation-walkthrough/
-    use-case-matrix/
+    use-cases-plugin/
 ```
 
 The core skills are:
@@ -695,7 +695,7 @@ presentation-showcase
 presentation-walkthrough
   Produce a deeper evidence-backed explanation with caveats.
 
-use-case-matrix
+use-cases-plugin
   Maintain, migrate, audit, and backfill use cases and evidence.
 ```
 
@@ -851,7 +851,7 @@ Purpose: surface presentation-skills to future agents at the right moments witho
 Canonical trusted bootstrap:
 
 ```text
-bootstrap/presentation-skills.md
+bootstrap/use-cases-plugin.md
 ```
 
 The bootstrap should be concise and host-projected. It should recommend continuous mode while allowing user preference.
@@ -904,7 +904,7 @@ The first implementation should be an end-to-end vertical slice before broadenin
 3. evidence append events and assurance model
 4. resolved showcase plan generation
 5. live showcase execution, scoped user approval, and replay
-6. canonical presentation-showcase/use-case-matrix skills
+6. canonical presentation-showcase/use-cases-plugin skills
 7. four-host discovery smoke checks
 8. correction/void/supersession events
 9. presentation-walkthrough skill and deeper selection

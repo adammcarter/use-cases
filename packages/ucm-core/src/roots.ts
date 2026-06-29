@@ -98,7 +98,7 @@ export function resolveWorkspaceContext(
   const pluginRoot = realpathIfExists(
     options.pluginRoot ?? resolve(dirname(fileURLToPath(import.meta.url)), "../../..")
   );
-  const configPath = join(workspaceRoot, "presentation-skills.yml");
+  const configPath = join(workspaceRoot, "use-cases-plugin.yml");
   const config = existsSync(configPath) ? readWorkspaceConfig(configPath, workspaceRoot) : null;
 
   if (options.component && config?.value.component_id && options.component !== config.value.component_id) {
@@ -120,7 +120,7 @@ export function resolveWorkspaceContext(
     data_root: dataRoot,
     use_cases_root: useCasesRoot,
     component_id: options.component ?? config?.value.component_id ?? "presentation-skills",
-    config_path: existsSync(configPath) ? "presentation-skills.yml" : null,
+    config_path: existsSync(configPath) ? "use-cases-plugin.yml" : null,
     verifiers: normalizeWorkspaceVerifiers(config?.value.verifiers),
     release_gate: normalizeReleaseGate(config?.value.release_gate),
     provenance: {
@@ -138,20 +138,20 @@ function readWorkspaceConfig(
   workspaceRoot: string
 ): { value: WorkspaceConfig; diagnostics: Diagnostic[] } {
   const source = readFileSync(configPath, "utf8");
-  const parsed = parseYamlToJson(source, "presentation-skills.yml");
+  const parsed = parseYamlToJson(source, "use-cases-plugin.yml");
   if (!parsed.ok) {
-    throw new PresentationSkillsError("Unable to parse presentation-skills.yml.", "workspace_config.parse_error");
+    throw new PresentationSkillsError("Unable to parse use-cases-plugin.yml.", "workspace_config.parse_error");
   }
   const validation = validateBySchemaId(
-    "https://use-case-matrix.dev/schemas/v1/workspace-config.schema.json",
+    "https://use-cases-plugin.dev/schemas/v1/workspace-config.schema.json",
     parsed.value,
-    "presentation-skills.yml"
+    "use-cases-plugin.yml"
   );
   if (!validation.ok) {
-    throw new PresentationSkillsError("Invalid presentation-skills.yml.", "workspace_config.schema_error");
+    throw new PresentationSkillsError("Invalid use-cases-plugin.yml.", "workspace_config.schema_error");
   }
   if (!isRecord(parsed.value)) {
-    throw new PresentationSkillsError("Invalid presentation-skills.yml.", "workspace_config.schema_error");
+    throw new PresentationSkillsError("Invalid use-cases-plugin.yml.", "workspace_config.schema_error");
   }
 
   const config = parsed.value as WorkspaceConfig;
@@ -243,7 +243,7 @@ export function isValidId(value: unknown): value is string {
 }
 
 /**
- * Throw a stable `path.invalid_id` error (mapped to public `UCM_INVALID_ID`)
+ * Throw a stable `path.invalid_id` error (mapped to public `UCP_INVALID_ID`)
  * when `value` is not a canonical id. Use this at every boundary where a
  * user-supplied id becomes a filesystem path segment or a ledger lookup key,
  * BEFORE the id is joined into a path, so traversal can never reach the disk.
@@ -303,7 +303,7 @@ export function isPathContained(root: string, target: string): boolean {
 
 /**
  * SECURITY: bound a user-supplied file path to `root`, symlink-safe. Returns the
- * resolved absolute path, or throws a stable `path.escape` (public UCM_PATH_ESCAPE)
+ * resolved absolute path, or throws a stable `path.escape` (public UCP_PATH_ESCAPE)
  * PresentationSkillsError when the path — after resolving symlinks on its existing
  * prefix — escapes `root`. Use at every boundary where an attacker-
  * controlled path (`--plan-file`, a host projection target, ...) becomes a

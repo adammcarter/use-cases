@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://use-case-matrix.dev/schemas/v1/demo-capsule.schema.json",
+  "$id": "https://use-cases-plugin.dev/schemas/v1/demo-capsule.schema.json",
   "type": "object",
   "additionalProperties": false,
   "properties": {

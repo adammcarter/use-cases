@@ -42,9 +42,9 @@ P0 turns that into a runnable TypeScript workspace.
 ### Package Names And Executables
 
 - Root package name: `presentation-skills`.
-- Core package name: `@use-case-matrix/core`.
-- CLI package name: `@use-case-matrix/cli`.
-- MCP package name: `@use-case-matrix/mcp`.
+- Core package name: `@use-cases-plugin/core`.
+- CLI package name: `@use-cases-plugin/cli`.
+- MCP package name: `@use-cases-plugin/mcp`.
 - CLI executable: `presentation-skills`.
 - MCP executable: `presentation-skills-mcp`.
 

@@ -803,10 +803,10 @@ pnpm cli -- showcase status --repo tests/fixtures/workspaces/showcase-basic --ru
 **Files to create or edit:**
 
 ```text
-.agents/skills/use-case-matrix/SKILL.md
+.agents/skills/use-cases-plugin/SKILL.md
 .agents/skills/presentation-showcase/SKILL.md
 .agents/skills/presentation-walkthrough/SKILL.md
-bootstrap/presentation-skills.md
+bootstrap/use-cases-plugin.md
 docs/activation.md
 tests/skills/*.test.ts
 ```
@@ -814,7 +814,7 @@ tests/skills/*.test.ts
 **Skill responsibilities:**
 
 ```text
-use-case-matrix
+use-cases-plugin
   planning, updating use cases, matrix health, evidence attachment, migration/backfill
 
 presentation-showcase

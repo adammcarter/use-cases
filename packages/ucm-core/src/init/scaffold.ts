@@ -1,13 +1,13 @@
-// `ucm init` — scaffold a minimal, WORKING Use Case Matrix workspace.
+// `ucp init` — scaffold a minimal, WORKING Use Cases Plugin workspace.
 //
 // Takes a brand-new repo from nothing to a bindable, verifiable matrix in one
-// command: a workspace config (`presentation-skills.yml`) wired to a default
+// command: a workspace config (`use-cases-plugin.yml`) wired to a default
 // verifier matching the chosen template, plus a `use-cases/` dir holding one
 // example row that VALIDATES against the use-case-file schema. The scaffolded
-// workspace passes `ucm matrix validate` out of the box.
+// workspace passes `ucp matrix validate` out of the box.
 //
 // SAFETY: never generates or writes any private key, never writes a GitHub
-// workflow file. If a `presentation-skills.yml` already exists it REFUSES unless
+// workflow file. If a `use-cases-plugin.yml` already exists it REFUSES unless
 // `force` is set (a `blocked` result, never a silent clobber). All writes are
 // path-contained inside the repo root.
 
@@ -44,7 +44,7 @@ export type ScaffoldWorkspaceResult = {
   diagnostics: Diagnostic[];
 };
 
-const CONFIG_FILE = "presentation-skills.yml";
+const CONFIG_FILE = "use-cases-plugin.yml";
 const USE_CASE_FILE = join("use-cases", "example.yml");
 const DEFAULT_VERIFIER_ID = "acceptance";
 
@@ -176,11 +176,11 @@ function renderExampleUseCase(): string {
     "schema_version: 1",
     "# TODO: replace this example with a real use case for your project.",
     "# Each row describes one observable behaviour your product must keep working.",
-    "# Once you bind it to code (`ucm bind`) and CI proves it, the row reaches FRESH.",
+    "# Once you bind it to code (`ucp bind`) and CI proves it, the row reaches FRESH.",
     "feature:",
     "  id: example.feature",
     "  name: Example feature",
-    "  summary: An example use case scaffolded by `ucm init` — replace it with your own.",
+    "  summary: An example use case scaffolded by `ucp init` — replace it with your own.",
     "metadata:",
     "  owner: unassigned",
     "  lifecycle: active",
@@ -196,7 +196,7 @@ function renderExampleUseCase(): string {
     "      - kind: file",
     "        path: src/example.ts",
     "    actor: user",
-    "    intent: Demonstrate the use-case-matrix row shape so you can replace it.",
+    "    intent: Demonstrate the use-cases-plugin row shape so you can replace it.",
     "    preconditions:",
     "      - The project is set up.",
     "    trigger: The user performs the example action.",
@@ -226,9 +226,9 @@ function renderExampleUseCase(): string {
 export function nextSteps(): string[] {
   return [
     "Edit use-cases/example.yml — replace the example row with a real use case.",
-    "Run `ucm matrix validate --repo . --json` to confirm the matrix is clean.",
-    "Bind the implementing code with `ucm bind` (see docs/getting-started.md).",
-    "Wire the `acceptance` verifier in presentation-skills.yml to your real test command (docs/concepts/verifiers.md).",
+    "Run `ucp matrix validate --repo . --json` to confirm the matrix is clean.",
+    "Bind the implementing code with `ucp bind` (see docs/getting-started.md).",
+    "Wire the `acceptance` verifier in use-cases-plugin.yml to your real test command (docs/concepts/verifiers.md).",
     "Generate an ed25519 keypair — commit the PUBLIC key, keep the PRIVATE key in a CI secret only (docs/security/key-management.md).",
     "Add the GitHub Actions reference workflow (.github/workflows/use-cases.yml) so CI mints FRESH proofs (docs/getting-started.md step 8)."
   ];

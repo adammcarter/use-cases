@@ -205,9 +205,9 @@ function writeFile(root: string, relPath: string, contents: string): void {
 }
 
 function makeWorkspace(): Workspace {
-  const root = mkdtempSync(join(tmpdir(), "ucm-prove-consume-"));
+  const root = mkdtempSync(join(tmpdir(), "ucp-prove-consume-"));
   tempDirs.push(root);
-  writeFile(root, "presentation-skills.yml", CONFIG_YAML);
+  writeFile(root, "use-cases-plugin.yml", CONFIG_YAML);
   writeFile(root, "use-cases/checkout.yml", USE_CASE_YAML);
   writeFile(root, "Sources/Checkout/CouponService.swift", SWIFT_A);
   writeFile(root, "Sources/Checkout/RefundService.swift", SWIFT_B);
@@ -459,7 +459,7 @@ describe("prove --all consumes verification results", () => {
 });
 
 describe("prove unsafe-assume seam is env-gated", () => {
-  const ENV = "UCM_ALLOW_UNSAFE_VERIFICATION";
+  const ENV = "UCP_ALLOW_UNSAFE_VERIFICATION";
   let previous: string | undefined;
 
   beforeEach(() => {

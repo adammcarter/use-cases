@@ -1,6 +1,6 @@
 # CI hardening: the CI-neutral authority contract & release-gate requirement
 
-Use Case Matrix proofs record **where and how they were produced** in a
+Use Cases Plugin proofs record **where and how they were produced** in a
 provider-agnostic `authority` block, and a repo can **require a minimum
 authority** before a `required_for_release` row is allowed to ship. This page
 covers the CI-neutral authority contract, the GitHub Actions reference path, how
@@ -65,7 +65,7 @@ Detected via `GITHUB_ACTIONS`. Fields are read from the standard runner env:
 | `event` | `GITHUB_EVENT_NAME` |
 | `protected_ref` | unknowable from the runner env → `null` (override to set) |
 
-No configuration is needed: running `ucm prove …` inside a GitHub Actions job
+No configuration is needed: running `ucp prove …` inside a GitHub Actions job
 yields `type: "ci"`, `provider: "github-actions"`.
 
 ### Other CI providers (auto-detected)
@@ -86,8 +86,8 @@ For a CI provider that is not auto-detected, or to attest a value the runner
 cannot expose (e.g. `protected_ref` on GitHub), pass a JSON authority record:
 
 ```sh
-ucm prove --all --trusted-ci \
-  --signing-key-env UCM_CI_SIGNING_KEY --key-id ci-key-1 \
+ucp prove --all --trusted-ci \
+  --signing-key-env UCP_CI_SIGNING_KEY --key-id ci-key-1 \
   --authority-file authority.json
 ```
 
@@ -109,10 +109,10 @@ The file is validated against `authority.schema.json`, embedded, and signed.
 
 By default the release gate does **not** look at authority — a `FRESH` required
 row passes regardless of how it was proved. A repo can **opt in** to a minimum
-authority via the OPTIONAL `release_gate` section of `presentation-skills.yml`:
+authority via the OPTIONAL `release_gate` section of `use-cases-plugin.yml`:
 
 ```yaml
-# presentation-skills.yml
+# use-cases-plugin.yml
 release_gate:
   required_authority: ci        # matching proof must have authority.type === "ci"
   require_protected_ref: true   # ...and authority.protected_ref === true

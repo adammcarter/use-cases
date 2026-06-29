@@ -120,15 +120,15 @@ export function computeLedgerEntryHash(entry: unknown): string {
 
 // --- tamper-evident hash chain verification (v1) -----------------------------
 //
-// Stable `UCM_*` diagnostic codes for the chain tamper classes. These are
+// Stable `UCP_*` diagnostic codes for the chain tamper classes. These are
 // declared as plain string literals here (not imported from the error registry)
 // so evidenceLedger has NO dependency on the registry — the registry already
 // imports `EvidenceErrorCode` from this module, and a back-import would be a
 // cycle. The same literals are registered in `errors/registry.ts`.
 export const LedgerChainErrorCode = Object.freeze({
-  CHAIN_BROKEN: "UCM_LEDGER_CHAIN_BROKEN",
-  INDEX_GAP: "UCM_LEDGER_INDEX_GAP",
-  DUPLICATE_INDEX: "UCM_LEDGER_DUPLICATE_INDEX"
+  CHAIN_BROKEN: "UCP_LEDGER_CHAIN_BROKEN",
+  INDEX_GAP: "UCP_LEDGER_INDEX_GAP",
+  DUPLICATE_INDEX: "UCP_LEDGER_DUPLICATE_INDEX"
 } as const);
 
 export type LedgerChainErrorCode =

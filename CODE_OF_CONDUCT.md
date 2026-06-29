@@ -62,7 +62,7 @@ Instances of abusive, harassing, or otherwise unacceptable behavior may be
 reported to the community leaders responsible for enforcement privately through
 the repository's GitHub private security advisory channel:
 
-> https://github.com/adammcarter/presentation-skills/security/advisories/new
+> https://github.com/adammcarter/use-cases-plugin/security/advisories/new
 
 (If a maintainer contact email is preferred, substitute it here:
 `MAINTAINER-CONTACT@example.com`.)

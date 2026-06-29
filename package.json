@@ -1,11 +1,11 @@
 {
-  "name": "use-case-matrix",
+  "name": "use-cases-plugin",
   "version": "1.0.0",
   "private": false,
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/adammcarter/presentation-skills.git"
+    "url": "git+https://github.com/adammcarter/use-cases-plugin.git"
   },
   "type": "module",
   "packageManager": "pnpm@11.9.0",
@@ -13,10 +13,10 @@
     "node": ">=22"
   },
   "bin": {
-    "ucm": "./packages/ucm-cli/dist/index.js",
-    "use-case-matrix": "./packages/ucm-cli/dist/index.js",
-    "ucm-mcp": "./packages/ucm-mcp/dist/index.js",
-    "use-case-matrix-mcp": "./packages/ucm-mcp/dist/index.js"
+    "ucp": "./packages/ucm-cli/dist/index.js",
+    "use-cases-plugin": "./packages/ucm-cli/dist/index.js",
+    "ucp-mcp": "./packages/ucm-mcp/dist/index.js",
+    "use-cases-plugin-mcp": "./packages/ucm-mcp/dist/index.js"
   },
   "files": [
     ".agents/skills",
@@ -46,7 +46,7 @@
     "packages/ucm-mcp/dist",
     "packages/ucm-mcp/package.json",
     "plugin.json",
-    "presentation-skills.yml",
+    "use-cases-plugin.yml",
     "schemas/v1",
     "use-cases"
   ],

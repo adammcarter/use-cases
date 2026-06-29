@@ -17,7 +17,7 @@ Generated plans, walkthroughs, capsules, and runbooks are prepared material only
 
 ## Defer To
 
-- `use-case-matrix` when behavior inventory needs to be created or updated.
+- `use-cases-plugin` when behavior inventory needs to be created or updated.
 - `presentation-showcase` when the user asks to perform a live demo, sign-off run, or final user-visible proof.
 - Ordinary summarization when there is no repo/workspace context or the user opts out of presentation-skills.
 

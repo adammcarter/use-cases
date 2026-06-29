@@ -5,11 +5,11 @@
 // This is the concrete payoff of the verifier-generality work and the evidence
 // behind the headline "anyone can adopt the matrix, not just JS repos":
 //
-//   1. pack @use-case-matrix/core + /cli into tarballs and `npm install` them into
+//   1. pack @use-cases-plugin/core + /cli into tarballs and `npm install` them into
 //      a CLEAN COPY of the example (mirrors tests/smoke/package-entrypoints.test.ts:
 //      a consumer with no repo workspace links, only the published bins);
 //   2. generate a throwaway ed25519 keypair in the temp dir (never committed);
-//   3. drive the installed `ucm` binary through the real trust flow —
+//   3. drive the installed `ucp` binary through the real trust flow —
 //      bind -> scan(UNPROVEN) -> verify(runs REAL pytest, exit 0) ->
 //      prove(--trusted-ci, scratch key, signs) -> scan — and assert the row
 //      reaches FRESH;
@@ -82,15 +82,15 @@ function pytestAvailable(): boolean {
 // The parsed CLI envelope for one marker command (bind/scan/verify/prove all emit
 // the `{ ok, data, ... }` envelope unconditionally).
 function runUcm(
-  ucm: string,
+  ucp: string,
   consumer: string,
   args: string[],
   env: Record<string, string> = {}
 ): { ok: boolean; data: Record<string, any>; raw: SpawnSyncReturns<string> } {
-  const result = run(ucm, args, consumer, env);
+  const result = run(ucp, args, consumer, env);
   if (typeof result.stdout !== "string" || result.stdout.trim() === "") {
     throw new Error(
-      `ucm ${args.join(" ")} produced no JSON (status ${result.status}, stderr: ${result.stderr})`
+      `ucp ${args.join(" ")} produced no JSON (status ${result.status}, stderr: ${result.stderr})`
     );
   }
   const payload = JSON.parse(result.stdout) as { ok: boolean; data: Record<string, any> };
@@ -99,7 +99,7 @@ function runUcm(
 
 interface Consumer {
   dir: string;
-  ucm: string;
+  ucp: string;
   publicKeyPath: string;
   privateKeyPem: string;
   vrPath: string;
@@ -107,7 +107,7 @@ interface Consumer {
 
 // A clean consumer: a COPY of the committed example with the published tarballs
 // installed via npm (no workspace linking), plus a scratch ed25519 keypair. This
-// is exactly what an adopter who `npm i @use-case-matrix/cli`'d would have.
+// is exactly what an adopter who `npm i @use-cases-plugin/cli`'d would have.
 function installConsumer(): Consumer {
   const dir = mkdtempSync(join(tmpdir(), "python-pytest-consumer-"));
   tempDirs.push(dir);
@@ -138,7 +138,7 @@ function installConsumer(): Consumer {
 
   return {
     dir,
-    ucm: join(dir, "node_modules/.bin/ucm"),
+    ucp: join(dir, "node_modules/.bin/ucp"),
     publicKeyPath,
     privateKeyPem: keypair.privateKey.export({ type: "pkcs8", format: "pem" }) as string,
     vrPath: join(dir, "verification-results.jsonl")
@@ -146,7 +146,7 @@ function installConsumer(): Consumer {
 }
 
 function bind(c: Consumer) {
-  return runUcm(c.ucm, c.dir, [
+  return runUcm(c.ucp, c.dir, [
     "bind",
     "--repo",
     c.dir,
@@ -162,11 +162,11 @@ function bind(c: Consumer) {
 }
 
 function scan(c: Consumer) {
-  return runUcm(c.ucm, c.dir, ["scan", "--repo", c.dir, "--public-key", c.publicKeyPath, "--json"]);
+  return runUcm(c.ucp, c.dir, ["scan", "--repo", c.dir, "--public-key", c.publicKeyPath, "--json"]);
 }
 
 function verify(c: Consumer) {
-  return runUcm(c.ucm, c.dir, [
+  return runUcm(c.ucp, c.dir, [
     "verify",
     "--repo",
     c.dir,
@@ -181,7 +181,7 @@ function verify(c: Consumer) {
 
 function prove(c: Consumer) {
   return runUcm(
-    c.ucm,
+    c.ucp,
     c.dir,
     [
       "prove",
@@ -193,12 +193,12 @@ function prove(c: Consumer) {
       "--verification-results",
       c.vrPath,
       "--signing-key-env",
-      "UCM_SIGNING_KEY",
+      "UCP_SIGNING_KEY",
       "--public-key",
       c.publicKeyPath,
       "--json"
     ],
-    { UCM_SIGNING_KEY: c.privateKeyPem }
+    { UCP_SIGNING_KEY: c.privateKeyPem }
   );
 }
 
@@ -218,14 +218,14 @@ beforeAll(() => {
 
   const packDir = mkdtempSync(join(tmpdir(), "python-pytest-pack-"));
   tempDirs.push(packDir);
-  for (const filter of ["@use-case-matrix/core", "@use-case-matrix/cli"]) {
+  for (const filter of ["@use-cases-plugin/core", "@use-cases-plugin/cli"]) {
     requireSuccess(
       run("corepack", ["pnpm", "--filter", filter, "pack", "--pack-destination", packDir]),
       `pack ${filter}`
     );
   }
-  coreTarball = join(packDir, "use-case-matrix-core-1.0.0.tgz");
-  cliTarball = join(packDir, "use-case-matrix-cli-1.0.0.tgz");
+  coreTarball = join(packDir, "use-cases-plugin-core-1.0.0.tgz");
+  cliTarball = join(packDir, "use-cases-plugin-cli-1.0.0.tgz");
 }, 180_000);
 
 afterAll(() => {
@@ -243,7 +243,7 @@ describe("examples/python-pytest reaches FRESH from the published artifact (no p
     const consumer = installConsumer();
 
     // The scaffolded workspace validates out of the box.
-    const validate = runUcm(consumer.ucm, consumer.dir, [
+    const validate = runUcm(consumer.ucp, consumer.dir, [
       "matrix",
       "validate",
       "--repo",

@@ -1,4 +1,4 @@
-# Local Use Case Matrix state produced by bind/scan/verify/prove. The committed
+# Local Use Cases Plugin state produced by bind/scan/verify/prove. The committed
 # example ships in the "marked but not yet bound" state; the adopter runs the
 # trust flow themselves (see README.md), which creates these.
 .use-cases/

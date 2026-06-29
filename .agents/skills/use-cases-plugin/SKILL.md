@@ -1,5 +1,5 @@
 ---
-name: use-case-matrix
+name: use-cases-plugin
 description: Use when planning, updating, validating, migrating, or backfilling product use cases, acceptance-style behavior inventory, matrix health, or safe evidence records in a workspace.
 ---
 

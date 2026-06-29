@@ -23,7 +23,7 @@ Each id resolves to a concrete `{ kind: script, command, inputs }` triple in thi
 order (first match wins):
 
 1. the row's own `verification_policy.verifiers[<id>]`;
-2. the workspace config's `verifiers[<id>]` (`presentation-skills.yml`);
+2. the workspace config's `verifiers[<id>]` (`use-cases-plugin.yml`);
 3. for the default-convention id **`acceptance`**, the entry named by the
    workspace's `verifiers.default`;
 4. otherwise the id is **BLOCKED** with an actionable reason (it never crashes).
@@ -50,7 +50,7 @@ verification_policy:
 ### Preset reference in the workspace config
 
 ```yaml
-# presentation-skills.yml
+# use-cases-plugin.yml
 verifiers:
   default: acceptance
   acceptance:

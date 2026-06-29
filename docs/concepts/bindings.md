@@ -34,17 +34,17 @@ export function applyDiscount(total: number, percent: number): number { … }
 ## The binding lifecycle
 
 ```
-            ucm bind                 edit code / test            ucm prove (CI)
+            ucp bind                 edit code / test            ucp prove (CI)
  author ───────────────▶ registered ──────────────▶ status ◀──────────────── proof
  marker                  (bindings.jsonl)            via scan                  events
 ```
 
 1. **Place** the marker in source.
-2. **Register** it with `ucm bind` — this appends a `binding_registered` event to
+2. **Register** it with `ucp bind` — this appends a `binding_registered` event to
    the append-only registry (`.use-cases/bindings.jsonl` by default). `bind`
    refuses to register unless the edited file scans clean, so the registry never
    records a broken marker.
-3. **Observe** status any time with `ucm scan`, which reconciles the registry
+3. **Observe** status any time with `ucp scan`, which reconciles the registry
    against the current code and the proof ledger.
 4. **Prove** in CI to reach FRESH (see [proofs](./proofs-and-ledger.md)).
 
@@ -56,13 +56,13 @@ editing source), `--comment-prefix` (override the inferred prefix), and
 
 ## The five freshness states
 
-`ucm scan` derives exactly one status per row. They are evaluated in this
+`ucp scan` derives exactly one status per row. They are evaluated in this
 priority order (the first that applies wins):
 
 | State | Meaning | How to fix |
 |---|---|---|
-| **INVALID** | The markers/registry are internally broken — a malformed or duplicate marker, an unregistered current marker, or a marker pointing at an unknown row. Blocks even in feature mode. | Run `ucm scan` to see the integrity errors; fix the marker/registry so the file scans clean. |
-| **UNBOUND** | The row exists but has no registered binding at all. | `ucm bind` the row to its implementing code. |
+| **INVALID** | The markers/registry are internally broken — a malformed or duplicate marker, an unregistered current marker, or a marker pointing at an unknown row. Blocks even in feature mode. | Run `ucp scan` to see the integrity errors; fix the marker/registry so the file scans clean. |
+| **UNBOUND** | The row exists but has no registered binding at all. | `ucp bind` the row to its implementing code. |
 | **SUSPECT** (removed) | A previously registered binding is gone from the code. | Restore the span, or re-bind to its new home, then re-prove. |
 | **UNPROVEN** | Bound to current code, but no signed proof exists yet. | Let CI `verify` + `prove` the row. |
 | **FRESH** | A trusted, signed proof matches the current row hash, binding-set hash, span hashes, **and** verifier context. | Nothing — this is the goal. |
@@ -75,7 +75,7 @@ trusted.
 
 ## Policy modes
 
-`ucm scan --policy-mode <mode>` controls what *blocks*:
+`ucp scan --policy-mode <mode>` controls what *blocks*:
 
 - **feature** (default) — blocks only INVALID rows.
 - **release** — also blocks any `required_for_release` row that is not FRESH (and,
