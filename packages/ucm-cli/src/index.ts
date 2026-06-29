@@ -79,12 +79,34 @@ async function loadUcmCore(): Promise<UcmCoreModule> {
       throw error;
     }
     const bundledCoreSpecifier = "../../ucm-core/dist/index.js";
-    return await import(bundledCoreSpecifier) as UcmCoreModule;
+    try {
+      return await import(bundledCoreSpecifier) as UcmCoreModule;
+    } catch (fallbackError) {
+      // The package alias AND the bundled dist both failed to resolve: the
+      // compiled core/dist has not been built yet. Surface an actionable hint
+      // instead of letting a raw ERR_MODULE_NOT_FOUND stack reach the user.
+      if (isMissingCoreModule(fallbackError)) {
+        process.stderr.write(`${MISSING_BUILD_MESSAGE}\n`);
+        process.exit(2);
+      }
+      throw fallbackError;
+    }
   }
 }
 
+export const MISSING_BUILD_MESSAGE =
+  "ucp: the compiled core is missing. Run `pnpm build` from the repository root before using the CLI.";
+
 function isMissingCorePackage(error: unknown): boolean {
-  return error instanceof Error && "code" in error && error.code === "ERR_MODULE_NOT_FOUND" && error.message.includes("@use-cases-plugin/core");
+  return isMissingCoreModule(error) && error instanceof Error && error.message.includes("@use-cases-plugin/core");
+}
+
+export function isMissingCoreModule(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    "code" in error &&
+    (error as { code?: unknown }).code === "ERR_MODULE_NOT_FOUND"
+  );
 }
 
 export function runCli(argv: string[]): number {
@@ -99,6 +121,14 @@ export function runCli(argv: string[]): number {
       process.stdout.write(`${getVersionInfo().version}\n`);
     }
     return 0;
+  }
+
+  // Discoverability: `ucp`, `ucp --help`, `ucp -h`, and `ucp <command> --help`
+  // all print a usage envelope. Agents reliably reach for `--help` first, so a
+  // bare or help-flagged invocation must answer with the command/flag catalog
+  // rather than the cryptic command.unknown response.
+  if (normalizedArgv.length === 0 || normalizedArgv.includes("--help") || normalizedArgv.includes("-h")) {
+    return runHelp(normalizedArgv);
   }
 
   if (normalizedArgv[0] === "schema" && normalizedArgv[1] === "list" && wantsJson) {
@@ -241,30 +271,219 @@ export function runCli(argv: string[]): number {
     return runMarkerValidateLedger(normalizedArgv);
   }
 
-  process.stderr.write(
-    `${JSON.stringify(
-      createCliResult(
-        "unknown",
-        {},
+  // No recognized command: instead of a cryptic one-line hint, print the usage
+  // envelope scoped to whatever group the caller named (e.g. `matrix`) so they
+  // can immediately see the valid subcommands and flags.
+  return runHelp(normalizedArgv, { unknown: true });
+}
+
+type UsageFlag = { flag: string; summary: string };
+type UsageEntry = { name: string; summary: string; flags: UsageFlag[] };
+
+const COMMON_FLAGS: UsageFlag[] = [
+  { flag: "--repo <path>", summary: "Workspace root (defaults to the current directory)." },
+  { flag: "--data-root <path>", summary: "Override the data root (must stay inside --repo)." },
+  { flag: "--component <id>", summary: "Select a component within the workspace." },
+  { flag: "--json", summary: "Emit the machine-readable JSON result envelope (required for most commands)." }
+];
+
+const USAGE: UsageEntry[] = [
+  { name: "version", summary: "Print the CLI version.", flags: [{ flag: "--json", summary: "Emit the version envelope." }] },
+  { name: "schema list", summary: "List the public schema ids.", flags: [{ flag: "--json", summary: "Required." }] },
+  {
+    name: "init",
+    summary: "Scaffold a Use Cases Plugin workspace.",
+    flags: [
+      { flag: "--repo <path>", summary: "Target directory to scaffold into." },
+      { flag: "--template <name>", summary: "generic | js-vitest | python-pytest | go-test." },
+      { flag: "--component <id>", summary: "Component id to seed." },
+      { flag: "--force", summary: "Overwrite existing scaffold files." },
+      { flag: "--json", summary: "Emit the JSON result envelope." }
+    ]
+  },
+  { name: "matrix validate", summary: "Validate the use-case matrix.", flags: COMMON_FLAGS },
+  {
+    name: "matrix list",
+    summary: "Query and list use cases.",
+    flags: [
+      ...COMMON_FLAGS,
+      { flag: "--value <tier>", summary: "Filter by value tier (repeatable)." },
+      { flag: "--journey-role <role>", summary: "Filter by journey role (repeatable)." },
+      { flag: "--lifecycle <state>", summary: "Filter by lifecycle (repeatable)." },
+      { flag: "--host <surface>", summary: "Filter by host surface (repeatable)." },
+      { flag: "--tag <tag>", summary: "Filter by tag (repeatable)." },
+      { flag: "--changed-path <path>", summary: "Filter by changed path (repeatable)." },
+      { flag: "--strict", summary: "Fail when the matrix is incomplete." }
+    ]
+  },
+  { name: "matrix status", summary: "Compose matrix and evidence completeness.", flags: COMMON_FLAGS },
+  {
+    name: "matrix upsert",
+    summary: "Add or update a single use-case row.",
+    flags: [
+      ...COMMON_FLAGS,
+      { flag: "--file <path>", summary: "Target use-case file (inside use-cases/)." },
+      { flag: "--use-case-json <json>", summary: "Inline JSON for the use-case row." },
+      { flag: "--use-case-file <path>", summary: "Read the use-case JSON from a file (alternative to --use-case-json)." },
+      { flag: "--expected-hash <hash>", summary: "Optimistic-concurrency guard for updates." }
+    ]
+  },
+  {
+    name: "matrix remove",
+    summary: "Soft-remove a use-case row.",
+    flags: [
+      ...COMMON_FLAGS,
+      { flag: "--use-case <id>", summary: "Use-case id to remove." },
+      { flag: "--reason <text>", summary: "Why the row is being removed." },
+      { flag: "--expected-hash <hash>", summary: "Optimistic-concurrency guard." }
+    ]
+  },
+  {
+    name: "plan showcase",
+    summary: "Select a showcase presentation plan.",
+    flags: [
+      ...COMMON_FLAGS,
+      { flag: "--audience <name>", summary: "Target audience (default reviewer)." },
+      { flag: "--timebox <seconds>", summary: "Timebox budget." },
+      { flag: "--max-items <n>", summary: "Cap the number of selected items." },
+      { flag: "--host <surface>", summary: "Host surface." },
+      { flag: "--changed-path <path>", summary: "Bias toward changed paths (repeatable)." },
+      { flag: "--strict", summary: "Fail on integrity issues." }
+    ]
+  },
+  {
+    name: "plan walkthrough",
+    summary: "Select a walkthrough presentation plan.",
+    flags: [
+      ...COMMON_FLAGS,
+      { flag: "--audience <name>", summary: "Target audience (default reviewer)." },
+      { flag: "--timebox <seconds>", summary: "Timebox budget." },
+      { flag: "--max-items <n>", summary: "Cap the number of selected items." }
+    ]
+  },
+  {
+    name: "plan cards",
+    summary: "Render presentation cards from a plan file.",
+    flags: [...COMMON_FLAGS, { flag: "--plan-file <path>", summary: "Plan file inside the workspace." }]
+  },
+  { name: "capsule list", summary: "List demo capsules.", flags: COMMON_FLAGS },
+  { name: "capsule validate", summary: "Validate demo capsules.", flags: COMMON_FLAGS },
+  {
+    name: "capsule plan",
+    summary: "Plan a demo capsule.",
+    flags: [...COMMON_FLAGS, { flag: "--capsule <id>", summary: "Capsule id." }]
+  },
+  {
+    name: "capsule run",
+    summary: "Run a demo capsule.",
+    flags: [
+      ...COMMON_FLAGS,
+      { flag: "--capsule <id>", summary: "Capsule id." },
+      { flag: "--execute-commands", summary: "Actually execute the capsule commands." }
+    ]
+  },
+  {
+    name: "evidence record",
+    summary: "Append an evidence observation to the ledger.",
+    flags: [
+      ...COMMON_FLAGS,
+      { flag: "--use-case <id>", summary: "Use-case id the evidence is for." },
+      { flag: "--kind <kind>", summary: "Evidence kind (default manual_observation)." },
+      { flag: "--result <result>", summary: "pass | fail | inconclusive | observed (default observed)." },
+      { flag: "--summary <text>", summary: "Human summary of the observation." },
+      { flag: "--idempotency-key <key>", summary: "Idempotency key for the append." }
+    ]
+  },
+  { name: "evidence status", summary: "Replay the evidence ledger state.", flags: COMMON_FLAGS },
+  {
+    name: "evidence void",
+    summary: "Append a terminal void event for an evidence aggregate.",
+    flags: [
+      ...COMMON_FLAGS,
+      { flag: "--evidence <id>", summary: "Evidence aggregate id." },
+      { flag: "--expected-head <event-id>", summary: "Expected head event id (concurrency guard)." },
+      { flag: "--reason <text>", summary: "Why the evidence is being voided." }
+    ]
+  },
+  {
+    name: "showcase start",
+    summary: "Start a showcase run from a plan or ad hoc selection.",
+    flags: [
+      ...COMMON_FLAGS,
+      { flag: "--plan-file <path>", summary: "Plan file inside the workspace." },
+      { flag: "--adhoc --select <id>", summary: "Start an ad hoc run for a single use case." }
+    ]
+  },
+  { name: "showcase status", summary: "Replay a showcase run.", flags: [...COMMON_FLAGS, { flag: "--run <id>", summary: "Run id." }] },
+  { name: "host doctor", summary: "Diagnose a host profile.", flags: [...COMMON_FLAGS, { flag: "--host <name>", summary: "claude | codex | copilot | opencode." }] },
+  {
+    name: "host project",
+    summary: "Project host files (dry-run/write/revert).",
+    flags: [
+      ...COMMON_FLAGS,
+      { flag: "--host <name>", summary: "Host to project." },
+      { flag: "--dry-run | --write | --revert", summary: "Exactly one mode." }
+    ]
+  },
+  { name: "host conformance", summary: "Check host conformance.", flags: [...COMMON_FLAGS, { flag: "--host <name>", summary: "Host (or --all)." }, { flag: "--all", summary: "Check every supported host." }] },
+  { name: "doctor roots", summary: "Report resolved workspace roots (read-only).", flags: COMMON_FLAGS },
+  { name: "doctor skills", summary: "Validate skill assets.", flags: COMMON_FLAGS },
+  { name: "doctor package", summary: "Inspect a package artifact.", flags: [...COMMON_FLAGS, { flag: "--tarball <path>", summary: "Inspect a tarball." }, { flag: "--installed-root <path>", summary: "Inspect an installed root." }] },
+  { name: "workflow mode", summary: "Print the effective advisory workflow mode.", flags: COMMON_FLAGS },
+  { name: "workflow set-mode", summary: "Persist the advisory workflow mode.", flags: [...COMMON_FLAGS, { flag: "--mode <mode>", summary: "Advisory workflow mode." }] },
+  { name: "migrate test-matrix", summary: "Migrate a legacy TEST-MATRIX.md.", flags: [...COMMON_FLAGS, { flag: "--source <path>", summary: "Source file." }, { flag: "--dry-run | --write", summary: "Migration mode." }, { flag: "--out <dir>", summary: "Output directory." }] },
+  { name: "bind", summary: "Bind a use-case row to a code marker.", flags: [...COMMON_FLAGS, { flag: "--row <id>", summary: "Row id." }, { flag: "--file <path>", summary: "Source file." }, { flag: "--mode <mode>", summary: "explicit | swift-func." }] },
+  { name: "scan", summary: "Scan markers against the bindings ledger.", flags: [...COMMON_FLAGS, { flag: "--policy-mode <mode>", summary: "feature | release | custom." }] },
+  { name: "prove", summary: "Produce signed proofs from verification results.", flags: [...COMMON_FLAGS, { flag: "--row <id> | --all", summary: "Target row(s)." }] },
+  { name: "verify", summary: "Run verifiers and emit verification results.", flags: [...COMMON_FLAGS, { flag: "--row <id> | --all", summary: "Target row(s)." }, { flag: "--out <path>", summary: "Write the unsigned results ledger." }] },
+  { name: "validate-ledger", summary: "Validate the marker evidence ledger.", flags: COMMON_FLAGS }
+];
+
+function selectUsageEntries(tokens: string[]): UsageEntry[] {
+  if (tokens.length === 0) {
+    return USAGE;
+  }
+  const prefix = tokens.join(" ");
+  const exact = USAGE.filter((entry) => entry.name === prefix || entry.name.startsWith(`${prefix} `));
+  if (exact.length > 0) {
+    return exact;
+  }
+  const group = USAGE.filter((entry) => entry.name === tokens[0] || entry.name.startsWith(`${tokens[0]} `));
+  return group.length > 0 ? group : USAGE;
+}
+
+function runHelp(argv: string[], options: { unknown?: boolean } = {}): number {
+  const tokens = argv.filter((arg) => !arg.startsWith("-"));
+  const commands = selectUsageEntries(tokens);
+  const data = {
+    schema_version: 1,
+    usage: "ucp <command> [subcommand] [flags] --json",
+    requested: tokens.length > 0 ? tokens.join(" ") : null,
+    commands
+  };
+  const diagnostics = options.unknown
+    ? [
         {
-          ok: false,
-          complete: false,
-          diagnostics: [
-            {
-              code: "command.unknown",
-              severity: "error",
-              message: "No supported P1 command was provided. Try --version --json or schema list --json.",
-              source_path: null,
-              json_pointer: null,
-              entity_id: null,
-              related_ids: []
-            }
-          ]
+          code: "command.unknown",
+          severity: "error" as const,
+          message: `No recognized command for '${tokens.join(" ") || "(none)"}'. See the commands listed below or run \`ucp --help\`.`,
+          source_path: null,
+          json_pointer: null,
+          entity_id: null,
+          related_ids: []
         }
-      )
+      ]
+    : [];
+  process.stdout.write(
+    `${JSON.stringify(
+      createCliResult("help", data, {
+        ok: !options.unknown,
+        complete: !options.unknown,
+        diagnostics
+      })
     )}\n`
   );
-  return 2;
+  return options.unknown ? 2 : 0;
 }
 
 function runInit(argv: string[], wantsJson: boolean): number {
@@ -351,11 +570,32 @@ function runEvidenceRecord(argv: string[]): number {
     actorType: "agent",
     hostSurface: "codex.cli"
   });
+  // Surface the derived assurance class so the agent immediately sees how strong
+  // the evidence is (e.g. a self-reported "pass" is the weakest tier). The
+  // append-result data shape is schema-locked, so this rides as an info
+  // diagnostic rather than an extra data field.
+  const snapshot = replayEvidence({ context });
+  const aggregate = snapshot.aggregates.find((item) => item.evidenceId === append.event.aggregate_id);
+  const assuranceClass = (aggregate?.assurance as { class?: string } | undefined)?.class;
+  const diagnostics = assuranceClass
+    ? [
+        {
+          code: "evidence.assurance_class",
+          severity: "info" as const,
+          message: assuranceClassMessage(assuranceClass),
+          source_path: null,
+          json_pointer: null,
+          entity_id: null,
+          related_ids: []
+        }
+      ]
+    : [];
   process.stdout.write(
     `${JSON.stringify(
       createCliResult("evidence.record", toEvidenceAppendResult(append), {
         ok: true,
         complete: true,
+        diagnostics,
         workspaceRoot: context.workspace_root,
         dataRoot: context.data_root,
         componentId: context.component_id
@@ -363,6 +603,20 @@ function runEvidenceRecord(argv: string[]): number {
     )}\n`
   );
   return 0;
+}
+
+function assuranceClassMessage(assuranceClass: string): string {
+  const note =
+    assuranceClass === "reported"
+      ? " (self-reported — the weakest assurance tier)"
+      : assuranceClass === "observed"
+        ? " (observed — stronger than self-reported)"
+        : assuranceClass === "reproducible"
+          ? " (reproducible via a structured command — the strongest tier)"
+          : assuranceClass === "reference"
+            ? " (reference link)"
+            : "";
+  return `Evidence assurance class: ${assuranceClass}${note}.`;
 }
 
 function runEvidenceVoid(argv: string[]): number {
@@ -519,9 +773,40 @@ function runMatrixUpsert(argv: string[]): number {
     return contextResult.exitCode;
   }
   const targetFile = valueAfter(argv, "--file");
-  const useCaseJson = valueAfter(argv, "--use-case-json");
-  if (!targetFile || !useCaseJson) {
-    return writeError("matrix.upsert", "cli_invalid_arguments", "Missing --file or --use-case-json.");
+  const inlineJson = valueAfter(argv, "--use-case-json");
+  const useCaseFile = valueAfter(argv, "--use-case-file");
+  if (!targetFile || (!inlineJson && !useCaseFile)) {
+    return writeError(
+      "matrix.upsert",
+      "cli_invalid_arguments",
+      "Missing --file or one of --use-case-json / --use-case-file."
+    );
+  }
+  if (inlineJson && useCaseFile) {
+    return writeError(
+      "matrix.upsert",
+      "cli_invalid_arguments",
+      "Use only one of --use-case-json or --use-case-file."
+    );
+  }
+  let useCaseJson: string;
+  if (useCaseFile) {
+    // --use-case-file is a read-only, one-shot convenience input (effectively
+    // stdin-from-a-file), so it is NOT containment-restricted the way persistent
+    // plan files are: agents naturally pass a scratch JSON from /tmp. Worst case a
+    // non-JSON target simply fails JSON.parse below.
+    const useCaseFilePath = resolve(process.cwd(), useCaseFile);
+    try {
+      useCaseJson = readFileSync(useCaseFilePath, "utf8");
+    } catch {
+      return writeError(
+        "matrix.upsert",
+        "matrix.use_case_file_unreadable",
+        `Could not read --use-case-file: ${useCaseFilePath}`
+      );
+    }
+  } else {
+    useCaseJson = inlineJson as string;
   }
   let useCase: Record<string, unknown>;
   try {
