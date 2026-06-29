@@ -59,7 +59,13 @@ const DEFAULT_SKIP_DIRS = new Set([
   "coverage",
   ".next",
   ".turbo",
-  ".svelte-kit"
+  ".svelte-kit",
+  // Sample/nested example projects ship their OWN matrix + markers (a nested
+  // workspace). Their markers reference the example's rows, not the parent's, so
+  // scanning them from the parent repo would read as INVALID. Skip by default;
+  // the example's own `scan --repo examples/<name>` has no `examples/` subtree
+  // and is unaffected. (examples/ is not part of the published package either.)
+  "examples"
 ]);
 
 export interface CollectSourceOptions {

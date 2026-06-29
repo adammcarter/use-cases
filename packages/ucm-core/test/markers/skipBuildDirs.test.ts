@@ -45,4 +45,20 @@ describe("collectSourceInputs skips build-output dirs", () => {
     expect(result.errors).toEqual([]);
     expect(result.bindings.map((b) => b.binding_slug)).toEqual(["demo.row"]);
   });
+
+  test("a marker in a nested examples/ project is not scanned by the parent", () => {
+    // examples/ ship their own matrix + markers (a nested workspace); scanning
+    // them from the parent repo would read their rows as INVALID. They must be
+    // skipped by default. Regression for the python-pytest example leaking
+    // `example.checkout.apply_coupon` into the parent root scan.
+    const root = mkdtempSync(join(tmpdir(), "ucm-skip-examples-"));
+    dirs.push(root);
+    write(root, "packages/core/src/F.ts", SRC); // the parent's real marker
+    write(root, "examples/python-pytest/src/coupon.py", SRC); // nested example marker
+
+    const scanned = collectSourceInputs(root)
+      .map((i) => i.file_path)
+      .sort();
+    expect(scanned).toEqual(["packages/core/src/F.ts"]);
+  });
 });
