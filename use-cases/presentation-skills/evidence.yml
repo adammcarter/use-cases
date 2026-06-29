@@ -36,8 +36,14 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command: [pnpm, -s, vitest, run, tests/use-cases/product_proof_map.test.ts]
+          inputs: [tests/use-cases/product_proof_map.test.ts]
       requirements:
-        - evidence_kind: command_result
+        - evidence_kind: test_result
           required_verifiers: [script]
           minimum_count: 1
     approval_policy:
@@ -75,12 +81,19 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command: [pnpm, -s, vitest, run, tests/use-cases/append_only_corrections.test.ts]
+          inputs: [tests/use-cases/append_only_corrections.test.ts]
       requirements:
-        - evidence_kind: command_result
+        - evidence_kind: test_result
           required_verifiers: [script]
           minimum_count: 1
     approval_policy:
       mode: none
+      required_for_release: true
 
   - id: presentation_skills.evidence.assurance_and_freshness
     title: Assurance and freshness surfaced
@@ -114,9 +127,15 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command: [pnpm, -s, vitest, run, tests/use-cases/assurance_and_freshness.test.ts]
+          inputs: [tests/use-cases/assurance_and_freshness.test.ts]
       requirements:
-        - evidence_kind: agent_observation
-          required_verifiers: [agent]
+        - evidence_kind: test_result
+          required_verifiers: [script]
           minimum_count: 1
     approval_policy:
       mode: none
@@ -153,12 +172,19 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command: [pnpm, -s, vitest, run, tests/use-cases/damaged_ledger_replay.test.ts]
+          inputs: [tests/use-cases/damaged_ledger_replay.test.ts]
       requirements:
         - evidence_kind: test_result
           required_verifiers: [script]
           minimum_count: 1
     approval_policy:
       mode: none
+      required_for_release: true
 
   - id: presentation_skills.evidence.untrusted_content_boundary
     title: Evidence content is data, not instruction

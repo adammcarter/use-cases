@@ -1,6 +1,7 @@
 import type { MatrixSnapshot } from "../useCases/types.js";
 import type { EvidenceMatrixLink, EvidenceSnapshot } from "./types.js";
 
+//: @use-case: presentation_skills.evidence.product_proof_map
 export function linkEvidenceToMatrix(
   evidence: EvidenceSnapshot,
   matrix: MatrixSnapshot
@@ -57,3 +58,4 @@ export function linkEvidenceToMatrix(
     `${left.evidenceId}:${left.useCaseId}`.localeCompare(`${right.evidenceId}:${right.useCaseId}`)
   );
 }
+//: @use-case: end presentation_skills.evidence.product_proof_map

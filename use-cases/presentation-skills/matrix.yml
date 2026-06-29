@@ -114,12 +114,19 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command: [pnpm, -s, vitest, run, tests/use-cases/integrity_degraded_nonfatal.test.ts]
+          inputs: [tests/use-cases/integrity_degraded_nonfatal.test.ts]
       requirements:
         - evidence_kind: test_result
           required_verifiers: [script]
           minimum_count: 1
     approval_policy:
       mode: none
+      required_for_release: true
 
   - id: presentation_skills.matrix.coverage_by_value_and_journey
     title: Coverage by value and journey role
@@ -153,9 +160,15 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command: [pnpm, -s, vitest, run, tests/use-cases/coverage_by_value_and_journey.test.ts]
+          inputs: [tests/use-cases/coverage_by_value_and_journey.test.ts]
       requirements:
-        - evidence_kind: agent_observation
-          required_verifiers: [agent]
+        - evidence_kind: test_result
+          required_verifiers: [script]
           minimum_count: 1
     approval_policy:
       mode: none

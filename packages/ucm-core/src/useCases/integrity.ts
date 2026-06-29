@@ -9,6 +9,7 @@ import type {
   MatrixValidationResultData
 } from "./types.js";
 
+//: @use-case: presentation_skills.matrix.integrity_degraded_nonfatal
 export function buildMatrixSnapshot(input: {
   context: MatrixSnapshot["context"];
   files: MatrixFileResult[];
@@ -128,6 +129,7 @@ export function buildMatrixSnapshot(input: {
   };
 }
 
+//: @use-case: end presentation_skills.matrix.integrity_degraded_nonfatal
 export function toMatrixValidationResult(snapshot: MatrixSnapshot): MatrixValidationResultData {
   return {
     schema_version: 1,
