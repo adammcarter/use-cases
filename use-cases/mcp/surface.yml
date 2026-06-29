@@ -199,3 +199,47 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
+  - id: mcp.surface.declared_tool_schemas
+    title: MCP tools declare their real input parameters
+    lifecycle: active
+    value_tier: core
+    journey_role: golden
+    usage_frequency: common
+    tags:
+      - mcp
+      - schema
+      - discoverability
+    source_refs:
+      - kind: file
+        path: packages/ucm-mcp/src/tools.ts
+      - kind: file
+        path: tests/conformance/mcp/tool-input-schemas.test.ts
+    actor: agent
+    intent: Expose each MCP tool's real parameters in its input schema so an agent can discover them from the tool definition instead of reverse-engineering them from the CLI or tests.
+    preconditions:
+      - The MCP server is registered and its tools are listed by the host.
+    trigger: An agent inspects an MCP tool's input schema before calling it.
+    scenarios:
+      - id: mcp.surface.declared_tool_schemas.declared
+        kind: steps
+        steps:
+          - List the MCP tools and read a high-value tool's input schema.
+          - Confirm named parameters with descriptions are present.
+          - Call the tool and confirm the CLI-parity result is unchanged.
+    observable_outcomes:
+      - High-value tool input schemas declare their real named parameters with descriptions rather than only an open passthrough.
+      - repo stays required for workspace-scoped tools, and CLI-parity forwarding behaviour is unchanged.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+      - host_surface: claude.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none
