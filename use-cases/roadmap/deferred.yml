@@ -29,11 +29,24 @@ use_cases:
       - hosts
       - approval
       - future
+      - security
     source_refs:
+      - kind: file
+        path: docs/adr/0006-trusted-user-approval-path.md
+      - kind: file
+        path: packages/ucm-core/src/showcase/approvalAuthority.ts
       - kind: file
         path: docs/security.md
     actor: user
-    intent: Let a host provide non-model trusted user confirmation.
+    intent: Let a real human grant a showcase sign-off through a trusted issuer that signs an approval token bound to the exact run, while an autonomous agent driving the same CLI/MCP cannot mint one. The verifier computes trust from the signature against the protected keyring; it never accepts a caller-supplied verified/confirmed flag. TTY confirmation is a weak, agent-spoofable fallback, not the trust root.
+    preconditions:
+      - A showcase run requires user approval (approval_policy approver_type user).
+      - A trusted approval issuer (host dialog, OS auth, WebAuthn, or out-of-band broker) is configured with a signing key outside the workspace.
+    trigger: A user-required showcase run is finished and awaits sign-off.
+    observable_outcomes:
+      - A real human can grant approval via a signed, nonce-bound, single-use token the plugin verifies against the keyring.
+      - An agent driving the CLI/MCP/terminal cannot produce a trusted approval; the run stays pending rather than being self-approved.
+      - Approval assurance is recorded by tier (host token / WebAuthn / weak TTY), and the weak tier is excluded from non-spoofable-required policies.
   - id: roadmap.deferred.signed_audit_log
     title: Cryptographically signed evidence ledger
     lifecycle: planned
