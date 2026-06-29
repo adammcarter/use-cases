@@ -41,6 +41,7 @@ const expectedSchemaIds = [
   "https://use-case-matrix.dev/schemas/v1/release-gate-result.schema.json",
   "https://use-case-matrix.dev/schemas/v1/ledger.schema.json",
   "https://use-case-matrix.dev/schemas/v1/keyring.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/authority.schema.json",
   "https://use-case-matrix.dev/schemas/v1/mcp-tool-results.schema.json"
 ];
 

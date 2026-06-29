@@ -42,6 +42,7 @@ import {
   type PemOrKeyObject,
   type PublicKeyResolver
 } from "../proofSignature.js";
+import type { CiAuthority } from "../ciAuthority.js";
 import type { CurrentBindingRecord } from "../scanner.js";
 import type { FreshnessInputRow } from "../freshness.js";
 import type { GitRunner } from "../appendOnly.js";
@@ -91,6 +92,10 @@ export interface ProveCommandOptions {
   unsafeAssumeVerificationResult?: "pass";
   signingKey?: ProveSigningKey;
   producer?: ProveProducerInfo;
+  // OPTIONAL CI-neutral provenance authority embedded into every proof this run
+  // appends. Built into the event before signing (the signature covers it). The
+  // GitHub-shaped `producer` block is kept exactly as before, beside it.
+  authority?: CiAuthority;
   generatedAt: string;
   // Injectable so tests can assert on a deterministic event id.
   idFactory?: () => string;
@@ -432,6 +437,7 @@ function proveOneRow(args: ProveOneRowArgs): ProveRowResult {
     bindings,
     verification,
     producer: options.producer,
+    authority: options.authority,
     entryIndex: tail.count,
     previousEntryHash: tail.lastEntry
       ? computeLedgerEntryHash(tail.lastEntry)
@@ -509,6 +515,9 @@ interface BuildProofArgs {
   bindings: CurrentBindingRecord[];
   verification: ProofVerification;
   producer?: ProveProducerInfo;
+  // OPTIONAL CI-neutral provenance authority (additive). Built into the event
+  // before signing when present; omitted entirely when absent.
+  authority?: CiAuthority;
   // Tamper-evident chain fields (additive). Built into the event before signing.
   entryIndex: number;
   previousEntryHash: string;
@@ -563,6 +572,10 @@ function buildProofEvent(args: BuildProofArgs): Omit<ProofEvent, "signature"> {
       context_hash: args.contextHash
     },
     entry_index: args.entryIndex,
-    previous_entry_hash: args.previousEntryHash
+    previous_entry_hash: args.previousEntryHash,
+    // OPTIONAL: only embed the CI-neutral authority when one was supplied, so
+    // proofs minted without it remain byte-for-byte as before (and legacy proofs
+    // without it still validate + stay FRESH).
+    ...(args.authority ? { authority: args.authority } : {})
   };
 }

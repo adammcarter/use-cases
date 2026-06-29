@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://use-case-matrix.dev/schemas/v1/authority.schema.json",
+  "title": "ucase-authority-v1",
+  "description": "CI-neutral provenance authority for a proof event. The trust model is CI-NEUTRAL: GitHub Actions is only the reference provider. This record captures WHO/WHERE produced a proof in a provider-agnostic shape (type + provider + best-effort repository/ref/commit/run_id/actor/event), auto-detected from CI env vars (see markers/ciAuthority.ts detectCiAuthority) or supplied explicitly via `prove --authority-file`. It is OPTIONAL on a proof event and ADDITIVE: it does not affect freshness (FRESH matches row/binding/context hashes, not provenance). When present it is built INTO the event before signing, so the signature covers it. `protected_ref` is a tri-state: true/false when the provider exposes an explicit protected-branch signal, and null when unknown.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "type": {
+      "enum": ["ci", "local"],
+      "description": "\"ci\" when produced inside a recognised CI provider; \"local\" otherwise."
+    },
+    "provider": {
+      "enum": ["github-actions", "gitlab-ci", "circleci", "generic"],
+      "description": "The CI provider. \"generic\" is the fallback for local runs or an unrecognised provider."
+    },
+    "repository": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Provider-shaped repository identifier (e.g. owner/repo)."
+    },
+    "ref": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The git ref / branch the run executed against."
+    },
+    "commit": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The commit SHA the run executed against."
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The provider's run / pipeline / build identifier."
+    },
+    "actor": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The user/login that triggered the run, when the provider exposes it."
+    },
+    "protected_ref": {
+      "type": ["boolean", "null"],
+      "description": "Whether the ref is a protected branch. true/false when the provider exposes an explicit signal; null when unknown."
+    },
+    "event": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The provider's triggering event name (e.g. push, pull_request, merge_request)."
+    }
+  },
+  "required": ["type", "provider"],
+  "examples": [
+    {
+      "type": "ci",
+      "provider": "github-actions",
+      "repository": "use-case-matrix/presentation-skills",
+      "ref": "refs/heads/main",
+      "commit": "0123456789abcdef0123456789abcdef01234567",
+      "run_id": "1234567890",
+      "actor": "octocat",
+      "protected_ref": null,
+      "event": "push"
+    },
+    {
+      "type": "local",
+      "provider": "generic"
+    }
+  ]
+}

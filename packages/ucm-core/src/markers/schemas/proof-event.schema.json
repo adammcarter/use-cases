@@ -15,7 +15,23 @@
     "signature"
   ],
   "$defs": {
-    "hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+    "hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "provider"],
+      "properties": {
+        "type": { "enum": ["ci", "local"] },
+        "provider": { "enum": ["github-actions", "gitlab-ci", "circleci", "generic"] },
+        "repository": { "type": "string", "minLength": 1 },
+        "ref": { "type": "string", "minLength": 1 },
+        "commit": { "type": "string", "minLength": 1 },
+        "run_id": { "type": "string", "minLength": 1 },
+        "actor": { "type": "string", "minLength": 1 },
+        "protected_ref": { "type": ["boolean", "null"] },
+        "event": { "type": "string", "minLength": 1 }
+      }
+    }
   },
   "properties": {
     "schema": { "const": "ucase-proof-event-v1" },
@@ -145,6 +161,10 @@
     "previous_entry_hash": {
       "$ref": "#/$defs/hash",
       "description": "OPTIONAL tamper-evident chain field: sha256 of the previous entry's full canonical JSON, or the genesis sentinel (sha256:<64 zeros>) for the first entry. Omitted on legacy proofs."
+    },
+    "authority": {
+      "$ref": "#/$defs/authority",
+      "description": "OPTIONAL CI-neutral provenance authority (mirrors authority.schema.json). Provider-agnostic who/where minted the proof. Omitted on legacy proofs minted before it existed, which must still validate and stay FRESH. When present it is signed (built into the event before signing)."
     }
   }
 }

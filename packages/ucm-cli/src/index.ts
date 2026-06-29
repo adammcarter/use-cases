@@ -4,6 +4,7 @@ import { createPrivateKey, createPublicKey } from "node:crypto";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type {
+  CiAuthority,
   HostName,
   HostProfile,
   ResolvedWorkspaceContext,
@@ -59,6 +60,7 @@ const {
   runProveCommand,
   runVerifyCommand,
   runValidateLedgerCommand,
+  detectCiAuthority,
   singleKeyResolver,
   keyringPublicKeyResolverFromFile
 } = await loadUcmCore();
@@ -1685,6 +1687,37 @@ function runMarkerProve(argv: string[]): number {
   const unsafeAssume =
     valueAfter(argv, "--unsafe-assume-verification-result") === "pass" ? ("pass" as const) : undefined;
 
+  // CI-neutral provenance authority (additive, signed). An explicit
+  // --authority-file (a JSON authority record) wins — for unknown CI / overrides;
+  // otherwise auto-detect from the process env. The GitHub-shaped `producer` block
+  // below is still populated exactly as before, beside the authority.
+  let authority: CiAuthority;
+  const authorityFileRaw = valueAfter(argv, "--authority-file");
+  if (authorityFileRaw) {
+    const authorityPath = resolve(process.cwd(), authorityFileRaw);
+    let authorityText: string;
+    try {
+      authorityText = readFileSync(authorityPath, "utf8");
+    } catch {
+      return writeError(
+        "markers.prove",
+        "cli_invalid_arguments",
+        `Could not read --authority-file: ${authorityPath}`
+      );
+    }
+    try {
+      authority = JSON.parse(authorityText) as CiAuthority;
+    } catch {
+      return writeError(
+        "markers.prove",
+        "cli_invalid_arguments",
+        `--authority-file is not valid JSON: ${authorityPath}`
+      );
+    }
+  } else {
+    authority = detectCiAuthority(process.env);
+  }
+
   const result = runProveCommand({
     context: contextResult,
     productRoot: paths.productRoot,
@@ -1705,6 +1738,7 @@ function runMarkerProve(argv: string[]): number {
       repo: process.env.GITHUB_REPOSITORY,
       commit: process.env.GITHUB_SHA
     },
+    authority,
     generatedAt: valueAfter(argv, "--generated-at") ?? new Date().toISOString(),
     idFactory: generateUlid,
     baseRef: valueAfter(argv, "--base-ref"),

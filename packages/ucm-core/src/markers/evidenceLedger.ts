@@ -19,6 +19,7 @@
 // impure helper is a thin git base-ref read that reuses Phase 3's `readBaseRefFile`.
 import { computeBindingSetHash } from "./bindingSetHash.js";
 import { canonicalJsonSha256 } from "./canonicalJson.js";
+import type { CiAuthority } from "./ciAuthority.js";
 import { validateProofEvent } from "./validators.js";
 import {
   appendOnly,
@@ -93,6 +94,15 @@ export interface ProofEvent {
   //                         entry, or GENESIS_ENTRY_HASH for the first entry.
   entry_index?: number;
   previous_entry_hash?: string;
+  // --- CI-neutral provenance authority (v1, ADDITIVE / OPTIONAL) ---------------
+  // Provider-agnostic provenance for the proof (mirrors authority.schema.json):
+  // who/where minted it (type/provider + best-effort repository/ref/commit/run_id/
+  // actor/event). It is OPTIONAL so legacy proofs minted before it existed still
+  // validate and stay FRESH (freshness matches row/binding/context hashes, not
+  // provenance). When present it is built INTO the event before signing, so the
+  // signature covers it. The existing GitHub-shaped `producer` block is kept
+  // exactly as before; `authority` is the CI-NEUTRAL trust record beside it.
+  authority?: CiAuthority;
 }
 
 // Genesis sentinel for `previous_entry_hash` on the first ledger entry. It is a
