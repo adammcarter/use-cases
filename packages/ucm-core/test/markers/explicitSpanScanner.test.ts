@@ -56,6 +56,22 @@ describe("comment-prefix resolver", () => {
       resolveCommentPrefix("weird.foo", { extensions: { ".foo": "//" } })
     ).toBe("//");
   });
+
+  test("resolves `#` for an extensionless shebang script when contents are given", () => {
+    expect(
+      resolveCommentPrefix("hooks/session-start", undefined, "#!/usr/bin/env bash\nset -e\n")
+    ).toBe("#");
+    expect(
+      resolveCommentPrefix("hooks/run", undefined, "#!/bin/sh\necho hi\n")
+    ).toBe("#");
+  });
+
+  test("extensionless non-shebang files (and shebang files without contents) stay null", () => {
+    // No contents -> cannot tell it is a script.
+    expect(resolveCommentPrefix("hooks/session-start")).toBeNull();
+    // Contents but no shebang (e.g. a Makefile) -> still null.
+    expect(resolveCommentPrefix("Makefile", undefined, "all:\n\techo build\n")).toBeNull();
+  });
 });
 
 describe("marker-line parser (spec 1.2/1.3)", () => {

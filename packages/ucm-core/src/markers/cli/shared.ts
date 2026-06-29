@@ -107,12 +107,14 @@ export function collectSourceInputs(productRoot: string, options: CollectSourceO
         continue;
       }
       const relPath = toPosix(relative(productRoot, full));
-      if (resolveCommentPrefix(relPath, options.config) === null) {
-        continue; // no configured prefix => cannot carry a marker
-      }
       const contents = fs.readText(full);
       if (contents === null) {
         continue;
+      }
+      // Resolve with contents so extensionless shebang scripts (e.g.
+      // hooks/session-start) are recognised, not silently skipped.
+      if (resolveCommentPrefix(relPath, options.config, contents) === null) {
+        continue; // no configured prefix => cannot carry a marker
       }
       inputs.push({ file_path: relPath, contents });
     }

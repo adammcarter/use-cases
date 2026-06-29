@@ -64,12 +64,22 @@ export function fileExtension(filePath: string): string {
 
 // Resolve the configured line-comment prefix for a file, or null when the
 // extension is not configured (the file simply cannot carry markers).
+//
+// `contents` is optional. When a file has no extension it can still carry
+// markers if it is a shebang script (e.g. an extensionless `hooks/session-start`
+// bash hook): such scripts are overwhelmingly `#`-comment languages, so a
+// leading `#!` resolves to `#`. Without contents an extensionless file stays
+// null, exactly as before.
 export function resolveCommentPrefix(
   filePath: string,
-  config?: CommentPrefixConfig
+  config?: CommentPrefixConfig,
+  contents?: string
 ): string | null {
   const ext = fileExtension(filePath);
   if (ext === "") {
+    if (contents !== undefined && contents.startsWith("#!")) {
+      return "#";
+    }
     return null;
   }
   const override = config?.extensions?.[ext];
