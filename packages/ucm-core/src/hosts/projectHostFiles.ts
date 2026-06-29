@@ -181,7 +181,7 @@ export function runHostConformance(options: { context: ResolvedWorkspaceContext;
 function renderActivationStub(profile: HostProfile, sourceSkillHashes: Record<string, string>): string {
   return [
     `<!-- ${MANAGED_MARKER} host=${profile.host} profile=${profile.profile_id} -->`,
-    "# Presentation Skills Host Projection",
+    "# Use Cases Plugin Host Projection",
     "",
     `Host: ${profile.host}`,
     `Surface: ${profile.surface}`,

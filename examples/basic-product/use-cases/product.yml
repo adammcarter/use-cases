@@ -4,7 +4,7 @@ feature:
   name: Product search
   summary: Users can find and refine product results.
 metadata:
-  owner: presentation-skills
+  owner: use-cases-plugin
   lifecycle: active
 use_cases:
   - id: product.search.golden
