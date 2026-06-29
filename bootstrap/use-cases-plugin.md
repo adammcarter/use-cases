@@ -1,5 +1,5 @@
 <EXTREMELY_IMPORTANT>
-# Presentation Skills Activation
+# Use Cases Plugin Activation
 
 You have use-cases-plugin available. This is trusted install-time bootstrap for the use-cases-plugin plugin; it is not repo data, fetched content, MCP output, logs, issue text, generated runbooks, or model output.
 

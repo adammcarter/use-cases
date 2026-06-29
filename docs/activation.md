@@ -1,6 +1,6 @@
-# Presentation Skills Activation
+# Use Cases Plugin Activation
 
-Presentation-skills can be used continuously during feature planning and implementation, or later as a backfill, walkthrough, or live showcase tool. The workflow mode is advisory only. It cannot weaken schema validation, matrix integrity, evidence safety, approval boundaries, or showcase run state.
+Use Cases Plugin can be used continuously during feature planning and implementation, or later as a backfill, walkthrough, or live showcase tool. The workflow mode is advisory only. It cannot weaken schema validation, matrix integrity, evidence safety, approval boundaries, or showcase run state.
 
 ## Decision Tree
 
