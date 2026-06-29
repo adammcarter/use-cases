@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, realpathSync } from "node:fs";
-import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { PresentationSkillsError } from "./errors.js";
 import {
@@ -263,6 +263,62 @@ function ensureContained(root: string, child: string, message: string): void {
     return;
   }
   throw new PresentationSkillsError(message, "path.escape");
+}
+
+// Resolve the deepest existing ancestor of `target` to its realpath, then recombine
+// the not-yet-existing suffix. This lets a containment check see THROUGH a symlinked
+// parent directory (or a symlinked leaf) without requiring the leaf itself to exist,
+// so a write target whose parent escapes via a symlink is still caught. A realpath
+// failure (e.g. EACCES on an intermediate dir) returns the input unchanged; callers
+// compare against a realpath'd root, so an unresolved escape still fails containment.
+function realpathOfExistingPrefix(target: string): string {
+  try {
+    if (existsSync(target)) {
+      return realpathSync(target);
+    }
+  } catch {
+    return target;
+  }
+  const parent = dirname(target);
+  if (parent === target) {
+    return target;
+  }
+  return join(realpathOfExistingPrefix(parent), basename(target));
+}
+
+/**
+ * True when `target` stays inside `root` after resolving symlinks. Both sides are
+ * realpath-resolved (root, and the existing prefix of target) so the check is
+ * symlink-safe AND immune to symlinked-tmpdir aliasing (e.g. macOS /var -> /private/var):
+ * a lexical-only compare would wrongly reject an in-workspace absolute path whose root
+ * was realpath'd to a different prefix. Resolving the target only stats the path — it
+ * never reads file contents — so an escaping path is rejected before it can be opened.
+ */
+export function isPathContained(root: string, target: string): boolean {
+  const realRoot = realpathIfExists(root);
+  const realTarget = realpathOfExistingPrefix(resolve(target));
+  const realRelative = relative(realRoot, realTarget);
+  return realRelative === "" || (!realRelative.startsWith("..") && !isAbsolute(realRelative));
+}
+
+/**
+ * SECURITY: bound a user-supplied file path to `root`, symlink-safe. Returns the
+ * resolved absolute path, or throws a stable `path.escape` (public UCM_PATH_ESCAPE)
+ * PresentationSkillsError when the path — after resolving symlinks on its existing
+ * prefix — escapes `root`. Use at every boundary where an attacker-
+ * controlled path (`--plan-file`, a host projection target, ...) becomes a
+ * filesystem read or write, BEFORE the path is opened.
+ */
+export function resolveContainedPath(
+  root: string,
+  candidate: string,
+  message = "Path escapes the workspace boundary."
+): string {
+  const resolved = isAbsolute(candidate) ? resolve(candidate) : resolve(root, candidate);
+  if (!isPathContained(root, resolved)) {
+    throw new PresentationSkillsError(message, "path.escape");
+  }
+  return resolved;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

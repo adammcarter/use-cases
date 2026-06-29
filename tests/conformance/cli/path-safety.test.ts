@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { cpSync, existsSync, mkdtempSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { beforeAll, describe, expect, test } from "vitest";
@@ -151,3 +151,119 @@ describe("P-sec showcase CLI rejects unsafe run/item ids", () => {
 function isValidLike(value: string): boolean {
   return /^[a-z0-9][a-z0-9_-]*(?:\.[a-z0-9][a-z0-9_-]*)*$/.test(value);
 }
+
+// SECURITY (path traversal): user-supplied --plan-file flows into resolve(workspace_root,
+// path) and is then read from disk. A traversal value ('../../etc/passwd'), an absolute
+// path outside the workspace, or an in-workspace symlink that points outside must be
+// rejected with the stable UCM_PATH_ESCAPE envelope (exit 4) and must read NOTHING
+// outside the workspace. A legitimate in-workspace plan file must still work.
+describe("P-sec CLI bounds --plan-file to the workspace", () => {
+  beforeAll(() => {
+    const built = run("corepack", ["pnpm", "build"]);
+    if (built.status !== 0) {
+      throw new Error(built.stderr || built.stdout);
+    }
+  });
+
+  function generatePlan(workspaceRoot: string): unknown {
+    const planResult = runCli([
+      "plan",
+      "showcase",
+      "--repo",
+      workspaceRoot,
+      "--max-items",
+      "1",
+      "--host",
+      "codex.cli",
+      "--generated-at",
+      "2026-06-25T12:00:00.000Z",
+      "--json"
+    ]);
+    expect(planResult.status).toBe(0);
+    return JSON.parse(planResult.stdout).data.plan;
+  }
+
+  function outsidePlanFile(plan: unknown): string {
+    const outsideDir = mkdtempSync(join(tmpdir(), "presentation-skills-pathsafety-outside-"));
+    const outsidePlan = join(outsideDir, "plan.json");
+    writeFileSync(outsidePlan, `${JSON.stringify(plan, null, 2)}\n`);
+    return outsidePlan;
+  }
+
+  test("plan cards rejects a traversal --plan-file with UCM_PATH_ESCAPE (exit 4)", () => {
+    const workspaceRoot = fixtureWorkspace("evidence-basic");
+    const result = runCli(["plan", "cards", "--repo", workspaceRoot, "--plan-file", "../../etc/passwd", "--json"]);
+    expect(result.status).toBe(4);
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      command: "plan.cards",
+      ok: false,
+      diagnostics: [expect.objectContaining({ code: "UCM_PATH_ESCAPE" })]
+    });
+  });
+
+  test("plan cards rejects an absolute --plan-file outside the workspace even when it is a valid plan", () => {
+    const workspaceRoot = fixtureWorkspace("evidence-basic");
+    // A perfectly valid plan placed OUTSIDE the workspace must still be refused,
+    // proving containment is enforced before the file is ever read.
+    const outsidePlan = outsidePlanFile(generatePlan(workspaceRoot));
+    const result = runCli(["plan", "cards", "--repo", workspaceRoot, "--plan-file", outsidePlan, "--json"]);
+    expect(result.status).toBe(4);
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      command: "plan.cards",
+      ok: false,
+      diagnostics: [expect.objectContaining({ code: "UCM_PATH_ESCAPE" })]
+    });
+  });
+
+  test("plan cards rejects a --plan-file symlink that points outside the workspace", () => {
+    const workspaceRoot = fixtureWorkspace("evidence-basic");
+    const outsidePlan = outsidePlanFile(generatePlan(workspaceRoot));
+    mkdirSync(join(workspaceRoot, "presentation-plans"), { recursive: true });
+    // Lexically in-workspace, but realpath tunnels outside via the symlink.
+    symlinkSync(outsidePlan, join(workspaceRoot, "presentation-plans", "link.json"));
+    const result = runCli([
+      "plan",
+      "cards",
+      "--repo",
+      workspaceRoot,
+      "--plan-file",
+      "presentation-plans/link.json",
+      "--json"
+    ]);
+    expect(result.status).toBe(4);
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      command: "plan.cards",
+      ok: false,
+      diagnostics: [expect.objectContaining({ code: "UCM_PATH_ESCAPE" })]
+    });
+  });
+
+  test("showcase start rejects a traversal --plan-file with UCM_PATH_ESCAPE (exit 4)", () => {
+    const workspaceRoot = fixtureWorkspace("evidence-basic");
+    const result = runCli(["showcase", "start", "--repo", workspaceRoot, "--plan-file", "../escape.json", "--json"]);
+    expect(result.status).toBe(4);
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      command: "showcase.start",
+      ok: false,
+      diagnostics: [expect.objectContaining({ code: "UCM_PATH_ESCAPE" })]
+    });
+  });
+
+  test("a legitimate in-workspace --plan-file still works", () => {
+    const workspaceRoot = fixtureWorkspace("evidence-basic");
+    const plan = generatePlan(workspaceRoot);
+    mkdirSync(join(workspaceRoot, "presentation-plans"), { recursive: true });
+    writeFileSync(join(workspaceRoot, "presentation-plans", "plan.json"), `${JSON.stringify(plan, null, 2)}\n`);
+    const result = runCli([
+      "plan",
+      "cards",
+      "--repo",
+      workspaceRoot,
+      "--plan-file",
+      "presentation-plans/plan.json",
+      "--json"
+    ]);
+    expect(result.status).toBe(0);
+    expect(JSON.parse(result.stdout)).toMatchObject({ command: "plan.cards", ok: true });
+  });
+});

@@ -30,6 +30,7 @@ const {
   readShowcaseEvents,
   replayEvidence,
   replayShowcaseRun,
+  resolveContainedPath,
   resolveWorkspaceContext,
   runDemoCapsule,
   runHostDoctor,
@@ -393,8 +394,9 @@ function showcaseStart(args: JsonObject): CliResult<unknown> {
   if ("envelope" in context) return context.envelope;
   const planFile = stringArg(args, "plan_file");
   if (planFile) {
-    const planPath = isAbsolute(planFile) ? planFile : resolve(context.workspace_root, planFile);
-    const plan = loadPresentationPlanFile(planPath);
+    const contained = containedFilePath("showcase.start", context.workspace_root, planFile);
+    if ("envelope" in contained) return contained.envelope;
+    const plan = loadPresentationPlanFile(contained.path);
     return showcaseEnvelope("showcase.start", startShowcaseRun({
       context,
       plan,
@@ -673,6 +675,24 @@ function rejectUnsafeId(command: string, paramName: string, value: string): CliR
         "UCM_INVALID_ID",
         `Invalid ${paramName} '${value}': must be a canonical id (lowercase, no path separators, no '..').`
       );
+}
+
+// SECURITY: bound a user-supplied file path (e.g. plan_file) to the workspace,
+// symlink-safe, BEFORE it is read from disk. Returns the safe absolute path, or the
+// stable UCM_PATH_ESCAPE envelope on escape.
+function containedFilePath(
+  command: string,
+  workspaceRoot: string,
+  candidate: string
+): { path: string } | { envelope: CliResult<unknown> } {
+  try {
+    return { path: resolveContainedPath(workspaceRoot, candidate) };
+  } catch (error) {
+    if (error instanceof Error && "code" in error && (error as { code?: unknown }).code === "path.escape") {
+      return { envelope: errorEnvelope(command, "UCM_PATH_ESCAPE", error.message) };
+    }
+    throw error;
+  }
 }
 
 function isTrustedUserClaim(args: JsonObject): boolean {
