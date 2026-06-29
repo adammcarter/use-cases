@@ -97,6 +97,15 @@ const FORBIDDEN_PACKAGE_SEGMENTS = [
   "src"
 ] as const;
 
+// `src`/`tests` are forbidden for the repo's OWN payload (the published plugin
+// must ship built artifacts, never TypeScript sources or the test suite), but
+// they are legitimate CONTENT of the example PROJECTS under examples/ — e.g.
+// examples/python-pytest ships a real src/ + tests/ layout that an adopter copies
+// (the python.pytest verifier preset mandates the tests/ path). Permit only these
+// two segments, and only beneath examples/; every other forbidden segment
+// (node_modules, coverage, .DS_Store, …) stays forbidden everywhere.
+const EXAMPLE_CONTENT_SEGMENTS = new Set<string>(["src", "tests"]);
+
 const FORBIDDEN_TEXT_PATTERNS = [
   { id: "local_user_path", pattern: /\/Users\/admin\b/ },
   { id: "mac_temp_path", pattern: /\/var\/folders\/|\/private\/var\/folders\// },
@@ -363,7 +372,13 @@ function isTextFile(path: string): boolean {
 
 function containsForbiddenSegment(path: string): boolean {
   const parts = path.split(/[\\/]/);
-  return FORBIDDEN_PACKAGE_SEGMENTS.some((segment) => parts.includes(segment));
+  const underExamples = parts.includes("examples");
+  return FORBIDDEN_PACKAGE_SEGMENTS.some((segment) => {
+    if (underExamples && EXAMPLE_CONTENT_SEGMENTS.has(segment)) {
+      return false;
+    }
+    return parts.includes(segment);
+  });
 }
 
 function normalizePackagePath(path: string): string {

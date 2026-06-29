@@ -1,0 +1,47 @@
+schema_version: 1
+feature:
+  id: example.checkout
+  name: Checkout coupons
+  summary: Shoppers can apply a coupon code to reduce their cart total.
+metadata:
+  owner: example-team
+  lifecycle: active
+use_cases:
+  - id: example.checkout.apply_coupon
+    title: Apply a valid coupon to a cart
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    tags: [checkout, coupon, python]
+    source_refs:
+      - kind: file
+        path: src/coupon.py
+    actor: shopper
+    intent: Reduce the cart total by applying a known coupon code.
+    preconditions:
+      - A cart with a positive subtotal exists.
+    trigger: The shopper submits a coupon code at checkout.
+    scenarios:
+      - id: example.checkout.apply_coupon.main
+        kind: steps
+        steps:
+          - The shopper enters a known coupon code.
+          - The system looks up the coupon's discount percentage.
+          - The system subtracts the discount from the subtotal.
+    observable_outcomes:
+      - The returned cart total reflects the coupon discount.
+      - An unknown coupon code is rejected rather than silently ignored.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+      - host_surface: claude.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers: [acceptance]
+          minimum_count: 1
+    approval_policy:
+      mode: none

@@ -8,6 +8,14 @@ const source = join(repoRoot, "schemas/v1");
 const destination = join(repoRoot, "packages/ucm-core/dist/schemas/v1");
 const hostProfileSource = join(repoRoot, "hosts");
 const hostProfileDestination = join(repoRoot, "packages/ucm-core/dist/host-profiles");
+// The marker trust-engine schemas (binding-registry / proof-event / freshness)
+// live in src and are loaded at runtime by markers/validators.js. tsc does not
+// copy .json, so without this they only resolve via the in-repo `../../src`
+// fallback and are MISSING from the published core tarball — which crashes
+// bind/scan/verify/prove for anyone who installs the CLI. Copy them into dist so
+// they ship in `files: ["dist"]` and resolve from the installed package too.
+const markerSchemaSource = join(repoRoot, "packages/ucm-core/src/markers/schemas");
+const markerSchemaDestination = join(repoRoot, "packages/ucm-core/dist/markers/schemas");
 const lockDir = join(repoRoot, "packages/ucm-core/.copy-schemas.lock");
 
 mkdirSync(dirname(lockDir), { recursive: true });
@@ -18,6 +26,9 @@ withDirectoryLock(lockDir, () => {
   mkdirSync(hostProfileDestination, { recursive: true });
   cpSync(hostProfileSource, hostProfileDestination, { recursive: true });
   removeOrphanedEntries(hostProfileSource, hostProfileDestination);
+  mkdirSync(markerSchemaDestination, { recursive: true });
+  cpSync(markerSchemaSource, markerSchemaDestination, { recursive: true });
+  removeOrphanedEntries(markerSchemaSource, markerSchemaDestination);
 });
 
 function withDirectoryLock(path, work) {
