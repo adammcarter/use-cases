@@ -229,6 +229,34 @@ function ensureRelativeSafe(value: string): void {
   }
 }
 
+// The canonical id pattern, mirroring schemas/v1/common.schema.json $defs.id.
+// SECURITY: this is the single guard that keeps a user-supplied id (showcase run
+// id, plan item id, evidence id, ...) from becoming a path-traversal segment.
+// Because it forbids '/', '\\', '..', leading separators, and absolute paths, an
+// id that passes this check is always a single safe path segment. The drift test
+// in test/roots/idValidation.test.ts asserts this source equals the schema's.
+export const CANONICAL_ID_PATTERN = /^[a-z0-9][a-z0-9_-]*(?:\.[a-z0-9][a-z0-9_-]*)*$/;
+
+/** True when `value` is a string matching the canonical id pattern. */
+export function isValidId(value: unknown): value is string {
+  return typeof value === "string" && CANONICAL_ID_PATTERN.test(value);
+}
+
+/**
+ * Throw a stable `path.invalid_id` error (mapped to public `UCM_INVALID_ID`)
+ * when `value` is not a canonical id. Use this at every boundary where a
+ * user-supplied id becomes a filesystem path segment or a ledger lookup key,
+ * BEFORE the id is joined into a path, so traversal can never reach the disk.
+ */
+export function assertValidId(value: unknown, paramName: string): asserts value is string {
+  if (!isValidId(value)) {
+    throw new PresentationSkillsError(
+      `Invalid ${paramName} '${String(value)}': must be a canonical id (lowercase, no path separators, no '..').`,
+      "path.invalid_id"
+    );
+  }
+}
+
 function ensureContained(root: string, child: string, message: string): void {
   const relativePath = relative(root, child);
   if (relativePath === "" || (!relativePath.startsWith("..") && !isAbsolute(relativePath))) {

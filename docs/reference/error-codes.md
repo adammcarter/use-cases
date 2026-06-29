@@ -9,7 +9,7 @@ code below is a versioned contract: a code is only removed or repurposed in a
 **major** release; new codes ship additively in a **minor**. Diagnostics carry
 the code in their `code` field.
 
-There are **65** codes across **9** surfaces.
+There are **66** codes across **9** surfaces.
 
 ## Marker grammar
 
@@ -119,4 +119,5 @@ There are **65** codes across **9** surfaces.
 
 | Code | Severity | Message |
 |---|---|---|
+| `UCM_INVALID_ID` | error | Identifier is not a canonical id; refusing to use it as a path segment. |
 | `UCM_PATH_ESCAPE` | error | Unsafe relative path escapes its root boundary. |
