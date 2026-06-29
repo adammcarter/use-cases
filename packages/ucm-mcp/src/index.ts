@@ -4,6 +4,8 @@ import { createInterface } from "node:readline";
 import { stdin, stdout } from "node:process";
 import { fileURLToPath } from "node:url";
 import { callMcpTool, mcpTools } from "./tools.js";
+import { listMcpResources, readMcpResource } from "./resources.js";
+import { getMcpPrompt, mcpPrompts } from "./prompts.js";
 
 type UcmCoreModule = typeof import("@use-case-matrix/core");
 
@@ -54,9 +56,11 @@ export function handleMcpMessage(message: JsonRpcRequest): JsonRpcResponse | nul
       jsonrpc: "2.0",
       id,
       result: {
-        protocolVersion: "2024-11-05",
+        protocolVersion: "2025-11-25",
         capabilities: {
-          tools: {}
+          tools: {},
+          resources: {},
+          prompts: {}
         },
         serverInfo: getVersionInfo()
       }
@@ -86,6 +90,63 @@ export function handleMcpMessage(message: JsonRpcRequest): JsonRpcResponse | nul
         structuredContent: envelope,
         isError: false
       }
+    };
+  }
+
+  if (message.method === "resources/list") {
+    return {
+      jsonrpc: "2.0",
+      id,
+      result: {
+        resources: listMcpResources()
+      }
+    };
+  }
+
+  if (message.method === "resources/read") {
+    const params = isRecord(message.params) ? message.params : {};
+    const uri = typeof params.uri === "string" ? params.uri : "";
+    const outcome = readMcpResource(uri);
+    if (outcome.ok) {
+      return {
+        jsonrpc: "2.0",
+        id,
+        result: { contents: outcome.contents }
+      };
+    }
+    return {
+      jsonrpc: "2.0",
+      id,
+      error: { code: outcome.code, message: outcome.message }
+    };
+  }
+
+  if (message.method === "prompts/list") {
+    return {
+      jsonrpc: "2.0",
+      id,
+      result: {
+        prompts: mcpPrompts
+      }
+    };
+  }
+
+  if (message.method === "prompts/get") {
+    const params = isRecord(message.params) ? message.params : {};
+    const name = typeof params.name === "string" ? params.name : "";
+    const args = isRecord(params.arguments) ? params.arguments : {};
+    const outcome = getMcpPrompt(name, args);
+    if (outcome.ok) {
+      return {
+        jsonrpc: "2.0",
+        id,
+        result: outcome.result
+      };
+    }
+    return {
+      jsonrpc: "2.0",
+      id,
+      error: { code: outcome.code, message: outcome.message }
     };
   }
 
