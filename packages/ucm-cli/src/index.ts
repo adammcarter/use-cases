@@ -19,6 +19,7 @@ const {
   appendEvidenceEvent,
   appendEvidenceVoidEvent,
   isValidId,
+  resolveContainedPath,
   createCliResult,
   getVersionInfo,
   loadDemoCapsules,
@@ -577,7 +578,11 @@ function runPlanCards(argv: string[]): number {
   if (!planFile) {
     return writeError("plan.cards", "cli_invalid_arguments", "Missing --plan-file.");
   }
-  const planPath = isAbsolute(planFile) ? planFile : resolve(contextResult.workspace_root, planFile);
+  const contained = containedFilePath("plan.cards", contextResult.workspace_root, planFile);
+  if ("exitCode" in contained) {
+    return contained.exitCode;
+  }
+  const planPath = contained.path;
   try {
     const plan = loadPresentationPlanFile(planPath);
     const data = {
@@ -802,7 +807,11 @@ function runShowcaseStart(argv: string[]): number {
   }
   const planFile = valueAfter(argv, "--plan-file");
   if (planFile) {
-    const planPath = isAbsolute(planFile) ? planFile : resolve(contextResult.workspace_root, planFile);
+    const contained = containedFilePath("showcase.start", contextResult.workspace_root, planFile);
+    if ("exitCode" in contained) {
+      return contained.exitCode;
+    }
+    const planPath = contained.path;
     try {
       const plan = loadPresentationPlanFile(planPath);
       const result = startShowcaseRun({
@@ -1908,6 +1917,24 @@ function invalidIdExit(command: string, paramName: string, value: string): numbe
 
 function rejectUnsafeId(command: string, paramName: string, value: string): number | null {
   return isValidId(value) ? null : invalidIdExit(command, paramName, value);
+}
+
+// SECURITY: bound a user-supplied file path (e.g. --plan-file) to the workspace,
+// symlink-safe, BEFORE it is read from disk. Returns the safe absolute path, or an
+// { exitCode } carrying the stable UCM_PATH_ESCAPE / exit-4 envelope on escape.
+function containedFilePath(
+  command: string,
+  workspaceRoot: string,
+  candidate: string
+): { path: string } | { exitCode: number } {
+  try {
+    return { path: resolveContainedPath(workspaceRoot, candidate) };
+  } catch (error) {
+    if (error instanceof Error && "code" in error && (error as { code?: unknown }).code === "path.escape") {
+      return { exitCode: writeError(command, "UCM_PATH_ESCAPE", error.message, 4) };
+    }
+    throw error;
+  }
 }
 
 function writeError(command: string, code: string, message: string, exitCode = 2): number {

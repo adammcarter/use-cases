@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, symlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { describe, expect, test } from "vitest";
@@ -175,6 +175,26 @@ describe("P8 host profiles, projections, and conformance", () => {
         evidence_event_ids: []
       }
     });
+  });
+
+  test("write projection refuses a target whose parent dir symlinks outside the workspace", () => {
+    // SECURITY (path traversal): the lexical '..' check passes here — the target path
+    // (.claude/presentation-skills.md) stays in-workspace as a string. But .claude is a
+    // symlink to an outside dir, so an unguarded write would land OUTSIDE the workspace.
+    // The realpath-based containment check must refuse it and write nothing outside.
+    const workspaceRoot = fixtureWorkspace();
+    const outside = mkdtempSync(join(tmpdir(), "presentation-skills-hosts-outside-"));
+    symlinkSync(outside, join(workspaceRoot, ".claude"));
+    const context = resolveWorkspaceContext({ workspaceRoot, pluginRoot: repoRoot });
+    const profile = loadHostProfile({ pluginRoot: repoRoot, host: "claude" }).profile;
+    if (!profile) {
+      throw new Error("expected claude profile");
+    }
+
+    const result = projectHostFiles({ context, profile, mode: "write" });
+    expect(result.operations.some((operation) => operation.action === "refuse_unsafe_path")).toBe(true);
+    expect(result.diagnostics.some((diagnostic) => diagnostic.code === "host.unsafe_projection_path")).toBe(true);
+    expect(existsSync(join(outside, "presentation-skills.md"))).toBe(false);
   });
 
   test("CLI host project rejects conflicting modes", () => {

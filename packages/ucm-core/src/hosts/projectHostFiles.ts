@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, sep } from "node:path";
-import type { ResolvedWorkspaceContext } from "../roots.js";
+import { isPathContained, type ResolvedWorkspaceContext } from "../roots.js";
 import { computeSemanticHash, type Diagnostic } from "../schema/index.js";
 import { PRESENTATION_SKILLS_VERSION } from "../version.js";
 import { deriveHostConformance, runExecutableSmoke } from "./conformanceStatus.js";
@@ -242,6 +242,12 @@ function unsafeProjectionPath(workspaceRoot: string, path: string): string | nul
   const rel = relative(workspaceRoot, fullPath);
   if (rel.startsWith("..") || rel === "" || isAbsolute(rel)) {
     return "Projection target escapes the repository.";
+  }
+  // SECURITY: the lexical checks above pass for a path that stays in-workspace as a
+  // string but whose parent directory is a symlink pointing OUTSIDE the workspace.
+  // Resolve symlinks on the existing prefix and re-check so a write can't tunnel out.
+  if (!isPathContained(workspaceRoot, fullPath)) {
+    return "Projection target escapes the repository via a symlink.";
   }
   return null;
 }
