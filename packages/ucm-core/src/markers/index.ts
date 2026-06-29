@@ -27,6 +27,8 @@ export * from "./proofSignature.js";
 export * from "./evidenceLedger.js";
 // Public-v1: opt-in multi-key keyring resolver (rotation / revocation).
 export * from "./keyring.js";
+// Public-v1: CI-neutral provenance authority detection.
+export * from "./ciAuthority.js";
 // Phase 6: freshness state machine (status derivation + policy gate).
 export * from "./freshness.js";
 // Phase 7: CLI command cores (bind / scan / prove / validate-ledger).

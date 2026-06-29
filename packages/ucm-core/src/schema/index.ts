@@ -90,6 +90,7 @@ export const PUBLIC_SCHEMA_IDS = [
   "https://use-case-matrix.dev/schemas/v1/release-gate-result.schema.json",
   "https://use-case-matrix.dev/schemas/v1/ledger.schema.json",
   "https://use-case-matrix.dev/schemas/v1/keyring.schema.json",
+  "https://use-case-matrix.dev/schemas/v1/authority.schema.json",
   "https://use-case-matrix.dev/schemas/v1/mcp-tool-results.schema.json"
 ] as const;
 
@@ -121,6 +122,7 @@ const SCHEMA_FILE_NAMES = [
   "release-gate-result.schema.json",
   "ledger.schema.json",
   "keyring.schema.json",
+  "authority.schema.json",
   "mcp-tool-results.schema.json"
 ] as const;
 
@@ -652,6 +654,20 @@ function validateSyntheticCommonContracts(validated: Set<string>, diagnostics: D
             status: "active"
           }
         ]
+      }
+    ],
+    [
+      "authority.schema.json",
+      {
+        type: "ci",
+        provider: "github-actions",
+        repository: "use-case-matrix/presentation-skills",
+        ref: "refs/heads/main",
+        commit: "0123456789abcdef0123456789abcdef01234567",
+        run_id: "1234567890",
+        actor: "octocat",
+        protected_ref: null,
+        event: "push"
       }
     ],
     ["mcp-tool-results.schema.json", createCliResult("matrix.status", { use_cases: [] })]

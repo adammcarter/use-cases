@@ -50,6 +50,7 @@ const NEW_SCHEMAS = [
   "release-gate-result.schema.json",
   "ledger.schema.json",
   "keyring.schema.json",
+  "authority.schema.json",
   "mcp-tool-results.schema.json"
 ] as const;
 
@@ -161,6 +162,34 @@ describe("v1 new schemas (5 gaps closed)", () => {
         ]
       })
     ).toBe(false);
+  });
+
+  test("authority rejects an out-of-enum provider", () => {
+    const validate = registry.validatorFor(`${ID_BASE}authority.schema.json`);
+    expect(
+      validate({ type: "ci", provider: "travis-ci" })
+    ).toBe(false);
+  });
+
+  test("authority rejects a missing type", () => {
+    const validate = registry.validatorFor(`${ID_BASE}authority.schema.json`);
+    expect(validate({ provider: "github-actions" })).toBe(false);
+  });
+
+  test("authority rejects an unknown extra property", () => {
+    const validate = registry.validatorFor(`${ID_BASE}authority.schema.json`);
+    expect(
+      validate({ type: "local", provider: "generic", workflow: "ci.yml" })
+    ).toBe(false);
+  });
+
+  test("authority accepts a tri-state protected_ref (true/false/null)", () => {
+    const validate = registry.validatorFor(`${ID_BASE}authority.schema.json`);
+    for (const protectedRef of [true, false, null] as const) {
+      expect(
+        validate({ type: "ci", provider: "gitlab-ci", protected_ref: protectedRef })
+      ).toBe(true);
+    }
   });
 
   test("mcp-tool-results rejects a value missing the CLI envelope context", () => {

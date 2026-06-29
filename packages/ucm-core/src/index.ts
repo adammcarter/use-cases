@@ -21,3 +21,5 @@ export * from "./package/index.js";
 export * from "./markers/cli/index.js";
 // Public-v1: opt-in multi-key keyring resolver (rotation / revocation).
 export * from "./markers/keyring.js";
+// Public-v1: CI-neutral provenance authority detection (detectCiAuthority).
+export * from "./markers/ciAuthority.js";
