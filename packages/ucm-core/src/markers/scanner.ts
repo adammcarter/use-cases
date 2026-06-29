@@ -244,7 +244,7 @@ export function scanFileForMarkers(
   contents: string,
   options?: ScannerOptions
 ): ScanFileResult {
-  const commentPrefix = resolveCommentPrefix(filePath, options?.config);
+  const commentPrefix = resolveCommentPrefix(filePath, options?.config, contents);
   if (commentPrefix === null) {
     // No configured prefix => the file cannot carry markers; skip it.
     return { file_path: filePath, comment_prefix: null, bindings: [], errors: [] };

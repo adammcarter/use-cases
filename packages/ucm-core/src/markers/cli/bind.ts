@@ -113,8 +113,17 @@ export function runBindCommand(options: BindCommandOptions): BindCommandResult {
     });
   }
 
-  // 3. Comment prefix for the file (override or configured by extension).
-  const commentPrefix = options.commentPrefix ?? resolveCommentPrefix(relFile, options.commentConfig);
+  // 3. Read the source first so the comment prefix can be resolved from a
+  //    shebang for extensionless scripts, then resolve the prefix.
+  const absFile = resolveUnderRoot(options.productRoot, options.file);
+  const current = fs.readText(absFile);
+  if (current === null) {
+    return fail(base, 2, {
+      code: "FILE_NOT_FOUND",
+      message: `source file ${relFile} does not exist`
+    });
+  }
+  const commentPrefix = options.commentPrefix ?? resolveCommentPrefix(relFile, options.commentConfig, current);
   if (commentPrefix === null || commentPrefix === undefined) {
     return fail(base, 2, {
       code: "NO_COMMENT_PREFIX",
@@ -141,14 +150,7 @@ export function runBindCommand(options: BindCommandOptions): BindCommandResult {
   }
 
   // 5. Compute the new source (or use existing for --register-existing).
-  const absFile = resolveUnderRoot(options.productRoot, options.file);
-  const current = fs.readText(absFile);
-  if (current === null) {
-    return fail(base, 2, {
-      code: "FILE_NOT_FOUND",
-      message: `source file ${relFile} does not exist`
-    });
-  }
+  //    `current`/`absFile` were read above so the prefix could honour a shebang.
 
   let nextContents: string;
   if (options.registerExisting) {
