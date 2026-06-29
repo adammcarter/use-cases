@@ -85,10 +85,12 @@ async function loadUcmCore(): Promise<UcmCoreModule> {
       // The package alias AND the bundled dist both failed to resolve: the
       // compiled core/dist has not been built yet. Surface an actionable hint
       // instead of letting a raw ERR_MODULE_NOT_FOUND stack reach the user.
+//: @use-case: diagnostics.contracts.missing_build_hint
       if (isMissingCoreModule(fallbackError)) {
         process.stderr.write(`${MISSING_BUILD_MESSAGE}\n`);
         process.exit(2);
       }
+//: @use-case: end diagnostics.contracts.missing_build_hint
       throw fallbackError;
     }
   }
@@ -452,6 +454,7 @@ function selectUsageEntries(tokens: string[]): UsageEntry[] {
   return group.length > 0 ? group : USAGE;
 }
 
+//: @use-case: diagnostics.contracts.cli_self_documents
 function runHelp(argv: string[], options: { unknown?: boolean } = {}): number {
   const tokens = argv.filter((arg) => !arg.startsWith("-"));
   const commands = selectUsageEntries(tokens);
@@ -485,6 +488,7 @@ function runHelp(argv: string[], options: { unknown?: boolean } = {}): number {
   );
   return options.unknown ? 2 : 0;
 }
+//: @use-case: end diagnostics.contracts.cli_self_documents
 
 function runInit(argv: string[], wantsJson: boolean): number {
   const repoRoot = resolve(process.cwd(), valueAfter(argv, "--repo") ?? ".");

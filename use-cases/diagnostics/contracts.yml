@@ -167,8 +167,20 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/conformance/cli/cli-ergonomics.test.ts
+          inputs:
+            - tests/conformance/cli/cli-ergonomics.test.ts
       requirements:
-        - evidence_kind: command_result
+        - evidence_kind: test_result
           required_verifiers:
             - script
           minimum_count: 1
@@ -206,8 +218,20 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/conformance/cli/cli-ergonomics.test.ts
+          inputs:
+            - tests/conformance/cli/cli-ergonomics.test.ts
       requirements:
-        - evidence_kind: command_result
+        - evidence_kind: test_result
           required_verifiers:
             - script
           minimum_count: 1

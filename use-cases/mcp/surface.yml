@@ -236,6 +236,18 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/conformance/mcp/tool-input-schemas.test.ts
+          inputs:
+            - tests/conformance/mcp/tool-input-schemas.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
