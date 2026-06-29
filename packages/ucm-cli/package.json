@@ -3,6 +3,12 @@
   "version": "1.0.0",
   "type": "module",
   "description": "CLI for use-case-matrix.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adammcarter/presentation-skills.git",
+    "directory": "packages/ucm-cli"
+  },
   "bin": {
     "ucm": "./dist/index.js",
     "use-case-matrix": "./dist/index.js"

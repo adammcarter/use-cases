@@ -1,0 +1,74 @@
+name: Bug report
+description: Report a defect in Use Case Matrix (ucm / ucm-mcp)
+title: "[bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug. Please fill in the version and JSON output
+        fields below — they are what we need to reproduce.
+
+        Do **not** report security vulnerabilities here. Use a private advisory:
+        https://github.com/adammcarter/presentation-skills/security/advisories/new
+  - type: textarea
+    id: version
+    attributes:
+      label: ucm version
+      description: Output of `ucm --version --json`.
+      render: json
+    validations:
+      required: true
+  - type: input
+    id: command
+    attributes:
+      label: Failing command
+      description: The exact command you ran (include `--json`).
+      placeholder: ucm matrix validate --repo . --json
+    validations:
+      required: true
+  - type: textarea
+    id: command-output
+    attributes:
+      label: Command --json output
+      description: The full `--json` output of the failing command.
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: status-output
+    attributes:
+      label: Status / freshness output
+      description: Output of `ucm matrix status --json` (matrix integrity + evidence/freshness replay).
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+      description: What you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: What actually happened, including any error codes/diagnostics.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps (and a fixture/repo link if possible).
+    validations:
+      required: false
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Node version, OS, and CI provider if relevant.
+      placeholder: Node 22.x, macOS 15, GitHub Actions
+    validations:
+      required: false

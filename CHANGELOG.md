@@ -1,5 +1,45 @@
 # Changelog
 
+All notable changes to this project are documented here. The format is based on
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
+follows [Semantic Versioning](https://semver.org) as declared in
+[`docs/reference/stability.md`](docs/reference/stability.md).
+
+## [Unreleased]
+
+Public v1 hardening — taking the internal trust engine to a public, adoptable
+release. At a high level:
+
+### Changed
+
+- Renamed the project to **Use Case Matrix (UCM)**, published under the
+  `@use-case-matrix/{core,cli,mcp}` scope with the `ucm` CLI (alias
+  `use-case-matrix`) and `ucm-mcp` MCP server.
+
+### Added
+
+- Declared **public API + SemVer contract**: CLI command/flag names and `--json`
+  envelopes, exit codes, MCP tool names/schemas, persisted file formats, and the
+  documented `@use-case-matrix/core` exports are now versioned surfaces.
+- **Tamper-evident, hash-chained ledger** — append-only proof/evidence ledger
+  that detects edited, reordered, or truncated entries.
+- **Keyring** with fail-closed key resolution: signing keys carry status and
+  validity windows, with rotation and revocation support; unknown/revoked/
+  out-of-window keys never verify.
+- **CI-neutral authority** — an optional, signature-covered `authority` block on
+  proofs (GitHub Actions reference path; GitLab CI / CircleCI / generic
+  auto-detected) plus an opt-in release-gate authority requirement.
+- **Verifier presets** — language/CI-neutral command verifiers, with `pnpm`/
+  `vitest` as one preset rather than a built-in assumption.
+
+### Security
+
+- **Path-traversal hardening** — workspace-root containment with rejection of
+  unsafe path / data-root boundary escapes.
+- **Redaction** — bounded, secret-pattern-redacted command output captured as
+  observations; `prove` is never exposed over MCP and there is no generic shell
+  tool over MCP.
+
 ## 1.0.0
 
 - Added sharded use-case matrix loading with damaged YAML recovery.
