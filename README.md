@@ -12,6 +12,9 @@ during work, proven in CI, and demonstrated when that is valuable.
 > Installs as `@use-case-matrix/cli` (binary `ucm`) plus an MCP server
 > (`@use-case-matrix/mcp`, binary `ucm-mcp`) that agents drive directly.
 
+New here? Start with [the documentation index](docs/README.md) and the
+[getting-started tutorial](docs/getting-started.md).
+
 ## Workflows
 
 - continuous: recommended default. Add or adjust use cases during planning,
