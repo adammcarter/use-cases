@@ -325,12 +325,18 @@ function useCaseFromRow(row: LegacyRow, featureSlug: string, sourceDigest: strin
 
 function resolveInside(root: string, value: string, code: string): string {
   if (isAbsolute(value) || value.split(/[\\/]/).includes("..")) {
-    throw new PresentationSkillsError("Migration path must be relative and stay inside the repository.", code);
+    throw new PresentationSkillsError(
+      `Migration source path '${value}' must be relative to the repository root (${root}) and stay inside it. Pass a path like 'TEST-MATRIX.md' or 'docs/TEST-MATRIX.md', not an absolute path or one containing '..'.`,
+      code
+    );
   }
   const fullPath = resolve(root, value);
   const rel = relative(root, fullPath);
   if (rel.startsWith("..") || isAbsolute(rel)) {
-    throw new PresentationSkillsError("Migration path escapes the repository.", code);
+    throw new PresentationSkillsError(
+      `Migration source path '${value}' escapes the repository root (${root}); it must be relative to the repository root and stay inside it.`,
+      code
+    );
   }
   return fullPath;
 }
