@@ -1,146 +1,169 @@
 schema_version: 1
 feature:
-  id: presentation_skills.future
+  id: roadmap.deferred
   name: Deferred product ideas
   summary: Valuable future rows kept planned so they are visible but not active v1 acceptance.
 use_cases:
-  - id: presentation_skills.hosts.behavioral_host_evals
+  - id: roadmap.deferred.behavioral_host_evals
     title: Behavioral host evals
     lifecycle: planned
     value_tier: supporting
     journey_role: alternate
     usage_frequency: rare
-    tags: [hosts, evals, future]
+    tags:
+      - hosts
+      - evals
+      - future
     source_refs:
       - kind: file
         path: docs/hosts.md
     actor: script
     intent: Run model-triggering behavioral checks across hosts.
-
-  - id: presentation_skills.hosts.trusted_host_confirmation_path
+  - id: roadmap.deferred.trusted_host_confirmation_path
     title: Trusted host-native confirmation
     lifecycle: planned
     value_tier: core
     journey_role: alternate
     usage_frequency: rare
-    tags: [hosts, approval, future]
+    tags:
+      - hosts
+      - approval
+      - future
     source_refs:
       - kind: file
         path: docs/security.md
     actor: user
     intent: Let a host provide non-model trusted user confirmation.
-
-  - id: presentation_skills.evidence.signed_audit_log
+  - id: roadmap.deferred.signed_audit_log
     title: Cryptographically signed evidence ledger
     lifecycle: planned
     value_tier: supporting
     journey_role: alternate
     usage_frequency: rare
-    tags: [evidence, signing, audit]
+    tags:
+      - evidence
+      - signing
+      - audit
     source_refs:
       - kind: file
         path: docs/data-model.md
     actor: script
     intent: Add signing and tamper-evidence to JSONL events.
-
-  - id: presentation_skills.evidence.destructive_secret_purge
+  - id: roadmap.deferred.destructive_secret_purge
     title: Destructive secret or legal purge
     lifecycle: planned
     value_tier: supporting
     journey_role: failure
     usage_frequency: rare
-    tags: [evidence, purge, security]
+    tags:
+      - evidence
+      - purge
+      - security
     source_refs:
       - kind: file
         path: docs/security.md
     actor: agent
     intent: Physically purge sensitive accidental data with audit output.
-
-  - id: presentation_skills.matrix.git_diff_auto_mapping
+  - id: roadmap.deferred.git_diff_auto_mapping
     title: Automatic diff-to-use-case mapping
     lifecycle: planned
     value_tier: supporting
     journey_role: alternate
     usage_frequency: rare
-    tags: [matrix, git, automation]
+    tags:
+      - matrix
+      - git
+      - automation
     source_refs:
       - kind: file
         path: docs/data-model.md
     actor: agent
     intent: Infer impacted use cases from changed source files.
-
-  - id: presentation_skills.matrix.advanced_monorepo_scoping
+  - id: roadmap.deferred.advanced_monorepo_scoping
     title: Advanced monorepo component scoping
     lifecycle: planned
     value_tier: supporting
     journey_role: edge
     usage_frequency: rare
-    tags: [matrix, monorepo, future]
+    tags:
+      - matrix
+      - monorepo
+      - future
     source_refs:
       - kind: file
         path: docs/data-model.md
     actor: agent
     intent: Manage multiple independent matrices inside one workspace.
-
-  - id: presentation_skills.mcp.direct_user_approval_write
+  - id: roadmap.deferred.direct_user_approval_write
     title: Direct MCP user approval write
     lifecycle: planned
     value_tier: critical
     journey_role: negative
     usage_frequency: rare
-    tags: [mcp, approval, future]
+    tags:
+      - mcp
+      - approval
+      - future
     source_refs:
       - kind: file
         path: docs/mcp.md
     actor: user
     intent: Allow MCP approval only with a trusted non-model confirmation token.
-
-  - id: presentation_skills.mcp.host_projection_conformance_tools
+  - id: roadmap.deferred.host_projection_conformance_tools
     title: MCP host projection and conformance tools
     lifecycle: planned
     value_tier: supporting
     journey_role: alternate
     usage_frequency: rare
-    tags: [mcp, hosts, future]
+    tags:
+      - mcp
+      - hosts
+      - future
     source_refs:
       - kind: file
         path: docs/mcp.md
     actor: agent
     intent: Expose host project and conformance through MCP.
-
-  - id: presentation_skills.planning.freshness_hard_gate_auto_selection
+  - id: roadmap.deferred.freshness_hard_gate_auto_selection
     title: Automated freshness hard gates
     lifecycle: planned
     value_tier: supporting
     journey_role: edge
     usage_frequency: rare
-    tags: [planning, freshness, future]
+    tags:
+      - planning
+      - freshness
+      - future
     source_refs:
       - kind: file
         path: docs/showcase.md
     actor: agent
     intent: Automatically block stale evidence from selected release or demo plans.
-
-  - id: presentation_skills.capsules.multi_machine_runner
+  - id: roadmap.deferred.multi_machine_runner
     title: Multi-machine scripted capsule runner
     lifecycle: planned
     value_tier: long_tail
     journey_role: edge
     usage_frequency: rare
-    tags: [capsules, runner, future]
+    tags:
+      - capsules
+      - runner
+      - future
     source_refs:
       - kind: file
         path: docs/showcase.md
     actor: script
     intent: Run capsule scripts across multiple machines or environments.
-
-  - id: presentation_skills.release.registry_publish_channel
+  - id: roadmap.deferred.registry_publish_channel
     title: Public registry publication channel
     lifecycle: planned
     value_tier: supporting
     journey_role: alternate
     usage_frequency: rare
-    tags: [release, npm, future]
+    tags:
+      - release
+      - npm
+      - future
     source_refs:
       - kind: file
         path: docs/release.md

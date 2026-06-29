@@ -1,16 +1,19 @@
 schema_version: 1
 feature:
-  id: presentation_skills.mcp
+  id: mcp.surface
   name: MCP wrapper
   summary: Agent tool access that wraps the CLI contract without weakening write gates or approval boundaries.
 use_cases:
-  - id: presentation_skills.mcp.cli_contract_transport
+  - id: mcp.surface.cli_contract_transport
     title: MCP mirrors CLI contract
     lifecycle: active
     value_tier: critical
     journey_role: golden
     usage_frequency: common
-    tags: [mcp, cli-parity, contract]
+    tags:
+      - mcp
+      - cli-parity
+      - contract
     source_refs:
       - kind: file
         path: docs/mcp.md
@@ -22,7 +25,7 @@ use_cases:
       - The CLI command exists and returns a structured envelope.
     trigger: An agent calls the MCP tool equivalent of a CLI command.
     scenarios:
-      - id: presentation_skills.mcp.cli_contract_transport.parity
+      - id: mcp.surface.cli_contract_transport.parity
         kind: steps
         steps:
           - Run a CLI command.
@@ -44,18 +47,21 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: test_result
-          required_verifiers: [script]
+          required_verifiers:
+            - script
           minimum_count: 1
     approval_policy:
       mode: none
-
-  - id: presentation_skills.mcp.write_gating
+  - id: mcp.surface.write_gating
     title: MCP read-only default and explicit writes
     lifecycle: active
     value_tier: critical
     journey_role: negative
     usage_frequency: common
-    tags: [mcp, write-gate, safety]
+    tags:
+      - mcp
+      - write-gate
+      - safety
     source_refs:
       - kind: file
         path: docs/mcp.md
@@ -67,7 +73,7 @@ use_cases:
       - MCP server is running in read-only or write-enabled mode.
     trigger: An agent calls a mutating MCP tool.
     scenarios:
-      - id: presentation_skills.mcp.write_gating.block
+      - id: mcp.surface.write_gating.block
         kind: steps
         steps:
           - Call a mutating MCP tool without write permission.
@@ -89,18 +95,21 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: test_result
-          required_verifiers: [script]
+          required_verifiers:
+            - script
           minimum_count: 1
     approval_policy:
       mode: none
-
-  - id: presentation_skills.mcp.safe_matrix_mutation_workflow
+  - id: mcp.surface.safe_matrix_mutation_workflow
     title: Safe matrix mutation through wrapper
     lifecycle: active
     value_tier: core
     journey_role: alternate
     usage_frequency: occasional
-    tags: [mcp, matrix, mutation]
+    tags:
+      - mcp
+      - matrix
+      - mutation
     source_refs:
       - kind: file
         path: docs/mcp.md
@@ -114,7 +123,7 @@ use_cases:
       - The caller has an updated use-case object and explicit write permission.
     trigger: Agent maintains rows through MCP instead of direct file editing.
     scenarios:
-      - id: presentation_skills.mcp.safe_matrix_mutation_workflow.upsert
+      - id: mcp.surface.safe_matrix_mutation_workflow.upsert
         kind: steps
         steps:
           - Validate current matrix integrity.
@@ -136,18 +145,21 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: test_result
-          required_verifiers: [script]
+          required_verifiers:
+            - script
           minimum_count: 1
     approval_policy:
       mode: none
-
-  - id: presentation_skills.mcp.approval_request_only
+  - id: mcp.surface.approval_request_only
     title: MCP approval request only
     lifecycle: active
     value_tier: critical
     journey_role: negative
     usage_frequency: common
-    tags: [mcp, approval, trust-boundary]
+    tags:
+      - mcp
+      - approval
+      - trust-boundary
     source_refs:
       - kind: file
         path: docs/mcp.md
@@ -161,7 +173,7 @@ use_cases:
       - A showcase run has finished and user approval may be needed.
     trigger: An agent calls the MCP approval request tool.
     scenarios:
-      - id: presentation_skills.mcp.approval_request_only.boundary
+      - id: mcp.surface.approval_request_only.boundary
         kind: steps
         steps:
           - Call the approval request MCP tool.
@@ -183,18 +195,21 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: test_result
-          required_verifiers: [script]
+          required_verifiers:
+            - script
           minimum_count: 1
     approval_policy:
       mode: none
-
-  - id: presentation_skills.mcp.domain_results_not_transport_failures
+  - id: mcp.surface.domain_results_not_transport_failures
     title: Domain-negative results stay structured
     lifecycle: active
     value_tier: supporting
     journey_role: edge
     usage_frequency: occasional
-    tags: [mcp, diagnostics, envelope]
+    tags:
+      - mcp
+      - diagnostics
+      - envelope
     source_refs:
       - kind: file
         path: docs/mcp.md
@@ -208,7 +223,7 @@ use_cases:
       - A domain command detects invalid matrix, partial evidence, or missing preconditions.
     trigger: An MCP caller invokes a command that has domain-level diagnostics.
     scenarios:
-      - id: presentation_skills.mcp.domain_results_not_transport_failures.envelope
+      - id: mcp.surface.domain_results_not_transport_failures.envelope
         kind: steps
         steps:
           - Call an MCP tool against damaged or incomplete input.
@@ -229,7 +244,8 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: test_result
-          required_verifiers: [script]
+          required_verifiers:
+            - script
           minimum_count: 1
     approval_policy:
       mode: none

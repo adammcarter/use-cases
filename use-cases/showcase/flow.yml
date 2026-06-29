@@ -1,16 +1,19 @@
 schema_version: 1
 feature:
-  id: presentation_skills.showcase
+  id: showcase.flow
   name: Live showcase runner
   summary: Performed demo runs that record observations, verdicts, decisions, finish state, and approval boundaries.
 use_cases:
-  - id: presentation_skills.showcase.live_acceptance_flow
+  - id: showcase.flow.live_acceptance_flow
     title: Performed live acceptance flow
     lifecycle: active
     value_tier: critical
     journey_role: golden
     usage_frequency: common
-    tags: [showcase, live-demo, acceptance]
+    tags:
+      - showcase
+      - live-demo
+      - acceptance
     source_refs:
       - kind: file
         path: docs/showcase.md
@@ -24,7 +27,7 @@ use_cases:
       - A selected plan or ad hoc use-case set exists.
     trigger: Agent is ready to prove work in front of the user or reviewer.
     scenarios:
-      - id: presentation_skills.showcase.live_acceptance_flow.cli
+      - id: showcase.flow.live_acceptance_flow.cli
         kind: steps
         steps:
           - Start a showcase run from a selected plan or ad hoc item list.
@@ -41,7 +44,8 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: live_demo
-          required_verifiers: [user]
+          required_verifiers:
+            - user
           minimum_count: 1
     approval_policy:
       mode: predefined
@@ -49,14 +53,16 @@ use_cases:
         - approver_type: user
           minimum_count: 1
       statement: User accepts the demonstrated showcase scope.
-
-  - id: presentation_skills.showcase.control_modes
+  - id: showcase.flow.control_modes
     title: Agent, user, script, and mixed control
     lifecycle: active
     value_tier: core
     journey_role: alternate
     usage_frequency: occasional
-    tags: [showcase, control-mode, collaboration]
+    tags:
+      - showcase
+      - control-mode
+      - collaboration
     source_refs:
       - kind: file
         path: docs/showcase.md
@@ -68,7 +74,7 @@ use_cases:
       - A showcase item can be driven by an agent, user, script, or combination.
     trigger: User preference or feature mechanics determine who should run the demo.
     scenarios:
-      - id: presentation_skills.showcase.control_modes.mixed
+      - id: showcase.flow.control_modes.mixed
         kind: steps
         steps:
           - Choose the control mode for each item.
@@ -84,18 +90,22 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: agent_observation
-          required_verifiers: [agent]
+          required_verifiers:
+            - agent
           minimum_count: 1
     approval_policy:
       mode: ask
-
-  - id: presentation_skills.showcase.failure_decisions
+  - id: showcase.flow.failure_decisions
     title: Failure decision path
     lifecycle: active
     value_tier: core
     journey_role: failure
     usage_frequency: occasional
-    tags: [showcase, failure, waiver, pause]
+    tags:
+      - showcase
+      - failure
+      - waiver
+      - pause
     source_refs:
       - kind: file
         path: docs/showcase.md
@@ -107,7 +117,7 @@ use_cases:
       - A showcase item has failed, blocked, or partially satisfied its expected outcome.
     trigger: Agent records a non-pass verdict during a live run.
     scenarios:
-      - id: presentation_skills.showcase.failure_decisions.branch
+      - id: showcase.flow.failure_decisions.branch
         kind: steps
         steps:
           - Record a failed or blocked verdict.
@@ -123,18 +133,21 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: manual_observation
-          required_verifiers: [user]
+          required_verifiers:
+            - user
           minimum_count: 1
     approval_policy:
       mode: ask
-
-  - id: presentation_skills.showcase.revision_epoch_staleness
+  - id: showcase.flow.revision_epoch_staleness
     title: Revision epoch and stale verdicts
     lifecycle: active
     value_tier: core
     journey_role: edge
     usage_frequency: occasional
-    tags: [showcase, revision, freshness]
+    tags:
+      - showcase
+      - revision
+      - freshness
     source_refs:
       - kind: file
         path: packages/ucm-core/src/showcase/revisionEpochs.ts
@@ -146,7 +159,7 @@ use_cases:
       - A paused or resumed showcase run crosses a relevant revision change.
     trigger: Agent resumes a run after source, matrix, or plan inputs changed.
     scenarios:
-      - id: presentation_skills.showcase.revision_epoch_staleness.resume
+      - id: showcase.flow.revision_epoch_staleness.resume
         kind: steps
         steps:
           - Start or resume a run with a revision snapshot.
@@ -161,18 +174,22 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: test_result
-          required_verifiers: [script]
+          required_verifiers:
+            - script
           minimum_count: 1
     approval_policy:
       mode: none
-
-  - id: presentation_skills.showcase.approval_authority_boundary
+  - id: showcase.flow.approval_authority_boundary
     title: Trusted approval boundary
     lifecycle: active
     value_tier: critical
     journey_role: negative
     usage_frequency: common
-    tags: [showcase, approval, trust-boundary, mcp]
+    tags:
+      - showcase
+      - approval
+      - trust-boundary
+      - mcp
     source_refs:
       - kind: file
         path: docs/security.md
@@ -186,7 +203,7 @@ use_cases:
       - A showcase run has reached a state where approval might be requested.
     trigger: Agent or MCP attempts to record or request user approval.
     scenarios:
-      - id: presentation_skills.showcase.approval_authority_boundary.negative
+      - id: showcase.flow.approval_authority_boundary.negative
         kind: steps
         steps:
           - Attempt noninteractive user approval.
@@ -202,18 +219,21 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: test_result
-          required_verifiers: [script]
+          required_verifiers:
+            - script
           minimum_count: 1
     approval_policy:
       mode: none
-
-  - id: presentation_skills.showcase.status_separation
+  - id: showcase.flow.status_separation
     title: Verdict, verification, run, and approval separated
     lifecycle: active
     value_tier: critical
     journey_role: golden
     usage_frequency: common
-    tags: [showcase, status, approval]
+    tags:
+      - showcase
+      - status
+      - approval
     source_refs:
       - kind: file
         path: docs/showcase.md
@@ -227,7 +247,7 @@ use_cases:
       - A run has observations, verdicts, finish state, or approval state.
     trigger: Agent inspects or reports showcase status.
     scenarios:
-      - id: presentation_skills.showcase.status_separation.status
+      - id: showcase.flow.status_separation.status
         kind: steps
         steps:
           - Replay a showcase run.
@@ -242,7 +262,8 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: agent_observation
-          required_verifiers: [agent]
+          required_verifiers:
+            - agent
           minimum_count: 1
     approval_policy:
       mode: none

@@ -1,16 +1,19 @@
 schema_version: 1
 feature:
-  id: presentation_skills.migration
+  id: migration.importer
   name: TEST-MATRIX migration
   summary: Reviewable migration from legacy test matrices into use-case rows without laundering old proof.
 use_cases:
-  - id: presentation_skills.migration.reviewable_draft_import
+  - id: migration.importer.reviewable_draft_import
     title: Reviewable TEST-MATRIX draft import
     lifecycle: active
     value_tier: core
     journey_role: alternate
     usage_frequency: occasional
-    tags: [migration, test-matrix, backfill]
+    tags:
+      - migration
+      - test-matrix
+      - backfill
     source_refs:
       - kind: file
         path: docs/migration.md
@@ -20,9 +23,9 @@ use_cases:
     intent: Convert legacy TEST-MATRIX rows into draft use-case YAML with review warnings.
     preconditions:
       - A legacy TEST-MATRIX.md file exists.
-    trigger: User or agent backfills an existing project into Presentation Skills.
+    trigger: User or agent backfills an existing project into Use Cases Plugin.
     scenarios:
-      - id: presentation_skills.migration.reviewable_draft_import.dry_run
+      - id: migration.importer.reviewable_draft_import.dry_run
         kind: steps
         steps:
           - Run migrate test-matrix in dry-run mode.
@@ -38,18 +41,21 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: command_result
-          required_verifiers: [script]
+          required_verifiers:
+            - script
           minimum_count: 1
     approval_policy:
       mode: ask
-
-  - id: presentation_skills.migration.no_legacy_pass_as_proof
+  - id: migration.importer.no_legacy_pass_as_proof
     title: Legacy pass marks are not evidence
     lifecycle: active
     value_tier: critical
     journey_role: negative
     usage_frequency: common
-    tags: [migration, evidence, proof-boundary]
+    tags:
+      - migration
+      - evidence
+      - proof-boundary
     source_refs:
       - kind: file
         path: docs/migration.md
@@ -61,7 +67,7 @@ use_cases:
       - Legacy matrix rows include status text such as pass, fail, done, or accepted.
     trigger: Agent migrates legacy matrix content.
     scenarios:
-      - id: presentation_skills.migration.no_legacy_pass_as_proof.guard
+      - id: migration.importer.no_legacy_pass_as_proof.guard
         kind: steps
         steps:
           - Parse legacy rows with old status marks.
@@ -77,18 +83,20 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: test_result
-          required_verifiers: [script]
+          required_verifiers:
+            - script
           minimum_count: 1
     approval_policy:
       mode: none
-
-  - id: presentation_skills.migration.source_traceability
+  - id: migration.importer.source_traceability
     title: Migration source traceability
     lifecycle: active
     value_tier: supporting
     journey_role: alternate
     usage_frequency: rare
-    tags: [migration, traceability]
+    tags:
+      - migration
+      - traceability
     source_refs:
       - kind: file
         path: docs/migration.md
@@ -100,7 +108,7 @@ use_cases:
       - A migration source file has identifiable source rows.
     trigger: Agent writes or reviews migrated draft use-case YAML.
     scenarios:
-      - id: presentation_skills.migration.source_traceability.refs
+      - id: migration.importer.source_traceability.refs
         kind: steps
         steps:
           - Generate draft rows from a TEST-MATRIX source.
@@ -115,18 +123,21 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: agent_observation
-          required_verifiers: [agent]
+          required_verifiers:
+            - agent
           minimum_count: 1
     approval_policy:
       mode: none
-
-  - id: presentation_skills.migration.human_review_activation
+  - id: migration.importer.human_review_activation
     title: Human review before activation
     lifecycle: active
     value_tier: core
     journey_role: alternate
     usage_frequency: occasional
-    tags: [migration, review, activation]
+    tags:
+      - migration
+      - review
+      - activation
     source_refs:
       - kind: file
         path: docs/migration.md
@@ -138,7 +149,7 @@ use_cases:
       - Migration output contains draft or uncertain rows.
     trigger: Agent considers activating migrated rows.
     scenarios:
-      - id: presentation_skills.migration.human_review_activation.review
+      - id: migration.importer.human_review_activation.review
         kind: steps
         steps:
           - Present a concise feature printout of migrated rows.
@@ -153,7 +164,8 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: manual_observation
-          required_verifiers: [user]
+          required_verifiers:
+            - user
           minimum_count: 1
     approval_policy:
       mode: ask

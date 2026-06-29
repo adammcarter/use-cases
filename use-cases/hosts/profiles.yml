@@ -1,16 +1,21 @@
 schema_version: 1
 feature:
-  id: presentation_skills.hosts
+  id: hosts.profiles
   name: Host profiles and conformance
   summary: First-class host families with truthful projection, activation, and support status.
 use_cases:
-  - id: presentation_skills.hosts.first_class_profile_set
+  - id: hosts.profiles.first_class_profile_set
     title: Four first-class host families
     lifecycle: active
     value_tier: critical
     journey_role: golden
     usage_frequency: common
-    tags: [hosts, claude, codex, copilot, opencode]
+    tags:
+      - hosts
+      - claude
+      - codex
+      - copilot
+      - opencode
     source_refs:
       - kind: file
         path: docs/hosts.md
@@ -28,7 +33,7 @@ use_cases:
       - Host profile files are part of the package and docs.
     trigger: Agent checks host support shape or release packaging.
     scenarios:
-      - id: presentation_skills.hosts.first_class_profile_set.profiles
+      - id: hosts.profiles.first_class_profile_set.profiles
         kind: steps
         steps:
           - Inspect the host profile set.
@@ -53,18 +58,21 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: command_result
-          required_verifiers: [script]
+          required_verifiers:
+            - script
           minimum_count: 1
     approval_policy:
       mode: none
-
-  - id: presentation_skills.hosts.projection_checksum_integrity
+  - id: hosts.profiles.projection_checksum_integrity
     title: Canonical skill projection integrity
     lifecycle: active
     value_tier: core
     journey_role: golden
     usage_frequency: common
-    tags: [hosts, projection, checksum]
+    tags:
+      - hosts
+      - projection
+      - checksum
     source_refs:
       - kind: file
         path: docs/hosts.md
@@ -76,7 +84,7 @@ use_cases:
       - Canonical agent skills exist in `.agents/skills`.
     trigger: Host projection or conformance status is generated.
     scenarios:
-      - id: presentation_skills.hosts.projection_checksum_integrity.check
+      - id: hosts.profiles.projection_checksum_integrity.check
         kind: steps
         steps:
           - Project host files from canonical skill sources.
@@ -91,18 +99,21 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: command_result
-          required_verifiers: [script]
+          required_verifiers:
+            - script
           minimum_count: 1
     approval_policy:
       mode: none
-
-  - id: presentation_skills.hosts.conformance_status_truth
+  - id: hosts.profiles.conformance_status_truth
     title: Truthful host conformance status
     lifecycle: active
     value_tier: critical
     journey_role: golden
     usage_frequency: common
-    tags: [hosts, conformance, evidence]
+    tags:
+      - hosts
+      - conformance
+      - evidence
     source_refs:
       - kind: file
         path: docs/hosts.md
@@ -114,7 +125,7 @@ use_cases:
       - Host conformance data or unavailable-host observations exist.
     trigger: Agent or release gate reports host support status.
     scenarios:
-      - id: presentation_skills.hosts.conformance_status_truth.status
+      - id: hosts.profiles.conformance_status_truth.status
         kind: steps
         steps:
           - Run host conformance status.
@@ -136,18 +147,21 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: host_conformance
-          required_verifiers: [script]
+          required_verifiers:
+            - script
           minimum_count: 1
     approval_policy:
       mode: none
-
-  - id: presentation_skills.hosts.live_activation_caveat
+  - id: hosts.profiles.live_activation_caveat
     title: Static projection is not live support
     lifecycle: active
     value_tier: critical
     journey_role: edge
     usage_frequency: occasional
-    tags: [hosts, claim-boundary, support]
+    tags:
+      - hosts
+      - claim-boundary
+      - support
     source_refs:
       - kind: file
         path: docs/activation.md
@@ -159,7 +173,7 @@ use_cases:
       - A host profile or projection exists without live host execution evidence.
     trigger: Agent summarizes host support or release status.
     scenarios:
-      - id: presentation_skills.hosts.live_activation_caveat.claim
+      - id: hosts.profiles.live_activation_caveat.claim
         kind: steps
         steps:
           - Inspect host conformance evidence.
@@ -180,23 +194,26 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: agent_observation
-          required_verifiers: [agent]
+          required_verifiers:
+            - agent
           minimum_count: 1
     approval_policy:
       mode: none
-
-  - id: presentation_skills.hosts.bootstrap_visibility
+  - id: hosts.profiles.bootstrap_visibility
     title: Trusted bootstrap visibility
     lifecycle: active
     value_tier: core
     journey_role: alternate
     usage_frequency: occasional
-    tags: [hosts, bootstrap, activation]
+    tags:
+      - hosts
+      - bootstrap
+      - activation
     source_refs:
       - kind: file
         path: docs/activation.md
       - kind: file
-        path: bootstrap/presentation-skills.md
+        path: bootstrap/use-cases-plugin.md
       - kind: file
         path: packages/ucm-core/src/skills/validateSkillAssets.ts
     actor: script
@@ -205,7 +222,7 @@ use_cases:
       - Host projection or skill package assets exist.
     trigger: Agent verifies activation-critical instructions for a host.
     scenarios:
-      - id: presentation_skills.hosts.bootstrap_visibility.check
+      - id: hosts.profiles.bootstrap_visibility.check
         kind: steps
         steps:
           - Validate skill assets.
@@ -226,18 +243,21 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: command_result
-          required_verifiers: [script]
+          required_verifiers:
+            - script
           minimum_count: 1
     approval_policy:
       mode: none
-
-  - id: presentation_skills.hosts.surface_limitations
+  - id: hosts.profiles.surface_limitations
     title: Host limitations are explicit
     lifecycle: active
     value_tier: supporting
     journey_role: alternate
     usage_frequency: occasional
-    tags: [hosts, limitations, permissions]
+    tags:
+      - hosts
+      - limitations
+      - permissions
     source_refs:
       - kind: file
         path: docs/hosts.md
@@ -251,7 +271,7 @@ use_cases:
       - A host has missing executable proof, limited projection support, or different tool semantics.
     trigger: Agent chooses a host workflow or reports host readiness.
     scenarios:
-      - id: presentation_skills.hosts.surface_limitations.report
+      - id: hosts.profiles.surface_limitations.report
         kind: steps
         steps:
           - Inspect host profile and conformance status.
@@ -272,18 +292,21 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: agent_observation
-          required_verifiers: [agent]
+          required_verifiers:
+            - agent
           minimum_count: 1
     approval_policy:
       mode: none
-
-  - id: presentation_skills.hosts.smoke_signal_resilience
+  - id: hosts.profiles.smoke_signal_resilience
     title: Signal-killed host smoke is not_run, never passed
     lifecycle: active
     value_tier: core
     journey_role: failure
     usage_frequency: rare
-    tags: [hosts, conformance, resilience]
+    tags:
+      - hosts
+      - conformance
+      - resilience
     source_refs:
       - kind: file
         path: packages/ucm-core/src/hosts/conformanceStatus.ts
@@ -295,7 +318,7 @@ use_cases:
       - A host smoke command is available but is killed by a signal or returns no exit status.
     trigger: Release gate or agent runs host conformance and a smoke executable is terminated abnormally.
     scenarios:
-      - id: presentation_skills.hosts.smoke_signal_resilience.terminated
+      - id: hosts.profiles.smoke_signal_resilience.terminated
         kind: steps
         steps:
           - Run host conformance with a smoke executable that is terminated by a signal.
@@ -317,7 +340,8 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: test_result
-          required_verifiers: [script]
+          required_verifiers:
+            - script
           minimum_count: 1
     approval_policy:
       mode: none

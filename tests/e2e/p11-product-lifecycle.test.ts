@@ -270,7 +270,7 @@ describe("P11 host and project acceptance", () => {
       complete: true,
       data: {
         counts: {
-          use_cases_addressable: 82
+          use_cases_addressable: 83
         }
       }
     });
@@ -278,20 +278,20 @@ describe("P11 host and project acceptance", () => {
     const listed = runCliJson(["matrix", "list", "--repo", repoRoot, "--json"]);
     expect(listed.status).toBe(0);
     const ids = (listed.payload.data.use_cases as Array<{ id: string }>).map((item) => item.id);
-    expect(ids).toHaveLength(82);
+    expect(ids).toHaveLength(83);
     expect(ids).toEqual(expect.arrayContaining([
       "capsule.live_runner.scripted",
       "matrix.core.validate",
-      "presentation_skills.lifecycle.continuous_loop",
-      "presentation_skills.matrix.product_inventory",
-      "presentation_skills.evidence.product_proof_map",
-      "presentation_skills.planning.showcase_selection",
-      "presentation_skills.showcase.live_acceptance_flow",
-      "presentation_skills.capsules.persisted_smoke_runbook",
-      "presentation_skills.mcp.cli_contract_transport",
-      "presentation_skills.hosts.conformance_status_truth",
-      "presentation_skills.migration.no_legacy_pass_as_proof",
-      "presentation_skills.release.self_dogfood_evidence_bundle"
+      "lifecycle.loop.continuous_loop",
+      "matrix.product.product_inventory",
+      "evidence.ledger.product_proof_map",
+      "planning.cards.showcase_selection",
+      "showcase.flow.live_acceptance_flow",
+      "capsule.demos.persisted_smoke_runbook",
+      "mcp.surface.cli_contract_transport",
+      "hosts.profiles.conformance_status_truth",
+      "migration.importer.no_legacy_pass_as_proof",
+      "release.proof.self_dogfood_evidence_bundle"
     ]));
   });
 });

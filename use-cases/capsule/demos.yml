@@ -1,16 +1,19 @@
 schema_version: 1
 feature:
-  id: presentation_skills.capsules
+  id: capsule.demos
   name: Demo capsules
   summary: Optional persisted smoke and golden-path runbooks that become proof only when performed as showcase runs.
 use_cases:
-  - id: presentation_skills.capsules.persisted_smoke_runbook
+  - id: capsule.demos.persisted_smoke_runbook
     title: Persisted smoke demo runbook
     lifecycle: active
     value_tier: core
     journey_role: golden
     usage_frequency: common
-    tags: [capsules, smoke, runbook]
+    tags:
+      - capsules
+      - smoke
+      - runbook
     source_refs:
       - kind: file
         path: docs/showcase.md
@@ -22,7 +25,7 @@ use_cases:
       - A common smoke or golden path deserves a persisted runbook.
     trigger: Agent or user wants a repeatable demonstration without reselecting rows manually.
     scenarios:
-      - id: presentation_skills.capsules.persisted_smoke_runbook.plan
+      - id: capsule.demos.persisted_smoke_runbook.plan
         kind: steps
         steps:
           - Validate a capsule file.
@@ -38,18 +41,21 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: command_result
-          required_verifiers: [script]
+          required_verifiers:
+            - script
           minimum_count: 1
     approval_policy:
       mode: none
-
-  - id: presentation_skills.capsules.adhoc_release_demo
+  - id: capsule.demos.adhoc_release_demo
     title: Ad hoc release demo plan
     lifecycle: active
     value_tier: core
     journey_role: alternate
     usage_frequency: occasional
-    tags: [capsules, adhoc, release]
+    tags:
+      - capsules
+      - adhoc
+      - release
     source_refs:
       - kind: file
         path: docs/showcase.md
@@ -61,7 +67,7 @@ use_cases:
       - The demo is specific to a release, PR, or changed scope.
     trigger: Agent prepares a one-off live run.
     scenarios:
-      - id: presentation_skills.capsules.adhoc_release_demo.start
+      - id: capsule.demos.adhoc_release_demo.start
         kind: steps
         steps:
           - Select ad hoc use-case IDs.
@@ -76,18 +82,21 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: agent_observation
-          required_verifiers: [agent]
+          required_verifiers:
+            - agent
           minimum_count: 1
     approval_policy:
       mode: ask
-
-  - id: presentation_skills.capsules.runner_command_safety
+  - id: capsule.demos.runner_command_safety
     title: Hardened scripted capsule execution
     lifecycle: active
     value_tier: critical
     journey_role: negative
     usage_frequency: common
-    tags: [capsules, command-runner, security]
+    tags:
+      - capsules
+      - command-runner
+      - security
     source_refs:
       - kind: file
         path: packages/ucm-core/src/capsules/runCapsule.ts
@@ -99,7 +108,7 @@ use_cases:
       - A capsule contains command steps.
     trigger: Agent runs a capsule with command execution enabled.
     scenarios:
-      - id: presentation_skills.capsules.runner_command_safety.command
+      - id: capsule.demos.runner_command_safety.command
         kind: steps
         steps:
           - Require command execution permission at the capsule and caller level.
@@ -115,18 +124,21 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: test_result
-          required_verifiers: [script]
+          required_verifiers:
+            - script
           minimum_count: 1
     approval_policy:
       mode: none
-
-  - id: presentation_skills.capsules.stale_reference_warning
+  - id: capsule.demos.stale_reference_warning
     title: Stale or missing capsule references
     lifecycle: active
     value_tier: supporting
     journey_role: edge
     usage_frequency: rare
-    tags: [capsules, stale, diagnostics]
+    tags:
+      - capsules
+      - stale
+      - diagnostics
     source_refs:
       - kind: file
         path: packages/ucm-core/src/capsules/loadCapsule.ts
@@ -138,7 +150,7 @@ use_cases:
       - A capsule references use-case or scenario IDs.
     trigger: Agent validates or plans a capsule after matrix changes.
     scenarios:
-      - id: presentation_skills.capsules.stale_reference_warning.validate
+      - id: capsule.demos.stale_reference_warning.validate
         kind: steps
         steps:
           - Validate a capsule after related rows changed.
@@ -153,18 +165,20 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: test_result
-          required_verifiers: [script]
+          required_verifiers:
+            - script
           minimum_count: 1
     approval_policy:
       mode: none
-
-  - id: presentation_skills.capsules.runbook_not_proof
+  - id: capsule.demos.runbook_not_proof
     title: Capsule is runbook, not proof
     lifecycle: active
     value_tier: critical
     journey_role: negative
     usage_frequency: common
-    tags: [capsules, proof-boundary]
+    tags:
+      - capsules
+      - proof-boundary
     source_refs:
       - kind: file
         path: docs/showcase.md
@@ -176,7 +190,7 @@ use_cases:
       - A capsule exists or a capsule plan has been generated.
     trigger: Agent summarizes proof, readiness, or release state.
     scenarios:
-      - id: presentation_skills.capsules.runbook_not_proof.guard
+      - id: capsule.demos.runbook_not_proof.guard
         kind: steps
         steps:
           - Inspect a capsule or capsule plan.
@@ -191,7 +205,8 @@ use_cases:
       mode: requirements
       requirements:
         - evidence_kind: agent_observation
-          required_verifiers: [agent]
+          required_verifiers:
+            - agent
           minimum_count: 1
     approval_policy:
       mode: none
