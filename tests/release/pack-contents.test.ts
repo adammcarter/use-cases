@@ -25,7 +25,7 @@ interface PackageSpec {
 const packages: PackageSpec[] = [
   {
     filter: "@use-cases-plugin/core",
-    tarball: "use-cases-plugin-core-1.0.0.tgz",
+    tarball: "use-cases-plugin-core-1.0.0-rc.1.tgz",
     requiredIncludes: [
       "dist/index.js",
       "dist/index.d.ts",
@@ -37,7 +37,7 @@ const packages: PackageSpec[] = [
   },
   {
     filter: "@use-cases-plugin/cli",
-    tarball: "use-cases-plugin-cli-1.0.0.tgz",
+    tarball: "use-cases-plugin-cli-1.0.0-rc.1.tgz",
     requiredIncludes: [
       "dist/index.js",
       "dist/index.d.ts",
@@ -48,7 +48,7 @@ const packages: PackageSpec[] = [
   },
   {
     filter: "@use-cases-plugin/mcp",
-    tarball: "use-cases-plugin-mcp-1.0.0.tgz",
+    tarball: "use-cases-plugin-mcp-1.0.0-rc.1.tgz",
     requiredIncludes: [
       "dist/index.js",
       "dist/index.d.ts",

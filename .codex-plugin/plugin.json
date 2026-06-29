@@ -1,12 +1,17 @@
 {
   "name": "use-cases-plugin",
-  "version": "1.0.0",
+  "version": "1.0.0-rc.1",
   "description": "Use-case, evidence, and live showcase infrastructure for agent work.",
   "author": {
     "name": "Use Cases Plugin"
   },
   "license": "MIT",
-  "keywords": ["agents", "showcase", "use-cases", "evidence"],
+  "keywords": [
+    "agents",
+    "showcase",
+    "use-cases",
+    "evidence"
+  ],
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Use Cases Plugin",
@@ -14,7 +19,10 @@
     "longDescription": "Maintains use cases, proof history, and live showcase flows for agent-led product work.",
     "developerName": "Use Cases Plugin",
     "category": "Productivity",
-    "capabilities": ["Interactive", "Write"],
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
     "defaultPrompt": [
       "Create use cases for this feature.",
       "Plan a live showcase for this branch.",
