@@ -224,7 +224,12 @@ describe("P0 staged plugin", () => {
     const manifest = JSON.parse(
       readFileSync(join(staged, ".codex-plugin/plugin.json"), "utf8")
     );
-    expect(manifest.mcpServers).toBe("./.mcp.json");
+    expect(manifest.mcpServers).toBe("../.mcp.json");
+    // The path must actually resolve to the staged root .mcp.json. ("./.mcp.json"
+    // would resolve inside .codex-plugin/ where no .mcp.json is shipped.)
+    expect(resolve(staged, ".codex-plugin", manifest.mcpServers)).toBe(
+      join(staged, ".mcp.json")
+    );
 
     const mcpConfig = JSON.parse(readFileSync(join(staged, ".mcp.json"), "utf8"));
     const server = mcpConfig.mcpServers["use-cases-plugin"];

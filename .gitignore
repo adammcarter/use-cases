@@ -1,4 +1,5 @@
 .agent-cache/
+.claude/
 .agent-tool/
 .agent-receipts/
 .DS_Store

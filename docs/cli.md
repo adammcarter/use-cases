@@ -23,8 +23,14 @@ All commands use JSON envelopes with `schema_version`, `protocol_version`,
   `--changed-path`.
 - `matrix status --repo <path> --json`: combine matrix integrity and evidence
   replay status.
-- `matrix upsert --repo <path> --file <path> --use-case-json <json> --json`:
-  add or update one use-case entry in an existing feature file.
+- `matrix upsert --repo <path> --file <path> (--use-case-json <json> | --use-case-file <path>) --json`:
+  add or update one use-case entry in an existing feature file. `--file` is the
+  destination feature YAML; supply the row payload either inline with
+  `--use-case-json '{...}'` or from a JSON file with `--use-case-file <path>`.
+  A row with `lifecycle: active` must include the conditionally-required fields
+  (`actor`, `intent`, `preconditions`, `trigger`, `scenarios`,
+  `observable_outcomes`, `host_applicability`, `verification_policy`,
+  `approval_policy`).
 - `matrix remove --repo <path> --use-case <id> --reason <text> --json`:
   mark a use case as `removed`. This is a lifecycle change, not physical
   deletion.
