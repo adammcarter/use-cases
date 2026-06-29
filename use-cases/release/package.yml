@@ -32,6 +32,7 @@ use_cases:
           - Run installed CLI and MCP smoke checks.
     observable_outcomes:
       - Package doctor reports a complete tarball or installed-root inspection with no diagnostics.
+      - The release claim points at the artifact users will install, and package contents match documented and manifest claims.
     host_applicability:
       - host_surface: codex.cli
         supported: true
@@ -69,6 +70,7 @@ use_cases:
           - Stop on the first failing command.
     observable_outcomes:
       - The command prints release gate passed only after all sequential checks exit zero.
+      - The gate proves frozen install, typecheck, build, full tests, package doctor, and matrix checks in one deterministic sequence.
     host_applicability:
       - host_surface: codex.cli
         supported: true
