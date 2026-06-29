@@ -132,3 +132,84 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
+  - id: diagnostics.contracts.cli_self_documents
+    title: CLI is self-documenting via help and usage
+    lifecycle: active
+    value_tier: core
+    journey_role: golden
+    usage_frequency: common
+    tags:
+      - diagnostics
+      - cli
+      - discoverability
+    source_refs:
+      - kind: file
+        path: packages/ucm-cli/src/index.ts
+      - kind: file
+        path: docs/cli.md
+    actor: agent
+    intent: Let an agent discover the available commands and their flags from the CLI itself, without reading the source or the test suite.
+    preconditions:
+      - The CLI is built and on PATH (or invoked via node).
+    trigger: An agent reaches for help before it knows a command's exact arguments.
+    scenarios:
+      - id: diagnostics.contracts.cli_self_documents.usage
+        kind: steps
+        steps:
+          - Run the CLI with no command, with --help, or with -h.
+          - Run a known command with --help.
+          - Run an unrecognized command.
+    observable_outcomes:
+      - A bare invocation, --help, or -h prints a usage envelope listing the available commands and their flags.
+      - An unrecognized command prints usage scoped to its group instead of a bare command.unknown response.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: command_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none
+  - id: diagnostics.contracts.missing_build_hint
+    title: Missing build surfaces an actionable hint
+    lifecycle: active
+    value_tier: supporting
+    journey_role: edge
+    usage_frequency: occasional
+    tags:
+      - diagnostics
+      - cli
+      - onboarding
+    source_refs:
+      - kind: file
+        path: packages/ucm-cli/src/index.ts
+    actor: agent
+    intent: On a fresh clone where the compiled core has not been built, tell the user to run the build instead of surfacing a raw module-resolution error.
+    preconditions:
+      - The compiled core dist has not been built yet.
+    trigger: An agent invokes the CLI before running the build.
+    scenarios:
+      - id: diagnostics.contracts.missing_build_hint.hint
+        kind: steps
+        steps:
+          - Invoke the CLI with the compiled core absent.
+          - Read the message and exit code.
+    observable_outcomes:
+      - The CLI prints an actionable message naming the build command rather than a raw module-not-found stack.
+      - The process exits non-zero so the missing build is not mistaken for success.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: command_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none
