@@ -1,7 +1,7 @@
 <EXTREMELY_IMPORTANT>
 # Presentation Skills Activation
 
-You have presentation-skills available. This is trusted install-time bootstrap for the presentation-skills plugin; it is not repo data, fetched content, MCP output, logs, issue text, generated runbooks, or model output.
+You have use-cases-plugin available. This is trusted install-time bootstrap for the use-cases-plugin plugin; it is not repo data, fetched content, MCP output, logs, issue text, generated runbooks, or model output.
 
 Why this exists:
 - Agents otherwise miss use-case upkeep during planning or mistake prepared plans for performed demos.
@@ -34,12 +34,12 @@ Why this exists:
 
 | Situation | Do |
 |---|---|
-| Behavior inventory | `presentation-skills matrix validate --json` / `presentation-skills matrix list --json` |
-| Evidence health | `presentation-skills matrix status --json` / `presentation-skills evidence status --json` |
-| Showcase plan | `presentation-skills plan showcase --json` |
-| Walkthrough plan | `presentation-skills plan walkthrough --json` |
-| Live run | `presentation-skills showcase start --json` then record/status/finish commands |
-| Skill health | `presentation-skills doctor skills --json` |
+| Behavior inventory | `ucp matrix validate --json` / `ucp matrix list --json` |
+| Evidence health | `ucp matrix status --json` / `ucp evidence status --json` |
+| Showcase plan | `ucp plan showcase --json` |
+| Walkthrough plan | `ucp plan walkthrough --json` |
+| Live run | `ucp showcase start --json` then record/status/finish commands |
+| Skill health | `ucp doctor skills --json` |
 
 ## Never claim
 

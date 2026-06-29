@@ -2,7 +2,7 @@ schema_version: 1
 capsule_id: capsule.v1.release_smoke
 title: v1 release smoke showcase
 mode: showcase
-description: Perform a command-backed smoke demo of the presentation-skills plugin itself.
+description: Perform a command-backed smoke demo of the use-cases-plugin plugin itself.
 audience: reviewer
 timebox_seconds: 300
 items:
@@ -15,12 +15,12 @@ items:
         executable: node
         argv:
           - -e
-          - "require('node:fs').accessSync('use-cases-plugin.yml'); process.stdout.write('presentation-skills workspace smoke\\n');"
+          - "require('node:fs').accessSync('use-cases-plugin.yml'); process.stdout.write('use-cases-plugin workspace smoke\\n');"
         working_directory: .
         expected_exit_codes: [0]
 permissions:
   command_execution: true
 extensions:
   use-cases-plugin.dev/runner:
-    command: presentation-skills capsule run --repo . --capsule capsule.v1.release_smoke --execute-commands --idempotency-key p14:v1-release-smoke --json
+    command: ucp capsule run --repo . --capsule capsule.v1.release_smoke --execute-commands --idempotency-key p14:v1-release-smoke --json
     command_steps: required

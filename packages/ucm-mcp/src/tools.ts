@@ -95,7 +95,7 @@ const cliEnvelopeSchema = {
 };
 
 const toolDefinitions: ToolDefinition[] = [
-  tool("doctor_roots", "doctor.roots", "Inspect resolved presentation-skills roots.", "read", toolInputBase, doctorRoots),
+  tool("doctor_roots", "doctor.roots", "Inspect resolved use-cases-plugin roots.", "read", toolInputBase, doctorRoots),
   tool("matrix_validate", "matrix.validate", "Validate use-case matrix files.", "read", toolInputBase, matrixValidate),
   tool("matrix_list", "matrix.list", "List and filter use cases.", "read", toolInputBase, matrixList),
   tool("matrix_status", "matrix.status", "Summarize matrix and evidence status.", "read", toolInputBase, matrixStatus),
@@ -569,7 +569,7 @@ function showcaseRequestApproval(args: JsonObject): CliResult<unknown> {
     finish_event_id: finish?.event_id ?? null,
     known_gaps: status.known_gaps,
     suggested_cli_command: [
-      "presentation-skills",
+      "ucp",
       "showcase",
       "approve",
       "--run",
