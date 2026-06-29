@@ -3,6 +3,7 @@ export * from "./schema/index.js";
 export * from "./errors.js";
 export * from "./errors/registry.js";
 export * from "./roots.js";
+export * from "./redact.js";
 export * from "./useCases/integrity.js";
 export * from "./useCases/loadUseCaseMatrix.js";
 export * from "./useCases/mutateUseCaseMatrix.js";

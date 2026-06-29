@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import { computeSemanticHash } from "../schema/index.js";
+import { redactSecrets } from "../redact.js";
 import { PresentationSkillsError } from "../errors.js";
 import type { PresentationPlan } from "../presentation/index.js";
 import type { ResolvedWorkspaceContext } from "../roots.js";
@@ -80,7 +81,10 @@ export function appendShowcaseObservation(options: {
     payload: {
       plan_item_id: options.planItemId,
       epoch_id: "epoch.1",
-      observation: options.text
+      // Redact at the point of persistence so the durable ledger never holds a
+      // leaked secret. The intent digest is computed over this payload, so it
+      // agrees with the redacted stored form.
+      observation: redactSecrets(options.text)
     }
   });
   return appendResult(options.context, event);

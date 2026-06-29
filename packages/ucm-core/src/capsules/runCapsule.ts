@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, realpathSync } from "node:fs";
 import { isAbsolute, relative, resolve } from "node:path";
 import type { Diagnostic } from "../schema/index.js";
+import { redactSecrets } from "../redact.js";
 import {
   appendShowcaseAction,
   appendShowcaseObservation,
@@ -421,12 +422,6 @@ function copyDefinedEnv(keys: string[]): NodeJS.ProcessEnv {
 
 function sanitizeCommandOutput(value: string): string {
   return truncateOutput(redactSecrets(value));
-}
-
-function redactSecrets(value: string): string {
-  return value
-    .replace(/\b(secret|token|password|api[_-]?key)\s*[:=]\s*[^\s]+/gi, (_match, label: string) => `${label}=[redacted]`)
-    .replace(/\bsk-[A-Za-z0-9_-]{8,}\b/g, "sk-[redacted]");
 }
 
 function truncateOutput(value: string): string {

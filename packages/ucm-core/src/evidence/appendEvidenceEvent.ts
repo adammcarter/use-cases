@@ -2,6 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { closeSync, existsSync, mkdirSync, openSync, readFileSync, rmSync, writeSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fsyncBestEffortForTemp } from "../durableWrite.js";
+import { redactSecrets } from "../redact.js";
 import { PresentationSkillsError } from "../errors.js";
 import type { ResolvedWorkspaceContext } from "../roots.js";
 import type { EvidenceAppendResultData, EvidenceEvent, EvidenceKind, EvidenceResult, EvidenceTarget } from "./types.js";
@@ -34,7 +35,12 @@ export type AppendEvidenceEventResult = EvidenceAppendResultData & {
 };
 
 export function appendEvidenceEvent(options: AppendEvidenceEventOptions): AppendEvidenceEventResult {
-  return withEvidenceAppendLock(options.context, () => appendUnderLock(options));
+  // Redact the free-text summary at the point of persistence so the durable
+  // ledger never holds a leaked secret. Doing it here (before digestIntent and
+  // payload construction) keeps the stored summary and its intent digest in
+  // agreement. Structural fields (ids, hashes, targets) are untouched.
+  const redacted: AppendEvidenceEventOptions = { ...options, summary: redactSecrets(options.summary) };
+  return withEvidenceAppendLock(redacted.context, () => appendUnderLock(redacted));
 }
 
 export function appendEvidenceVoidEvent(options: VoidEvidenceEventOptions): AppendEvidenceEventResult {

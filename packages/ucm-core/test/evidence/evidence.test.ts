@@ -180,6 +180,71 @@ describe("P3 evidence append and linkage", () => {
     expect(readFileSync(first.ledgerPath, "utf8")).toBe(bytesAfterFirst);
   });
 
+  test("a secret in the evidence summary is stored redacted, and its digest agrees", () => {
+    const workspaceRoot = fixtureWorkspace("evidence-basic");
+    const context = resolveWorkspaceContext({ workspaceRoot });
+
+    const appended = appendEvidenceEvent({
+      context,
+      idempotencyKey: "leaky-summary",
+      target: {
+        use_case_id: "showcase.live.golden",
+        use_case_semantic_hash: useCaseHash(workspaceRoot, "showcase.live.golden")
+      },
+      kind: "manual_observation",
+      result: "pass",
+      summary: "Authenticated with sk-ABCD1234efgh5678 and api_key=TOPSECRETVALUE then ran.",
+      actorType: "user",
+      hostSurface: "codex.cli"
+    });
+
+    expect(appended.event.payload?.summary).toBe(
+      "Authenticated with sk-[redacted] and api_key=[redacted] then ran."
+    );
+    // The raw secret must not survive on disk.
+    const raw = readFileSync(appended.ledgerPath, "utf8");
+    expect(raw).not.toContain("sk-ABCD1234efgh5678");
+    expect(raw).not.toContain("TOPSECRETVALUE");
+
+    // The intent digest is computed over the redacted summary: re-appending the
+    // SAME redacted summary under the same key is idempotent (no conflict).
+    const replay = appendEvidenceEvent({
+      context,
+      idempotencyKey: "leaky-summary",
+      target: {
+        use_case_id: "showcase.live.golden",
+        use_case_semantic_hash: useCaseHash(workspaceRoot, "showcase.live.golden")
+      },
+      kind: "manual_observation",
+      result: "pass",
+      summary: "Authenticated with sk-[redacted] and api_key=[redacted] then ran.",
+      actorType: "user",
+      hostSurface: "codex.cli"
+    });
+    expect(replay.appended).toBe(false);
+    expect(replay.event.event_id).toBe(appended.event.event_id);
+  });
+
+  test("a clean evidence summary with no secret pattern is stored verbatim", () => {
+    const workspaceRoot = fixtureWorkspace("evidence-basic");
+    const context = resolveWorkspaceContext({ workspaceRoot });
+    const summary = "The api documentation explains how tokens and secrets work in general.";
+    const appended = appendEvidenceEvent({
+      context,
+      idempotencyKey: "clean-summary",
+      target: {
+        use_case_id: "showcase.live.golden",
+        use_case_semantic_hash: useCaseHash(workspaceRoot, "showcase.live.golden")
+      },
+      kind: "manual_observation",
+      result: "pass",
+      summary,
+      actorType: "user",
+      hostSurface: "codex.cli"
+    });
+    expect(appended.event.payload?.summary).toBe(summary);
+  });
+
   test("moving a use-case file does not break stable-ID evidence linkage", () => {
     const workspaceRoot = fixtureWorkspace("evidence-basic");
     const context = resolveWorkspaceContext({ workspaceRoot });
