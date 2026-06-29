@@ -1,6 +1,6 @@
 {
   "name": "use-cases-plugin",
-  "version": "1.0.0",
+  "version": "1.0.0-rc.1",
   "description": "Use-case, evidence, and live showcase infrastructure for agent work.",
   "mcpServers": "../.mcp.json"
 }

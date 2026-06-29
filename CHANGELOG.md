@@ -5,7 +5,7 @@ All notable changes to this project are documented here. The format is based on
 follows [Semantic Versioning](https://semver.org) as declared in
 [`docs/reference/stability.md`](docs/reference/stability.md).
 
-## [Unreleased]
+## 1.0.0-rc.1 - 2026-06-29
 
 Public v1 hardening — taking the internal trust engine to a public, adoptable
 release. At a high level:
