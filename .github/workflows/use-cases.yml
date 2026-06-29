@@ -99,9 +99,13 @@ jobs:
           cache: pnpm
       - run: corepack pnpm install --frozen-lockfile
       - run: corepack pnpm build
-      # Feature: blocks INVALID only. Release: also blocks required rows that are
-      # not FRESH. --ci makes scan print the inferred Swift spans (spec 10.2).
-      - name: scan (${{ needs.policy.outputs.mode }})
+      # Integrity scan: ALWAYS feature mode (blocks INVALID only). The release gate
+      # — "every required_for_release row must be FRESH" — deliberately runs AFTER
+      # the prove job mints proofs (see the "release gate" step there), NOT here:
+      # gating required-not-FRESH before prove had run was a bootstrap deadlock (a
+      # newly-required row blocked scan, so prove never ran to mint its proof).
+      # --ci makes scan print the inferred Swift spans (spec 10.2).
+      - name: scan (integrity)
         run: |
           key_args=()
           if [ -f "$UCM_PUBLIC_KEY" ]; then key_args=(--public-key "$UCM_PUBLIC_KEY"); fi
@@ -110,7 +114,7 @@ jobs:
             --product-root . \
             --evidence "$UCM_EVIDENCE" \
             --bindings "$UCM_BINDINGS" \
-            --policy-mode "${{ needs.policy.outputs.mode }}" \
+            --policy-mode feature \
             "${key_args[@]}" \
             --ci \
             --json
@@ -216,3 +220,22 @@ jobs:
           # append back to the same branch the release run is on.
           git pull --rebase origin "$GITHUB_REF_NAME"
           git push origin "HEAD:$GITHUB_REF_NAME"
+      # Release gate (POST-PROVE): now that proofs are minted + persisted, enforce
+      # that every required_for_release row is FRESH. Runs release-mode scan over
+      # the just-proven ledger, so a newly-required row whose verifier PASSED is
+      # already FRESH (no gate-before-prove deadlock). A required row that could
+      # NOT be proven (verifier failed / unbound / invalid) still blocks the
+      # release here (exit nonzero) — passing rows are already persisted above.
+      - name: release gate (required rows must be FRESH)
+        if: ${{ env.UCM_CI_SIGNING_KEY != '' }}
+        run: |
+          key_args=()
+          if [ -f "$UCM_PUBLIC_KEY" ]; then key_args=(--public-key "$UCM_PUBLIC_KEY"); fi
+          corepack pnpm cli -- scan \
+            --repo . \
+            --product-root . \
+            --evidence "$UCM_EVIDENCE" \
+            --bindings "$UCM_BINDINGS" \
+            --policy-mode release \
+            "${key_args[@]}" \
+            --json
