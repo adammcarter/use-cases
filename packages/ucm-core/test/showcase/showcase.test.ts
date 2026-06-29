@@ -470,6 +470,74 @@ describe("P6 showcase run replay", () => {
       verification_state: "not_required"
     });
   });
+
+  test("a secret in an observation is stored redacted in the showcase ledger", () => {
+    const workspaceRoot = fixtureWorkspace("evidence-basic");
+    const context = resolveWorkspaceContext({ workspaceRoot });
+    const plan = planFor(context);
+    const started = startShowcaseRun({
+      context,
+      plan,
+      controlMode: "agent_led",
+      actorType: "agent",
+      hostSurface: "codex.cli",
+      idempotencyKey: "p6-redact-start",
+      recordedAt: "2026-06-25T12:00:00.000Z"
+    });
+    const leaky = "Logged in with sk-ABCD1234efgh5678 and api_key=SUPERSECRETVALUE shown.";
+    const observation = appendShowcaseObservation({
+      context,
+      runId: started.run_id,
+      planItemId: "item.showcase.live.golden",
+      text: leaky,
+      actorType: "agent",
+      hostSurface: "codex.cli",
+      idempotencyKey: "p6-redact-observe",
+      recordedAt: "2026-06-25T12:01:00.000Z"
+    });
+
+    const stored = readShowcaseEvents(context, started.run_id).events.find(
+      (event) => event.event_id === observation.event.event_id
+    );
+    expect(stored?.payload.observation).toBe(
+      "Logged in with sk-[redacted] and api_key=[redacted] shown."
+    );
+    // The raw secret must not survive anywhere on disk.
+    const ledgerPath = join(workspaceRoot, "showcase-runs", started.run_id, "events.jsonl");
+    const raw = readFileSync(ledgerPath, "utf8");
+    expect(raw).not.toContain("sk-ABCD1234efgh5678");
+    expect(raw).not.toContain("SUPERSECRETVALUE");
+  });
+
+  test("a clean observation with no secret pattern is stored verbatim", () => {
+    const workspaceRoot = fixtureWorkspace("evidence-basic");
+    const context = resolveWorkspaceContext({ workspaceRoot });
+    const plan = planFor(context);
+    const started = startShowcaseRun({
+      context,
+      plan,
+      controlMode: "agent_led",
+      actorType: "agent",
+      hostSurface: "codex.cli",
+      idempotencyKey: "p6-clean-start",
+      recordedAt: "2026-06-25T12:00:00.000Z"
+    });
+    const prose = "The api documentation explains how tokens and secrets work in general.";
+    const observation = appendShowcaseObservation({
+      context,
+      runId: started.run_id,
+      planItemId: "item.showcase.live.golden",
+      text: prose,
+      actorType: "agent",
+      hostSurface: "codex.cli",
+      idempotencyKey: "p6-clean-observe",
+      recordedAt: "2026-06-25T12:01:00.000Z"
+    });
+    const stored = readShowcaseEvents(context, started.run_id).events.find(
+      (event) => event.event_id === observation.event.event_id
+    );
+    expect(stored?.payload.observation).toBe(prose);
+  });
 });
 
 function fixtureWorkspace(name: string): string {
