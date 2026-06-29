@@ -31,6 +31,22 @@ Generated plans, walkthroughs, capsules, and runbooks are prepared material only
 
 ## Common Commands
 
+- Add or update a use case (the core authoring command):
+  `ucp matrix upsert --file <feature.yml> --use-case-json '{...}'` — `--file`
+  is the existing feature file the row lands in (create one first with
+  `ucp init`), and `--use-case-json` is the row payload. For larger rows pass
+  `--use-case-file <payload.json>` instead of inline JSON. Minimal planned row:
+
+  ```sh
+  ucp matrix upsert --file use-cases/my-feature.yml \
+    --use-case-json '{"id":"my-feature.does-x","title":"Does X","lifecycle":"planned","value_tier":"core","journey_role":"golden","usage_frequency":"common"}'
+  ```
+
+  A row with `lifecycle: active` must additionally carry the full set of
+  conditionally-required fields: `actor`, `intent`, `preconditions`,
+  `trigger`, `scenarios`, `observable_outcomes`, `host_applicability`,
+  `verification_policy`, and `approval_policy`. Run `ucp matrix validate --json`
+  after upserting.
 - Validate inventory: `ucp matrix validate --json`
 - List or filter rows: `ucp matrix list --json`
 - Inspect matrix plus evidence health: `ucp matrix status --json`
