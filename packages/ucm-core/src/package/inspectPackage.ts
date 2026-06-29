@@ -62,8 +62,8 @@ export type PackageInspectionResult = {
 
 const REQUIRED_PACKAGE_PATHS = [
   ".agents/skills/use-cases-plugin/SKILL.md",
-  ".agents/skills/presentation-showcase/SKILL.md",
-  ".agents/skills/presentation-walkthrough/SKILL.md",
+  ".agents/skills/showcase/SKILL.md",
+  ".agents/skills/walkthrough/SKILL.md",
   ".codex-plugin/plugin.json",
   ".claude-plugin/plugin.json",
   ".mcp.json",

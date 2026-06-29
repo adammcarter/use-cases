@@ -6,7 +6,7 @@ import { parseYamlToJson } from "../../packages/ucm-core/src/schema/index.js";
 
 const repoRoot = resolve(import.meta.dirname, "../..");
 const skillRoot = join(repoRoot, ".agents", "skills");
-const canonicalSkillNames = ["use-cases-plugin", "presentation-showcase", "presentation-walkthrough"];
+const canonicalSkillNames = ["use-cases-plugin", "showcase", "walkthrough"];
 const knownCliCommands = new Set([
   "capsule list",
   "capsule plan",
@@ -96,8 +96,8 @@ describe("P7 canonical skills and activation bootstrap", () => {
     const source = readFileSync(join(repoRoot, "docs", "activation.md"), "utf8");
     expect(source).toContain("Decision Tree");
     expect(source).toContain("-> use-cases-plugin");
-    expect(source).toContain("-> presentation-showcase");
-    expect(source).toContain("-> presentation-walkthrough");
+    expect(source).toContain("-> showcase");
+    expect(source).toContain("-> walkthrough");
     expect(source).toContain("-> do not activate");
   });
 

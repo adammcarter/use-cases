@@ -9,10 +9,10 @@ User asks about behavior inventory, matrix health, migration, or evidence record
   -> use-cases-plugin
 
 User asks for live demo, sign-off, pre-merge proof, or performed showcase?
-  -> presentation-showcase
+  -> showcase
 
 User asks for broad explanation, caveats, gaps, evidence review, or extensive feature review?
-  -> presentation-walkthrough
+  -> walkthrough
 
 No repo/workspace context, trivial Q&A, pure formatting, sensitive cleanup, or user opts out?
   -> do not activate
@@ -21,8 +21,8 @@ No repo/workspace context, trivial Q&A, pure formatting, sensitive cleanup, or u
 ## Skill Selection
 
 - `use-cases-plugin`: create or update use cases, validate matrix health, backfill TEST-MATRIX-style rows, and attach safe evidence.
-- `presentation-showcase`: prepare or perform a live, high-value proof run from selected use cases.
-- `presentation-walkthrough`: produce extensive explanation with provenance, caveats, gaps, edge cases, and failure cases.
+- `showcase`: prepare or perform a live, high-value proof run from selected use cases.
+- `walkthrough`: produce extensive explanation with provenance, caveats, gaps, edge cases, and failure cases.
 
 ## Trusted Boundaries
 

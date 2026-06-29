@@ -211,7 +211,7 @@ use_cases:
       - kind: file
         path: docs/security.md
       - kind: file
-        path: .agents/skills/presentation-showcase/SKILL.md
+        path: .agents/skills/showcase/SKILL.md
     actor: agent
     intent: Prevent verified, supported, signed-off, or release-ready claims when evidence or approval is missing.
     preconditions:
