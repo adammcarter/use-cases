@@ -20,6 +20,7 @@ import { reconcileRegistryWithScan, type RowReconciliation } from "./reconcile.j
 import { splitSlug } from "./markerLine.js";
 import { SPAN_CANON_ID, STATUS_SCHEMA_ID } from "./constants.js";
 import { PROOF_PASS_RESULT, type ProofEvent } from "./evidenceLedger.js";
+import type { CiAuthority } from "./ciAuthority.js";
 import type { MaterializedRegistry } from "./registry.js";
 import type { CurrentBindingRecord, MarkerError, ScanResult } from "./scanner.js";
 
@@ -46,6 +47,29 @@ export interface PolicyDecisionContext {
 
 export type CustomPolicyPredicate = (context: PolicyDecisionContext) => boolean;
 
+// CI-neutral release-gate AUTHORITY requirement (public-v1, Phase 2, Piece 2).
+//
+// OPTIONAL / off by default. When configured, a `required_for_release` row whose
+// matching FRESH proof was minted with insufficient provenance authority is
+// POLICY-BLOCKED in RELEASE mode (and only release mode). The check is purely
+// ADDITIVE: it can only ever block an otherwise-FRESH required row; it never
+// relaxes the existing "required + not FRESH" block, and it never touches
+// feature/custom mode. The trust model is CI-NEUTRAL — the proof's `authority`
+// block (mirrors authority.schema.json) records WHO/WHERE minted it, regardless
+// of provider (GitHub Actions is only the reference). When nothing is configured
+// (the whole object omitted, empty, or every field falsy) behaviour is exactly
+// as before.
+export interface ReleaseGatePolicy {
+  // When "ci", the matching proof's `authority.type` must be "ci" (i.e. minted
+  // inside a recognised CI provider, not a local run). Any other value (or an
+  // absent authority block) is insufficient.
+  required_authority?: "ci";
+  // When true, the matching proof's `authority.protected_ref` must be exactly
+  // `true` (the provider attested the ref is a protected branch). `false` or
+  // `null` (unknown) — or an absent authority block — is insufficient.
+  require_protected_ref?: boolean;
+}
+
 export interface DeriveFreshnessInput {
   // R: the loaded YAML rows.
   rows: ReadonlyArray<FreshnessInputRow>;
@@ -58,6 +82,9 @@ export interface DeriveFreshnessInput {
   policy_mode: PolicyMode;
   // Only consulted when policy_mode === "custom".
   custom_policy?: CustomPolicyPredicate;
+  // OPTIONAL CI-neutral release-gate authority requirement. Only consulted in
+  // RELEASE mode; off by default (omit / empty => no change to today's gating).
+  release_gate?: ReleaseGatePolicy;
   // Freshly recomputed verification context hash per row (rowId -> sha), derived
   // by scan from the CURRENT resolved verifier + declared-input contents. When
   // provided, a proof is only FRESH if its embedded verification.context_hash
@@ -344,12 +371,62 @@ function deriveStaleReasons(
   return reasons;
 }
 
+// Is any authority requirement actually configured? An omitted, empty, or
+// all-falsy `release_gate` means "no requirement" — behaviour stays as today.
+function authorityGateActive(policy: ReleaseGatePolicy | undefined): boolean {
+  if (!policy) {
+    return false;
+  }
+  return policy.required_authority === "ci" || policy.require_protected_ref === true;
+}
+
+// Does the matching proof's authority satisfy the configured release-gate
+// requirement? CI-neutral: only the authority shape is inspected (not the
+// provider). An absent authority block satisfies nothing once a requirement is
+// active. Returns true when no requirement is configured.
+function authoritySatisfies(
+  policy: ReleaseGatePolicy | undefined,
+  authority: CiAuthority | undefined
+): boolean {
+  if (!authorityGateActive(policy)) {
+    return true;
+  }
+  if (policy?.required_authority === "ci" && authority?.type !== "ci") {
+    return false;
+  }
+  if (policy?.require_protected_ref === true && authority?.protected_ref !== true) {
+    return false;
+  }
+  return true;
+}
+
+// Human-readable explanation for an AUTHORITY_INSUFFICIENT block.
+function authorityReason(
+  policy: ReleaseGatePolicy | undefined,
+  authority: CiAuthority | undefined
+): string {
+  const wants: string[] = [];
+  if (policy?.required_authority === "ci") {
+    wants.push('authority.type === "ci"');
+  }
+  if (policy?.require_protected_ref === true) {
+    wants.push("authority.protected_ref === true");
+  }
+  const got = authority
+    ? `type=${authority.type}, protected_ref=${String(authority.protected_ref ?? null)}`
+    : "no authority block on the matching proof";
+  return `release gate requires ${wants.join(" and ")}, but the matching proof has ${got}`;
+}
+
 function evaluatePolicyBlock(
   mode: PolicyMode,
   status: RowStatus,
   required: boolean,
   rowId: string,
-  custom?: CustomPolicyPredicate
+  custom: CustomPolicyPredicate | undefined,
+  // True when an active release-gate authority requirement is NOT met by the
+  // matching FRESH proof for a required row. Only meaningful in release mode.
+  authorityInsufficient: boolean
 ): boolean {
   const isInvalid = status === "INVALID";
   if (mode === "feature") {
@@ -357,7 +434,13 @@ function evaluatePolicyBlock(
   }
   if (mode === "release") {
     // release blocks INVALID and any required row that is not FRESH (spec 10.2).
-    return isInvalid || (required && status !== "FRESH");
+    // ADDITIVE: a required row that IS FRESH is also blocked when its matching
+    // proof's provenance authority falls short of the configured requirement.
+    return (
+      isInvalid ||
+      (required && status !== "FRESH") ||
+      (required && status === "FRESH" && authorityInsufficient)
+    );
   }
   // custom: defer to the configured predicate; default to feature behaviour.
   if (custom) {
@@ -585,12 +668,30 @@ export function deriveFreshness(input: DeriveFreshnessInput): FreshnessStatus {
     }
 
     const required = requiredForRelease(inputRow?.approval_policy);
+    // Release-gate authority requirement: only meaningful for a required, FRESH
+    // row whose matching proof we have in hand. An active requirement that the
+    // proof's authority does not meet flips the (otherwise unblocked) FRESH row
+    // to POLICY-BLOCKED and surfaces an AUTHORITY_INSUFFICIENT reason.
+    const authorityActive =
+      input.policy_mode === "release" &&
+      required &&
+      status === "FRESH" &&
+      authorityGateActive(input.release_gate);
+    const authorityInsufficient =
+      authorityActive && !authoritySatisfies(input.release_gate, matching?.authority);
+    if (authorityInsufficient) {
+      reasons.push({
+        code: "AUTHORITY_INSUFFICIENT",
+        message: authorityReason(input.release_gate, matching?.authority)
+      });
+    }
     const policyBlock = evaluatePolicyBlock(
       input.policy_mode,
       status,
       required,
       rowId,
-      input.custom_policy
+      input.custom_policy,
+      authorityInsufficient
     );
 
     let requiredAction: string | null = null;
