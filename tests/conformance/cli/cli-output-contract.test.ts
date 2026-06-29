@@ -12,7 +12,7 @@
 //      inventory's per-command mapping), its `data` ALSO validates against that
 //      schema.
 //   3. Coverage: the set of commands exercised here equals the canonical v1 CLI
-//      surface (43 commands), so a new command cannot silently escape the
+//      surface (44 commands), so a new command cannot silently escape the
 //      contract without this test going red.
 //
 // Reuses the EXISTING schema machinery (validateBySchemaId → the offline AJV 2020
@@ -102,7 +102,7 @@ function record(payload: { command: string }): void {
 }
 
 // ---------------------------------------------------------------------------
-// Canonical v1 CLI surface — 43 commands (docs/release/v1-surface-inventory.md).
+// Canonical v1 CLI surface — 44 commands (docs/release/v1-surface-inventory.md).
 // `dataSchema` is set ONLY where the inventory maps the command to a dedicated
 // result schema AND that mapping holds for real output (verified empirically).
 // Commands left as `null` legitimately have no dedicated data schema: their
@@ -113,6 +113,7 @@ const CANONICAL_COMMANDS = [
   "version",
   "schema.list",
   "schema.validate-fixtures",
+  "init",
   "matrix.validate",
   "matrix.list",
   "matrix.status",
@@ -176,6 +177,12 @@ const independentCases: IndependentCase[] = [
     command: "schema.validate-fixtures",
     // Defaults to tests/fixtures/workspaces/minimal-valid relative to cwd (repoRoot).
     build: () => ["schema", "validate-fixtures", "--json"]
+  },
+  {
+    command: "init",
+    // Scaffolds into a fresh temp dir (never an existing fixture). data is the
+    // scaffold result (created files + template + next steps); envelope only.
+    build: () => ["init", "--repo", mkdtempSync(join(tmpdir(), "ucm-conf-init-")), "--json"]
   },
   {
     command: "matrix.validate",
@@ -806,8 +813,8 @@ describe("v1 CLI output conformance", () => {
   // Coverage gate: every canonical v1 command must have been exercised above. If a
   // command is added to the CLI surface, add it to CANONICAL_COMMANDS and cover it
   // here — otherwise this assertion (and the surface inventory) goes stale loudly.
-  test("covers every command in the canonical v1 CLI surface (43)", () => {
-    expect(CANONICAL_COMMANDS).toHaveLength(43);
+  test("covers every command in the canonical v1 CLI surface (44)", () => {
+    expect(CANONICAL_COMMANDS).toHaveLength(44);
     const expected = [...CANONICAL_COMMANDS].sort();
     const actual = [...covered].sort();
     expect(actual).toEqual(expected);

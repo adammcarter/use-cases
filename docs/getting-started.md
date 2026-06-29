@@ -31,12 +31,28 @@ This puts the `ucm` binary on your project's path (via `pnpm exec ucm …` or a
 `@use-case-matrix/mcp` (binary `ucm-mcp`) if you want agents to drive the same
 commands — see [the MCP contract](./mcp.md).
 
-There is **no `ucm init`**. Bootstrapping is two files you create by hand
-(next step).
+## 2. Scaffold the workspace with `ucm init`
 
-## 2. Create the workspace config and matrix folder
+One command takes a brand-new repo from nothing to a bindable, verifiable
+matrix — a workspace config plus an example row that already validates:
 
-Create `presentation-skills.yml` at the repo root:
+```bash
+ucm init --repo . --template js-vitest
+```
+
+- `--template` wires the default verifier: `generic` (a clearly-TODO placeholder
+  command), `js-vitest` (the `js.vitest` preset), `python-pytest`
+  (`python.pytest`), or `go-test` (`go.test`).
+- `--component <id>` sets the component id (otherwise it is derived from the
+  repo directory name).
+- `--force` overwrites an existing workspace; without it, `init` refuses rather
+  than clobber a `presentation-skills.yml` that already exists.
+- `--json` emits the standard result envelope; omit it for a human summary that
+  prints these next steps.
+
+It writes `presentation-skills.yml` and `use-cases/example.yml`. It never
+generates or writes a private key, and it does not create the GitHub workflow —
+those steps are below. The generated config looks like:
 
 ```yaml
 schema_version: 1
@@ -44,16 +60,20 @@ workspace_id: my-project
 component_id: my-project
 data_root: .
 use_cases_dir: use-cases
-```
-
-Then make the matrix folder:
-
-```bash
-mkdir -p use-cases/billing
+evidence_dir: evidence
+demo_capsules_dir: demo-capsules
+showcase_runs_dir: showcase-runs
+default_workflow_mode: continuous
+verifiers:
+  default: acceptance
+  acceptance:
+    preset: js.vitest
+    evidence_kind: test_result
 ```
 
 Use-case rows live in sharded YAML files under `use_cases_dir`. See
-[the matrix concept](./concepts/matrix.md).
+[the matrix concept](./concepts/matrix.md). Replace the scaffolded
+`use-cases/example.yml` with a real row (next step).
 
 ## 3. Add a use-case row
 

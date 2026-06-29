@@ -64,7 +64,9 @@ const {
   runValidateLedgerCommand,
   detectCiAuthority,
   singleKeyResolver,
-  keyringPublicKeyResolverFromFile
+  keyringPublicKeyResolverFromFile,
+  scaffoldWorkspace,
+  isInitTemplate
 } = await loadUcmCore();
 
 const SUPPORTED_HOSTS: HostName[] = ["claude", "codex", "copilot", "opencode"];
@@ -133,6 +135,10 @@ export function runCli(argv: string[]): number {
       )}\n`
     );
     return 0;
+  }
+
+  if (normalizedArgv[0] === "init") {
+    return runInit(normalizedArgv, wantsJson);
   }
 
   if (normalizedArgv[0] === "matrix" && normalizedArgv[1] === "validate" && wantsJson) {
@@ -259,6 +265,60 @@ export function runCli(argv: string[]): number {
     )}\n`
   );
   return 2;
+}
+
+function runInit(argv: string[], wantsJson: boolean): number {
+  const repoRoot = resolve(process.cwd(), valueAfter(argv, "--repo") ?? ".");
+  const templateRaw = valueAfter(argv, "--template");
+  if (templateRaw !== undefined && !isInitTemplate(templateRaw)) {
+    return writeError(
+      "init",
+      "init.unknown_template",
+      `Unknown --template '${templateRaw}'. Use one of generic, js-vitest, python-pytest, go-test.`
+    );
+  }
+  const result = scaffoldWorkspace({
+    repoRoot,
+    template: templateRaw,
+    component: valueAfter(argv, "--component") ?? undefined,
+    force: argv.includes("--force")
+  });
+  const ok = result.status === "created";
+
+  if (wantsJson) {
+    process.stdout.write(
+      `${JSON.stringify(
+        createCliResult("init", result, {
+          ok,
+          complete: ok,
+          diagnostics: result.diagnostics,
+          workspaceRoot: repoRoot,
+          dataRoot: repoRoot,
+          componentId: result.component_id
+        })
+      )}\n`
+    );
+  } else if (ok) {
+    const lines = [
+      `Scaffolded a Use Case Matrix workspace in ${repoRoot}`,
+      `  template:  ${result.template}`,
+      `  component: ${result.component_id}`,
+      "  created:",
+      ...result.created_files.map((file) => `    - ${file}`),
+      "",
+      "Next steps:",
+      ...result.next_steps.map((step, index) => `  ${index + 1}. ${step}`),
+      ""
+    ];
+    process.stdout.write(`${lines.join("\n")}\n`);
+  } else {
+    process.stderr.write(`${result.diagnostics[0]?.message ?? "ucm init failed."}\n`);
+  }
+
+  if (ok) {
+    return 0;
+  }
+  return result.diagnostics.some((item) => item.code === "init.path_escape") ? 4 : 1;
 }
 
 function runEvidenceRecord(argv: string[]): number {
