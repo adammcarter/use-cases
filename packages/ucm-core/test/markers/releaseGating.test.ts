@@ -30,6 +30,12 @@ component_id: presentation-skills
 default_workflow_mode: continuous
 `;
 
+// A config that opts into the CI-neutral release-gate authority requirement.
+const CONFIG_YAML_WITH_AUTHORITY_GATE = `${CONFIG_YAML}release_gate:
+  required_authority: ci
+  require_protected_ref: true
+`;
+
 // A use-case file whose approval_policy declares required_for_release. `flag`
 // toggles the value; omit it entirely when `flag` is null.
 function rowYaml(flag: boolean | null): string {
@@ -156,5 +162,31 @@ describe("release-mode gating via required_for_release", () => {
   test("feature mode never blocks a not-FRESH required row", () => {
     const { row } = rowStatus(makeWorkspace(true), "feature");
     expect(row?.policy_block).toBe(false);
+  });
+});
+
+describe("release-gate authority requirement is read from workspace config", () => {
+  function workspaceWith(configBody: string): ReturnType<typeof resolveWorkspaceContext> {
+    const root = mkdtempSync(join(tmpdir(), "ucm-relgate-cfg-"));
+    tmpDirs.push(root);
+    for (const [rel, body] of [
+      ["presentation-skills.yml", configBody],
+      ["use-cases/checkout.yml", rowYaml(true)]
+    ] as const) {
+      const full = join(root, rel);
+      mkdirSync(dirname(full), { recursive: true });
+      writeFileSync(full, body);
+    }
+    return resolveWorkspaceContext({ workspaceRoot: root });
+  }
+
+  test("a configured release_gate is parsed onto the workspace context", () => {
+    const ctx = workspaceWith(CONFIG_YAML_WITH_AUTHORITY_GATE);
+    expect(ctx.release_gate).toEqual({ required_authority: "ci", require_protected_ref: true });
+  });
+
+  test("no release_gate in config leaves the context requirement undefined (off by default)", () => {
+    const ctx = workspaceWith(CONFIG_YAML);
+    expect(ctx.release_gate).toBeUndefined();
   });
 });

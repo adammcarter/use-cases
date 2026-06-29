@@ -16,10 +16,26 @@
       "enum": ["continuous", "backfill", "showcase_only", "audit_only", "migration", "custom"]
     },
     "verifiers": { "$ref": "#/$defs/verifiers_config" },
+    "release_gate": { "$ref": "#/$defs/release_gate" },
     "extensions": { "$ref": "common.schema.json#/$defs/extensions" }
   },
   "required": ["schema_version", "workspace_id", "data_root", "use_cases_dir", "evidence_dir", "demo_capsules_dir", "showcase_runs_dir", "component_id"],
   "$defs": {
+    "release_gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "OPTIONAL CI-neutral release-gate authority requirement (off by default). When present, a required_for_release row whose only FRESH proof was minted with insufficient provenance authority is policy-blocked in RELEASE mode only; feature mode is never affected. The trust model is CI-NEUTRAL — only the proof's authority shape is inspected (see schemas/v1/authority.schema.json), not which provider produced it. Omitting this object, or leaving every field unset/falsy, preserves today's gating exactly.",
+      "properties": {
+        "required_authority": {
+          "enum": ["ci"],
+          "description": "When \"ci\", a required row's matching FRESH proof must carry authority.type === \"ci\" (minted inside a recognised CI provider). A local-run proof (or no authority block) is insufficient and blocks release."
+        },
+        "require_protected_ref": {
+          "type": "boolean",
+          "description": "When true, a required row's matching FRESH proof must carry authority.protected_ref === true (the provider attested a protected branch). false/null/unknown is insufficient. protected_ref is provider-attested where available and otherwise unknown."
+        }
+      }
+    },
     "verifiers_config": {
       "type": "object",
       "propertyNames": { "$ref": "common.schema.json#/$defs/id" },

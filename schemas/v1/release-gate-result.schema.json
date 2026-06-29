@@ -27,7 +27,15 @@
         "reasons": {
           "type": "array",
           "items": { "type": "string", "minLength": 1 },
-          "description": "Human-readable reasons the row is not FRESH (optional)."
+          "description": "Human-readable reasons the row is not FRESH or is otherwise blocked (optional). Includes AUTHORITY_INSUFFICIENT when a FRESH required row is blocked by the release-gate authority requirement."
+        },
+        "authority_type": {
+          "enum": ["ci", "local"],
+          "description": "OPTIONAL. The authority.type of the row's matching FRESH proof (CI-neutral provenance; see authority.schema.json). Present only when the proof carries an authority block. Absent when there is no matching proof or it predates the authority block."
+        },
+        "authority_protected_ref": {
+          "type": ["boolean", "null"],
+          "description": "OPTIONAL. The authority.protected_ref tri-state of the matching FRESH proof: true/false when the provider attested the protected-branch state, null when unknown. protected_ref is provider-attested where available and otherwise unknown."
         }
       },
       "required": ["row_id", "status", "required_for_release", "policy_block"]
@@ -59,6 +67,21 @@
       "items": { "$ref": "common.schema.json#/$defs/id" },
       "description": "Ordered row ids that block the release."
     },
+    "authority_requirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "OPTIONAL echo of the CI-neutral release-gate authority requirement this decision was evaluated under (from workspace-config release_gate). Absent when no authority requirement is configured (off by default). The trust model is CI-NEUTRAL — only the proof's authority shape is inspected, not which provider produced it.",
+      "properties": {
+        "required_authority": {
+          "enum": ["ci"],
+          "description": "When \"ci\", a required row's matching FRESH proof must carry authority.type === \"ci\"."
+        },
+        "require_protected_ref": {
+          "type": "boolean",
+          "description": "When true, a required row's matching FRESH proof must carry authority.protected_ref === true."
+        }
+      }
+    },
     "rows": {
       "type": "array",
       "items": { "$ref": "#/$defs/row" }
@@ -86,6 +109,26 @@
           "status": "FRESH",
           "required_for_release": false,
           "policy_block": false
+        }
+      ]
+    },
+    {
+      "schema_version": 1,
+      "policy_mode": "release",
+      "passed": false,
+      "generated_at": "2026-06-28T12:10:00Z",
+      "summary": { "rows_total": 1, "rows_required": 1, "rows_blocked": 1 },
+      "blocked_row_ids": ["checkout.apply_coupon"],
+      "authority_requirement": { "required_authority": "ci", "require_protected_ref": true },
+      "rows": [
+        {
+          "row_id": "checkout.apply_coupon",
+          "status": "FRESH",
+          "required_for_release": true,
+          "policy_block": true,
+          "reasons": ["AUTHORITY_INSUFFICIENT: release gate requires authority.type === \"ci\" and authority.protected_ref === true, but the matching proof was minted locally"],
+          "authority_type": "local",
+          "authority_protected_ref": null
         }
       ]
     }

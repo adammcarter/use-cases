@@ -81,7 +81,10 @@ promoted. They are called out here so adopters can depend on them with eyes open
 - MCP **resources** and **prompts** (not yet exposed — planned).
 - MCP output **rate-limiting** and **size caps**.
 - Non-GitHub-Actions CI authority adapters (the proof model is CI-neutral; only
-  the GitHub Actions reference workflow is a supported path at 1.0.0).
+  the GitHub Actions reference workflow is a supported path at 1.0.0). The
+  CI-neutral authority contract, per-provider authority population, and the
+  opt-in release-gate authority requirement are documented in
+  [CI hardening](../security/ci-hardening.md).
 - Any CLI command's **human-readable** (non-`--json`) formatting.
 - Internal `@use-case-matrix/core` modules not listed in the documented export surface.
 
@@ -89,7 +92,10 @@ promoted. They are called out here so adopters can depend on them with eyes open
 
 - **Node**: active LTS lines.
 - **CI**: GitHub Actions is the reference, first-class path. The verify/prove
-  contract is CI-neutral and documented for other providers (best-effort).
+  contract is CI-neutral and documented for other providers (best-effort) in
+  [CI hardening](../security/ci-hardening.md), which also covers the opt-in
+  release-gate authority requirement (`release_gate.required_authority` /
+  `require_protected_ref`).
 - **Verifiers**: command verifiers for any language/toolchain. `pnpm`/`vitest`
   is one preset, not an assumption.
 - **MCP transport**: local stdio. Remote/HTTP transport is **not** a v1 contract.

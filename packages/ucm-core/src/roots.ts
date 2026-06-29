@@ -26,6 +26,11 @@ export type ResolvedWorkspaceContext = {
   // resolver. Threaded identically into verify/prove/scan so a row's resolved
   // verifier (and thus its verification context hash) is computed consistently.
   verifiers: ResolvedWorkspaceVerifiers;
+  // OPTIONAL CI-neutral release-gate authority requirement (off by default).
+  // Threaded into deriveFreshness so a required_for_release row whose matching
+  // FRESH proof was minted with insufficient provenance authority is policy-
+  // blocked in RELEASE mode. Undefined => no requirement (behaviour unchanged).
+  release_gate?: WorkspaceReleaseGate;
   provenance: {
     workspace_root: "explicit" | "cwd";
     data_root: "override" | "workspace_config" | "default";
@@ -69,11 +74,20 @@ export type ResolvedWorkspaceVerifiers = {
   verifiers: Record<string, WorkspaceVerifierEntry>;
 };
 
+// The optional workspace-config `release_gate` section (mirrors
+// workspace-config.schema.json#/$defs/release_gate). Structurally compatible
+// with freshness.ts `ReleaseGatePolicy`, so it threads straight through.
+export type WorkspaceReleaseGate = {
+  required_authority?: "ci";
+  require_protected_ref?: boolean;
+};
+
 type WorkspaceConfig = {
   data_root?: string;
   use_cases_dir?: string;
   component_id?: string;
   verifiers?: WorkspaceVerifiersConfig;
+  release_gate?: WorkspaceReleaseGate;
 };
 
 export function resolveWorkspaceContext(
@@ -108,6 +122,7 @@ export function resolveWorkspaceContext(
     component_id: options.component ?? config?.value.component_id ?? "presentation-skills",
     config_path: existsSync(configPath) ? "presentation-skills.yml" : null,
     verifiers: normalizeWorkspaceVerifiers(config?.value.verifiers),
+    release_gate: normalizeReleaseGate(config?.value.release_gate),
     provenance: {
       workspace_root: options.workspaceRoot ? "explicit" : "cwd",
       data_root: options.dataRootOverride ? "override" : config?.value.data_root ? "workspace_config" : "default",
@@ -176,6 +191,28 @@ function normalizeWorkspaceVerifiers(
   return typeof raw.default === "string"
     ? { default: raw.default, verifiers }
     : { verifiers };
+}
+
+// Normalize the optional `release_gate` config into a clean policy, or undefined
+// when nothing meaningful is set. The schema already validates shape; we re-read
+// defensively (config may be hand-edited) and drop an empty/all-falsy object so
+// downstream sees `undefined` (== no requirement, behaviour unchanged).
+function normalizeReleaseGate(
+  raw: WorkspaceReleaseGate | undefined
+): WorkspaceReleaseGate | undefined {
+  if (!isRecord(raw)) {
+    return undefined;
+  }
+  const gate: WorkspaceReleaseGate = {};
+  if (raw.required_authority === "ci") {
+    gate.required_authority = "ci";
+  }
+  if (raw.require_protected_ref === true) {
+    gate.require_protected_ref = true;
+  }
+  return gate.required_authority !== undefined || gate.require_protected_ref !== undefined
+    ? gate
+    : undefined;
 }
 
 function resolveRelative(root: string, value: string): string {

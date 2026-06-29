@@ -144,7 +144,10 @@ export function prepareScan(options: ScanCommandOptions): ScanPreparation {
     generated_at: options.generatedAt,
     product_root: options.productRoot,
     current_context_hashes: currentContextHashes,
-    global_integrity_errors: globalIntegrity
+    global_integrity_errors: globalIntegrity,
+    // OPTIONAL CI-neutral release-gate authority requirement from workspace
+    // config (off by default). Only consulted in release mode by deriveFreshness.
+    release_gate: options.context.release_gate
   });
 
   return {
