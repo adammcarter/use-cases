@@ -297,3 +297,69 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
+  - id: hosts.profiles.bootstrap_autoinject
+    title: Trusted bootstrap is auto-injected at session start per host
+    lifecycle: active
+    value_tier: core
+    journey_role: golden
+    usage_frequency: common
+    tags:
+      - hosts
+      - bootstrap
+      - activation
+    source_refs:
+      - kind: file
+        path: hooks/session-start
+      - kind: file
+        path: hooks/hooks.json
+      - kind: file
+        path: hooks/hooks-codex.json
+      - kind: file
+        path: .opencode/plugin/use-cases-plugin.js
+      - kind: file
+        path: bootstrap/use-cases-plugin.md
+    actor: agent
+    intent: Deliver the trusted bootstrap into an installed agent's context at session start through each host's real mechanism, so the plugin activates without the agent having to discover it by reading the repo.
+    preconditions:
+      - The plugin is installed in a supported host and the host fires its session-start lifecycle.
+    trigger: A session starts (or resumes / clears / compacts) in a host with the plugin installed.
+    scenarios:
+      - id: hosts.profiles.bootstrap_autoinject.per_host
+        kind: steps
+        steps:
+          - Run the session-start hook under each host's environment (Claude, Copilot, Codex).
+          - Confirm it emits the trusted bootstrap in that host's context shape.
+          - Confirm the OpenCode plugin returns the bootstrap as session.started context.
+    observable_outcomes:
+      - Claude and Codex receive the bootstrap as hookSpecificOutput.additionalContext; Copilot as top-level additionalContext; OpenCode as session.started context.
+      - The injected content is the trusted EXTREMELY_IMPORTANT bootstrap block, delivered whole (no truncation), not arbitrary text.
+    host_applicability:
+      - host_surface: claude.cli
+        supported: true
+      - host_surface: codex.cli
+        supported: true
+      - host_surface: copilot.cli
+        supported: true
+      - host_surface: opencode.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/conformance/bootstrap/session-start.test.ts
+          inputs:
+            - tests/conformance/bootstrap/session-start.test.ts
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none

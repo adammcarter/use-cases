@@ -23,6 +23,8 @@
     ".claude-plugin/plugin.json",
     ".codex-plugin/plugin.json",
     ".mcp.json",
+    ".opencode/plugin/use-cases-plugin.js",
+    "hooks",
     "README.md",
     "CHANGELOG.md",
     "bootstrap",
