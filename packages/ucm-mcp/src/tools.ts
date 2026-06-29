@@ -16,6 +16,7 @@ type UcmCoreModule = typeof import("@use-case-matrix/core");
 const {
   appendEvidenceEvent,
   appendEvidenceVoidEvent,
+  isValidId,
   appendShowcaseFailureDecision,
   appendShowcaseObservation,
   appendShowcaseVerdict,
@@ -324,6 +325,8 @@ function evidenceVoid(args: JsonObject): CliResult<unknown> {
   if (!evidenceId || !expectedHead || !reason) {
     return errorEnvelope("evidence.void", "cli_invalid_arguments", "Missing evidence, expected_head, or reason.");
   }
+  const invalidEvidenceId = rejectUnsafeId("evidence.void", "evidence", evidenceId);
+  if (invalidEvidenceId) return invalidEvidenceId;
   const append = appendEvidenceVoidEvent({
     context,
     evidenceId,
@@ -439,6 +442,8 @@ function showcaseStatus(args: JsonObject): CliResult<unknown> {
   if ("envelope" in context) return context.envelope;
   const runId = stringArg(args, "run");
   if (!runId) return errorEnvelope("showcase.status", "cli_invalid_arguments", "Missing run.");
+  const invalidStatusId = rejectUnsafeId("showcase.status", "run", runId);
+  if (invalidStatusId) return invalidStatusId;
   const status = replayShowcaseRun({ context, runId });
   return envelope("showcase.status", status, context, { complete: status.complete });
 }
@@ -452,6 +457,10 @@ function showcaseObservation(args: JsonObject): CliResult<unknown> {
   if (!runId || !planItemId || !text) {
     return errorEnvelope("showcase.record-observation", "cli_invalid_arguments", "Missing run, item, or text.");
   }
+  const invalidObservationId =
+    rejectUnsafeId("showcase.record-observation", "run", runId) ??
+    rejectUnsafeId("showcase.record-observation", "item", planItemId);
+  if (invalidObservationId) return invalidObservationId;
   return showcaseEnvelope("showcase.record-observation", appendShowcaseObservation({
     context,
     runId,
@@ -473,6 +482,10 @@ function showcaseVerdict(args: JsonObject): CliResult<unknown> {
   if (!runId || !planItemId || !verdict) {
     return errorEnvelope("showcase.record-verdict", "cli_invalid_arguments", "Missing run, item, or verdict.");
   }
+  const invalidVerdictId =
+    rejectUnsafeId("showcase.record-verdict", "run", runId) ??
+    rejectUnsafeId("showcase.record-verdict", "item", planItemId);
+  if (invalidVerdictId) return invalidVerdictId;
   const status = replayShowcaseRun({ context, runId });
   const item = status.items.find((candidate) => candidate.plan_item_id === planItemId);
   if (!item?.latest_observation_event_id) {
@@ -501,6 +514,8 @@ function showcaseDecide(args: JsonObject): CliResult<unknown> {
   if (!runId || !verdictEventId || !decision || !reason) {
     return errorEnvelope("showcase.decide", "cli_invalid_arguments", "Missing run, verdict_event, decision, or reason.");
   }
+  const invalidDecideId = rejectUnsafeId("showcase.decide", "run", runId);
+  if (invalidDecideId) return invalidDecideId;
   return showcaseEnvelope("showcase.decide", appendShowcaseFailureDecision({
     context,
     runId,
@@ -519,6 +534,8 @@ function showcaseFinish(args: JsonObject): CliResult<unknown> {
   if ("envelope" in context) return context.envelope;
   const runId = stringArg(args, "run");
   if (!runId) return errorEnvelope("showcase.finish", "cli_invalid_arguments", "Missing run.");
+  const invalidFinishId = rejectUnsafeId("showcase.finish", "run", runId);
+  if (invalidFinishId) return invalidFinishId;
   return showcaseEnvelope("showcase.finish", finishShowcaseRun({
     context,
     runId,
@@ -534,6 +551,8 @@ function showcaseRequestApproval(args: JsonObject): CliResult<unknown> {
   if ("envelope" in context) return context.envelope;
   const runId = stringArg(args, "run");
   if (!runId) return errorEnvelope("showcase.request-approval", "cli_invalid_arguments", "Missing run.");
+  const invalidApprovalId = rejectUnsafeId("showcase.request-approval", "run", runId);
+  if (invalidApprovalId) return invalidApprovalId;
   const status = replayShowcaseRun({ context, runId });
   const events = readShowcaseEvents(context, runId).events;
   const start = events.find((event) => event.event_type === "run_started");
@@ -641,6 +660,19 @@ function errorEnvelope(command: string, code: string, message: string): CliResul
       related_ids: []
     }]
   });
+}
+
+// SECURITY: reject a user-supplied id that is not a canonical id before it can
+// become a filesystem path segment or a ledger lookup key. Returns the stable
+// UCM_INVALID_ID envelope on failure, or null when the value is safe.
+function rejectUnsafeId(command: string, paramName: string, value: string): CliResult<unknown> | null {
+  return isValidId(value)
+    ? null
+    : errorEnvelope(
+        command,
+        "UCM_INVALID_ID",
+        `Invalid ${paramName} '${value}': must be a canonical id (lowercase, no path separators, no '..').`
+      );
 }
 
 function isTrustedUserClaim(args: JsonObject): boolean {

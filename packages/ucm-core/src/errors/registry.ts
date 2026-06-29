@@ -297,6 +297,11 @@ const REGISTRY = {
     "Unsafe relative path escapes its root boundary.",
     "UCM_PATH_ESCAPE"
   ),
+  UCM_INVALID_ID: entry(
+    "path",
+    "Identifier is not a canonical id; refusing to use it as a path segment.",
+    "UCM_INVALID_ID"
+  ),
 
   // --- migration test matrix (surface: migration) -------------------------
   UCM_MIGRATION_UNSAFE_SOURCE_PATH: entry(
@@ -502,6 +507,7 @@ export const LEGACY_STRING_CODE_MAP: Readonly<Record<string, UcmErrorCode>> = Ob
   "workspace_config.parse_error": "UCM_WORKSPACE_CONFIG_PARSE",
   "workspace_config.schema_error": "UCM_WORKSPACE_CONFIG_INVALID",
   "path.escape": "UCM_PATH_ESCAPE",
+  "path.invalid_id": "UCM_INVALID_ID",
   migration_unsafe_source_path: "UCM_MIGRATION_UNSAFE_SOURCE_PATH",
   migration_unsafe_output_path: "UCM_MIGRATION_UNSAFE_OUTPUT_PATH",
   showcase_plan_file_unreadable: "UCM_SHOWCASE_PLAN_UNREADABLE",

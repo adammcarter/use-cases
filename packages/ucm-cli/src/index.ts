@@ -18,6 +18,7 @@ const {
   PUBLIC_SCHEMA_IDS,
   appendEvidenceEvent,
   appendEvidenceVoidEvent,
+  isValidId,
   createCliResult,
   getVersionInfo,
   loadDemoCapsules,
@@ -313,6 +314,10 @@ function runEvidenceVoid(argv: string[]): number {
   const reason = valueAfter(argv, "--reason");
   if (!evidenceId || !expectedHead || !reason) {
     return writeError("evidence.void", "cli_invalid_arguments", "Missing --evidence, --expected-head, or --reason.");
+  }
+  const invalidEvidenceId = rejectUnsafeId("evidence.void", "--evidence", evidenceId);
+  if (invalidEvidenceId !== null) {
+    return invalidEvidenceId;
   }
   try {
     const append = appendEvidenceVoidEvent({
@@ -864,6 +869,12 @@ function runShowcaseObservation(argv: string[]): number {
   if (!runId || !planItemId || !text) {
     return writeError("showcase.record-observation", "cli_invalid_arguments", "Missing --run, --item, or --text.");
   }
+  const invalidObservationId =
+    rejectUnsafeId("showcase.record-observation", "--run", runId) ??
+    rejectUnsafeId("showcase.record-observation", "--item", planItemId);
+  if (invalidObservationId !== null) {
+    return invalidObservationId;
+  }
   try {
     const result = appendShowcaseObservation({
       context: contextResult,
@@ -891,6 +902,12 @@ function runShowcaseVerdict(argv: string[]): number {
   const verdict = valueAfter(argv, "--verdict");
   if (!runId || !planItemId || !verdict) {
     return writeError("showcase.record-verdict", "cli_invalid_arguments", "Missing --run, --item, or --verdict.");
+  }
+  const invalidVerdictId =
+    rejectUnsafeId("showcase.record-verdict", "--run", runId) ??
+    rejectUnsafeId("showcase.record-verdict", "--item", planItemId);
+  if (invalidVerdictId !== null) {
+    return invalidVerdictId;
   }
   const status = replayShowcaseRun({ context: contextResult, runId });
   const item = status.items.find((candidate) => candidate.plan_item_id === planItemId);
@@ -927,6 +944,10 @@ function runShowcaseDecide(argv: string[]): number {
   if (!runId || !verdictEventId || !decision || !reason) {
     return writeError("showcase.decide", "cli_invalid_arguments", "Missing --run, --verdict-event, --decision, or --reason.");
   }
+  const invalidDecideId = rejectUnsafeId("showcase.decide", "--run", runId);
+  if (invalidDecideId !== null) {
+    return invalidDecideId;
+  }
   try {
     const result = appendShowcaseFailureDecision({
       context: contextResult,
@@ -955,6 +976,10 @@ function runShowcasePause(argv: string[]): number {
   if (!runId) {
     return writeError("showcase.pause", "cli_invalid_arguments", "Missing --run.");
   }
+  const invalidPauseId = rejectUnsafeId("showcase.pause", "--run", runId);
+  if (invalidPauseId !== null) {
+    return invalidPauseId;
+  }
   try {
     const result = pauseShowcaseRun({
       context: contextResult,
@@ -981,6 +1006,10 @@ function runShowcaseResume(argv: string[]): number {
   if (!runId) {
     return writeError("showcase.resume", "cli_invalid_arguments", "Missing --run.");
   }
+  const invalidResumeId = rejectUnsafeId("showcase.resume", "--run", runId);
+  if (invalidResumeId !== null) {
+    return invalidResumeId;
+  }
   try {
     const result = resumeShowcaseRun({
       context: contextResult,
@@ -1006,6 +1035,10 @@ function runShowcaseFinish(argv: string[]): number {
   if (!runId) {
     return writeError("showcase.finish", "cli_invalid_arguments", "Missing --run.");
   }
+  const invalidFinishId = rejectUnsafeId("showcase.finish", "--run", runId);
+  if (invalidFinishId !== null) {
+    return invalidFinishId;
+  }
   try {
     const result = finishShowcaseRun({
       context: contextResult,
@@ -1029,6 +1062,10 @@ function runShowcaseStatus(argv: string[]): number {
   const runId = valueAfter(argv, "--run");
   if (!runId) {
     return writeError("showcase.status", "cli_invalid_arguments", "Missing --run.");
+  }
+  const invalidStatusId = rejectUnsafeId("showcase.status", "--run", runId);
+  if (invalidStatusId !== null) {
+    return invalidStatusId;
   }
   const status = replayShowcaseRun({ context: contextResult, runId });
   process.stdout.write(
@@ -1054,6 +1091,10 @@ function runShowcaseApprove(argv: string[]): number {
   const statement = valueAfter(argv, "--statement");
   if (!runId || !statement) {
     return writeError("showcase.approve", "cli_invalid_arguments", "Missing --run or --statement.");
+  }
+  const invalidApproveId = rejectUnsafeId("showcase.approve", "--run", runId);
+  if (invalidApproveId !== null) {
+    return invalidApproveId;
   }
   try {
     const result = appendShowcaseApproval({
@@ -1083,6 +1124,10 @@ function runShowcaseReject(argv: string[]): number {
   if (!runId || !statement) {
     return writeError("showcase.reject", "cli_invalid_arguments", "Missing --run or --statement.");
   }
+  const invalidRejectId = rejectUnsafeId("showcase.reject", "--run", runId);
+  if (invalidRejectId !== null) {
+    return invalidRejectId;
+  }
   try {
     const result = rejectShowcaseApproval({
       context: contextResult,
@@ -1111,6 +1156,10 @@ function runShowcaseCorrect(argv: string[]): number {
   const reason = valueAfter(argv, "--reason");
   if (!runId || !targetEventId || !correctedVerdict || !reason) {
     return writeError("showcase.correct", "cli_invalid_arguments", "Missing --run, --target-event, --verdict, or --reason.");
+  }
+  const invalidCorrectId = rejectUnsafeId("showcase.correct", "--run", runId);
+  if (invalidCorrectId !== null) {
+    return invalidCorrectId;
   }
   try {
     const result = correctShowcaseVerdict({
@@ -1842,6 +1891,23 @@ function contextFromArgs(argv: string[], command: string) {
     dataRootOverride: dataRootValue ? resolve(process.cwd(), dataRootValue) : undefined,
     component: valueAfter(argv, "--component")
   });
+}
+
+// SECURITY: reject a user-supplied id that is not a canonical id BEFORE it can
+// become a filesystem path segment (e.g. showcase-runs/<runId>/events.jsonl) or a
+// ledger lookup key. Returns the stable UCM_INVALID_ID / exit-2 invalid-arguments
+// envelope. Returns null when the value is safe, so callers read it as a guard.
+function invalidIdExit(command: string, paramName: string, value: string): number {
+  return writeError(
+    command,
+    "UCM_INVALID_ID",
+    `Invalid ${paramName} '${value}': must be a canonical id (lowercase, no path separators, no '..').`,
+    2
+  );
+}
+
+function rejectUnsafeId(command: string, paramName: string, value: string): number | null {
+  return isValidId(value) ? null : invalidIdExit(command, paramName, value);
 }
 
 function writeError(command: string, code: string, message: string, exitCode = 2): number {
