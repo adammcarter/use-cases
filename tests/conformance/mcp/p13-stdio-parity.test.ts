@@ -174,7 +174,7 @@ async function runPnpm(args: string[]) {
 }
 
 function fixtureWorkspace(name: string): string {
-  const workspaceRoot = mkdtempSync(join(tmpdir(), `presentation-skills-mcp-stdio-${name}-`));
+  const workspaceRoot = mkdtempSync(join(tmpdir(), `use-cases-plugin-mcp-stdio-${name}-`));
   cpSync(join(repoRoot, "tests/fixtures/workspaces", name), workspaceRoot, { recursive: true });
   return workspaceRoot;
 }

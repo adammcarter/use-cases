@@ -227,7 +227,7 @@ function prepareInspectionTarget(target: PackageInspectionTarget): {
       env: { ...process.env, COREPACK_ENABLE_DOWNLOAD_PROMPT: "0" }
     }), "corepack pnpm build");
   }
-  const packDir = mkdtempSync(join(tmpdir(), "presentation-skills-doctor-pack-"));
+  const packDir = mkdtempSync(join(tmpdir(), "use-cases-plugin-doctor-pack-"));
   const pack = spawnSync("corepack", ["pnpm", "pack", "--json", "--pack-destination", packDir], {
     cwd: workspace,
     encoding: "utf8",
@@ -246,7 +246,7 @@ function listPackageEntries(root: string, options: { skipNodeModules: boolean })
 }
 
 function extractTarball(tarball: string): string {
-  const extractDir = mkdtempSync(join(tmpdir(), "presentation-skills-doctor-extract-"));
+  const extractDir = mkdtempSync(join(tmpdir(), "use-cases-plugin-doctor-extract-"));
   const result = spawnSync("tar", ["-xzf", tarball, "-C", extractDir], { encoding: "utf8" });
   requireCommandSuccess(result, `tar -xzf ${tarball}`);
   const packageRoot = join(extractDir, "package");

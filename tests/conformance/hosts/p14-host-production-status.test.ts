@@ -39,7 +39,7 @@ describe("P14 host projection production status", () => {
         }
       });
     }
-    expect(existsSync(join(workspaceRoot, ".presentation-skills-projection.json"))).toBe(true);
+    expect(existsSync(join(workspaceRoot, ".use-cases-plugin-projection.json"))).toBe(true);
     for (const target of Object.values(hostTargets)) {
       expect(existsSync(join(workspaceRoot, target))).toBe(true);
     }
@@ -90,7 +90,7 @@ describe("P14 host projection production status", () => {
       const reverted = runCliJson(["host", "project", "--host", host, "--repo", workspaceRoot, "--revert", "--json"]);
       expect(reverted.status).toBe(0);
     }
-    expect(existsSync(join(workspaceRoot, ".presentation-skills-projection.json"))).toBe(false);
+    expect(existsSync(join(workspaceRoot, ".use-cases-plugin-projection.json"))).toBe(false);
     for (const target of Object.values(hostTargets)) {
       expect(existsSync(join(workspaceRoot, target))).toBe(false);
     }
@@ -98,7 +98,7 @@ describe("P14 host projection production status", () => {
 });
 
 function fixtureWorkspace(): string {
-  const workspaceRoot = mkdtempSync(join(tmpdir(), "presentation-skills-hosts-p14-"));
+  const workspaceRoot = mkdtempSync(join(tmpdir(), "use-cases-plugin-hosts-p14-"));
   cpSync(join(repoRoot, "examples", "host-projections"), workspaceRoot, { recursive: true, errorOnExist: false });
   return workspaceRoot;
 }

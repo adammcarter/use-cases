@@ -159,7 +159,7 @@ function runCli(args: string[]) {
 }
 
 function fixtureWorkspace(name: string): string {
-  const workspaceRoot = mkdtempSync(join(tmpdir(), `presentation-skills-mcp-${name}-`));
+  const workspaceRoot = mkdtempSync(join(tmpdir(), `use-cases-plugin-mcp-${name}-`));
   cpSync(join(repoRoot, "tests/fixtures/workspaces", name), workspaceRoot, { recursive: true });
   return workspaceRoot;
 }

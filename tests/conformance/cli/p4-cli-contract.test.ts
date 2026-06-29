@@ -26,7 +26,7 @@ function build() {
 }
 
 function copyFixture(name: string): string {
-  const workspaceRoot = mkdtempSync(join(tmpdir(), `presentation-skills-${name}-`));
+  const workspaceRoot = mkdtempSync(join(tmpdir(), `use-cases-plugin-${name}-`));
   cpSync(join(repoRoot, "tests/fixtures/workspaces", name), workspaceRoot, {
     recursive: true
   });

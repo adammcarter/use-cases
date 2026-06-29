@@ -25,7 +25,7 @@ function callTool(name: string, args: Record<string, unknown>) {
 }
 
 function fixtureWorkspace(name: string): string {
-  const workspaceRoot = mkdtempSync(join(tmpdir(), `presentation-skills-mcp-pathsafety-${name}-`));
+  const workspaceRoot = mkdtempSync(join(tmpdir(), `use-cases-plugin-mcp-pathsafety-${name}-`));
   cpSync(join(repoRoot, "tests/fixtures/workspaces", name), workspaceRoot, { recursive: true });
   return workspaceRoot;
 }
@@ -148,7 +148,7 @@ describe("P-sec MCP bounds plan_file to the workspace", () => {
   test("showcase_start rejects an absolute plan_file outside the workspace even when it is a valid plan", () => {
     const fixture = fixtureWorkspace("evidence-basic");
     const plan = generatePlan(fixture);
-    const outsideDir = mkdtempSync(join(tmpdir(), "presentation-skills-mcp-pathsafety-outside-"));
+    const outsideDir = mkdtempSync(join(tmpdir(), "use-cases-plugin-mcp-pathsafety-outside-"));
     const outsidePlan = join(outsideDir, "plan.json");
     writeFileSync(outsidePlan, `${JSON.stringify(plan, null, 2)}\n`);
     const envelope = withMcpWriteMode(() =>
@@ -164,7 +164,7 @@ describe("P-sec MCP bounds plan_file to the workspace", () => {
   test("showcase_start rejects a plan_file symlink that points outside the workspace", () => {
     const fixture = fixtureWorkspace("evidence-basic");
     const plan = generatePlan(fixture);
-    const outsideDir = mkdtempSync(join(tmpdir(), "presentation-skills-mcp-pathsafety-outside-"));
+    const outsideDir = mkdtempSync(join(tmpdir(), "use-cases-plugin-mcp-pathsafety-outside-"));
     const outsidePlan = join(outsideDir, "plan.json");
     writeFileSync(outsidePlan, `${JSON.stringify(plan, null, 2)}\n`);
     mkdirSync(join(fixture, "presentation-plans"), { recursive: true });

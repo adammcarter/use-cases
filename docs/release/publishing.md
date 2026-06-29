@@ -36,7 +36,7 @@ the first publish. CI cannot bootstrap them.
    package → **Settings → Trusted Publishing → Add a trusted publisher** and set:
    - **Publisher:** GitHub Actions
    - **Organization / user:** `adammcarter`
-   - **Repository:** `presentation-skills`
+   - **Repository:** `use-cases-plugin`
    - **Workflow filename:** `release.yml`
    - **Environment:** leave blank (the workflow does not use a GitHub
      environment).

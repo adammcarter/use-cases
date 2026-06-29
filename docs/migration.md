@@ -9,7 +9,7 @@ Old `PASS`, `FAIL`, `DONE`, evidence links, screenshots, and sign-off text are i
 Run a dry-run first:
 
 ```bash
-presentation-skills migrate test-matrix \
+ucp migrate test-matrix \
   --repo . \
   --source TEST-MATRIX.md \
   --out use-cases/_migrated \
@@ -30,7 +30,7 @@ would_write[]
 Then write draft use cases:
 
 ```bash
-presentation-skills migrate test-matrix \
+ucp migrate test-matrix \
   --repo . \
   --source TEST-MATRIX.md \
   --out use-cases/_migrated \

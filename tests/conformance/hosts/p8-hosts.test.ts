@@ -74,11 +74,11 @@ describe("P8 host profiles, projections, and conformance", () => {
       }),
       expect.objectContaining({
         action: "create",
-        path: ".presentation-skills-projection.json"
+        path: ".use-cases-plugin-projection.json"
       })
     ]);
     expect(existsSync(join(workspaceRoot, ".claude", "use-cases-plugin.md"))).toBe(false);
-    expect(existsSync(join(workspaceRoot, ".presentation-skills-projection.json"))).toBe(false);
+    expect(existsSync(join(workspaceRoot, ".use-cases-plugin-projection.json"))).toBe(false);
   });
 
   test("write projection is idempotent, manifest-backed, and thin", () => {
@@ -92,11 +92,11 @@ describe("P8 host profiles, projections, and conformance", () => {
     const first = projectHostFiles({ context, profile, mode: "write" });
     const second = projectHostFiles({ context, profile, mode: "write" });
     const stub = readFileSync(join(workspaceRoot, ".claude", "use-cases-plugin.md"), "utf8");
-    const manifest = JSON.parse(readFileSync(join(workspaceRoot, ".presentation-skills-projection.json"), "utf8"));
+    const manifest = JSON.parse(readFileSync(join(workspaceRoot, ".use-cases-plugin-projection.json"), "utf8"));
 
     expect(first.operations.some((operation) => operation.action === "create")).toBe(true);
     expect(second.operations.every((operation) => operation.action === "skip_unchanged")).toBe(true);
-    expect(stub).toContain("presentation-skills:managed");
+    expect(stub).toContain("use-cases-plugin:managed");
     expect(stub).toContain(".agents/skills");
     expect(stub).not.toContain("## Live Run Rules");
     expect(manifest).toMatchObject({
@@ -183,7 +183,7 @@ describe("P8 host profiles, projections, and conformance", () => {
     // symlink to an outside dir, so an unguarded write would land OUTSIDE the workspace.
     // The realpath-based containment check must refuse it and write nothing outside.
     const workspaceRoot = fixtureWorkspace();
-    const outside = mkdtempSync(join(tmpdir(), "presentation-skills-hosts-outside-"));
+    const outside = mkdtempSync(join(tmpdir(), "use-cases-plugin-hosts-outside-"));
     symlinkSync(outside, join(workspaceRoot, ".claude"));
     const context = resolveWorkspaceContext({ workspaceRoot, pluginRoot: repoRoot });
     const profile = loadHostProfile({ pluginRoot: repoRoot, host: "claude" }).profile;
@@ -216,13 +216,13 @@ describe("P8 host profiles, projections, and conformance", () => {
 });
 
 function fixtureWorkspace(): string {
-  const workspaceRoot = mkdtempSync(join(tmpdir(), "presentation-skills-hosts-"));
+  const workspaceRoot = mkdtempSync(join(tmpdir(), "use-cases-plugin-hosts-"));
   cpSync(join(repoRoot, "examples", "host-projections"), workspaceRoot, { recursive: true, errorOnExist: false });
   rmSync(join(workspaceRoot, ".claude"), { recursive: true, force: true });
   rmSync(join(workspaceRoot, ".codex"), { recursive: true, force: true });
   rmSync(join(workspaceRoot, ".github"), { recursive: true, force: true });
   rmSync(join(workspaceRoot, ".opencode"), { recursive: true, force: true });
-  rmSync(join(workspaceRoot, ".presentation-skills-projection.json"), { force: true });
+  rmSync(join(workspaceRoot, ".use-cases-plugin-projection.json"), { force: true });
   return workspaceRoot;
 }
 

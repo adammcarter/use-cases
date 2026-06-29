@@ -135,7 +135,7 @@ function parseFrontmatter(source: string, path: string): { name: string; descrip
 
 function extractCliCommands(source: string): string[] {
   const commands: string[] = [];
-  for (const match of source.matchAll(/`(?:presentation-skills|pnpm cli --)\s+([^`]+?)`/g)) {
+  for (const match of source.matchAll(/`(?:ucp|pnpm cli --)\s+([^`]+?)`/g)) {
     const tokens = match[1].trim().split(/\s+/);
     if (tokens.length >= 2) {
       commands.push(`${tokens[0]} ${tokens[1]}`);

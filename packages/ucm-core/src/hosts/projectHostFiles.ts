@@ -13,8 +13,8 @@ import type {
   HostProjectionResult
 } from "./types.js";
 
-const MANAGED_MARKER = "presentation-skills:managed";
-const MANIFEST_PATH = ".presentation-skills-projection.json";
+const MANAGED_MARKER = "use-cases-plugin:managed";
+const MANIFEST_PATH = ".use-cases-plugin-projection.json";
 const CANONICAL_SKILLS = ["use-cases-plugin", "presentation-showcase", "presentation-walkthrough"];
 const GENERATED_AT = "1970-01-01T00:00:00.000Z";
 

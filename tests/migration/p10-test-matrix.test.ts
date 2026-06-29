@@ -109,7 +109,7 @@ describe("P10 TEST-MATRIX migration", () => {
     expect(envelope.data.summary.files_written).toBe(1);
     const migrated = join(fixture, "use-cases", "_migrated", "auth.yml");
     expect(readFileSync(migrated, "utf8")).toContain("Draft intended behavior only");
-    expect(existsSync(join(fixture, "use-cases", "_migrated", ".presentation-skills-migration.json"))).toBe(true);
+    expect(existsSync(join(fixture, "use-cases", "_migrated", ".use-cases-plugin-migration.json"))).toBe(true);
     expect(existsSync(join(fixture, "evidence"))).toBe(false);
     expect(existsSync(join(fixture, "showcase-runs"))).toBe(false);
 
@@ -163,7 +163,7 @@ function runCli(args: string[]) {
 }
 
 function fixtureWorkspace(): string {
-  const workspaceRoot = mkdtempSync(join(tmpdir(), "presentation-skills-migration-"));
+  const workspaceRoot = mkdtempSync(join(tmpdir(), "use-cases-plugin-migration-"));
   cpSync(join(repoRoot, "tests/fixtures/workspaces/test-matrix-source"), workspaceRoot, { recursive: true });
   return workspaceRoot;
 }

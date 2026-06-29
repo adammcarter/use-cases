@@ -117,7 +117,7 @@ export function validateSkillAssets(options: { context: ResolvedWorkspaceContext
   const bootstrapFullPath = join(root, bootstrapPath);
   const bootstrapSections: string[] = [];
   if (!existsSync(bootstrapFullPath)) {
-    diagnostics.push(diagnostic("skills.bootstrap_missing", "Missing presentation-skills bootstrap.", bootstrapPath));
+    diagnostics.push(diagnostic("skills.bootstrap_missing", "Missing use-cases-plugin bootstrap.", bootstrapPath));
   } else {
     const source = readFileSync(bootstrapFullPath, "utf8");
     for (const section of BOOTSTRAP_SECTIONS) {
@@ -197,7 +197,7 @@ function parseFrontmatter(
 
 function extractCliCommands(source: string, sourcePath: string): SkillCommandReference[] {
   const references: SkillCommandReference[] = [];
-  for (const match of source.matchAll(/`(?:presentation-skills|pnpm cli --)\s+([^`]+?)`/g)) {
+  for (const match of source.matchAll(/`(?:ucp|pnpm cli --)\s+([^`]+?)`/g)) {
     const tokens = match[1].trim().split(/\s+/);
     if (tokens.length >= 2) {
       references.push({ command: `${tokens[0]} ${tokens[1]}`, source_path: sourcePath });

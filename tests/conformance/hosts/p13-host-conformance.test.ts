@@ -20,7 +20,7 @@ beforeAll(() => {
 describe("P13 host conformance status semantics", () => {
   test("reports a missing host executable as warning-backed not_run without failing the command", () => {
     const workspaceRoot = projectedWorkspace();
-    const emptyPath = mkdtempSync(join(tmpdir(), "presentation-skills-empty-path-"));
+    const emptyPath = mkdtempSync(join(tmpdir(), "use-cases-plugin-empty-path-"));
 
     const result = runCli(["host", "conformance", "--host", "codex", "--repo", workspaceRoot, "--json"], {
       PATH: emptyPath
@@ -251,10 +251,10 @@ describe("P13 host conformance status semantics", () => {
 });
 
 function projectedWorkspace(): string {
-  const workspaceRoot = mkdtempSync(join(tmpdir(), "presentation-skills-host-conformance-"));
+  const workspaceRoot = mkdtempSync(join(tmpdir(), "use-cases-plugin-host-conformance-"));
   cpSync(join(repoRoot, "examples", "host-projections"), workspaceRoot, { recursive: true, errorOnExist: false });
   rmSync(join(workspaceRoot, ".codex"), { recursive: true, force: true });
-  rmSync(join(workspaceRoot, ".presentation-skills-projection.json"), { force: true });
+  rmSync(join(workspaceRoot, ".use-cases-plugin-projection.json"), { force: true });
 
   const project = runCli(["host", "project", "--host", "codex", "--repo", workspaceRoot, "--write", "--json"]);
   if (project.status !== 0) {
@@ -264,7 +264,7 @@ function projectedWorkspace(): string {
 }
 
 function pathWithExecutable(name: string, body: string): string {
-  const binPath = mkdtempSync(join(tmpdir(), "presentation-skills-host-bin-"));
+  const binPath = mkdtempSync(join(tmpdir(), "use-cases-plugin-host-bin-"));
   const executablePath = join(binPath, name);
   writeFileSync(executablePath, `#!/bin/sh\n${body}\n`);
   chmodSync(executablePath, 0o755);

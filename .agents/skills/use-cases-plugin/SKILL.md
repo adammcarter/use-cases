@@ -31,10 +31,10 @@ Generated plans, walkthroughs, capsules, and runbooks are prepared material only
 
 ## Common Commands
 
-- Validate inventory: `presentation-skills matrix validate --json`
-- List or filter rows: `presentation-skills matrix list --json`
-- Inspect matrix plus evidence health: `presentation-skills matrix status --json`
-- Record safe evidence: `presentation-skills evidence record --json`
-- Void mistaken evidence by appending history: `presentation-skills evidence void --json`
+- Validate inventory: `ucp matrix validate --json`
+- List or filter rows: `ucp matrix list --json`
+- Inspect matrix plus evidence health: `ucp matrix status --json`
+- Record safe evidence: `ucp evidence record --json`
+- Void mistaken evidence by appending history: `ucp evidence void --json`
 
 Stop and surface concrete diagnostics when validation is incomplete, YAML is damaged, evidence may leak sensitive data, or the user asks not to modify project records.

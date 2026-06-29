@@ -144,8 +144,8 @@ function removeUseCase(options: UseCaseMutationOptions): UseCaseMutationResult {
     lifecycle: "removed" as const,
     extensions: {
       ...asRecord(existing.extensions),
-      "presentation-skills/removal": {
-        ...asRecord(asRecord(existing.extensions)["presentation-skills/removal"]),
+      "use-cases-plugin/removal": {
+        ...asRecord(asRecord(existing.extensions)["use-cases-plugin/removal"]),
         reason: options.reason,
         actor: options.actor ?? "agent",
         recorded_at: RECORDED_AT
