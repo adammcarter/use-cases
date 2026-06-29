@@ -8,8 +8,8 @@ const repoRoot = resolve(import.meta.dirname, "../..");
 
 const requiredRootArtifactPaths = [
   ".agents/skills/use-cases-plugin/SKILL.md",
-  ".agents/skills/presentation-showcase/SKILL.md",
-  ".agents/skills/presentation-walkthrough/SKILL.md",
+  ".agents/skills/showcase/SKILL.md",
+  ".agents/skills/walkthrough/SKILL.md",
   ".claude-plugin/plugin.json",
   ".codex-plugin/plugin.json",
   ".mcp.json",

@@ -60,7 +60,7 @@ use_cases:
       - kind: file
         path: packages/ucm-core/src/presentation/selectWalkthroughPlan.ts
       - kind: file
-        path: .agents/skills/presentation-walkthrough/SKILL.md
+        path: .agents/skills/walkthrough/SKILL.md
     actor: agent
     intent: Select alternate, edge, negative, and failure cases for a deeper evidence-backed walkthrough.
     preconditions:

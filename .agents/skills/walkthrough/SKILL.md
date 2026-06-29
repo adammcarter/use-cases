@@ -1,9 +1,9 @@
 ---
-name: presentation-walkthrough
+name: walkthrough
 description: Use when producing an extensive product or feature walkthrough with use cases, caveats, gaps, edge or failure cases, evidence provenance, and non-live presentation structure.
 ---
 
-# Presentation Walkthrough
+# Walkthrough
 
 Use this skill for broad explanation and review of what exists, what changed, what is covered, and what remains uncertain.
 
@@ -18,7 +18,7 @@ Generated plans, walkthroughs, capsules, and runbooks are prepared material only
 ## Defer To
 
 - `use-cases-plugin` when behavior inventory needs to be created or updated.
-- `presentation-showcase` when the user asks to perform a live demo, sign-off run, or final user-visible proof.
+- `showcase` when the user asks to perform a live demo, sign-off run, or final user-visible proof.
 - Ordinary summarization when there is no repo/workspace context or the user opts out of use-cases-plugin.
 
 ## Presentation Formats

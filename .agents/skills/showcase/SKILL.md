@@ -1,9 +1,9 @@
 ---
-name: presentation-showcase
+name: showcase
 description: Use when preparing or performing a live user-visible showcase, demo, sign-off flow, pre-merge acceptance run, or high-value feature proof from use cases and evidence.
 ---
 
-# Presentation Showcase
+# Showcase
 
 Use this skill for live, high-value demonstration work where the agent may run the show or guide the user through it.
 
@@ -18,7 +18,7 @@ Generated plans, walkthroughs, capsules, and runbooks are prepared material only
 ## Defer To
 
 - `use-cases-plugin` when the task is to maintain behavior inventory or evidence records.
-- `presentation-walkthrough` when the user wants broad explanation, caveats, edge cases, or provenance rather than a live run.
+- `walkthrough` when the user wants broad explanation, caveats, edge cases, or provenance rather than a live run.
 - Ordinary implementation/testing when no proof or presentation is requested.
 
 ## Plan Mode vs Run Mode
