@@ -131,7 +131,7 @@ use_cases:
       - kind: file
         path: docs/migration.md
       - kind: file
-        path: .agents/skills/use-case-matrix/SKILL.md
+        path: .agents/skills/use-cases-plugin/SKILL.md
     actor: agent
     intent: Keep migrated rows draft or planned until a human reviews the high-level feature printout.
     preconditions:

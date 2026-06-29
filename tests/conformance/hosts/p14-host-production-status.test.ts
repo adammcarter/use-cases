@@ -6,10 +6,10 @@ import { beforeAll, describe, expect, test } from "vitest";
 
 const repoRoot = resolve(import.meta.dirname, "../../..");
 const hostTargets = {
-  claude: ".claude/presentation-skills.md",
-  codex: ".codex/presentation-skills.md",
-  copilot: ".github/copilot/presentation-skills.md",
-  opencode: ".opencode/presentation-skills.md"
+  claude: ".claude/use-cases-plugin.md",
+  codex: ".codex/use-cases-plugin.md",
+  copilot: ".github/copilot/use-cases-plugin.md",
+  opencode: ".opencode/use-cases-plugin.md"
 } as const;
 
 beforeAll(() => {

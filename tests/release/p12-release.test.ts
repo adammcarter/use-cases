@@ -23,7 +23,7 @@ describe("P12 release hardening", () => {
         required_paths: expect.arrayContaining([
           expect.objectContaining({ path: ".codex-plugin/plugin.json", status: "present" }),
           expect.objectContaining({ path: ".mcp.json", status: "present" }),
-          expect.objectContaining({ path: ".agents/skills/use-case-matrix/SKILL.md", status: "present" }),
+          expect.objectContaining({ path: ".agents/skills/use-cases-plugin/SKILL.md", status: "present" }),
           expect.objectContaining({ path: "packages/ucm-cli/dist/index.js", status: "present" }),
           expect.objectContaining({ path: "packages/ucm-mcp/dist/index.js", status: "present" }),
           expect.objectContaining({ path: "packages/ucm-core/dist/schemas/v1/use-case-file.schema.json", status: "present" })
@@ -44,7 +44,7 @@ describe("P12 release hardening", () => {
     requireSuccess(result);
 
     for (const included of [
-      ".agents/skills/use-case-matrix/SKILL.md",
+      ".agents/skills/use-cases-plugin/SKILL.md",
       ".codex-plugin/plugin.json",
       ".mcp.json",
       "packages/ucm-cli/dist/index.js",

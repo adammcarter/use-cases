@@ -49,7 +49,7 @@ describe("P10 TEST-MATRIX migration", () => {
       }
     });
     expect(
-      validateBySchemaId("https://use-case-matrix.dev/schemas/v1/migration-test-matrix-result.schema.json", envelope.data)
+      validateBySchemaId("https://use-cases-plugin.dev/schemas/v1/migration-test-matrix-result.schema.json", envelope.data)
     ).toMatchObject({ ok: true });
     expect(JSON.stringify(envelope)).not.toMatch(/evidence_recorded|approval_recorded|verified_with_evidence/);
     expect(existsSync(join(fixture, "use-cases", "_migrated"))).toBe(false);

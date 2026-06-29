@@ -1,5 +1,5 @@
 name: Bug report
-description: Report a defect in Use Case Matrix (ucm / ucm-mcp)
+description: Report a defect in Use Cases Plugin (ucp / ucp-mcp)
 title: "[bug]: "
 labels: ["bug"]
 body:
@@ -10,12 +10,12 @@ body:
         fields below — they are what we need to reproduce.
 
         Do **not** report security vulnerabilities here. Use a private advisory:
-        https://github.com/adammcarter/presentation-skills/security/advisories/new
+        https://github.com/adammcarter/use-cases-plugin/security/advisories/new
   - type: textarea
     id: version
     attributes:
-      label: ucm version
-      description: Output of `ucm --version --json`.
+      label: ucp version
+      description: Output of `ucp --version --json`.
       render: json
     validations:
       required: true
@@ -24,7 +24,7 @@ body:
     attributes:
       label: Failing command
       description: The exact command you ran (include `--json`).
-      placeholder: ucm matrix validate --repo . --json
+      placeholder: ucp matrix validate --repo . --json
     validations:
       required: true
   - type: textarea
@@ -39,7 +39,7 @@ body:
     id: status-output
     attributes:
       label: Status / freshness output
-      description: Output of `ucm matrix status --json` (matrix integrity + evidence/freshness replay).
+      description: Output of `ucp matrix status --json` (matrix integrity + evidence/freshness replay).
       render: json
     validations:
       required: true

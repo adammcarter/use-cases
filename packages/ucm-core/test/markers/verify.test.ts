@@ -201,9 +201,9 @@ function writeFile(root: string, relPath: string, contents: string): void {
 }
 
 function makeWorkspace(): Workspace {
-  const root = mkdtempSync(join(tmpdir(), "ucm-verify-"));
+  const root = mkdtempSync(join(tmpdir(), "ucp-verify-"));
   tempDirs.push(root);
-  writeFile(root, "presentation-skills.yml", CONFIG_YAML);
+  writeFile(root, "use-cases-plugin.yml", CONFIG_YAML);
   writeFile(root, "use-cases/checkout.yml", USE_CASE_YAML);
   writeFile(root, "Sources/Checkout/CouponService.swift", SWIFT_A);
   writeFile(root, "Sources/Checkout/RefundService.swift", SWIFT_B);
@@ -442,9 +442,9 @@ public func presetDefault(_ code: String) async throws -> Int {
 `;
 
 function makeCustomWorkspace(configYaml: string): Workspace {
-  const root = mkdtempSync(join(tmpdir(), "ucm-verify-cfg-"));
+  const root = mkdtempSync(join(tmpdir(), "ucp-verify-cfg-"));
   tempDirs.push(root);
-  writeFile(root, "presentation-skills.yml", configYaml);
+  writeFile(root, "use-cases-plugin.yml", configYaml);
   writeFile(root, "use-cases/checkout.yml", USE_CASE_ACCEPTANCE_YAML);
   writeFile(root, "Sources/Checkout/PresetService.swift", SWIFT_PRESET);
   // The js.vitest preset declares this acceptance test as an input.

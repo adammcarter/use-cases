@@ -62,7 +62,7 @@ describe("P0 MCP wire contract", () => {
       id: 1,
       result: {
         serverInfo: {
-          name: "use-case-matrix",
+          name: "use-cases-plugin",
           version: "1.0.0"
         }
       }

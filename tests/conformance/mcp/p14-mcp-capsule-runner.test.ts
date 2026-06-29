@@ -159,13 +159,13 @@ function fixtureWorkspace(name: string): string {
 }
 
 function withMcpWriteMode<T>(fn: () => T): T {
-  return withEnv({ PRESENTATION_SKILLS_MCP_WRITE: "1" }, fn);
+  return withEnv({ UCP_MCP_WRITE: "1" }, fn);
 }
 
 function withMcpCommandMode<T>(fn: () => T): T {
   return withEnv({
-    PRESENTATION_SKILLS_MCP_WRITE: "1",
-    PRESENTATION_SKILLS_MCP_COMMAND_EXECUTION: "1"
+    UCP_MCP_WRITE: "1",
+    UCP_MCP_COMMAND_EXECUTION: "1"
   }, fn);
 }
 

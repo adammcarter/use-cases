@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://use-case-matrix.dev/schemas/v1/evidence-event.schema.json",
+  "$id": "https://use-cases-plugin.dev/schemas/v1/evidence-event.schema.json",
   "oneOf": [
     { "$ref": "#/$defs/evidence_recorded" },
     { "$ref": "#/$defs/evidence_corrected" },

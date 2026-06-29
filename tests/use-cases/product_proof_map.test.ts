@@ -38,7 +38,7 @@ afterEach(() => {
 });
 
 function freshWorkspace(): string {
-  const dir = mkdtempSync(join(tmpdir(), "ucm-proof-map-"));
+  const dir = mkdtempSync(join(tmpdir(), "ucp-proof-map-"));
   cpSync(join(fixturesRoot, "evidence-basic"), dir, { recursive: true });
   tempDirs.push(dir);
   return dir;

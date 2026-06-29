@@ -15,7 +15,7 @@
 // when a sibling row fails, and the command then exits nonzero.
 //
 // The dangerous "assume verification passed" seam is `unsafeAssumeVerificationResult`
-// and is honoured ONLY when env UCM_ALLOW_UNSAFE_VERIFICATION=1 is set; otherwise
+// and is honoured ONLY when env UCP_ALLOW_UNSAFE_VERIFICATION=1 is set; otherwise
 // it is ignored, so it can never manufacture a green proof in normal operation.
 import type { ResolvedWorkspaceContext } from "../../roots.js";
 import type { CommentPrefixConfig } from "../commentPrefix.js";
@@ -53,7 +53,7 @@ import type { VerificationResultRecord } from "./verify.js";
 
 // The env var that must equal "1" for the dangerous unsafe-assume seam to be
 // honoured. Absent/any-other value -> the seam is silently ignored.
-export const ALLOW_UNSAFE_VERIFICATION_ENV = "UCM_ALLOW_UNSAFE_VERIFICATION";
+export const ALLOW_UNSAFE_VERIFICATION_ENV = "UCP_ALLOW_UNSAFE_VERIFICATION";
 
 export interface ProveSigningKey {
   privateKey: PemOrKeyObject;
@@ -88,7 +88,7 @@ export interface ProveCommandOptions {
   // the latest record per row, never re-runs the verifier.
   verificationResults?: VerificationResultRecord[];
   // DANGEROUS test seam: assume the row's verification passed. Honoured ONLY when
-  // env UCM_ALLOW_UNSAFE_VERIFICATION=1 is set; otherwise ignored.
+  // env UCP_ALLOW_UNSAFE_VERIFICATION=1 is set; otherwise ignored.
   unsafeAssumeVerificationResult?: "pass";
   signingKey?: ProveSigningKey;
   producer?: ProveProducerInfo;

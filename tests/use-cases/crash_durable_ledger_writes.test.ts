@@ -76,7 +76,7 @@ describe("crash_durable_ledger_writes", () => {
 
   beforeEach(() => {
     fsyncFault.error = null;
-    dir = mkdtempSync(join(tmpdir(), "ucm-durable-"));
+    dir = mkdtempSync(join(tmpdir(), "ucp-durable-"));
   });
 
   afterEach(() => {

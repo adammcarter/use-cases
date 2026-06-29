@@ -10,9 +10,9 @@ import type {
   ResolvedWorkspaceContext,
   UseCaseQuery,
   VerificationResultRecord
-} from "@use-case-matrix/core";
+} from "@use-cases-plugin/core";
 
-type UcmCoreModule = typeof import("@use-case-matrix/core");
+type UcmCoreModule = typeof import("@use-cases-plugin/core");
 
 const {
   PUBLIC_SCHEMA_IDS,
@@ -73,7 +73,7 @@ const SUPPORTED_HOSTS: HostName[] = ["claude", "codex", "copilot", "opencode"];
 
 async function loadUcmCore(): Promise<UcmCoreModule> {
   try {
-    return await import("@use-case-matrix/core");
+    return await import("@use-cases-plugin/core");
   } catch (error) {
     if (!isMissingCorePackage(error)) {
       throw error;
@@ -84,7 +84,7 @@ async function loadUcmCore(): Promise<UcmCoreModule> {
 }
 
 function isMissingCorePackage(error: unknown): boolean {
-  return error instanceof Error && "code" in error && error.code === "ERR_MODULE_NOT_FOUND" && error.message.includes("@use-case-matrix/core");
+  return error instanceof Error && "code" in error && error.code === "ERR_MODULE_NOT_FOUND" && error.message.includes("@use-cases-plugin/core");
 }
 
 export function runCli(argv: string[]): number {
@@ -300,7 +300,7 @@ function runInit(argv: string[], wantsJson: boolean): number {
     );
   } else if (ok) {
     const lines = [
-      `Scaffolded a Use Case Matrix workspace in ${repoRoot}`,
+      `Scaffolded a Use Cases Plugin workspace in ${repoRoot}`,
       `  template:  ${result.template}`,
       `  component: ${result.component_id}`,
       "  created:",
@@ -312,7 +312,7 @@ function runInit(argv: string[], wantsJson: boolean): number {
     ];
     process.stdout.write(`${lines.join("\n")}\n`);
   } else {
-    process.stderr.write(`${result.diagnostics[0]?.message ?? "ucm init failed."}\n`);
+    process.stderr.write(`${result.diagnostics[0]?.message ?? "ucp init failed."}\n`);
   }
 
   if (ok) {
@@ -1801,7 +1801,7 @@ function runMarkerProve(argv: string[]): number {
 
   // DANGEROUS seam (renamed from --verification-result): assume the row's
   // verification passed. The core honours it ONLY when env
-  // UCM_ALLOW_UNSAFE_VERIFICATION=1 is set; otherwise it is ignored.
+  // UCP_ALLOW_UNSAFE_VERIFICATION=1 is set; otherwise it is ignored.
   const unsafeAssume =
     valueAfter(argv, "--unsafe-assume-verification-result") === "pass" ? ("pass" as const) : undefined;
 
@@ -1964,12 +1964,12 @@ function contextFromArgs(argv: string[], command: string) {
 
 // SECURITY: reject a user-supplied id that is not a canonical id BEFORE it can
 // become a filesystem path segment (e.g. showcase-runs/<runId>/events.jsonl) or a
-// ledger lookup key. Returns the stable UCM_INVALID_ID / exit-2 invalid-arguments
+// ledger lookup key. Returns the stable UCP_INVALID_ID / exit-2 invalid-arguments
 // envelope. Returns null when the value is safe, so callers read it as a guard.
 function invalidIdExit(command: string, paramName: string, value: string): number {
   return writeError(
     command,
-    "UCM_INVALID_ID",
+    "UCP_INVALID_ID",
     `Invalid ${paramName} '${value}': must be a canonical id (lowercase, no path separators, no '..').`,
     2
   );
@@ -1981,7 +1981,7 @@ function rejectUnsafeId(command: string, paramName: string, value: string): numb
 
 // SECURITY: bound a user-supplied file path (e.g. --plan-file) to the workspace,
 // symlink-safe, BEFORE it is read from disk. Returns the safe absolute path, or an
-// { exitCode } carrying the stable UCM_PATH_ESCAPE / exit-4 envelope on escape.
+// { exitCode } carrying the stable UCP_PATH_ESCAPE / exit-4 envelope on escape.
 function containedFilePath(
   command: string,
   workspaceRoot: string,
@@ -1991,7 +1991,7 @@ function containedFilePath(
     return { path: resolveContainedPath(workspaceRoot, candidate) };
   } catch (error) {
     if (error instanceof Error && "code" in error && (error as { code?: unknown }).code === "path.escape") {
-      return { exitCode: writeError(command, "UCM_PATH_ESCAPE", error.message, 4) };
+      return { exitCode: writeError(command, "UCP_PATH_ESCAPE", error.message, 4) };
     }
     throw error;
   }
@@ -2025,13 +2025,13 @@ function writeError(command: string, code: string, message: string, exitCode = 2
 }
 
 function readWorkflowMode(workspaceRoot: string): string {
-  const configPath = join(workspaceRoot, "presentation-skills.yml");
+  const configPath = join(workspaceRoot, "use-cases-plugin.yml");
   const source = readFileSync(configPath, "utf8");
   return source.match(/^default_workflow_mode:\s*([a-z_]+)/m)?.[1] ?? "continuous";
 }
 
 function writeWorkflowMode(workspaceRoot: string, mode: string): void {
-  const configPath = join(workspaceRoot, "presentation-skills.yml");
+  const configPath = join(workspaceRoot, "use-cases-plugin.yml");
   const source = readFileSync(configPath, "utf8");
   const next = source.match(/^default_workflow_mode:/m)
     ? source.replace(/^default_workflow_mode:\s*[a-z_]+/m, `default_workflow_mode: ${mode}`)

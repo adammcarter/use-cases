@@ -27,7 +27,7 @@ describe("P8 host profiles, projections, and conformance", () => {
       installation_mode: { expected: "repo_projection" },
       permission_mode: { expected: "workspace_write" },
       expected_capabilities: { skill_discovery: "required", cli_access: "required" },
-      projection_targets: [{ kind: "activation_stub", path: ".codex/presentation-skills.md", managed: true }],
+      projection_targets: [{ kind: "activation_stub", path: ".codex/use-cases-plugin.md", managed: true }],
       doctor_checks: ["projection_manifest_optional", "cli_available"],
       conformance_checks: ["canonical_skill_hashes_match"],
       known_limitations: [],
@@ -38,7 +38,7 @@ describe("P8 host profiles, projections, and conformance", () => {
     };
 
     expect(
-      validateBySchemaId("https://use-case-matrix.dev/schemas/v1/host-profile.schema.json", badProfile)
+      validateBySchemaId("https://use-cases-plugin.dev/schemas/v1/host-profile.schema.json", badProfile)
     ).toMatchObject({ ok: false });
   });
 
@@ -70,14 +70,14 @@ describe("P8 host profiles, projections, and conformance", () => {
     expect(first.operations).toEqual([
       expect.objectContaining({
         action: "create",
-        path: ".claude/presentation-skills.md"
+        path: ".claude/use-cases-plugin.md"
       }),
       expect.objectContaining({
         action: "create",
         path: ".presentation-skills-projection.json"
       })
     ]);
-    expect(existsSync(join(workspaceRoot, ".claude", "presentation-skills.md"))).toBe(false);
+    expect(existsSync(join(workspaceRoot, ".claude", "use-cases-plugin.md"))).toBe(false);
     expect(existsSync(join(workspaceRoot, ".presentation-skills-projection.json"))).toBe(false);
   });
 
@@ -91,7 +91,7 @@ describe("P8 host profiles, projections, and conformance", () => {
 
     const first = projectHostFiles({ context, profile, mode: "write" });
     const second = projectHostFiles({ context, profile, mode: "write" });
-    const stub = readFileSync(join(workspaceRoot, ".claude", "presentation-skills.md"), "utf8");
+    const stub = readFileSync(join(workspaceRoot, ".claude", "use-cases-plugin.md"), "utf8");
     const manifest = JSON.parse(readFileSync(join(workspaceRoot, ".presentation-skills-projection.json"), "utf8"));
 
     expect(first.operations.some((operation) => operation.action === "create")).toBe(true);
@@ -102,7 +102,7 @@ describe("P8 host profiles, projections, and conformance", () => {
     expect(manifest).toMatchObject({
       host: "claude",
       surface: "claude.cli",
-      generated_files: [expect.objectContaining({ path: ".claude/presentation-skills.md" })]
+      generated_files: [expect.objectContaining({ path: ".claude/use-cases-plugin.md" })]
     });
   });
 
@@ -179,7 +179,7 @@ describe("P8 host profiles, projections, and conformance", () => {
 
   test("write projection refuses a target whose parent dir symlinks outside the workspace", () => {
     // SECURITY (path traversal): the lexical '..' check passes here — the target path
-    // (.claude/presentation-skills.md) stays in-workspace as a string. But .claude is a
+    // (.claude/use-cases-plugin.md) stays in-workspace as a string. But .claude is a
     // symlink to an outside dir, so an unguarded write would land OUTSIDE the workspace.
     // The realpath-based containment check must refuse it and write nothing outside.
     const workspaceRoot = fixtureWorkspace();
@@ -194,7 +194,7 @@ describe("P8 host profiles, projections, and conformance", () => {
     const result = projectHostFiles({ context, profile, mode: "write" });
     expect(result.operations.some((operation) => operation.action === "refuse_unsafe_path")).toBe(true);
     expect(result.diagnostics.some((diagnostic) => diagnostic.code === "host.unsafe_projection_path")).toBe(true);
-    expect(existsSync(join(outside, "presentation-skills.md"))).toBe(false);
+    expect(existsSync(join(outside, "use-cases-plugin.md"))).toBe(false);
   });
 
   test("CLI host project rejects conflicting modes", () => {

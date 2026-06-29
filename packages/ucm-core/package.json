@@ -1,12 +1,12 @@
 {
-  "name": "@use-case-matrix/core",
+  "name": "@use-cases-plugin/core",
   "version": "1.0.0",
   "type": "module",
-  "description": "Core domain library for use-case-matrix.",
+  "description": "Core domain library for use-cases-plugin.",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/adammcarter/presentation-skills.git",
+    "url": "git+https://github.com/adammcarter/use-cases-plugin.git",
     "directory": "packages/ucm-core"
   },
   "exports": {

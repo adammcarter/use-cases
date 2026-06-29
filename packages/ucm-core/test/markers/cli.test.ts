@@ -17,7 +17,7 @@ import {
 
 // prove no longer runs verifiers; it consumes verification-result records. The
 // env var that gates prove's dangerous "assume verification passed" seam.
-const ALLOW_UNSAFE_ENV = "UCM_ALLOW_UNSAFE_VERIFICATION";
+const ALLOW_UNSAFE_ENV = "UCP_ALLOW_UNSAFE_VERIFICATION";
 
 // ---------------------------------------------------------------------------
 // Fixtures: an on-disk tmp workspace + a generated ed25519 keypair, so the CLI
@@ -148,7 +148,7 @@ function writeFile(root: string, relPath: string, contents: string): void {
 function makeWorkspace(sourceFiles: Record<string, string> = {}): Workspace {
   const root = mkdtempSync(join(tmpdir(), "ucm-cli-"));
   tempDirs.push(root);
-  writeFile(root, "presentation-skills.yml", CONFIG_YAML);
+  writeFile(root, "use-cases-plugin.yml", CONFIG_YAML);
   writeFile(root, "use-cases/checkout.yml", USE_CASE_YAML);
   for (const [relPath, contents] of Object.entries(sourceFiles)) {
     writeFile(root, relPath, contents);

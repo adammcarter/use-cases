@@ -61,13 +61,13 @@ export type PackageInspectionResult = {
 };
 
 const REQUIRED_PACKAGE_PATHS = [
-  ".agents/skills/use-case-matrix/SKILL.md",
+  ".agents/skills/use-cases-plugin/SKILL.md",
   ".agents/skills/presentation-showcase/SKILL.md",
   ".agents/skills/presentation-walkthrough/SKILL.md",
   ".codex-plugin/plugin.json",
   ".claude-plugin/plugin.json",
   ".mcp.json",
-  "bootstrap/use-case-matrix.md",
+  "bootstrap/use-cases-plugin.md",
   "docs/release.md",
   "docs/security.md",
   "hosts/codex.yml",
@@ -276,7 +276,7 @@ function packageManifestReferences(root: string): PackageManifestReference[] {
   const mcpPath = join(root, ".mcp.json");
   if (existsSync(mcpPath)) {
     const mcp = readJson(mcpPath) as { mcpServers?: Record<string, { args?: string[] }> };
-    const server = mcp.mcpServers?.["use-case-matrix"];
+    const server = mcp.mcpServers?.["use-cases-plugin"];
     const target = resolvePackagedReference(root, ".mcp.json", server?.args?.[0] ?? "");
     references.push({
       from: ".mcp.json",

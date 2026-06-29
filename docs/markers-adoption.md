@@ -37,7 +37,7 @@ in addition to `.git` / `node_modules` / `.use-cases`. Covered by
 
 ## Next adoption steps
 
-- Set up the real CI signing key (`UCM_CI_SIGNING_KEY` secret) so CI mints the
+- Set up the real CI signing key (`UCP_CI_SIGNING_KEY` secret) so CI mints the
   first trusted proof and this row goes FRESH on `main`.
 - Bind more rows to their implementing functions; track the bound/unbound ratio
   as the linkage-coverage metric.

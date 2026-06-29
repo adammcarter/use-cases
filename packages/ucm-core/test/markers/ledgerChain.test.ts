@@ -172,9 +172,9 @@ function writeFile(root: string, relPath: string, contents: string): void {
 }
 
 function makeWorkspace(): Workspace {
-  const root = mkdtempSync(join(tmpdir(), "ucm-ledger-chain-"));
+  const root = mkdtempSync(join(tmpdir(), "ucp-ledger-chain-"));
   tempDirs.push(root);
-  writeFile(root, "presentation-skills.yml", CONFIG_YAML);
+  writeFile(root, "use-cases-plugin.yml", CONFIG_YAML);
   writeFile(root, "use-cases/checkout.yml", USE_CASE_YAML);
   writeFile(root, "Sources/Checkout/CouponService.swift", SWIFT_A);
   writeFile(root, "Sources/Checkout/RefundService.swift", SWIFT_B);

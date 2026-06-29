@@ -46,12 +46,12 @@ Present (under `schemas/v1/`): cli-result, common, demo-capsule, evidence-append
 
 - ~108 diagnostic call sites; **no single registry**.
 - 5 enum families (`MarkerErrorCode`, `RegistryErrorCode`, `EvidenceErrorCode`, `SwiftFuncErrorCode`, `SignatureFailureCode`) + ~21 `PresentationSkillsError` string literals.
-- **Plan:** introduce a central `@use-case-matrix/core/errors` registry of stable `UCM_*` codes (e.g. `UCM_MARKER_MALFORMED`, `UCM_EVIDENCE_ROW_MISSING`), map the ~57 existing codes, keep the enums as type-safe wrappers during migration (additive, non-breaking).
+- **Plan:** introduce a central `@use-cases-plugin/core/errors` registry of stable `UCP_*` codes (e.g. `UCP_MARKER_MALFORMED`, `UCP_EVIDENCE_ROW_MISSING`), map the ~57 existing codes, keep the enums as type-safe wrappers during migration (additive, non-breaking).
 
 ## Phase 1 remaining workstreams (after this contract declaration)
 
 - [ ] Close the 5 schema gaps + register their `$id`s.
 - [ ] Conformance test: every CLI `--json` output validates against a schema.
 - [ ] `--json` consistency across all commands.
-- [x] `UCM_*` error-code registry (additive) + generated error-code docs page — `packages/ucm-core/src/errors/registry.ts` + `docs/reference/error-codes.md`.
+- [x] `UCP_*` error-code registry (additive) + generated error-code docs page — `packages/ucm-core/src/errors/registry.ts` + `docs/reference/error-codes.md`.
 - [ ] (Phase 4) MCP resources + prompts; rate-limit/size caps.

@@ -16,7 +16,7 @@ import {
 } from "../../src/markers/index.js";
 
 // The env var that gates prove's dangerous "assume verification passed" seam.
-export const ALLOW_UNSAFE_ENV = "UCM_ALLOW_UNSAFE_VERIFICATION";
+export const ALLOW_UNSAFE_ENV = "UCP_ALLOW_UNSAFE_VERIFICATION";
 
 export const ROW_ID = "checkout.apply_coupon";
 export const ROW_ID_2 = "checkout.remove_coupon";
@@ -158,9 +158,9 @@ export function writeWorkspaceFile(root: string, relPath: string, contents: stri
 }
 
 export function makeWorkspace(sourceFiles: Record<string, string> = {}): Workspace {
-  const root = mkdtempSync(join(tmpdir(), "ucm-p9-"));
+  const root = mkdtempSync(join(tmpdir(), "ucp-p9-"));
   tempDirs.push(root);
-  writeWorkspaceFile(root, "presentation-skills.yml", CONFIG_YAML);
+  writeWorkspaceFile(root, "use-cases-plugin.yml", CONFIG_YAML);
   writeWorkspaceFile(root, "use-cases/checkout.yml", TWO_ROW_YAML);
   for (const [relPath, contents] of Object.entries(sourceFiles)) {
     writeWorkspaceFile(root, relPath, contents);

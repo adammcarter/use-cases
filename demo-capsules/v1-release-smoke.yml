@@ -15,12 +15,12 @@ items:
         executable: node
         argv:
           - -e
-          - "require('node:fs').accessSync('presentation-skills.yml'); process.stdout.write('presentation-skills workspace smoke\\n');"
+          - "require('node:fs').accessSync('use-cases-plugin.yml'); process.stdout.write('presentation-skills workspace smoke\\n');"
         working_directory: .
         expected_exit_codes: [0]
 permissions:
   command_execution: true
 extensions:
-  use-case-matrix.dev/runner:
+  use-cases-plugin.dev/runner:
     command: presentation-skills capsule run --repo . --capsule capsule.v1.release_smoke --execute-commands --idempotency-key p14:v1-release-smoke --json
     command_steps: required
