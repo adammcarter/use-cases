@@ -66,7 +66,7 @@ function listJsonlFiles(root: string, rootReal: string): string[] {
   return results;
 }
 
-//: @use-case: presentation_skills.evidence.damaged_ledger_replay
+//: @use-case: evidence.ledger.damaged_ledger_replay
 function readLedgerFile(path: string, relPath: string): {
   ledger: EvidenceLedgerResult;
   events: EvidenceEvent[];
@@ -122,7 +122,7 @@ function readLedgerFile(path: string, relPath: string): {
     diagnostics
   };
 }
-//: @use-case: end presentation_skills.evidence.damaged_ledger_replay
+//: @use-case: end evidence.ledger.damaged_ledger_replay
 
 function hasDuplicateJsonKeys(source: string): boolean {
   const stack: Array<Set<string>> = [];
