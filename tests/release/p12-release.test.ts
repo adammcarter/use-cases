@@ -56,6 +56,14 @@ describe("P12 release hardening", () => {
     ]) {
       expect(result.stdout).toContain(included);
     }
+    // The example PROJECTS under examples/ legitimately ship their own src/ and
+    // tests/ layout (e.g. examples/python-pytest), so exclude those lines before
+    // asserting the repo's OWN sources/tests never leak. Every other forbidden
+    // token (.agent-cache, .copy-schemas.lock, packages/*/src) is still checked fully.
+    const nonExampleOutput = result.stdout
+      .split("\n")
+      .filter((line) => !line.includes("examples/"))
+      .join("\n");
     for (const forbidden of [
       "tests/",
       "packages/ucm-cli/src/",
@@ -65,7 +73,7 @@ describe("P12 release hardening", () => {
       ".agent-receipts/",
       ".copy-schemas.lock"
     ]) {
-      expect(result.stdout).not.toContain(forbidden);
+      expect(nonExampleOutput).not.toContain(forbidden);
     }
   });
 

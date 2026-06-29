@@ -218,6 +218,11 @@ The available presets are `command.generic`, `js.vitest`, `js.npm-test`,
 `{ kind: script, command: [...], inputs: [...] }` on the row itself. Full model:
 [verifiers](./concepts/verifiers.md).
 
+> **Not a JS repo?** The [pure-Python tutorial](./tutorials/python-pytest.md)
+> walks the *whole* flow — bind → scan → verify → prove → FRESH — for a project
+> whose verifier is `pytest`, with no pnpm/vitest involved. Runnable example:
+> [`examples/python-pytest/`](../examples/python-pytest).
+
 Now write the acceptance test the preset names (e.g.
 `tests/use-cases/billing.core.apply_discount.test.ts`) and make it pass locally.
 

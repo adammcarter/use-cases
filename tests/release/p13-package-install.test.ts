@@ -63,9 +63,18 @@ describe("P13 installable root package artifact", () => {
     for (const required of requiredRootArtifactPaths) {
       expect(entries).toContain(`package/${required}`);
     }
+    // `src`/`tests` are legitimate CONTENT of the example PROJECTS shipped under
+    // examples/ (e.g. examples/python-pytest carries a real src/ + tests/ layout —
+    // the python.pytest verifier preset mandates the tests/ path). They remain
+    // forbidden everywhere else, so the repo's OWN sources/tests can never leak.
+    const exampleContentSegments = new Set(["src", "tests"]);
     for (const entry of entries) {
       const parts = entry.split("/");
+      const underExamples = parts.includes("examples");
       for (const forbidden of forbiddenEntrySegments) {
+        if (underExamples && exampleContentSegments.has(forbidden)) {
+          continue;
+        }
         expect(parts).not.toContain(forbidden);
       }
     }

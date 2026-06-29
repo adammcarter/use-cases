@@ -1,0 +1,12 @@
+# Local Use Case Matrix state produced by bind/scan/verify/prove. The committed
+# example ships in the "marked but not yet bound" state; the adopter runs the
+# trust flow themselves (see README.md), which creates these.
+.use-cases/
+evidence/
+verification-results.jsonl
+keys/
+
+# Python + pytest scratch.
+__pycache__/
+.pytest_cache/
+*.pyc

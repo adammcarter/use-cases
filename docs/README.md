@@ -15,6 +15,13 @@ Ships as `@use-case-matrix/cli` (binary `ucm`) plus an MCP server
   for a new repo: install, author a row, bind code, declare a verifier, and let CI
   mint the proof.
 
+## Tutorials
+
+- **[Adopt the matrix in a pure-Python repo](./tutorials/python-pytest.md)** —
+  proof that adoption is **not** JS-only: a tiny Python project reaches a signed
+  **FRESH** row with `pytest` as the verifier and **no pnpm/vitest** anywhere.
+  Runnable project at [`examples/python-pytest/`](../examples/python-pytest).
+
 ## Concepts
 
 Read these in order for the full mental model:
