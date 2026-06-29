@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, test } from "vitest";
 
@@ -21,6 +21,9 @@ function runHook(env: Record<string, string>) {
 describe("session-start bootstrap delivery", () => {
   test("the polyglot hook script is shipped and executable", () => {
     expect(existsSync(hookScript)).toBe(true);
+    // The hooks.json command invokes the script directly, so the executable bit
+    // must survive (placing a marker via `ucp bind` once stripped it).
+    expect(statSync(hookScript).mode & 0o111).not.toBe(0);
   });
 
   test("Claude Code shape: hookSpecificOutput.additionalContext carries the bootstrap", () => {
