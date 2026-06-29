@@ -80,14 +80,23 @@ signing-key missing) are documented in the CLI reference and are stable.
 These ship and work, but their **shape** may change in a minor release until
 promoted. They are called out here so adopters can depend on them with eyes open:
 
-- MCP **resources** and **prompts** (not yet exposed — planned).
+- MCP **resources** (`ucm://…`) and **prompts** are exposed and read-only, but
+  the exact URI/prompt set may grow in minor releases; treat the MCP *tool*
+  surface as the most stable MCP contract.
 - MCP output **rate-limiting** and **size caps**.
+- **Host profiles are a fixed built-in set for v1** (`claude`, `codex`,
+  `copilot`, `opencode`). The host-applicability/projection engine is generic,
+  but registering *custom* host profiles is a post-v1 extension; the trust core
+  (bind/verify/prove/freshness) is host-independent and unaffected.
+- The **trust-engine commands** (`bind`, `scan`, `verify`, `prove`,
+  `validate-ledger`) always emit JSON — they are machine/CI-oriented and have no
+  separate human-formatted mode (other commands gate JSON behind `--json`).
 - Non-GitHub-Actions CI authority adapters (the proof model is CI-neutral; only
   the GitHub Actions reference workflow is a supported path at 1.0.0). The
   CI-neutral authority contract, per-provider authority population, and the
   opt-in release-gate authority requirement are documented in
   [CI hardening](../security/ci-hardening.md).
-- Any CLI command's **human-readable** (non-`--json`) formatting.
+- Any other CLI command's **human-readable** (non-`--json`) formatting.
 - Internal `@use-case-matrix/core` modules not listed in the documented export surface.
 
 ## Supported environments
