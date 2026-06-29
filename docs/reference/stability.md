@@ -8,6 +8,8 @@ versions move.
 
 > Packages are released together at the same version:
 > `@use-case-matrix/core`, `@use-case-matrix/cli`, `@use-case-matrix/mcp`.
+> See the [publishing runbook](../release/publishing.md) for how a release is cut
+> (npm Trusted Publishing + provenance) and the owner one-time npm setup.
 
 ## SemVer policy
 
