@@ -20,11 +20,19 @@
     }
   },
   "files": ["dist", "package.json"],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "dependencies": {
     "@use-case-matrix/core": "workspace:*"
   },
   "scripts": {
     "build": "tsc -b",
-    "typecheck": "tsc -b --pretty false"
+    "typecheck": "tsc -b --pretty false",
+    "prepublishOnly": "tsc -b"
   }
 }
