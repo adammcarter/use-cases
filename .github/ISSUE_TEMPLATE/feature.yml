@@ -1,0 +1,67 @@
+name: Feature request
+description: Suggest a new capability or improvement for Use Case Matrix
+title: "[feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the idea. Please describe the problem first, then the
+        proposed solution. Keep in mind UCM aims to stay language- and
+        CI-neutral, and that public surfaces are SemVer-governed
+        (see docs/reference/stability.md).
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+      description: What are you trying to do, and what's getting in the way today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What would you like UCM to do? Sketch the CLI/MCP/schema shape if you can.
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Affected surface
+      description: Which part of UCM does this touch?
+      multiple: true
+      options:
+        - matrix
+        - bindings / markers
+        - verify / prove / ledger
+        - freshness
+        - release gate
+        - evidence
+        - showcase
+        - capsule
+        - plan
+        - host applicability
+        - CLI
+        - MCP server
+        - docs
+        - other
+    validations:
+      required: true
+  - type: dropdown
+    id: semver
+    attributes:
+      label: Expected SemVer impact
+      description: Best guess per docs/reference/stability.md.
+      options:
+        - additive (minor)
+        - breaking (major)
+        - not sure
+    validations:
+      required: false
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other approaches or existing workarounds you've tried.
+    validations:
+      required: false

@@ -2,6 +2,11 @@
   "name": "use-case-matrix",
   "version": "1.0.0",
   "private": false,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adammcarter/presentation-skills.git"
+  },
   "type": "module",
   "packageManager": "pnpm@11.9.0",
   "engines": {

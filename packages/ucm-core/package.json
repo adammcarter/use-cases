@@ -3,6 +3,12 @@
   "version": "1.0.0",
   "type": "module",
   "description": "Core domain library for use-case-matrix.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adammcarter/presentation-skills.git",
+    "directory": "packages/ucm-core"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
