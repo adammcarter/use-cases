@@ -10,13 +10,16 @@ use_cases:
     value_tier: core
     journey_role: alternate
     usage_frequency: common
-    tags: [mcp, cli]
+    tags:
+      - mcp
+      - cli
     source_refs:
       - kind: file
         path: packages/ucm-mcp/src/tools.ts
     actor: agent
     intent: Use MCP without inventing separate showcase or approval behavior.
-    preconditions: [The compiled MCP server can load the packaged core.]
+    preconditions:
+      - The compiled MCP server can load the packaged core.
     trigger: Agent runs a showcase through MCP stdio.
     scenarios:
       - id: mcp.wrapper.parity.cli
@@ -26,7 +29,10 @@ use_cases:
           - Start from the generated plan file through compiled stdio MCP.
           - Record observation, verdict, and finish through MCP.
           - Request approval through MCP without appending approval.
-    observable_outcomes: [MCP returns CLI envelopes, records the same lifecycle events, and keeps approval pending.]
+    observable_outcomes:
+      - MCP returns CLI envelopes
+      - records the same lifecycle events
+      - and keeps approval pending.
     host_applicability:
       - host_surface: codex.cli
         supported: true
@@ -40,7 +46,11 @@ use_cases:
     value_tier: core
     journey_role: golden
     usage_frequency: common
-    tags: [mcp, matrix, mutation, safety]
+    tags:
+      - mcp
+      - matrix
+      - mutation
+      - safety
     source_refs:
       - kind: file
         path: packages/ucm-mcp/src/tools.ts
@@ -74,6 +84,7 @@ use_cases:
       - Write mode is required before any mutation.
       - User approval or user actor claims are rejected without trusted host confirmation.
       - Delete is lifecycle removal, not physical deletion.
+      - Damaged input or a path escape prevents mutation.
     host_applicability:
       - host_surface: codex.cli
         supported: true

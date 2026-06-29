@@ -104,54 +104,6 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
-  - id: hosts.profiles.conformance_status_truth
-    title: Truthful host conformance status
-    lifecycle: active
-    value_tier: critical
-    journey_role: golden
-    usage_frequency: common
-    tags:
-      - hosts
-      - conformance
-      - evidence
-    source_refs:
-      - kind: file
-        path: docs/hosts.md
-      - kind: file
-        path: packages/ucm-core/src/hosts/conformanceStatus.ts
-    actor: script
-    intent: Report passed, failed, and not_run distinctly, with no verified support claim without evidence IDs.
-    preconditions:
-      - Host conformance data or unavailable-host observations exist.
-    trigger: Agent or release gate reports host support status.
-    scenarios:
-      - id: hosts.profiles.conformance_status_truth.status
-        kind: steps
-        steps:
-          - Run host conformance status.
-          - Inspect passed, failed, and not_run entries.
-          - Confirm support claims are backed by evidence IDs or caveated as unverified.
-    observable_outcomes:
-      - Missing Copilot or OpenCode executables are reported as not_run rather than passed.
-      - Host docs and release claims match recorded evidence.
-    host_applicability:
-      - host_surface: codex.cli
-        supported: true
-      - host_surface: claude.cli
-        supported: true
-      - host_surface: copilot.cli
-        supported: true
-      - host_surface: opencode.cli
-        supported: true
-    verification_policy:
-      mode: requirements
-      requirements:
-        - evidence_kind: host_conformance
-          required_verifiers:
-            - script
-          minimum_count: 1
-    approval_policy:
-      mode: none
   - id: hosts.profiles.live_activation_caveat
     title: Static projection is not live support
     lifecycle: active

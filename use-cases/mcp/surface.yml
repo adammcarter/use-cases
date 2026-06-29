@@ -100,56 +100,6 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
-  - id: mcp.surface.safe_matrix_mutation_workflow
-    title: Safe matrix mutation through wrapper
-    lifecycle: active
-    value_tier: core
-    journey_role: alternate
-    usage_frequency: occasional
-    tags:
-      - mcp
-      - matrix
-      - mutation
-    source_refs:
-      - kind: file
-        path: docs/mcp.md
-      - kind: file
-        path: packages/ucm-core/src/useCases/mutateUseCaseMatrix.ts
-      - kind: file
-        path: packages/ucm-mcp/src/tools.ts
-    actor: agent
-    intent: Allow safe row upkeep through the same command contract without wholesale YAML clobbering.
-    preconditions:
-      - The caller has an updated use-case object and explicit write permission.
-    trigger: Agent maintains rows through MCP instead of direct file editing.
-    scenarios:
-      - id: mcp.surface.safe_matrix_mutation_workflow.upsert
-        kind: steps
-        steps:
-          - Validate current matrix integrity.
-          - Upsert a single row through the MCP wrapper.
-          - Validate after-hash and changed file status.
-    observable_outcomes:
-      - MCP mutation preserves the same safe upsert/remove behavior as the CLI.
-      - Damaged input or path escape prevents mutation.
-    host_applicability:
-      - host_surface: codex.cli
-        supported: true
-      - host_surface: claude.cli
-        supported: true
-      - host_surface: copilot.cli
-        supported: true
-      - host_surface: opencode.cli
-        supported: true
-    verification_policy:
-      mode: requirements
-      requirements:
-        - evidence_kind: test_result
-          required_verifiers:
-            - script
-          minimum_count: 1
-    approval_policy:
-      mode: none
   - id: mcp.surface.approval_request_only
     title: MCP approval request only
     lifecycle: active

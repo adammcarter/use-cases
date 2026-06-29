@@ -80,6 +80,7 @@ use_cases:
       - Each host row reports static conformance and executable smoke state.
       - verified_with_evidence remains false until evidence_event_ids exist.
       - Unavailable executables produce warning-backed not_run status instead of a verified support claim.
+      - Missing Copilot or OpenCode executables are reported as not_run rather than passed.
     host_applicability:
       - host_surface: codex.cli
         supported: true
