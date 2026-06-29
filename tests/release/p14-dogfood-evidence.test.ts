@@ -40,6 +40,7 @@ describe("P14 v1 release dogfood evidence", () => {
       "evidence.ledger.damaged_ledger_replay",
       "evidence.ledger.product_proof_map",
       "evidence.ledger.untrusted_content_boundary",
+      "hosts.profiles.bootstrap_autoinject",
       "hosts.profiles.bootstrap_visibility",
       "hosts.profiles.first_class_profile_set",
       "hosts.profiles.live_activation_caveat",

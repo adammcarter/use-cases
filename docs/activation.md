@@ -2,6 +2,26 @@
 
 Use Cases Plugin can be used continuously during feature planning and implementation, or later as a backfill, walkthrough, or live showcase tool. The workflow mode is advisory only. It cannot weaken schema validation, matrix integrity, evidence safety, approval boundaries, or showcase run state.
 
+## Session-Start Bootstrap
+
+When the plugin is installed, the trusted bootstrap (`bootstrap/use-cases-plugin.md`)
+is injected into the agent's context at session start, so an agent activates the
+plugin without having to discover it by reading the repo. Each host receives it
+through its own real mechanism (the JSON/return shape differs per host; one
+mechanism is never copied onto another):
+
+| Host | Mechanism | Shape |
+|---|---|---|
+| Claude Code | `hooks/hooks.json` SessionStart (`startup\|clear\|compact`) runs `hooks/session-start` | `hookSpecificOutput.additionalContext` |
+| Copilot CLI | same `hooks/session-start` script (detected via `COPILOT_CLI`) | top-level `additionalContext` |
+| Codex | `hooks/hooks-codex.json` SessionStart (`startup\|resume\|clear`) runs `hooks/session-start` | `hookSpecificOutput.additionalContext` |
+| OpenCode | `.opencode/plugin/use-cases-plugin.js` `session.started` | `{ context }` |
+
+The injected content is exactly the trusted `<EXTREMELY_IMPORTANT>` bootstrap
+block — never repo data, tool output, or generated material. Auto-injection is a
+delivery mechanism, not proof of live host support: claim host support only when
+recorded host evidence exists (see Host Support Language below).
+
 ## Decision Tree
 
 ```text
