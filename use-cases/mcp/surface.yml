@@ -18,7 +18,7 @@ use_cases:
       - kind: file
         path: docs/mcp.md
       - kind: file
-        path: packages/ucm-mcp/src/tools.ts
+        path: packages/mcp/src/tools.ts
     actor: agent
     intent: Return the same semantic envelopes as the CLI without reimplementing product logic.
     preconditions:
@@ -66,7 +66,7 @@ use_cases:
       - kind: file
         path: docs/mcp.md
       - kind: file
-        path: packages/ucm-mcp/src/index.ts
+        path: packages/mcp/src/index.ts
     actor: agent
     intent: Require explicit write permission and workspace roots for mutating MCP tools.
     preconditions:
@@ -114,9 +114,9 @@ use_cases:
       - kind: file
         path: docs/mcp.md
       - kind: file
-        path: packages/ucm-mcp/src/tools.ts
+        path: packages/mcp/src/tools.ts
       - kind: file
-        path: packages/ucm-core/src/showcase/approvalAuthority.ts
+        path: packages/core/src/showcase/approvalAuthority.ts
     actor: agent
     intent: Let MCP request approval and suggest the trusted CLI path, but never write user approval.
     preconditions:
@@ -166,7 +166,7 @@ use_cases:
       - kind: file
         path: docs/adr/0005-p4-cli-contract.md
       - kind: file
-        path: packages/ucm-mcp/src/tools.ts
+        path: packages/mcp/src/tools.ts
     actor: agent
     intent: Return validation failures, warnings, and integrity gaps as structured command results.
     preconditions:
@@ -211,7 +211,7 @@ use_cases:
       - discoverability
     source_refs:
       - kind: file
-        path: packages/ucm-mcp/src/tools.ts
+        path: packages/mcp/src/tools.ts
       - kind: file
         path: tests/conformance/mcp/tool-input-schemas.test.ts
     actor: agent

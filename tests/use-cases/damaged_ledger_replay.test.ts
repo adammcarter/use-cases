@@ -8,15 +8,15 @@
 // must never cause valid proof to be discarded.
 //
 // It drives the REAL tolerant reader the bound code implements
-// (packages/ucm-core/src/evidence/jsonlLedger.ts: readLedgerFile) through
+// (packages/core/src/evidence/jsonlLedger.ts: readLedgerFile) through
 // replayEvidence over a temp copy of the `evidence-basic` fixture whose ledger
 // contains one valid event, one parse-error line, and a torn tail.
 import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
-import { resolveWorkspaceContext } from "../../packages/ucm-core/src/roots.js";
-import { replayEvidence } from "../../packages/ucm-core/src/evidence/index.js";
+import { resolveWorkspaceContext } from "../../packages/core/src/roots.js";
+import { replayEvidence } from "../../packages/core/src/evidence/index.js";
 
 const repoRoot = resolve(import.meta.dirname, "../..");
 const fixturesRoot = join(repoRoot, "tests/fixtures/workspaces");

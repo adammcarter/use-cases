@@ -3,7 +3,7 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, symlinkSync, writeFileSync 
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { beforeAll, describe, expect, test } from "vitest";
-import { handleMcpMessage } from "../../../packages/ucm-mcp/src/index.js";
+import { handleMcpMessage } from "../../../packages/mcp/src/index.js";
 
 // SECURITY (path traversal): the MCP `run`/`item` ids share the CLI's filesystem
 // path/lookup sinks. They must be rejected with the stable UCP_INVALID_ID envelope

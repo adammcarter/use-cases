@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { handleMcpMessage } from "../../../packages/ucm-mcp/src/index.js";
+import { handleMcpMessage } from "../../../packages/mcp/src/index.js";
 
 const repoRoot = resolve(import.meta.dirname, "../../..");
 const fixture = resolve(repoRoot, "tests/fixtures/workspaces/minimal-valid");

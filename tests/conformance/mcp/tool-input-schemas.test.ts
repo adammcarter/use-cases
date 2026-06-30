@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { handleMcpMessage } from "../../../packages/ucm-mcp/src/index.js";
+import { handleMcpMessage } from "../../../packages/mcp/src/index.js";
 
 type ToolSchema = {
   name: string;

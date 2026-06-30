@@ -19,7 +19,7 @@
 // registry compiled from schemas/v1) rather than hand-rolling a second validator,
 // the same way tests/schema/schema-contracts.test.ts does.
 //
-// Every command is run through the BUILT CLI (node packages/ucm-cli/dist/index.js)
+// Every command is run through the BUILT CLI (node packages/cli/dist/index.js)
 // against fixture workspaces; mutating commands operate on a COPY in a temp dir so
 // the test is hermetic and repeatable. The build runs once in beforeAll.
 
@@ -29,7 +29,7 @@ import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
-import { validateBySchemaId } from "../../../packages/ucm-core/src/schema/index.js";
+import { validateBySchemaId } from "../../../packages/core/src/schema/index.js";
 
 const repoRoot = resolve(import.meta.dirname, "../../..");
 const fixturesRoot = join(repoRoot, "tests/fixtures/workspaces");
@@ -47,7 +47,7 @@ function copyFixture(name: string): string {
 }
 
 function runCli(args: string[], env: Record<string, string> = {}) {
-  return spawnSync("node", ["packages/ucm-cli/dist/index.js", ...args], {
+  return spawnSync("node", ["packages/cli/dist/index.js", ...args], {
     cwd: repoRoot,
     encoding: "utf8",
     env: { ...process.env, COREPACK_ENABLE_DOWNLOAD_PROMPT: "0", ...env }

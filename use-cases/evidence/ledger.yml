@@ -18,7 +18,7 @@ use_cases:
       - kind: file
         path: docs/data-model.md
       - kind: file
-        path: packages/ucm-core/src/evidence/linkEvidence.ts
+        path: packages/core/src/evidence/linkEvidence.ts
     actor: agent
     intent: Link release, test, command, manual, and host proof back to stable use-case IDs.
     preconditions:
@@ -73,7 +73,7 @@ use_cases:
       - kind: file
         path: docs/data-model.md
       - kind: file
-        path: packages/ucm-core/src/evidence/appendEvidenceEvent.ts
+        path: packages/core/src/evidence/appendEvidenceEvent.ts
     actor: agent
     intent: Correct, void, supersede, or invalidate evidence by appending events, never silent rewrites.
     preconditions:
@@ -126,9 +126,9 @@ use_cases:
       - freshness
     source_refs:
       - kind: file
-        path: packages/ucm-core/src/evidence/assurance.ts
+        path: packages/core/src/evidence/assurance.ts
       - kind: file
-        path: packages/ucm-core/src/presentation/selectPlan.ts
+        path: packages/core/src/presentation/selectPlan.ts
     actor: agent
     intent: Distinguish proof strength by producer, method, revision, environment, artifact, and recency.
     preconditions:
@@ -180,9 +180,9 @@ use_cases:
       - diagnostics
     source_refs:
       - kind: file
-        path: packages/ucm-core/src/evidence/jsonlLedger.ts
+        path: packages/core/src/evidence/jsonlLedger.ts
       - kind: file
-        path: packages/ucm-core/src/evidence/replayEvidence.ts
+        path: packages/core/src/evidence/replayEvidence.ts
     actor: script
     intent: Replay valid JSONL records while warning on damaged, duplicate, or invalid event lines.
     preconditions:
@@ -284,11 +284,11 @@ use_cases:
       - integrity
     source_refs:
       - kind: file
-        path: packages/ucm-core/src/durableWrite.ts
+        path: packages/core/src/durableWrite.ts
       - kind: file
-        path: packages/ucm-core/src/evidence/appendEvidenceEvent.ts
+        path: packages/core/src/evidence/appendEvidenceEvent.ts
       - kind: file
-        path: packages/ucm-core/src/showcase/jsonlLedger.ts
+        path: packages/core/src/showcase/jsonlLedger.ts
     actor: script
     intent: Append evidence and showcase events through an atomic temp-file write with best-effort fsync so a crash or interruption cannot leave a half-written or truncated ledger.
     preconditions:

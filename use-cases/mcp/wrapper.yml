@@ -15,7 +15,7 @@ use_cases:
       - cli
     source_refs:
       - kind: file
-        path: packages/ucm-mcp/src/tools.ts
+        path: packages/mcp/src/tools.ts
     actor: agent
     intent: Use MCP without inventing separate showcase or approval behavior.
     preconditions:
@@ -53,9 +53,9 @@ use_cases:
       - safety
     source_refs:
       - kind: file
-        path: packages/ucm-mcp/src/tools.ts
+        path: packages/mcp/src/tools.ts
       - kind: file
-        path: packages/ucm-core/src/useCases/mutateUseCaseMatrix.ts
+        path: packages/core/src/useCases/mutateUseCaseMatrix.ts
     actor: agent
     intent: Add, update, or retire use-case rows from an MCP host without bypassing CLI-equivalent validation.
     preconditions:

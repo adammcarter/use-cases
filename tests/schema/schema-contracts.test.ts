@@ -10,7 +10,7 @@ import {
   validateBySchemaId,
   validateFixtureWorkspace,
   validatePublicSchemas
-} from "../../packages/ucm-core/src/schema/index.js";
+} from "../../packages/core/src/schema/index.js";
 
 const repoRoot = resolve(import.meta.dirname, "../..");
 const fixturesRoot = join(repoRoot, "tests/fixtures/workspaces");

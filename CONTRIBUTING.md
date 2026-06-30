@@ -30,9 +30,9 @@ corepack pnpm cli -- matrix validate --repo . --json   # run the built CLI
 
 | Path | Package | What it is |
 |---|---|---|
-| `packages/ucm-core` | `@use-cases-plugin/core` | Core domain library: matrix, bindings, verify/prove, freshness, ledger, evidence, showcase, capsule, plan, host. The schemas live under `schemas/v1`. |
-| `packages/ucm-cli` | `@use-cases-plugin/cli` | The `ucp` CLI (alias `use-cases-plugin`). Thin command layer over core; owns the `--json` envelopes and exit codes. |
-| `packages/ucm-mcp` | `@use-cases-plugin/mcp` | The `ucp-mcp` MCP server. Wraps the same envelopes for agents over local stdio. |
+| `packages/core` | `@use-cases-plugin/core` | Core domain library: matrix, bindings, verify/prove, freshness, ledger, evidence, showcase, capsule, plan, host. The schemas live under `schemas/v1`. |
+| `packages/cli` | `@use-cases-plugin/cli` | The `ucp` CLI (alias `use-cases-plugin`). Thin command layer over core; owns the `--json` envelopes and exit codes. |
+| `packages/mcp` | `@use-cases-plugin/mcp` | The `ucp-mcp` MCP server. Wraps the same envelopes for agents over local stdio. |
 | `docs/` | — | Reference, security, and release docs. `docs/reference/stability.md` is the SemVer contract. |
 | `tests/` | — | Cross-package and acceptance tests. |
 

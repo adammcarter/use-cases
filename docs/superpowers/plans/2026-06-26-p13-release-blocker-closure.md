@@ -22,27 +22,27 @@
 
 ## File Structure
 
-- `packages/ucm-core/src/showcase/approvalAuthority.ts`
+- `packages/core/src/showcase/approvalAuthority.ts`
   - Owns trusted approval authority checks and approval scope construction.
-- `packages/ucm-core/src/showcase/planBinding.ts`
+- `packages/core/src/showcase/planBinding.ts`
   - Owns plan hash validation, plan-file loading, placeholder-hash rejection, and finish-event binding helpers.
-- `packages/ucm-core/src/showcase/appendShowcaseEvent.ts`
+- `packages/core/src/showcase/appendShowcaseEvent.ts`
   - Delegates approval and start-run validation to the new core helpers.
-- `packages/ucm-core/src/showcase/replayRun.ts`
+- `packages/core/src/showcase/replayRun.ts`
   - Ignores/degrades untrusted approval events during replay and exposes diagnostics through status.
-- `packages/ucm-core/src/showcase/types.ts`
+- `packages/core/src/showcase/types.ts`
   - Adds approval/proof-binding payload fields if current event result types need them.
-- `packages/ucm-core/src/hosts/conformanceStatus.ts`
+- `packages/core/src/hosts/conformanceStatus.ts`
   - Owns host executable smoke status derivation and aggregate conformance status.
-- `packages/ucm-core/src/hosts/projectHostFiles.ts`
+- `packages/core/src/hosts/projectHostFiles.ts`
   - Delegates host conformance status to the new module.
-- `packages/ucm-core/src/package/inspectPackage.ts`
+- `packages/core/src/package/inspectPackage.ts`
   - Inspects a real packlist/tarball or installed package root and runs installed CLI/MCP smoke checks.
-- `packages/ucm-core/src/index.ts`
+- `packages/core/src/index.ts`
   - Exports the new core modules needed by CLI/tests.
-- `packages/ucm-cli/src/index.ts`
+- `packages/cli/src/index.ts`
   - Adds plan-file based `showcase start`, trusted interactive approval gating, and real package doctor integration.
-- `packages/ucm-mcp/src/tools.ts`
+- `packages/mcp/src/tools.ts`
   - Preserves request-only approval and uses shared core behavior; no direct approval tool is added.
 - `tests/conformance/cli/p6-showcase-contract.test.ts`
   - Tightens approval and plan-binding CLI behavior.
@@ -64,11 +64,11 @@
 ### Task 1: Approval Authority Trust Boundary
 
 **Files:**
-- Create: `packages/ucm-core/src/showcase/approvalAuthority.ts`
-- Modify: `packages/ucm-core/src/showcase/appendShowcaseEvent.ts`
-- Modify: `packages/ucm-core/src/showcase/replayRun.ts`
-- Modify: `packages/ucm-core/src/showcase/index.ts`
-- Modify: `packages/ucm-cli/src/index.ts`
+- Create: `packages/core/src/showcase/approvalAuthority.ts`
+- Modify: `packages/core/src/showcase/appendShowcaseEvent.ts`
+- Modify: `packages/core/src/showcase/replayRun.ts`
+- Modify: `packages/core/src/showcase/index.ts`
+- Modify: `packages/cli/src/index.ts`
 - Test: `tests/conformance/cli/p6-showcase-contract.test.ts`
 - Test: `tests/conformance/mcp/p9-mcp.test.ts`
 
@@ -161,7 +161,7 @@ Expected: PASS.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add packages/ucm-core/src/showcase packages/ucm-cli/src/index.ts tests/conformance/cli/p6-showcase-contract.test.ts tests/conformance/mcp/p9-mcp.test.ts
+git add packages/core/src/showcase packages/cli/src/index.ts tests/conformance/cli/p6-showcase-contract.test.ts tests/conformance/mcp/p9-mcp.test.ts
 git commit -m "Harden trusted showcase approval"
 ```
 
@@ -170,10 +170,10 @@ git commit -m "Harden trusted showcase approval"
 ### Task 2: Real Proof Binding and Generated Plan Starts
 
 **Files:**
-- Create: `packages/ucm-core/src/showcase/planBinding.ts`
-- Modify: `packages/ucm-core/src/showcase/appendShowcaseEvent.ts`
-- Modify: `packages/ucm-cli/src/index.ts`
-- Modify: `packages/ucm-core/src/presentation/selectPlan.ts`
+- Create: `packages/core/src/showcase/planBinding.ts`
+- Modify: `packages/core/src/showcase/appendShowcaseEvent.ts`
+- Modify: `packages/cli/src/index.ts`
+- Modify: `packages/core/src/presentation/selectPlan.ts`
 - Modify: `examples/basic-product/evidence/by-id/ev/evidence-basic-search.jsonl`
 - Modify: `examples/basic-product/showcase-runs/run.basic.product.search/events.jsonl`
 - Test: `tests/e2e/p11-product-lifecycle.test.ts`
@@ -245,7 +245,7 @@ Expected: PASS.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add packages/ucm-core/src/showcase packages/ucm-cli/src/index.ts examples/basic-product tests/e2e/p11-product-lifecycle.test.ts tests/conformance/cli/p6-showcase-contract.test.ts
+git add packages/core/src/showcase packages/cli/src/index.ts examples/basic-product tests/e2e/p11-product-lifecycle.test.ts tests/conformance/cli/p6-showcase-contract.test.ts
 git commit -m "Bind showcase proof to generated plans"
 ```
 
@@ -255,20 +255,20 @@ git commit -m "Bind showcase proof to generated plans"
 
 **Files:**
 - Create: `tests/conformance/mcp/p13-stdio-parity.test.ts`
-- Modify: `packages/ucm-mcp/src/tools.ts`
-- Modify: `packages/ucm-mcp/src/index.ts` only if stdio framing needs correction.
+- Modify: `packages/mcp/src/tools.ts`
+- Modify: `packages/mcp/src/index.ts` only if stdio framing needs correction.
 - Test: `tests/conformance/mcp/p13-stdio-parity.test.ts`
 
 **Interfaces:**
 - Produces: test helper `startMcpServer(): { callTool(name,args), close() }`
-- Consumes: compiled executable `packages/ucm-mcp/dist/index.js --stdio`
+- Consumes: compiled executable `packages/mcp/dist/index.js --stdio`
 
 - [ ] **Step 1: Write failing stdio parity tests**
 
 Create tests that spawn:
 
 ```ts
-spawn(process.execPath, ["packages/ucm-mcp/dist/index.js", "--stdio"], { cwd: repoRoot });
+spawn(process.execPath, ["packages/mcp/dist/index.js", "--stdio"], { cwd: repoRoot });
 ```
 
 Then send newline-delimited JSON-RPC:
@@ -305,7 +305,7 @@ Expected: PASS.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add packages/ucm-mcp tests/conformance/mcp
+git add packages/mcp tests/conformance/mcp
 git commit -m "Verify compiled MCP stdio lifecycle parity"
 ```
 
@@ -314,10 +314,10 @@ git commit -m "Verify compiled MCP stdio lifecycle parity"
 ### Task 4: Host Conformance Status Semantics
 
 **Files:**
-- Create: `packages/ucm-core/src/hosts/conformanceStatus.ts`
-- Modify: `packages/ucm-core/src/hosts/projectHostFiles.ts`
-- Modify: `packages/ucm-core/src/hosts/index.ts`
-- Modify: `packages/ucm-cli/src/index.ts`
+- Create: `packages/core/src/hosts/conformanceStatus.ts`
+- Modify: `packages/core/src/hosts/projectHostFiles.ts`
+- Modify: `packages/core/src/hosts/index.ts`
+- Modify: `packages/cli/src/index.ts`
 - Test: `tests/conformance/hosts/p8-hosts.test.ts`
 - Test: `tests/conformance/hosts/p13-host-conformance.test.ts`
 - Test: `tests/e2e/p11-product-lifecycle.test.ts`
@@ -371,7 +371,7 @@ Expected: PASS.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add packages/ucm-core/src/hosts packages/ucm-cli/src/index.ts tests/conformance/hosts tests/e2e/p11-product-lifecycle.test.ts
+git add packages/core/src/hosts packages/cli/src/index.ts tests/conformance/hosts tests/e2e/p11-product-lifecycle.test.ts
 git commit -m "Correct host conformance status semantics"
 ```
 
@@ -380,9 +380,9 @@ git commit -m "Correct host conformance status semantics"
 ### Task 5: Real Tarball/Install Package Doctor
 
 **Files:**
-- Create: `packages/ucm-core/src/package/inspectPackage.ts`
-- Modify: `packages/ucm-core/src/index.ts`
-- Modify: `packages/ucm-cli/src/index.ts`
+- Create: `packages/core/src/package/inspectPackage.ts`
+- Modify: `packages/core/src/index.ts`
+- Modify: `packages/cli/src/index.ts`
 - Modify: `tests/release/p12-release.test.ts`
 - Create: `tests/release/p13-package-install.test.ts`
 - Modify: `docs/release.md`
@@ -437,7 +437,7 @@ Expected: PASS.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add packages/ucm-core/src/package packages/ucm-core/src/index.ts packages/ucm-cli/src/index.ts tests/release docs/release.md
+git add packages/core/src/package packages/core/src/index.ts packages/cli/src/index.ts tests/release docs/release.md
 git commit -m "Inspect installable package artifacts"
 ```
 

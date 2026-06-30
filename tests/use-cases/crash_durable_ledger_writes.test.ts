@@ -4,7 +4,7 @@
 // This is the default verifier target for that row: the row's resolved `script`
 // verifier runs THIS file (see use-cases/presentation-skills/evidence.yml). It
 // exercises the REAL durable-write primitive in
-// packages/ucm-core/src/durableWrite.ts and asserts the two observable outcomes
+// packages/core/src/durableWrite.ts and asserts the two observable outcomes
 // the row promises:
 //
 //   1. Atomic append — appending an event through the open/write/fsync/close
@@ -50,7 +50,7 @@ vi.mock("node:fs", async (importOriginal) => {
 
 // Imported AFTER the mock is declared so durableWrite binds the mocked fsyncSync.
 const { fsyncBestEffortForTemp } = await import(
-  "../../packages/ucm-core/src/durableWrite.js"
+  "../../packages/core/src/durableWrite.js"
 );
 
 function errnoError(code: string): NodeJS.ErrnoException {

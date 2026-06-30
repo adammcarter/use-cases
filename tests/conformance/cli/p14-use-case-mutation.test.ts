@@ -198,7 +198,7 @@ function listUseCase(workspaceRoot: string, useCaseId: string, lifecycle = "plan
 }
 
 function runCli(args: string[]): SpawnSyncReturns<string> {
-  return run("node", ["packages/ucm-cli/dist/index.js", ...args]);
+  return run("node", ["packages/cli/dist/index.js", ...args]);
 }
 
 function run(command: string, args: string[]): SpawnSyncReturns<string> {

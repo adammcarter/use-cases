@@ -243,9 +243,9 @@ If the domain is not ready, publish schemas from the package and docs site first
 
 1. **Create a rename branch before public docs are written.**
 2. **Rename package names and imports in one mechanical PR.**
-   - `@presentation-skills/ucm-core` → `@use-cases-plugin/core`
-   - `@presentation-skills/ucm-cli` → `@use-cases-plugin/cli`
-   - `@presentation-skills/ucm-mcp` → `@use-cases-plugin/mcp`
+   - `@presentation-skills/core` → `@use-cases-plugin/core`
+   - `@presentation-skills/cli` → `@use-cases-plugin/cli`
+   - `@presentation-skills/mcp` → `@use-cases-plugin/mcp`
 3. **Rename internal docs, generated help, examples, schema `$id`s, MCP names, CLI help, and fixtures in the same PR.**
 4. **Keep internal folder names boring:**
    - `packages/core`

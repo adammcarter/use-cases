@@ -9,7 +9,7 @@ describe("P0 MCP wire contract", () => {
   test("distributed MCP executable initializes and lists tools over stdio", async () => {
     await expect(runPnpm(["build"])).resolves.toBeUndefined();
 
-    const child = spawn("node", ["packages/ucm-mcp/dist/index.js"], {
+    const child = spawn("node", ["packages/mcp/dist/index.js"], {
       cwd: repoRoot,
       stdio: ["pipe", "pipe", "pipe"]
     });

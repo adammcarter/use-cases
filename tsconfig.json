@@ -1,8 +1,8 @@
 {
   "files": [],
   "references": [
-    { "path": "./packages/ucm-core" },
-    { "path": "./packages/ucm-cli" },
-    { "path": "./packages/ucm-mcp" }
+    { "path": "./packages/core" },
+    { "path": "./packages/cli" },
+    { "path": "./packages/mcp" }
   ]
 }

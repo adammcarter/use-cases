@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { describe, expect, test } from "vitest";
-import { validateBySchemaId } from "../../packages/ucm-core/src/schema/index.js";
+import { validateBySchemaId } from "../../packages/core/src/schema/index.js";
 
 const repoRoot = resolve(import.meta.dirname, "../..");
 
@@ -36,7 +36,7 @@ describe("P3 evidence CLI", () => {
     });
 
     const record = run("node", [
-      "packages/ucm-cli/dist/index.js",
+      "packages/cli/dist/index.js",
       "evidence",
       "record",
       "--repo",
@@ -68,7 +68,7 @@ describe("P3 evidence CLI", () => {
     ).toMatchObject({ ok: true, diagnostics: [] });
 
     const status = run("node", [
-      "packages/ucm-cli/dist/index.js",
+      "packages/cli/dist/index.js",
       "evidence",
       "status",
       "--repo",

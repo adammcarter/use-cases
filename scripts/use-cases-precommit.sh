@@ -26,14 +26,14 @@
 # so running it repeatedly has no side effects.
 #
 # Overridable via environment:
-#   UCP_CLI_JS       path to the built CLI entry (default: packages/ucm-cli/dist/index.js)
+#   UCP_CLI_JS       path to the built CLI entry (default: packages/cli/dist/index.js)
 #   UCP_BASE_REF     git ref the ledger must stay append-only against (default: HEAD)
 #   UCP_PUBLIC_KEY   trusted-CI public key PEM (default: .use-cases/trusted-ci-public-key.pem)
 #   UCP_PRODUCT_ROOT product root to scan (default: repo root)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CLI_JS="${UCP_CLI_JS:-$ROOT/packages/ucm-cli/dist/index.js}"
+CLI_JS="${UCP_CLI_JS:-$ROOT/packages/cli/dist/index.js}"
 BASE_REF="${UCP_BASE_REF:-HEAD}"
 PUBLIC_KEY="${UCP_PUBLIC_KEY:-$ROOT/.use-cases/trusted-ci-public-key.pem}"
 PRODUCT_ROOT="${UCP_PRODUCT_ROOT:-$ROOT}"

@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawnSync, type SpawnSyncReturns } from "node:child_process";
 import { beforeAll, describe, expect, test } from "vitest";
-import { isMissingCoreModule, MISSING_BUILD_MESSAGE } from "../../../packages/ucm-cli/src/index.js";
+import { isMissingCoreModule, MISSING_BUILD_MESSAGE } from "../../../packages/cli/src/index.js";
 
 const repoRoot = resolve(import.meta.dirname, "../../..");
 
@@ -20,7 +20,7 @@ function run(command: string, args: string[]): SpawnSyncReturns<string> {
 }
 
 function runCli(args: string[]): SpawnSyncReturns<string> {
-  return run("node", ["packages/ucm-cli/dist/index.js", ...args]);
+  return run("node", ["packages/cli/dist/index.js", ...args]);
 }
 
 function requireSuccess(result: SpawnSyncReturns<string>): void {
@@ -118,7 +118,7 @@ describe("CLI help and usage discoverability", () => {
 
 describe("missing build hint", () => {
   test("ERR_MODULE_NOT_FOUND is recognized and the hint mentions pnpm build", () => {
-    const error = Object.assign(new Error("Cannot find module '../../ucm-core/dist/index.js'"), {
+    const error = Object.assign(new Error("Cannot find module '../../core/dist/index.js'"), {
       code: "ERR_MODULE_NOT_FOUND"
     });
     expect(isMissingCoreModule(error)).toBe(true);

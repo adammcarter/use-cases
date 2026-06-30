@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { describe, expect, test } from "vitest";
-import { parseYamlToJson } from "../../packages/ucm-core/src/schema/index.js";
+import { parseYamlToJson } from "../../packages/core/src/schema/index.js";
 
 const repoRoot = resolve(import.meta.dirname, "../..");
 const skillRoot = join(repoRoot, ".agents", "skills");
@@ -106,7 +106,7 @@ describe("P7 canonical skills and activation bootstrap", () => {
   test("doctor skills validates canonical artifacts through the CLI", () => {
     const build = run("corepack", ["pnpm", "build"]);
     expect(build.status).toBe(0);
-    const result = run("node", ["packages/ucm-cli/dist/index.js", "doctor", "skills", "--repo", repoRoot, "--json"]);
+    const result = run("node", ["packages/cli/dist/index.js", "doctor", "skills", "--repo", repoRoot, "--json"]);
     expect(result.status).toBe(0);
     expect(JSON.parse(result.stdout)).toMatchObject({
       command: "doctor.skills",

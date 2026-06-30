@@ -4,7 +4,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative, resolve } from "node:path";
 import { describe, expect, test } from "vitest";
-import { validateBySchemaId } from "../../../packages/ucm-core/src/schema/index.js";
+import { validateBySchemaId } from "../../../packages/core/src/schema/index.js";
 
 const repoRoot = resolve(import.meta.dirname, "../../..");
 
@@ -17,7 +17,7 @@ function run(command: string, args: string[]) {
 }
 
 function runCli(args: string[]) {
-  return run("node", ["packages/ucm-cli/dist/index.js", ...args]);
+  return run("node", ["packages/cli/dist/index.js", ...args]);
 }
 
 function requireSuccess(result: ReturnType<typeof run>) {

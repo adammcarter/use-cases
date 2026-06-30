@@ -13,7 +13,7 @@ use_cases:
     tags: [migration, test-matrix]
     source_refs:
       - kind: file
-        path: packages/ucm-core/src/migration/testMatrix.ts
+        path: packages/core/src/migration/testMatrix.ts
     actor: agent
     intent: Backfill use-case drafts from a legacy matrix safely.
     preconditions: [A legacy TEST-MATRIX.md file exists.]

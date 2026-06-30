@@ -3,14 +3,14 @@ import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, symlinkSync } fr
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { describe, expect, test } from "vitest";
-import { validateBySchemaId } from "../../../packages/ucm-core/src/schema/index.js";
-import { resolveWorkspaceContext } from "../../../packages/ucm-core/src/roots.js";
+import { validateBySchemaId } from "../../../packages/core/src/schema/index.js";
+import { resolveWorkspaceContext } from "../../../packages/core/src/roots.js";
 import {
   loadHostProfile,
   projectHostFiles,
   runHostConformance,
   runHostDoctor
-} from "../../../packages/ucm-core/src/hosts/index.js";
+} from "../../../packages/core/src/hosts/index.js";
 
 const repoRoot = resolve(import.meta.dirname, "../../..");
 
@@ -235,7 +235,7 @@ function runCli(args: string[]) {
   if (build.status !== 0) {
     throw new Error(build.stderr || build.stdout);
   }
-  return spawnSync("node", ["packages/ucm-cli/dist/index.js", ...args], {
+  return spawnSync("node", ["packages/cli/dist/index.js", ...args], {
     cwd: repoRoot,
     encoding: "utf8",
     env: { ...process.env, COREPACK_ENABLE_DOWNLOAD_PROMPT: "0" }

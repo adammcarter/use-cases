@@ -1,0 +1,41 @@
+{
+  "name": "@use-cases-plugin/cli",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "CLI for use-cases-plugin.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adammcarter/use-cases-plugin.git",
+    "directory": "packages/cli"
+  },
+  "bin": {
+    "ucp": "./dist/index.js",
+    "use-cases-plugin": "./dist/index.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "package.json"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "dependencies": {
+    "@use-cases-plugin/core": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b --pretty false",
+    "prepublishOnly": "tsc -b"
+  }
+}

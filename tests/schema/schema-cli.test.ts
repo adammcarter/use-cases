@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 import { describe, expect, test } from "vitest";
-import { PUBLIC_SCHEMA_IDS } from "../../packages/ucm-core/src/schema/index.js";
+import { PUBLIC_SCHEMA_IDS } from "../../packages/core/src/schema/index.js";
 
 const repoRoot = resolve(import.meta.dirname, "../..");
 
@@ -30,7 +30,7 @@ describe("P1 schema CLI", () => {
     requireSuccess(run("corepack", ["pnpm", "build"]));
 
     const result = run("node", [
-      "packages/ucm-cli/dist/index.js",
+      "packages/cli/dist/index.js",
       "schema",
       "list",
       "--json"
@@ -57,7 +57,7 @@ describe("P1 schema CLI", () => {
     requireSuccess(run("corepack", ["pnpm", "build"]));
 
     const result = run("node", [
-      "packages/ucm-cli/dist/index.js",
+      "packages/cli/dist/index.js",
       "schema",
       "validate-fixtures",
       "--json",

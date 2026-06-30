@@ -82,9 +82,9 @@ presentation-skills/
     use-cases-plugin.md
 
   packages/
-    ucm-core/
-    ucm-cli/
-    ucm-mcp/
+    core/
+    cli/
+    mcp/
 
   schemas/
     v1/
@@ -899,7 +899,7 @@ MCP output is never treated as trusted bootstrap.
 The first implementation should be an end-to-end vertical slice before broadening every feature:
 
 ```text
-1. minimal schemas/v1 and ucm-core loader/validator
+1. minimal schemas/v1 and core loader/validator
 2. CLI read/status commands and damage tolerance
 3. evidence append events and assurance model
 4. resolved showcase plan generation
@@ -917,7 +917,7 @@ Advanced migration automation, behavioural host evals, MCP writes, freshness har
 
 ## Open Questions For Implementation Planning
 
-- Which language/runtime should own `ucm-core` and `ucm-cli`?
+- Which language/runtime should own `core` and `cli`?
 - How much host conformance can be tested locally for Copilot and OpenCode on this machine?
 - What default repo path should persisted demo capsules use when users opt into saving them?
 - What exact JSON schemas should be public and versioned in v1?

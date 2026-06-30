@@ -9,9 +9,9 @@
 ```text
 plugin_root/
   schemas/v1/                 versioned persisted contracts
-  packages/ucm-core/          domain and application core
-  packages/ucm-cli/           public CLI, JSON/text contract
-  packages/ucm-mcp/           thin MCP wrapper over CLI handlers
+  packages/core/          domain and application core
+  packages/cli/           public CLI, JSON/text contract
+  packages/mcp/           thin MCP wrapper over CLI handlers
   .agents/skills/             canonical skill source
   hosts/                      host expectations and projection config
   bootstrap/                  trusted activation stubs
@@ -122,16 +122,16 @@ plugin.json
 .codex-plugin/plugin.json
 .claude-plugin/plugin.json
 docs/adr/0001-p0-bootstrap-decisions.md
-packages/ucm-core/package.json
-packages/ucm-cli/package.json
-packages/ucm-mcp/package.json
+packages/core/package.json
+packages/cli/package.json
+packages/mcp/package.json
 tests/fixtures/README.md
 docs/superpowers/plans/2026-06-24-presentation-skills-implementation.md
 ```
 
 **Implementation steps:**
 
-- [ ] Add the pnpm workspace with packages `ucm-core`, `ucm-cli`, and `ucm-mcp`.
+- [ ] Add the pnpm workspace with packages `core`, `cli`, and `mcp`.
 - [ ] Pin the package manager with `packageManager: pnpm@11.9.0` and support `corepack pnpm` when global `pnpm` is absent.
 - [ ] Record installed-plugin launch, module-format, version, package-name, schema-ownership, CLI, and MCP startup decisions in `docs/adr/0001-p0-bootstrap-decisions.md`.
 - [ ] Add root scripts:
@@ -144,7 +144,7 @@ docs/superpowers/plans/2026-06-24-presentation-skills-implementation.md
 - [ ] Ensure package exports and executable bins point at built `dist/` output, not TypeScript source.
 - [ ] Add plugin manifests with conservative metadata and no unsupported host claims.
 - [ ] Add `.gitignore` entries for build output, coverage, `.albus/`, `.cowork-receipts/`, `.DS_Store`, and package manager cache artifacts if needed.
-- [ ] Add a smoke test that imports `ucm-core`, invokes the CLI `--version`, and starts the MCP server enough to list its tool metadata.
+- [ ] Add a smoke test that imports `core`, invokes the CLI `--version`, and starts the MCP server enough to list its tool metadata.
 - [ ] Add a packed-consumer smoke test that packs the packages, installs tarballs into a clean temp project, and verifies runtime imports, type declarations, CLI bin, and MCP bin.
 - [ ] Add a wire-level MCP smoke test that starts the distributed MCP executable over stdio, runs `initialize`, sends `notifications/initialized`, calls `tools/list`, and verifies stdout contains protocol messages only.
 - [ ] Add a staged-plugin smoke test that copies only intended distributable files into a clean directory and validates every manifest command/path against that staged root.
@@ -195,7 +195,7 @@ schemas/v1/presentation-plan.schema.json
 schemas/v1/host-profile.schema.json
 schemas/v1/workspace-config.schema.json
 schemas/v1/workflow-mode.schema.json
-packages/ucm-core/src/schema/
+packages/core/src/schema/
 tests/fixtures/workspaces/minimal-valid/
 tests/fixtures/workspaces/damaged-yaml/
 tests/fixtures/workspaces/duplicate-ids/
@@ -303,14 +303,14 @@ pnpm cli -- schema validate-fixtures --json
 **Files to create or edit:**
 
 ```text
-packages/ucm-core/src/roots.ts
-packages/ucm-core/src/useCases/types.ts
-packages/ucm-core/src/useCases/loadUseCaseMatrix.ts
-packages/ucm-core/src/useCases/validateUseCaseFile.ts
-packages/ucm-core/src/useCases/integrity.ts
-packages/ucm-core/src/useCases/query.ts
-packages/ucm-core/src/errors.ts
-packages/ucm-core/test/useCases/*.test.ts
+packages/core/src/roots.ts
+packages/core/src/useCases/types.ts
+packages/core/src/useCases/loadUseCaseMatrix.ts
+packages/core/src/useCases/validateUseCaseFile.ts
+packages/core/src/useCases/integrity.ts
+packages/core/src/useCases/query.ts
+packages/core/src/errors.ts
+packages/core/test/useCases/*.test.ts
 ```
 
 **Implementation steps:**
@@ -374,7 +374,7 @@ type MatrixLoadResult = {
 **Acceptance evidence:**
 
 ```bash
-pnpm test -- packages/ucm-core/test/useCases
+pnpm test -- packages/core/test/useCases
 pnpm cli -- matrix validate --repo tests/fixtures/workspaces/minimal-valid --json
 pnpm cli -- matrix validate --repo tests/fixtures/workspaces/damaged-yaml --json
 pnpm cli -- matrix list --repo tests/fixtures/workspaces/minimal-valid --value critical --json
@@ -397,13 +397,13 @@ pnpm cli -- matrix list --repo tests/fixtures/workspaces/minimal-valid --value c
 **Files to create or edit:**
 
 ```text
-packages/ucm-core/src/events/baseEvent.ts
-packages/ucm-core/src/events/jsonlLedger.ts
-packages/ucm-core/src/evidence/types.ts
-packages/ucm-core/src/evidence/appendEvidenceEvent.ts
-packages/ucm-core/src/evidence/replayEvidence.ts
-packages/ucm-core/src/evidence/assurance.ts
-packages/ucm-core/test/evidence/*.test.ts
+packages/core/src/events/baseEvent.ts
+packages/core/src/events/jsonlLedger.ts
+packages/core/src/evidence/types.ts
+packages/core/src/evidence/appendEvidenceEvent.ts
+packages/core/src/evidence/replayEvidence.ts
+packages/core/src/evidence/assurance.ts
+packages/core/test/evidence/*.test.ts
 tests/fixtures/workspaces/evidence-basic/
 tests/fixtures/workspaces/evidence-damaged/
 ```
@@ -457,7 +457,7 @@ tests/fixtures/workspaces/evidence-damaged/
 **Acceptance evidence:**
 
 ```bash
-pnpm test -- packages/ucm-core/test/evidence
+pnpm test -- packages/core/test/evidence
 pnpm cli -- evidence record --repo tests/fixtures/workspaces/evidence-basic --use-case showcase.live.golden --kind manual_observation --result pass --json
 pnpm cli -- evidence status --repo tests/fixtures/workspaces/evidence-basic --json
 ```
@@ -479,12 +479,12 @@ pnpm cli -- evidence status --repo tests/fixtures/workspaces/evidence-basic --js
 **Files to create or edit:**
 
 ```text
-packages/ucm-cli/src/index.ts
-packages/ucm-cli/src/commands/matrix.ts
-packages/ucm-cli/src/commands/evidence.ts
-packages/ucm-cli/src/output.ts
-packages/ucm-cli/src/errors.ts
-packages/ucm-cli/test/*.test.ts
+packages/cli/src/index.ts
+packages/cli/src/commands/matrix.ts
+packages/cli/src/commands/evidence.ts
+packages/cli/src/output.ts
+packages/cli/src/errors.ts
+packages/cli/test/*.test.ts
 tests/conformance/cli/*.test.ts
 ```
 
@@ -531,7 +531,7 @@ presentation-skills workflow set-mode
 
 **Implementation steps:**
 
-- [ ] Implement shared command handler functions in `ucm-core` or an application layer.
+- [ ] Implement shared command handler functions in `core` or an application layer.
 - [ ] Make CLI adapters format output only; they must not own business rules.
 - [ ] Standardize JSON envelope:
 
@@ -567,11 +567,11 @@ type CliJsonEnvelope<T> = {
 **Acceptance evidence:**
 
 ```bash
-pnpm test -- packages/ucm-cli tests/conformance/cli
+pnpm test -- packages/cli tests/conformance/cli
 pnpm build
-node packages/ucm-cli/dist/index.js matrix validate --repo tests/fixtures/workspaces/minimal-valid --json
-node packages/ucm-cli/dist/index.js matrix validate --repo tests/fixtures/workspaces/damaged-yaml --json
-node packages/ucm-cli/dist/index.js workflow set-mode --repo tests/fixtures/workspaces/minimal-valid --mode showcase_only --json
+node packages/cli/dist/index.js matrix validate --repo tests/fixtures/workspaces/minimal-valid --json
+node packages/cli/dist/index.js matrix validate --repo tests/fixtures/workspaces/damaged-yaml --json
+node packages/cli/dist/index.js workflow set-mode --repo tests/fixtures/workspaces/minimal-valid --mode showcase_only --json
 ```
 
 **Commit:** `Add CLI matrix and evidence contract`
@@ -592,12 +592,12 @@ node packages/ucm-cli/dist/index.js workflow set-mode --repo tests/fixtures/work
 **Files to create or edit:**
 
 ```text
-packages/ucm-core/src/presentation/types.ts
-packages/ucm-core/src/presentation/selectShowcasePlan.ts
-packages/ucm-core/src/presentation/selectWalkthroughPlan.ts
-packages/ucm-core/src/presentation/scoring.ts
-packages/ucm-cli/src/commands/plan.ts
-packages/ucm-core/test/presentation/*.test.ts
+packages/core/src/presentation/types.ts
+packages/core/src/presentation/selectShowcasePlan.ts
+packages/core/src/presentation/selectWalkthroughPlan.ts
+packages/core/src/presentation/scoring.ts
+packages/cli/src/commands/plan.ts
+packages/core/test/presentation/*.test.ts
 tests/fixtures/workspaces/presentation-selection/
 ```
 
@@ -668,7 +668,7 @@ presentation-skills plan walkthrough
 **Acceptance evidence:**
 
 ```bash
-pnpm test -- packages/ucm-core/test/presentation
+pnpm test -- packages/core/test/presentation
 pnpm cli -- plan showcase --repo tests/fixtures/workspaces/presentation-selection --json
 pnpm cli -- plan walkthrough --repo tests/fixtures/workspaces/presentation-selection --json
 ```
@@ -690,16 +690,16 @@ pnpm cli -- plan walkthrough --repo tests/fixtures/workspaces/presentation-selec
 **Files to create or edit:**
 
 ```text
-packages/ucm-core/src/capsules/types.ts
-packages/ucm-core/src/capsules/loadCapsule.ts
-packages/ucm-core/src/showcase/types.ts
-packages/ucm-core/src/showcase/startRun.ts
-packages/ucm-core/src/showcase/appendShowcaseEvent.ts
-packages/ucm-core/src/showcase/replayRun.ts
-packages/ucm-core/src/showcase/revisionEpochs.ts
-packages/ucm-core/src/showcase/approval.ts
-packages/ucm-cli/src/commands/showcase.ts
-packages/ucm-core/test/showcase/*.test.ts
+packages/core/src/capsules/types.ts
+packages/core/src/capsules/loadCapsule.ts
+packages/core/src/showcase/types.ts
+packages/core/src/showcase/startRun.ts
+packages/core/src/showcase/appendShowcaseEvent.ts
+packages/core/src/showcase/replayRun.ts
+packages/core/src/showcase/revisionEpochs.ts
+packages/core/src/showcase/approval.ts
+packages/cli/src/commands/showcase.ts
+packages/core/test/showcase/*.test.ts
 tests/fixtures/workspaces/showcase-basic/
 ```
 
@@ -776,7 +776,7 @@ approval state
 **Acceptance evidence:**
 
 ```bash
-pnpm test -- packages/ucm-core/test/showcase
+pnpm test -- packages/core/test/showcase
 pnpm cli -- showcase start --repo tests/fixtures/workspaces/showcase-basic --adhoc --select showcase.live.golden --json
 pnpm cli -- showcase record-observation --repo tests/fixtures/workspaces/showcase-basic --run <run-id> --item showcase.live.golden --text "Observed expected live behavior" --json
 pnpm cli -- showcase record-verdict --repo tests/fixtures/workspaces/showcase-basic --run <run-id> --item showcase.live.golden --verdict pass --actor user --json
@@ -880,10 +880,10 @@ hosts/claude.yml
 hosts/codex.yml
 hosts/copilot.yml
 hosts/opencode.yml
-packages/ucm-core/src/hosts/types.ts
-packages/ucm-core/src/hosts/loadHostProfile.ts
-packages/ucm-core/src/hosts/projectHostFiles.ts
-packages/ucm-cli/src/commands/host.ts
+packages/core/src/hosts/types.ts
+packages/core/src/hosts/loadHostProfile.ts
+packages/core/src/hosts/projectHostFiles.ts
+packages/cli/src/commands/host.ts
 tests/conformance/hosts/*.test.ts
 examples/host-projections/
 ```
@@ -958,9 +958,9 @@ pnpm cli -- host conformance --host opencode --repo examples/host-projections --
 **Files to create or edit:**
 
 ```text
-packages/ucm-mcp/src/index.ts
-packages/ucm-mcp/src/tools/*.ts
-packages/ucm-mcp/src/cliBridge.ts or packages/ucm-mcp/src/handlers.ts
+packages/mcp/src/index.ts
+packages/mcp/src/tools/*.ts
+packages/mcp/src/cliBridge.ts or packages/mcp/src/handlers.ts
 tests/conformance/mcp/*.test.ts
 docs/mcp.md
 ```
@@ -1033,7 +1033,7 @@ MCP can request approval and prepare an approval command, but it must not write 
 ```bash
 pnpm test -- tests/conformance/mcp
 pnpm build
-node packages/ucm-mcp/dist/index.js --stdio
+node packages/mcp/dist/index.js --stdio
 ```
 
 **Commit:** `Add MCP wrapper over CLI contract`
@@ -1053,8 +1053,8 @@ node packages/ucm-mcp/dist/index.js --stdio
 **Files to create or edit:**
 
 ```text
-packages/ucm-core/src/migration/testMatrix.ts
-packages/ucm-cli/src/commands/migrate.ts
+packages/core/src/migration/testMatrix.ts
+packages/cli/src/commands/migrate.ts
 tests/fixtures/workspaces/test-matrix-source/
 tests/migration/*.test.ts
 docs/migration.md

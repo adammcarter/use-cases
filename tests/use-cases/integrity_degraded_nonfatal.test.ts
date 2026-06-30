@@ -8,13 +8,13 @@
 // rest of the matrix.
 //
 // It drives the REAL loader/snapshot builder the bound code implements
-// (packages/ucm-core/src/useCases/integrity.ts: buildMatrixSnapshot, via
+// (packages/core/src/useCases/integrity.ts: buildMatrixSnapshot, via
 // loadUseCaseMatrix) against the committed `damaged-yaml` fixture, which pairs a
 // malformed use-case file with a valid sibling.
 import { join, resolve } from "node:path";
 import { describe, expect, test } from "vitest";
-import { resolveWorkspaceContext } from "../../packages/ucm-core/src/roots.js";
-import { loadUseCaseMatrix } from "../../packages/ucm-core/src/useCases/loadUseCaseMatrix.js";
+import { resolveWorkspaceContext } from "../../packages/core/src/roots.js";
+import { loadUseCaseMatrix } from "../../packages/core/src/useCases/loadUseCaseMatrix.js";
 
 const repoRoot = resolve(import.meta.dirname, "../..");
 const fixturesRoot = join(repoRoot, "tests/fixtures/workspaces");

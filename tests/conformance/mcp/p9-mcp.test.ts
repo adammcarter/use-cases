@@ -3,7 +3,7 @@ import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, statSync } 
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { describe, expect, test } from "vitest";
-import { handleMcpMessage } from "../../../packages/ucm-mcp/src/index.js";
+import { handleMcpMessage } from "../../../packages/mcp/src/index.js";
 
 const repoRoot = resolve(import.meta.dirname, "../../..");
 
@@ -148,7 +148,7 @@ function build() {
 }
 
 function runCli(args: string[]) {
-  const result = spawnSync("node", ["packages/ucm-cli/dist/index.js", ...args], {
+  const result = spawnSync("node", ["packages/cli/dist/index.js", ...args], {
     cwd: repoRoot,
     encoding: "utf8"
   });

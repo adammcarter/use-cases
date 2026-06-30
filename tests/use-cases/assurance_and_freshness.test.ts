@@ -6,14 +6,14 @@
 // or explicitly invalidated evidence.
 //
 // It drives the REAL assurance/freshness primitives the bound code implements
-// (packages/ucm-core/src/evidence/assurance.ts: deriveEvidenceAssurance /
+// (packages/core/src/evidence/assurance.ts: deriveEvidenceAssurance /
 // evaluateEvidenceFreshness) and asserts the distinct facets and freshness states
 // directly — these are pure, deterministic classifiers.
 import { describe, expect, test } from "vitest";
 import {
   deriveEvidenceAssurance,
   evaluateEvidenceFreshness
-} from "../../packages/ucm-core/src/evidence/index.js";
+} from "../../packages/core/src/evidence/index.js";
 
 describe("assurance_and_freshness", () => {
   test("assurance class reflects how the proof was captured", () => {

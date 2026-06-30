@@ -158,7 +158,7 @@ use_cases:
       - kind: file
         path: docs/activation.md
       - kind: file
-        path: packages/ucm-core/src/presentation/selectPlan.ts
+        path: packages/core/src/presentation/selectPlan.ts
     actor: agent
     intent: Show the user high-level feature status and gaps without exposing YAML mechanics by default.
     preconditions:

@@ -18,9 +18,9 @@ use_cases:
       - kind: file
         path: docs/showcase.md
       - kind: file
-        path: packages/ucm-core/src/showcase/startRun.ts
+        path: packages/core/src/showcase/startRun.ts
       - kind: file
-        path: packages/ucm-core/src/showcase/appendShowcaseEvent.ts
+        path: packages/core/src/showcase/appendShowcaseEvent.ts
     actor: agent
     intent: Start a run, perform items, record observations and verdicts, finish, and derive status from events.
     preconditions:
@@ -67,7 +67,7 @@ use_cases:
       - kind: file
         path: docs/showcase.md
       - kind: file
-        path: packages/ucm-core/src/showcase/types.ts
+        path: packages/core/src/showcase/types.ts
     actor: agent
     intent: Support agent-led, user-led, script-led, and mixed demonstrations without changing proof semantics.
     preconditions:
@@ -110,7 +110,7 @@ use_cases:
       - kind: file
         path: docs/showcase.md
       - kind: file
-        path: packages/ucm-core/src/showcase/replayRun.ts
+        path: packages/core/src/showcase/replayRun.ts
     actor: agent
     intent: When an item fails, require continue, pause_to_fix, waive_with_reason, or abort.
     preconditions:
@@ -150,9 +150,9 @@ use_cases:
       - freshness
     source_refs:
       - kind: file
-        path: packages/ucm-core/src/showcase/revisionEpochs.ts
+        path: packages/core/src/showcase/revisionEpochs.ts
       - kind: file
-        path: packages/ucm-core/src/showcase/replayRun.ts
+        path: packages/core/src/showcase/replayRun.ts
     actor: agent
     intent: Mark affected verdicts stale when relevant code or data changes during a paused or resumed run.
     preconditions:
@@ -194,9 +194,9 @@ use_cases:
       - kind: file
         path: docs/security.md
       - kind: file
-        path: packages/ucm-core/src/showcase/approvalAuthority.ts
+        path: packages/core/src/showcase/approvalAuthority.ts
       - kind: file
-        path: packages/ucm-core/src/showcase/approval.ts
+        path: packages/core/src/showcase/approval.ts
     actor: agent
     intent: Ensure agents, scripts, and MCP cannot fabricate user approval or rejection.
     preconditions:
@@ -238,9 +238,9 @@ use_cases:
       - kind: file
         path: docs/showcase.md
       - kind: file
-        path: packages/ucm-core/src/showcase/results.ts
+        path: packages/core/src/showcase/results.ts
       - kind: file
-        path: packages/ucm-core/src/showcase/replayRun.ts
+        path: packages/core/src/showcase/replayRun.ts
     actor: agent
     intent: Keep item verdict, verification state, run completion, and approval state distinct.
     preconditions:

@@ -13,9 +13,9 @@ use_cases:
     tags: [capsule, showcase, live-demo, command]
     source_refs:
       - kind: file
-        path: packages/ucm-core/src/capsules/runCapsule.ts
+        path: packages/core/src/capsules/runCapsule.ts
       - kind: file
-        path: packages/ucm-core/src/showcase/appendShowcaseEvent.ts
+        path: packages/core/src/showcase/appendShowcaseEvent.ts
     actor: agent
     intent: Perform a persisted demo capsule in front of the user or reviewer and record command-backed proof in the showcase ledger.
     preconditions:

@@ -16,7 +16,7 @@ use_cases:
       - configuration
     source_refs:
       - kind: file
-        path: packages/ucm-core/src/roots.ts
+        path: packages/core/src/roots.ts
       - kind: file
         path: docs/data-model.md
     actor: agent
@@ -58,7 +58,7 @@ use_cases:
       - contract
     source_refs:
       - kind: file
-        path: packages/ucm-core/src/schema/index.ts
+        path: packages/core/src/schema/index.ts
       - kind: file
         path: schemas/v1/cli-result.schema.json
       - kind: file
@@ -102,7 +102,7 @@ use_cases:
       - contract
     source_refs:
       - kind: file
-        path: packages/ucm-core/src/version.ts
+        path: packages/core/src/version.ts
       - kind: file
         path: use-cases-plugin.yml
     actor: agent
@@ -144,7 +144,7 @@ use_cases:
       - discoverability
     source_refs:
       - kind: file
-        path: packages/ucm-cli/src/index.ts
+        path: packages/cli/src/index.ts
       - kind: file
         path: docs/cli.md
     actor: agent
@@ -198,7 +198,7 @@ use_cases:
       - onboarding
     source_refs:
       - kind: file
-        path: packages/ucm-cli/src/index.ts
+        path: packages/cli/src/index.ts
     actor: agent
     intent: On a fresh clone where the compiled core has not been built, tell the user to run the build instead of surfacing a raw module-resolution error.
     preconditions:

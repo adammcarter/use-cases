@@ -15,7 +15,7 @@ use_cases:
       - projections
     source_refs:
       - kind: file
-        path: packages/ucm-core/src/hosts/projectHostFiles.ts
+        path: packages/core/src/hosts/projectHostFiles.ts
     actor: agent
     intent: Confirm host files are projected without claiming unsupported proof.
     preconditions:
@@ -60,7 +60,7 @@ use_cases:
       - support-status
     source_refs:
       - kind: file
-        path: packages/ucm-core/src/hosts/projectHostFiles.ts
+        path: packages/core/src/hosts/projectHostFiles.ts
       - kind: file
         path: docs/hosts.md
     actor: agent

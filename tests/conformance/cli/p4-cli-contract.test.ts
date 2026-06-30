@@ -7,7 +7,7 @@ import { describe, expect, test } from "vitest";
 const repoRoot = resolve(import.meta.dirname, "../../..");
 
 function runCli(args: string[], cwd = repoRoot) {
-  return spawnSync("node", ["packages/ucm-cli/dist/index.js", ...args], {
+  return spawnSync("node", ["packages/cli/dist/index.js", ...args], {
     cwd,
     encoding: "utf8",
     env: { ...process.env, COREPACK_ENABLE_DOWNLOAD_PROMPT: "0" }

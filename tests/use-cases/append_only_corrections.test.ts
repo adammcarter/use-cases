@@ -6,7 +6,7 @@
 // and an append that does not target the aggregate's CURRENT head is refused.
 //
 // It drives the REAL append-only ledger primitives the bound code implements
-// (packages/ucm-core/src/evidence/appendEvidenceEvent.ts: appendEvidenceVoidEvent
+// (packages/core/src/evidence/appendEvidenceEvent.ts: appendEvidenceVoidEvent
 // / voidUnderLock) against a temp copy of the `evidence-basic` fixture and asserts
 // the two observable outcomes:
 //
@@ -19,13 +19,13 @@ import { cpSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
-import { resolveWorkspaceContext } from "../../packages/ucm-core/src/roots.js";
-import { loadUseCaseMatrix } from "../../packages/ucm-core/src/useCases/loadUseCaseMatrix.js";
+import { resolveWorkspaceContext } from "../../packages/core/src/roots.js";
+import { loadUseCaseMatrix } from "../../packages/core/src/useCases/loadUseCaseMatrix.js";
 import {
   appendEvidenceEvent,
   appendEvidenceVoidEvent,
   replayEvidence
-} from "../../packages/ucm-core/src/evidence/index.js";
+} from "../../packages/core/src/evidence/index.js";
 import { rmSync } from "node:fs";
 
 const repoRoot = resolve(import.meta.dirname, "../..");

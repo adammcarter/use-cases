@@ -13,7 +13,7 @@ use_cases:
     tags: [showcase, signoff]
     source_refs:
       - kind: file
-        path: packages/ucm-core/src/showcase/appendShowcaseEvent.ts
+        path: packages/core/src/showcase/appendShowcaseEvent.ts
     actor: agent
     intent: Prove finished work in front of the user.
     preconditions: [A showcase item is selected.]

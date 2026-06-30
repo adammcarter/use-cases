@@ -31,7 +31,7 @@ Groups: `version`, `init`, `schema {list,validate-fixtures}`, `matrix
 
 ## Schemas — 26 present, 5 gaps
 
-Present (under `schemas/v1/`): cli-result, common, demo-capsule, evidence-append-result, evidence-event, evidence-status-result, host-profile, host-status-result, matrix-{list,mutation,validation}-result, migration-test-matrix-result, presentation-plan(+result), showcase-{approval,event,event-append,finish,run-status,start}-result, showcase-event, use-case-file, workflow-mode, workspace-config. Plus the markers schemas (`proof-event`, registry, …) under `packages/ucm-core/src/markers/schemas/`.
+Present (under `schemas/v1/`): cli-result, common, demo-capsule, evidence-append-result, evidence-event, evidence-status-result, host-profile, host-status-result, matrix-{list,mutation,validation}-result, migration-test-matrix-result, presentation-plan(+result), showcase-{approval,event,event-append,finish,run-status,start}-result, showcase-event, use-case-file, workflow-mode, workspace-config. Plus the markers schemas (`proof-event`, registry, …) under `packages/core/src/markers/schemas/`.
 
 **Gaps to close:**
 1. `marker` — `ucase-marker-v1` id exists in constants but no schema file.
@@ -53,5 +53,5 @@ Present (under `schemas/v1/`): cli-result, common, demo-capsule, evidence-append
 - [ ] Close the 5 schema gaps + register their `$id`s.
 - [ ] Conformance test: every CLI `--json` output validates against a schema.
 - [ ] `--json` consistency across all commands.
-- [x] `UCP_*` error-code registry (additive) + generated error-code docs page — `packages/ucm-core/src/errors/registry.ts` + `docs/reference/error-codes.md`.
+- [x] `UCP_*` error-code registry (additive) + generated error-code docs page — `packages/core/src/errors/registry.ts` + `docs/reference/error-codes.md`.
 - [ ] (Phase 4) MCP resources + prompts; rate-limit/size caps.

@@ -16,7 +16,7 @@ use_cases:
       - doctor
     source_refs:
       - kind: file
-        path: packages/ucm-core/src/package/inspectPackage.ts
+        path: packages/core/src/package/inspectPackage.ts
     actor: agent
     intent: Prove the distributable artifact is installable and free of local state.
     preconditions:

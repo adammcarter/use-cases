@@ -272,7 +272,7 @@ function pathWithExecutable(name: string, body: string): string {
 }
 
 function runCli(args: string[], env: Record<string, string> = {}) {
-  return spawnSync(process.execPath, ["packages/ucm-cli/dist/index.js", ...args], {
+  return spawnSync(process.execPath, ["packages/cli/dist/index.js", ...args], {
     cwd: repoRoot,
     encoding: "utf8",
     env: { ...process.env, COREPACK_ENABLE_DOWNLOAD_PROMPT: "0", ...env }

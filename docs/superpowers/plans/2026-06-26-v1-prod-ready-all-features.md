@@ -4,7 +4,7 @@
 
 **Goal:** Ship `presentation-skills` v1 as a production-ready release with the full originally intended feature set: living use-case matrix, append-only evidence, showcase and walkthrough planning, performed live showcase runs, persisted and scripted demo capsules, use-case mutation through CLI and MCP, host projection/conformance for Claude/Codex/Copilot/OpenCode, trusted activation bootstrap, release evidence, CI, and package publish readiness.
 
-**Architecture:** Keep the current TypeScript workspace and trust boundaries. `ucm-core` owns domain behavior and file safety, `ucm-cli` is the normative public contract, and `ucm-mcp` wraps the same core behavior without becoming a separate authority path. Production readiness is proven through sequential release gates, real package/install smoke, committed evidence, and host status that distinguishes projection support, executable smoke, and verified evidence.
+**Architecture:** Keep the current TypeScript workspace and trust boundaries. `core` owns domain behavior and file safety, `cli` is the normative public contract, and `mcp` wraps the same core behavior without becoming a separate authority path. Production readiness is proven through sequential release gates, real package/install smoke, committed evidence, and host status that distinguishes projection support, executable smoke, and verified evidence.
 
 **Tech Stack:** Node.js 22+, pnpm 11.9.0, TypeScript, Vitest, AJV, YAML, GitHub Actions, stdio MCP JSON-RPC, append-only JSONL ledgers.
 
@@ -133,10 +133,10 @@ git commit -m "Add production release gate"
 ## Task 2: Use-Case Mutation CLI And Core
 
 **Files:**
-- Create: `packages/ucm-core/src/useCases/mutateUseCaseMatrix.ts`
-- Modify: `packages/ucm-core/src/useCases/index.ts`
-- Modify: `packages/ucm-core/src/index.ts`
-- Modify: `packages/ucm-cli/src/index.ts`
+- Create: `packages/core/src/useCases/mutateUseCaseMatrix.ts`
+- Modify: `packages/core/src/useCases/index.ts`
+- Modify: `packages/core/src/index.ts`
+- Modify: `packages/cli/src/index.ts`
 - Create: `schemas/v1/matrix-mutation-result.schema.json`
 - Modify: `package.json`
 - Modify: `docs/cli.md`
@@ -210,7 +210,7 @@ reload matrix after write and return after_hash
 
 - [ ] **Step 3: Wire CLI**
 
-Add `matrix upsert` and `matrix remove` branches to `packages/ucm-cli/src/index.ts`.
+Add `matrix upsert` and `matrix remove` branches to `packages/cli/src/index.ts`.
 
 Expected JSON envelope commands:
 
@@ -227,7 +227,7 @@ Run:
 corepack pnpm exec vitest run tests/conformance/cli/p14-use-case-mutation.test.ts tests/schema/matrix-cli.test.ts
 corepack pnpm typecheck
 corepack pnpm build
-git add packages/ucm-core/src packages/ucm-cli/src schemas/v1 package.json docs/cli.md tests/conformance/cli/p14-use-case-mutation.test.ts
+git add packages/core/src packages/cli/src schemas/v1 package.json docs/cli.md tests/conformance/cli/p14-use-case-mutation.test.ts
 git commit -m "Add use-case mutation CLI"
 ```
 
@@ -236,7 +236,7 @@ git commit -m "Add use-case mutation CLI"
 ## Task 3: MCP Use-Case Mutation Tools
 
 **Files:**
-- Modify: `packages/ucm-mcp/src/tools.ts`
+- Modify: `packages/mcp/src/tools.ts`
 - Modify: `docs/mcp.md`
 - Modify: `use-cases/mcp/wrapper.yml`
 - Test: `tests/conformance/mcp/p14-mcp-use-case-mutation.test.ts`
@@ -286,7 +286,7 @@ Run:
 corepack pnpm exec vitest run tests/conformance/mcp/p14-mcp-use-case-mutation.test.ts tests/conformance/mcp/p9-mcp.test.ts
 corepack pnpm typecheck
 corepack pnpm build
-git add packages/ucm-mcp/src docs/mcp.md use-cases/mcp/wrapper.yml tests/conformance/mcp/p14-mcp-use-case-mutation.test.ts
+git add packages/mcp/src docs/mcp.md use-cases/mcp/wrapper.yml tests/conformance/mcp/p14-mcp-use-case-mutation.test.ts
 git commit -m "Expose safe use-case mutation through MCP"
 ```
 
@@ -295,11 +295,11 @@ git commit -m "Expose safe use-case mutation through MCP"
 ## Task 4: Demo Capsule Live Runner
 
 **Files:**
-- Create: `packages/ucm-core/src/capsules/runCapsule.ts`
-- Modify: `packages/ucm-core/src/capsules/index.ts`
-- Modify: `packages/ucm-core/src/capsules/types.ts`
-- Modify: `packages/ucm-cli/src/index.ts`
-- Modify: `packages/ucm-mcp/src/tools.ts`
+- Create: `packages/core/src/capsules/runCapsule.ts`
+- Modify: `packages/core/src/capsules/index.ts`
+- Modify: `packages/core/src/capsules/types.ts`
+- Modify: `packages/cli/src/index.ts`
+- Modify: `packages/mcp/src/tools.ts`
 - Modify: `docs/showcase.md`
 - Modify: `docs/mcp.md`
 - Modify: `examples/basic-product/demo-capsules/product-search.yml`
@@ -368,7 +368,7 @@ Run:
 corepack pnpm exec vitest run tests/conformance/cli/p14-capsule-runner.test.ts tests/conformance/mcp/p14-mcp-capsule-runner.test.ts
 corepack pnpm typecheck
 corepack pnpm build
-git add packages/ucm-core/src/capsules packages/ucm-cli/src packages/ucm-mcp/src docs/showcase.md docs/mcp.md examples/basic-product/demo-capsules/product-search.yml tests/conformance
+git add packages/core/src/capsules packages/cli/src packages/mcp/src docs/showcase.md docs/mcp.md examples/basic-product/demo-capsules/product-search.yml tests/conformance
 git commit -m "Add demo capsule live runner"
 ```
 
@@ -377,8 +377,8 @@ git commit -m "Add demo capsule live runner"
 ## Task 5: Host Projection Evidence And Status Reporting
 
 **Files:**
-- Modify: `packages/ucm-core/src/hosts/projectHostFiles.ts`
-- Modify: `packages/ucm-cli/src/index.ts`
+- Modify: `packages/core/src/hosts/projectHostFiles.ts`
+- Modify: `packages/cli/src/index.ts`
 - Modify: `docs/hosts.md`
 - Modify: `use-cases/hosts/projections.yml`
 - Test: `tests/conformance/hosts/p14-host-production-status.test.ts`
@@ -433,7 +433,7 @@ Run:
 ```bash
 corepack pnpm exec vitest run tests/conformance/hosts/p14-host-production-status.test.ts tests/conformance/hosts/p8-hosts.test.ts
 corepack pnpm cli -- host conformance --all --repo . --json
-git add packages/ucm-core/src/hosts packages/ucm-cli/src docs/hosts.md use-cases/hosts/projections.yml tests/conformance/hosts/p14-host-production-status.test.ts
+git add packages/core/src/hosts packages/cli/src docs/hosts.md use-cases/hosts/projections.yml tests/conformance/hosts/p14-host-production-status.test.ts
 git commit -m "Prove host projection production status"
 ```
 

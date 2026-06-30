@@ -3,7 +3,7 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { beforeAll, describe, expect, test } from "vitest";
-import { handleMcpMessage } from "../../packages/ucm-mcp/src/index.js";
+import { handleMcpMessage } from "../../packages/mcp/src/index.js";
 
 const repoRoot = resolve(import.meta.dirname, "../..");
 const zeroHash = "sha256:0000000000000000000000000000000000000000000000000000000000000000";
@@ -319,7 +319,7 @@ function callMcpTool(name: string, args: Record<string, unknown>) {
 }
 
 function runCliJson(args: string[]) {
-  const result = run("node", ["packages/ucm-cli/dist/index.js", ...args]);
+  const result = run("node", ["packages/cli/dist/index.js", ...args]);
   return {
     ...result,
     payload: parseJsonOutput(result)

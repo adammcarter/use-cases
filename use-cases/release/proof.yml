@@ -110,7 +110,7 @@ use_cases:
       - kind: file
         path: plugin.json
       - kind: file
-        path: packages/ucm-core/src/version.ts
+        path: packages/core/src/version.ts
     actor: script
     intent: Keep package, manifests, CLI/MCP version output, and projection plugin_version consistent.
     preconditions:
