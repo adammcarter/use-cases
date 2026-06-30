@@ -14,12 +14,30 @@ export { isMissingCoreModule, MISSING_BUILD_MESSAGE };
 // the legacy path shrinks to nothing — at which point legacy.ts is deleted.
 export function runCli(argv: string[]): number {
   const normalizedArgv = argv[0] === "--" ? argv.slice(1) : argv;
+  // The legacy dispatcher intercepts version and help (anywhere in argv, or an
+  // empty invocation) BEFORE command dispatch. Preserve that precedence: these
+  // never match a registry command, so route them straight to legacy — otherwise
+  // `matrix upsert --help` would run the upsert handler instead of scoped help.
+  if (isHelpOrVersion(normalizedArgv)) {
+    return runLegacyCli(argv);
+  }
   const match = matchCommand(allCommands, normalizedArgv);
   if (match === null) {
     return runLegacyCli(argv);
   }
   const wantsJson = normalizedArgv.includes("--json");
   return runRegistryCommand(match, normalizedArgv, wantsJson);
+}
+
+function isHelpOrVersion(normalizedArgv: string[]): boolean {
+  return (
+    normalizedArgv.length === 0 ||
+    normalizedArgv.includes("--help") ||
+    normalizedArgv.includes("-h") ||
+    normalizedArgv.includes("--version") ||
+    normalizedArgv.includes("-v") ||
+    normalizedArgv[0] === "version"
+  );
 }
 
 function isEntrypoint(): boolean {

@@ -13,7 +13,7 @@ import type { FlagSpec, ParsedFlags } from "../command/types.js";
 // looks like another flag (`--a --b` => a === "--b"). Tightening that is a
 // deliberate post-v1 change, not part of this refactor.
 
-function valueAfter(argv: string[], flag: string): string | undefined {
+export function valueAfter(argv: string[], flag: string): string | undefined {
   const index = argv.indexOf(flag);
   if (index === -1) {
     return undefined;
@@ -21,7 +21,7 @@ function valueAfter(argv: string[], flag: string): string | undefined {
   return argv[index + 1];
 }
 
-function valuesAfter(argv: string[], flag: string): string[] | undefined {
+export function valuesAfter(argv: string[], flag: string): string[] | undefined {
   const values: string[] = [];
   for (let index = 0; index < argv.length; index += 1) {
     if (argv[index] === flag && argv[index + 1]) {
@@ -31,7 +31,7 @@ function valuesAfter(argv: string[], flag: string): string[] | undefined {
   return values.length > 0 ? values : undefined;
 }
 
-function numberAfter(argv: string[], flag: string): number | undefined {
+export function numberAfter(argv: string[], flag: string): number | undefined {
   const value = valueAfter(argv, flag);
   if (!value) {
     return undefined;
