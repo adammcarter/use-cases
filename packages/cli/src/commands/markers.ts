@@ -27,7 +27,7 @@ import {
   singleKeyResolver,
   type ResolvedContext
 } from "../runtime.js";
-import { loadUcmCore } from "../builtins.js";
+import { loadUcmCore } from "../coreLoader.js";
 import { workspaceFlags } from "./common.js";
 
 // getVersionInfo is not re-exported by runtime.ts, and a static import of core
