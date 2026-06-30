@@ -31,6 +31,7 @@ describe("P12 release hardening", () => {
         forbidden_paths: [],
         manifest_references: expect.arrayContaining([
           expect.objectContaining({ from: ".codex-plugin/plugin.json", target: ".mcp.json", status: "resolved" }),
+          expect.objectContaining({ from: ".claude-plugin/plugin.json", target: "packages/mcp/dist/index.js", status: "resolved" }),
           expect.objectContaining({ from: ".mcp.json", target: "packages/mcp/dist/index.js", status: "resolved" })
         ])
       }
