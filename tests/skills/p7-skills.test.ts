@@ -3,10 +3,14 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { describe, expect, test } from "vitest";
 import { parseYamlToJson } from "../../packages/core/src/schema/index.js";
+import { CANONICAL_SKILLS } from "../../packages/core/src/skills/canonicalSkills.js";
 
 const repoRoot = resolve(import.meta.dirname, "../..");
 const skillRoot = join(repoRoot, ".agents", "skills");
-const canonicalSkillNames = ["use-cases-plugin", "showcase", "walkthrough", "migration"];
+// Bound to the single source of truth, so this test guards that host projection
+// and skill validation (which both read CANONICAL_SKILLS) cover every shipped
+// skill — including `migration`, which host projection once silently dropped.
+const canonicalSkillNames = [...CANONICAL_SKILLS];
 const knownCliCommands = new Set([
   "capsule list",
   "capsule plan",

@@ -4,6 +4,7 @@ import { isPathContained, type ResolvedWorkspaceContext } from "../roots.js";
 import { computeSemanticHash, type Diagnostic } from "../schema/index.js";
 import { UCP_VERSION } from "../version.js";
 import { deriveHostConformance, runExecutableSmoke } from "./conformanceStatus.js";
+import { CANONICAL_SKILLS } from "../skills/canonicalSkills.js";
 import type {
   HostConformanceResult,
   HostDoctorResult,
@@ -15,7 +16,6 @@ import type {
 
 const MANAGED_MARKER = "use-cases-plugin:managed";
 const MANIFEST_PATH = ".use-cases-plugin-projection.json";
-const CANONICAL_SKILLS = ["use-cases-plugin", "showcase", "walkthrough"];
 const GENERATED_AT = "1970-01-01T00:00:00.000Z";
 
 export function projectHostFiles(options: {
