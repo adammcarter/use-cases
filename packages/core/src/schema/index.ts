@@ -5,6 +5,9 @@ import { basename, extname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseDocument } from "yaml";
 import { DEFAULT_COMPONENT_ID } from "../version.js";
+import { diagnostic } from "./diagnostic.js";
+
+export { diagnostic } from "./diagnostic.js";
 
 export type Diagnostic = {
   code: string;
@@ -882,12 +885,10 @@ function mapAjvErrors(errors: ErrorObject[], sourcePath: string | null): Diagnos
       error.keyword === "required" && isRecord(error.params)
         ? String(error.params.missingProperty)
         : null;
-    return diagnostic(
-      diagnosticCode(error, missingProperty),
-      enumMessage(error),
-      sourcePath,
-      error.instancePath || null
-    );
+    return {
+      ...diagnostic(diagnosticCode(error, missingProperty), enumMessage(error), sourcePath),
+      json_pointer: error.instancePath || null
+    };
   });
 }
 
@@ -923,23 +924,6 @@ function diagnosticCode(error: ErrorObject, missingProperty: string | null): str
     return `${missingProperty}.required`;
   }
   return `schema.${error.keyword}`;
-}
-
-function diagnostic(
-  code: string,
-  message: string,
-  sourcePath: string | null,
-  jsonPointer: string | null = null
-): Diagnostic {
-  return {
-    code,
-    severity: "error",
-    message,
-    source_path: sourcePath,
-    json_pointer: jsonPointer,
-    entity_id: null,
-    related_ids: []
-  };
 }
 
 function canonicalJson(value: unknown): string {

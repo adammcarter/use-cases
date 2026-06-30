@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { delimiter, join } from "node:path";
-import type { Diagnostic } from "../schema/index.js";
+import { diagnostic, type Diagnostic } from "../schema/index.js";
 import type { HostExecutableSmoke, HostProfile, HostSupportStatus } from "./types.js";
 
 export type HostConformanceDerivation = {
@@ -141,7 +141,7 @@ function diagnosticsForExecutableSmoke(profile: HostProfile, smoke: HostExecutab
     return [];
   }
   if (smoke.status === "failed") {
-    return [diagnostic("host.executable_smoke_failed", "error", smoke.reason, profile.profile_id)];
+    return [diagnostic("host.executable_smoke_failed", smoke.reason, profile.profile_id)];
   }
   const code =
     smoke.reason_code === "executable_unavailable"
@@ -149,23 +149,11 @@ function diagnosticsForExecutableSmoke(profile: HostProfile, smoke: HostExecutab
       : smoke.reason_code === "executable_timeout"
         ? "host.executable_timeout"
         : "host.executable_not_found";
-  return [diagnostic(code, "warning", smoke.reason, profile.profile_id)];
+  return [{ ...diagnostic(code, smoke.reason, profile.profile_id), severity: "warning" }];
 }
 
 function isTimeoutError(error: Error): boolean {
   return (error as NodeJS.ErrnoException).code === "ETIMEDOUT";
-}
-
-function diagnostic(code: string, severity: Diagnostic["severity"], message: string, sourcePath: string): Diagnostic {
-  return {
-    code,
-    severity,
-    message,
-    source_path: sourcePath,
-    json_pointer: null,
-    entity_id: null,
-    related_ids: []
-  };
 }
 
 function smokeCommand(host: HostProfile["host"]): { executable: string; argv: string[]; label: string } {

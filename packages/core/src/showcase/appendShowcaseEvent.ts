@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { computeSemanticHash } from "../schema/index.js";
 import { redactSecrets } from "../redact.js";
-import { PresentationSkillsError } from "../errors.js";
+import { UseCasesPluginError } from "../errors.js";
 import type { PresentationPlan } from "../presentation/index.js";
 import type { ResolvedWorkspaceContext } from "../roots.js";
 import type { HostSurface } from "../useCases/types.js";
@@ -21,7 +21,7 @@ import type {
 export function startShowcaseRun(options: ShowcaseStartOptions): ShowcaseAppendResult {
   assertPresentationPlanHash(options.plan);
   if (options.plan.integrity_acknowledgement_required && !options.knownGapAcknowledgement?.acknowledged) {
-    throw new PresentationSkillsError("Partial plan requires known-gap acknowledgement.", "showcase_known_gap_ack_required");
+    throw new UseCasesPluginError("Partial plan requires known-gap acknowledgement.", "showcase_known_gap_ack_required");
   }
   const runId = runIdFrom(options.idempotencyKey, options.recordedAt);
   const ledgerPath = showcaseLedgerPath(options.context, runId);
@@ -34,7 +34,7 @@ export function startShowcaseRun(options: ShowcaseStartOptions): ShowcaseAppendR
   };
   const existing = readShowcaseEvents(options.context, runId);
   if (!existing.complete && existsSync(ledgerPath)) {
-    throw new PresentationSkillsError("Refusing to start against damaged showcase history.", "showcase_ledger_damaged");
+    throw new UseCasesPluginError("Refusing to start against damaged showcase history.", "showcase_ledger_damaged");
   }
   const existingEvent = existing.events.find((event) => event.idempotency_key === options.idempotencyKey);
   const intentDigest = intentDigestFor("run_started", payload, options.actorType, options.hostSurface);
@@ -42,10 +42,10 @@ export function startShowcaseRun(options: ShowcaseStartOptions): ShowcaseAppendR
     if (existingEvent.intent_digest === intentDigest) {
       return appendResult(options.context, existingEvent);
     }
-    throw new PresentationSkillsError("Idempotency key was reused with different intent.", "showcase_idempotency_conflict");
+    throw new UseCasesPluginError("Idempotency key was reused with different intent.", "showcase_idempotency_conflict");
   }
   if (existing.events.length > 0) {
-    throw new PresentationSkillsError("Showcase run id already exists.", "showcase_run_id_conflict");
+    throw new UseCasesPluginError("Showcase run id already exists.", "showcase_run_id_conflict");
   }
   const event = makeEvent({
     context: options.context,
@@ -133,7 +133,7 @@ export function appendShowcaseVerdict(options: {
       .map((event) => event.event_id)
   );
   if (!options.observationEventIds.some((eventId) => observations.has(eventId))) {
-    throw new PresentationSkillsError("Verdict requires a prior observation.", "showcase_verdict_requires_observation");
+    throw new UseCasesPluginError("Verdict requires a prior observation.", "showcase_verdict_requires_observation");
   }
   const event = appendEvent(options.context, options.runId, {
     eventType: "verdict_recorded",
@@ -166,12 +166,12 @@ export function appendShowcaseFailureDecision(options: {
   const read = readShowcaseEvents(options.context, options.runId);
   const target = read.events.find((event) => event.event_id === options.verdictEventId);
   if (!target || (target.event_type !== "verdict_recorded" && target.event_type !== "verdict_corrected")) {
-    throw new PresentationSkillsError("Failure decision target must be a verdict event.", "showcase_invalid_failure_decision_target");
+    throw new UseCasesPluginError("Failure decision target must be a verdict event.", "showcase_invalid_failure_decision_target");
   }
   const targetVerdict =
     target.event_type === "verdict_recorded" ? target.payload.verdict : target.payload.corrected_verdict;
   if (targetVerdict !== "fail" && targetVerdict !== "blocked") {
-    throw new PresentationSkillsError("Failure decision target must be a failed or blocked verdict.", "showcase_invalid_failure_decision_target");
+    throw new UseCasesPluginError("Failure decision target must be a failed or blocked verdict.", "showcase_invalid_failure_decision_target");
   }
   const event = appendEvent(options.context, options.runId, {
     eventType: "failure_decision_recorded",
@@ -269,7 +269,7 @@ export function finishShowcaseRun(options: {
 }): ShowcaseAppendResult {
   const status = replayShowcaseRun({ context: options.context, runId: options.runId });
   if (status.unresolved_failure_count > 0) {
-    throw new PresentationSkillsError("Cannot finish until each failed or blocked verdict has a failure decision.", "showcase_failure_decision_required");
+    throw new UseCasesPluginError("Cannot finish until each failed or blocked verdict has a failure decision.", "showcase_failure_decision_required");
   }
   const event = appendEvent(options.context, options.runId, {
     eventType: "run_finished",
@@ -305,7 +305,7 @@ export function appendShowcaseApproval(options: {
   });
   const finish = read.events.slice().reverse().find((event) => event.event_type === "run_finished");
   if (!finish) {
-    throw new PresentationSkillsError("User approval requires a finished showcase run.", "showcase.finish_required_for_approval");
+    throw new UseCasesPluginError("User approval requires a finished showcase run.", "showcase.finish_required_for_approval");
   }
   const status = replayShowcaseRun({ context: options.context, runId: options.runId });
   const event = appendEvent(options.context, options.runId, {
@@ -350,7 +350,7 @@ export function rejectShowcaseApproval(options: {
   });
   const finish = read.events.slice().reverse().find((event) => event.event_type === "run_finished");
   if (!finish) {
-    throw new PresentationSkillsError("User rejection requires a finished showcase run.", "showcase.finish_required_for_approval");
+    throw new UseCasesPluginError("User rejection requires a finished showcase run.", "showcase.finish_required_for_approval");
   }
   const status = replayShowcaseRun({ context: options.context, runId: options.runId });
   const event = appendEvent(options.context, options.runId, {
@@ -389,7 +389,7 @@ export function correctShowcaseVerdict(options: {
   const read = readShowcaseEvents(options.context, options.runId);
   const target = read.events.find((event) => event.event_id === options.targetEventId);
   if (!target || target.event_type !== "verdict_recorded") {
-    throw new PresentationSkillsError("Correction target must be a verdict event.", "showcase_invalid_correction_target");
+    throw new UseCasesPluginError("Correction target must be a verdict event.", "showcase_invalid_correction_target");
   }
   const event = appendEvent(options.context, options.runId, {
     eventType: "verdict_corrected",
@@ -421,7 +421,7 @@ function appendEvent(
 ): ShowcaseEvent {
   const read = readShowcaseEvents(context, runId);
   if (!read.complete) {
-    throw new PresentationSkillsError("Refusing to append to damaged showcase history.", "showcase_ledger_damaged");
+    throw new UseCasesPluginError("Refusing to append to damaged showcase history.", "showcase_ledger_damaged");
   }
   const existing = read.events.find((event) => event.idempotency_key === options.idempotencyKey);
   const intentDigest = intentDigestFor(options.eventType, options.payload, options.actorType, options.hostSurface);
@@ -429,7 +429,7 @@ function appendEvent(
     if (existing.intent_digest === intentDigest) {
       return existing;
     }
-    throw new PresentationSkillsError("Idempotency key was reused with different intent.", "showcase_idempotency_conflict");
+    throw new UseCasesPluginError("Idempotency key was reused with different intent.", "showcase_idempotency_conflict");
   }
   const event = makeEvent({
     context,

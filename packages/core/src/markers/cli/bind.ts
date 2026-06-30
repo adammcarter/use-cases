@@ -18,7 +18,7 @@ import {
   type CurrentBindingRecord
 } from "../scanner.js";
 import { appendJsonlLine, nodeMarkerFs, type MarkerFs } from "./io.js";
-import { findRow, loadMarkerRows, resolveUnderRoot } from "./shared.js";
+import { findRow, loadMarkerRows, resolveUnderRoot, toPosix } from "./shared.js";
 
 export type BindMode = "explicit" | "swift-func";
 
@@ -285,8 +285,4 @@ function splitKeepingTerminator(source: string): { lines: string[]; terminator: 
 function joinWithTerminator(lines: string[], terminator: boolean): string {
   const joined = lines.join("\n");
   return terminator ? `${joined}\n` : joined;
-}
-
-function toPosix(path: string): string {
-  return path.split("\\").join("/");
 }

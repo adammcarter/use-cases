@@ -1,9 +1,9 @@
-export class PresentationSkillsError extends Error {
+export class UseCasesPluginError extends Error {
   constructor(
     message: string,
     readonly code: string
   ) {
     super(message);
-    this.name = "PresentationSkillsError";
+    this.name = "UseCasesPluginError";
   }
 }

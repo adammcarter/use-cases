@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "
 import { dirname, extname, isAbsolute, join, relative, sep } from "node:path";
 import { parseDocument, stringify } from "yaml";
 import type { ResolvedWorkspaceContext } from "../roots.js";
-import { computeSemanticHash, validateBySchemaId, type Diagnostic } from "../schema/index.js";
+import { computeSemanticHash, diagnostic, validateBySchemaId, type Diagnostic } from "../schema/index.js";
 import { loadUseCaseMatrix } from "./loadUseCaseMatrix.js";
 import type { UseCaseV1 } from "./types.js";
 
@@ -255,17 +255,6 @@ function blocked(
   };
 }
 
-function diagnostic(code: string, message: string, sourcePath: string | null = null, entityId: string | null = null): Diagnostic {
-  return {
-    code,
-    severity: "error",
-    message,
-    source_path: sourcePath,
-    json_pointer: null,
-    entity_id: entityId,
-    related_ids: []
-  };
-}
 
 function asRecord(value: unknown): Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : {};

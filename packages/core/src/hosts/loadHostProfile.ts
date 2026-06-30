@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { parseYamlToJson, validateBySchemaId, type Diagnostic } from "../schema/index.js";
+import { diagnostic, parseYamlToJson, validateBySchemaId, type Diagnostic } from "../schema/index.js";
 import type { HostName, HostProfile, HostProfileLoadResult } from "./types.js";
 
 const HOST_PROFILE_SCHEMA_ID = "https://use-cases-plugin.dev/schemas/v1/host-profile.schema.json";
@@ -44,14 +44,3 @@ function resolveHostProfilePath(pluginRoot: string, host: HostName): string {
   return join(dirname(fileURLToPath(import.meta.url)), "../host-profiles", `${host}.yml`);
 }
 
-function diagnostic(code: string, message: string, sourcePath: string): Diagnostic {
-  return {
-    code,
-    severity: "error",
-    message,
-    source_path: sourcePath,
-    json_pointer: null,
-    entity_id: null,
-    related_ids: []
-  };
-}

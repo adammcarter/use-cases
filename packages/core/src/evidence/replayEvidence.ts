@@ -1,3 +1,4 @@
+import { canonicalJson } from "../markers/canonicalJson.js";
 import type { Diagnostic } from "../schema/index.js";
 import type { ResolvedWorkspaceContext } from "../roots.js";
 import { deriveEvidenceAssurance } from "./assurance.js";
@@ -241,15 +242,3 @@ function nullPath(_event: EvidenceEvent): string | null {
   return null;
 }
 
-function canonicalJson(value: unknown): string {
-  if (value === null || typeof value !== "object") {
-    return JSON.stringify(value);
-  }
-  if (Array.isArray(value)) {
-    return `[${value.map((item) => canonicalJson(item)).join(",")}]`;
-  }
-  const entries = Object.entries(value as Record<string, unknown>)
-    .filter(([, item]) => item !== undefined)
-    .sort(([left], [right]) => left.localeCompare(right));
-  return `{${entries.map(([key, item]) => `${JSON.stringify(key)}:${canonicalJson(item)}`).join(",")}}`;
-}

@@ -13,7 +13,7 @@
 
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
-import type { Diagnostic } from "../schema/index.js";
+import { diagnostic, type Diagnostic } from "../schema/index.js";
 import { isValidId, resolveContainedPath } from "../roots.js";
 
 export const INIT_TEMPLATES = ["generic", "js-vitest", "python-pytest", "go-test"] as const;
@@ -258,14 +258,3 @@ function toPosix(path: string): string {
   return path.split(sep).join("/");
 }
 
-function diagnostic(code: string, message: string, sourcePath: string | null = null): Diagnostic {
-  return {
-    code,
-    severity: "error",
-    message,
-    source_path: sourcePath,
-    json_pointer: null,
-    entity_id: null,
-    related_ids: []
-  };
-}

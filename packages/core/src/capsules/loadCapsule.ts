@@ -3,6 +3,7 @@ import { extname, isAbsolute, join, relative, sep } from "node:path";
 import type { ResolvedWorkspaceContext } from "../roots.js";
 import {
   computeSemanticHash,
+  diagnostic,
   parseYamlToJson,
   validateBySchemaId,
   type Diagnostic,
@@ -209,20 +210,3 @@ function listCapsuleEntries(
   return results;
 }
 
-function diagnostic(
-  code: string,
-  message: string,
-  sourcePath: string | null,
-  entityId: string | null = null,
-  relatedIds: string[] = []
-): Diagnostic {
-  return {
-    code,
-    severity: "error",
-    message,
-    source_path: sourcePath,
-    json_pointer: null,
-    entity_id: entityId,
-    related_ids: relatedIds
-  };
-}

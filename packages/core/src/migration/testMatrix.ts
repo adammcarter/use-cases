@@ -5,7 +5,7 @@ import { stringify } from "yaml";
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
-import { PresentationSkillsError } from "../errors.js";
+import { UseCasesPluginError } from "../errors.js";
 import type { ResolvedWorkspaceContext } from "../roots.js";
 import { computeSemanticHash, type Diagnostic } from "../schema/index.js";
 
@@ -325,7 +325,7 @@ function useCaseFromRow(row: LegacyRow, featureSlug: string, sourceDigest: strin
 
 function resolveInside(root: string, value: string, code: string): string {
   if (isAbsolute(value) || value.split(/[\\/]/).includes("..")) {
-    throw new PresentationSkillsError(
+    throw new UseCasesPluginError(
       `Migration source path '${value}' must be relative to the repository root (${root}) and stay inside it. Pass a path like 'TEST-MATRIX.md' or 'docs/TEST-MATRIX.md', not an absolute path or one containing '..'.`,
       code
     );
@@ -333,7 +333,7 @@ function resolveInside(root: string, value: string, code: string): string {
   const fullPath = resolve(root, value);
   const rel = relative(root, fullPath);
   if (rel.startsWith("..") || isAbsolute(rel)) {
-    throw new PresentationSkillsError(
+    throw new UseCasesPluginError(
       `Migration source path '${value}' escapes the repository root (${root}); it must be relative to the repository root and stay inside it.`,
       code
     );
@@ -343,16 +343,16 @@ function resolveInside(root: string, value: string, code: string): string {
 
 function resolveOutputPath(context: ResolvedWorkspaceContext, outRel: string): string {
   if (isAbsolute(outRel) || outRel.split(/[\\/]/).includes("..")) {
-    throw new PresentationSkillsError("Migration output must stay inside the data root.", "migration_unsafe_output_path");
+    throw new UseCasesPluginError("Migration output must stay inside the data root.", "migration_unsafe_output_path");
   }
   const blocked = outRel.split(/[\\/]/)[0];
   if (blocked === "evidence" || blocked === "showcase-runs" || blocked === ".codex" || blocked === ".claude") {
-    throw new PresentationSkillsError("Migration output cannot target evidence, showcase, or host projection roots.", "migration_unsafe_output_path");
+    throw new UseCasesPluginError("Migration output cannot target evidence, showcase, or host projection roots.", "migration_unsafe_output_path");
   }
   const fullPath = resolve(context.data_root, outRel);
   const rel = relative(context.data_root, fullPath);
   if (rel.startsWith("..") || isAbsolute(rel)) {
-    throw new PresentationSkillsError("Migration output escapes the data root.", "migration_unsafe_output_path");
+    throw new UseCasesPluginError("Migration output escapes the data root.", "migration_unsafe_output_path");
   }
   return fullPath;
 }

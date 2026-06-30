@@ -1,4 +1,4 @@
-import { PresentationSkillsError } from "../errors.js";
+import { UseCasesPluginError } from "../errors.js";
 import type { ShowcaseActorType, ShowcaseEvent } from "./types.js";
 
 export type TrustedApprovalAuthority =
@@ -13,13 +13,13 @@ export function requireTrustedUserApprovalAuthority(input: {
 }): void {
   if (input.actorType !== "user") {
     if (input.userApprovalRequired) {
-      throw new PresentationSkillsError("Agent cannot record user-required approval.", "showcase.user_required_approval");
+      throw new UseCasesPluginError("Agent cannot record user-required approval.", "showcase.user_required_approval");
     }
     return;
   }
 
   if (!isTrustedAuthority(input.authority)) {
-    throw new PresentationSkillsError(
+    throw new UseCasesPluginError(
       "User approval requires a trusted interactive user confirmation path.",
       "showcase.trusted_user_confirmation_required"
     );

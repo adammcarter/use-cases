@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { migrateTestMatrix } from "../../src/migration/index.js";
-import { PresentationSkillsError } from "../../src/errors.js";
+import { UseCasesPluginError } from "../../src/errors.js";
 import type { ResolvedWorkspaceContext } from "../../src/roots.js";
 
 const repoRoot = "/tmp/ucp-migrate-fixture-root";
@@ -37,8 +37,8 @@ describe("migrateTestMatrix unsafe source path diagnostic", () => {
       caught = error;
     }
 
-    expect(caught).toBeInstanceOf(PresentationSkillsError);
-    const err = caught as PresentationSkillsError;
+    expect(caught).toBeInstanceOf(UseCasesPluginError);
+    const err = caught as UseCasesPluginError;
     expect(err.code).toBe("migration_unsafe_source_path");
     // The message must say what the path is relative TO, and echo the resolved
     // repo root so an agent can self-correct.
@@ -58,8 +58,8 @@ describe("migrateTestMatrix unsafe source path diagnostic", () => {
       caught = error;
     }
 
-    expect(caught).toBeInstanceOf(PresentationSkillsError);
-    const err = caught as PresentationSkillsError;
+    expect(caught).toBeInstanceOf(UseCasesPluginError);
+    const err = caught as UseCasesPluginError;
     expect(err.code).toBe("migration_unsafe_source_path");
     expect(err.message).toMatch(/relative to the repository/i);
     expect(err.message).toContain(repoRoot);

@@ -2,7 +2,6 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { UseCaseQuery } from "@use-cases-plugin/core";
 import type { CliCommand, CommandOutput } from "../command/types.js";
-import { valueAfter, valuesAfter } from "../args/parse.js";
 import {
   createCliResult,
   errorEnvelope,
@@ -81,20 +80,20 @@ export const matrixListCommand: CliCommand = {
     { key: "changedPath", name: "--changed-path", kind: "string", repeatable: true, valueName: "<path>", summary: "Filter by changed path (repeatable)." },
     { key: "strict", name: "--strict", kind: "boolean", summary: "Fail when the matrix is incomplete." }
   ],
-  handler: ({ argv }) => {
-    const strict = argv.includes("--strict");
+  handler: ({ argv, flags }) => {
+    const strict = flags.strict as boolean;
     const context = resolveContextOrError(argv, "matrix.list");
     if (context.kind === "error") {
       return { envelope: context.envelope, exitCode: context.exitCode };
     }
     const snapshot = loadUseCaseMatrix({ context: context.context });
     const selected = queryUseCases(snapshot, {
-      valueTiers: valuesAfter(argv, "--value") as UseCaseQuery["valueTiers"],
-      journeyRoles: valuesAfter(argv, "--journey-role") as UseCaseQuery["journeyRoles"],
-      lifecycles: valuesAfter(argv, "--lifecycle") as UseCaseQuery["lifecycles"],
-      hostSurfaces: valuesAfter(argv, "--host") as UseCaseQuery["hostSurfaces"],
-      tagsAny: valuesAfter(argv, "--tag"),
-      changedPaths: valuesAfter(argv, "--changed-path")
+      valueTiers: flags.value as UseCaseQuery["valueTiers"],
+      journeyRoles: flags.journeyRole as UseCaseQuery["journeyRoles"],
+      lifecycles: flags.lifecycle as UseCaseQuery["lifecycles"],
+      hostSurfaces: flags.host as UseCaseQuery["hostSurfaces"],
+      tagsAny: flags.tag as string[] | undefined,
+      changedPaths: flags.changedPath as string[] | undefined
     });
     const ok = strict ? snapshot.complete : true;
     return {
@@ -154,14 +153,14 @@ export const matrixUpsertCommand: CliCommand = {
     { key: "useCaseFile", name: "--use-case-file", kind: "string", valueName: "<path>", summary: "Read the use-case JSON from a file (alternative to --use-case-json)." },
     { key: "expectedHash", name: "--expected-hash", kind: "string", valueName: "<hash>", summary: "Optimistic-concurrency guard for updates." }
   ],
-  handler: ({ argv }) => {
+  handler: ({ argv, flags }) => {
     const context = resolveContextOrError(argv, "matrix.upsert");
     if (context.kind === "error") {
       return { envelope: context.envelope, exitCode: context.exitCode };
     }
-    const targetFile = valueAfter(argv, "--file");
-    const inlineJson = valueAfter(argv, "--use-case-json");
-    const useCaseFile = valueAfter(argv, "--use-case-file");
+    const targetFile = flags.file as string | undefined;
+    const inlineJson = flags.useCaseJson as string | undefined;
+    const useCaseFile = flags.useCaseFile as string | undefined;
     if (!targetFile || (!inlineJson && !useCaseFile)) {
       return {
         envelope: errorEnvelope("matrix.upsert", "cli_invalid_arguments", "Missing --file or one of --use-case-json / --use-case-file."),
@@ -205,7 +204,7 @@ export const matrixUpsertCommand: CliCommand = {
       operation: "upsert",
       targetFile,
       useCase,
-      expectedSemanticHash: valueAfter(argv, "--expected-hash") ?? undefined,
+      expectedSemanticHash: (flags.expectedHash as string | undefined) ?? undefined,
       actor: "agent"
     });
     return mutationOutput("matrix.upsert", result, context.context);
@@ -225,13 +224,13 @@ export const matrixRemoveCommand: CliCommand = {
     { key: "expectedHash", name: "--expected-hash", kind: "string", valueName: "<hash>", summary: "Optimistic-concurrency guard." },
     jsonFlag
   ],
-  handler: ({ argv }) => {
+  handler: ({ argv, flags }) => {
     const context = resolveContextOrError(argv, "matrix.remove");
     if (context.kind === "error") {
       return { envelope: context.envelope, exitCode: context.exitCode };
     }
-    const useCaseId = valueAfter(argv, "--use-case");
-    const reason = valueAfter(argv, "--reason");
+    const useCaseId = flags.useCase as string | undefined;
+    const reason = flags.reason as string | undefined;
     if (!useCaseId || !reason) {
       return {
         envelope: errorEnvelope("matrix.remove", "cli_invalid_arguments", "Missing --use-case or --reason."),
@@ -243,7 +242,7 @@ export const matrixRemoveCommand: CliCommand = {
       operation: "remove",
       useCaseId,
       reason,
-      expectedSemanticHash: valueAfter(argv, "--expected-hash") ?? undefined,
+      expectedSemanticHash: (flags.expectedHash as string | undefined) ?? undefined,
       actor: "agent"
     });
     return mutationOutput("matrix.remove", result, context.context);

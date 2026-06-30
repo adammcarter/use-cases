@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, isAbsolute, join, relative, sep } from "node:path";
+import { dirname, isAbsolute, join, relative } from "node:path";
 import { isPathContained, type ResolvedWorkspaceContext } from "../roots.js";
-import { computeSemanticHash, type Diagnostic } from "../schema/index.js";
+import { computeSemanticHash, diagnostic, type Diagnostic } from "../schema/index.js";
 import { UCP_VERSION } from "../version.js";
 import { deriveHostConformance, runExecutableSmoke } from "./conformanceStatus.js";
 import { CANONICAL_SKILLS } from "../skills/canonicalSkills.js";
@@ -322,14 +322,3 @@ function productionSupportSummary(
   };
 }
 
-function diagnostic(code: string, message: string, sourcePath: string): Diagnostic {
-  return {
-    code,
-    severity: "error",
-    message,
-    source_path: sourcePath.split(sep).join("/"),
-    json_pointer: null,
-    entity_id: null,
-    related_ids: []
-  };
-}

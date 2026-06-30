@@ -11,8 +11,7 @@ import { readFileSync } from "node:fs";
 import { createPrivateKey, createPublicKey } from "node:crypto";
 import { join, resolve } from "node:path";
 import type { CiAuthority, VerificationResultRecord } from "@use-cases-plugin/core";
-import type { CliCommand, CommandOutput } from "../command/types.js";
-import { numberAfter, valueAfter } from "../args/parse.js";
+import type { CliCommand, CommandOutput, ParsedFlags } from "../command/types.js";
 import {
   createCliResult,
   detectCiAuthority,
@@ -41,29 +40,29 @@ const { getVersionInfo } = await loadUcmCore();
 // Verbatim port of the legacy `markerPaths`: resolve the product root and the
 // bindings/evidence ledger paths from flags, defaulting to the workspace root and
 // the .use-cases ledgers under the data root.
-function markerPaths(argv: string[], context: ResolvedContext) {
-  const productRoot = valueAfter(argv, "--product-root")
-    ? resolve(process.cwd(), valueAfter(argv, "--product-root") as string)
+function markerPaths(flags: ParsedFlags, context: ResolvedContext) {
+  const productRoot = (flags.productRoot as string | undefined)
+    ? resolve(process.cwd(), flags.productRoot as string)
     : context.workspace_root;
-  const bindingsPath = valueAfter(argv, "--bindings")
-    ? resolve(process.cwd(), valueAfter(argv, "--bindings") as string)
+  const bindingsPath = (flags.bindings as string | undefined)
+    ? resolve(process.cwd(), flags.bindings as string)
     : join(context.data_root, ".use-cases", "bindings.jsonl");
-  const evidencePath = valueAfter(argv, "--evidence")
-    ? resolve(process.cwd(), valueAfter(argv, "--evidence") as string)
+  const evidencePath = (flags.evidence as string | undefined)
+    ? resolve(process.cwd(), flags.evidence as string)
     : join(context.data_root, ".use-cases", "evidence.jsonl");
   return { productRoot, bindingsPath, evidencePath };
 }
 
 // Verbatim port of the legacy `markerPublicKeyResolver`.
-function markerPublicKeyResolver(argv: string[]): ReturnType<typeof singleKeyResolver> {
+function markerPublicKeyResolver(flags: ParsedFlags): ReturnType<typeof singleKeyResolver> {
   // Opt-in multi-key path: --keyring builds a resolver that enforces per-key
   // status (active/revoked) and validity windows against the proof's created_at.
   // When both flags are present the keyring wins over the single --public-key.
-  const keyringPath = valueAfter(argv, "--keyring");
+  const keyringPath = flags.keyring as string | undefined;
   if (keyringPath) {
     return keyringPublicKeyResolverFromFile(resolve(process.cwd(), keyringPath));
   }
-  const keyPath = valueAfter(argv, "--public-key");
+  const keyPath = flags.publicKey as string | undefined;
   if (!keyPath) {
     // No configured key: any proof signature fails (ledger with proofs is invalid).
     return () => undefined;
@@ -73,8 +72,8 @@ function markerPublicKeyResolver(argv: string[]): ReturnType<typeof singleKeyRes
 }
 
 // Verbatim port of the legacy `markerSigningKey`.
-function markerSigningKey(argv: string[]): { privateKey: ReturnType<typeof createPrivateKey>; keyId: string } | undefined {
-  const envName = valueAfter(argv, "--signing-key-env");
+function markerSigningKey(flags: ParsedFlags): { privateKey: ReturnType<typeof createPrivateKey>; keyId: string } | undefined {
+  const envName = flags.signingKeyEnv as string | undefined;
   if (!envName) {
     return undefined;
   }
@@ -82,7 +81,7 @@ function markerSigningKey(argv: string[]): { privateKey: ReturnType<typeof creat
   if (!pem) {
     return undefined;
   }
-  return { privateKey: createPrivateKey(pem), keyId: valueAfter(argv, "--key-id") ?? "trusted-ci" };
+  return { privateKey: createPrivateKey(pem), keyId: (flags.keyId as string | undefined) ?? "trusted-ci" };
 }
 
 // Minimal ULID-shaped id for registry/proof event ids (uniqueness from the tail).
@@ -154,36 +153,36 @@ export const markersBindCommand: CliCommand = {
     { key: "commentPrefix", name: "--comment-prefix", kind: "string", valueName: "<s>", summary: "Override the line-comment prefix (else inferred from extension/shebang)." },
     { key: "dryRun", name: "--dry-run", kind: "boolean", summary: "Preview the marker placement without writing the source or registry." }
   ],
-  handler: ({ argv }) => {
+  handler: ({ argv, flags }) => {
     const context = resolveContextOrError(argv, "markers.bind");
     if (context.kind === "error") {
       return { envelope: context.envelope, exitCode: context.exitCode };
     }
     const ctx = context.context;
-    const rowId = valueAfter(argv, "--row");
-    const file = valueAfter(argv, "--file");
-    const modeRaw = valueAfter(argv, "--mode");
+    const rowId = flags.row as string | undefined;
+    const file = flags.file as string | undefined;
+    const modeRaw = flags.mode as string | undefined;
     if (!rowId || !file || (modeRaw !== "explicit" && modeRaw !== "swift-func")) {
       return {
         envelope: errorEnvelope("markers.bind", "cli_invalid_arguments", "Missing --row, --file, or --mode (explicit|swift-func)."),
         exitCode: 2
       };
     }
-    const paths = markerPaths(argv, ctx);
+    const paths = markerPaths(flags, ctx);
     const result = runBindCommand({
       context: ctx,
       productRoot: paths.productRoot,
       bindingsPath: paths.bindingsPath,
       rowId,
-      suffix: valueAfter(argv, "--suffix"),
+      suffix: flags.suffix as string | undefined,
       file,
       mode: modeRaw,
-      line: numberAfter(argv, "--line"),
-      startLine: numberAfter(argv, "--start-line"),
-      endLine: numberAfter(argv, "--end-line"),
-      commentPrefix: valueAfter(argv, "--comment-prefix"),
-      registerExisting: argv.includes("--register-existing"),
-      dryRun: argv.includes("--dry-run"),
+      line: flags.line as number | undefined,
+      startLine: flags.startLine as number | undefined,
+      endLine: flags.endLine as number | undefined,
+      commentPrefix: flags.commentPrefix as string | undefined,
+      registerExisting: flags.registerExisting as boolean,
+      dryRun: flags.dryRun as boolean,
       clock: () => new Date().toISOString(),
       idFactory: generateUlid,
       version: getVersionInfo().version
@@ -205,14 +204,14 @@ export const markersScanCommand: CliCommand = {
     { key: "baseRef", name: "--base-ref", kind: "string", valueName: "<ref>", summary: "Diff base for the append-only check." },
     { key: "ci", name: "--ci", kind: "boolean", summary: "CI mode (print inferred spans)." }
   ],
-  handler: ({ argv }) => {
+  handler: ({ argv, flags }) => {
     const context = resolveContextOrError(argv, "markers.scan");
     if (context.kind === "error") {
       return { envelope: context.envelope, exitCode: context.exitCode };
     }
     const ctx = context.context;
-    const paths = markerPaths(argv, ctx);
-    const policyModeRaw = valueAfter(argv, "--policy-mode") ?? "feature";
+    const paths = markerPaths(flags, ctx);
+    const policyModeRaw = (flags.policyMode as string | undefined) ?? "feature";
     const policyMode = ["feature", "release", "custom"].includes(policyModeRaw)
       ? (policyModeRaw as "feature" | "release" | "custom")
       : "feature";
@@ -222,9 +221,9 @@ export const markersScanCommand: CliCommand = {
       bindingsPath: paths.bindingsPath,
       evidencePath: paths.evidencePath,
       policyMode,
-      publicKeyResolver: markerPublicKeyResolver(argv),
-      generatedAt: valueAfter(argv, "--generated-at") ?? new Date().toISOString(),
-      baseRef: valueAfter(argv, "--base-ref"),
+      publicKeyResolver: markerPublicKeyResolver(flags),
+      generatedAt: (flags.generatedAt as string | undefined) ?? new Date().toISOString(),
+      baseRef: flags.baseRef as string | undefined,
       repoCwd: ctx.workspace_root
     });
     // CI mode prints the inferred spans to stderr (a human/log side-channel, NOT
@@ -232,7 +231,7 @@ export const markersScanCommand: CliCommand = {
     // has no stderr channel, so this side-effect stays here to keep behaviour
     // byte-identical with the legacy scan handler. Ordering (stderr then the
     // stdout envelope) is preserved because the handler runs before the render.
-    if (argv.includes("--ci") && result.inferred_spans.length > 0) {
+    if ((flags.ci as boolean) && result.inferred_spans.length > 0) {
       process.stderr.write(`${result.inferred_spans.join("\n\n")}\n`);
     }
     return markerOutput("markers.scan", result, ctx, result.exit_code === 0);
@@ -261,26 +260,26 @@ export const markersProveCommand: CliCommand = {
     { key: "generatedAt", name: "--generated-at", kind: "string", valueName: "<iso>", summary: "Override the generated-at timestamp." },
     { key: "baseRef", name: "--base-ref", kind: "string", valueName: "<ref>", summary: "Diff base for the append-only check." }
   ],
-  handler: ({ argv }) => {
+  handler: ({ argv, flags }) => {
     const context = resolveContextOrError(argv, "markers.prove");
     if (context.kind === "error") {
       return { envelope: context.envelope, exitCode: context.exitCode };
     }
     const ctx = context.context;
-    const all = argv.includes("--all");
-    const rowId = valueAfter(argv, "--row");
+    const all = flags.all as boolean;
+    const rowId = flags.row as string | undefined;
     if (!all && !rowId) {
       return {
         envelope: errorEnvelope("markers.prove", "cli_invalid_arguments", "Missing --row or --all."),
         exitCode: 2
       };
     }
-    const paths = markerPaths(argv, ctx);
+    const paths = markerPaths(flags, ctx);
 
     // prove no longer runs verifiers; it CONSUMES the unsigned verification-results
     // ledger that `verify --out` produced (one JSONL record per row).
     let verificationResults: VerificationResultRecord[] | undefined;
-    const resultsPathRaw = valueAfter(argv, "--verification-results");
+    const resultsPathRaw = flags.verificationResults as string | undefined;
     if (resultsPathRaw) {
       const resultsPath = resolve(process.cwd(), resultsPathRaw);
       let text: string;
@@ -318,14 +317,14 @@ export const markersProveCommand: CliCommand = {
     // verification passed. The core honours it ONLY when env
     // UCP_ALLOW_UNSAFE_VERIFICATION=1 is set; otherwise it is ignored.
     const unsafeAssume =
-      valueAfter(argv, "--unsafe-assume-verification-result") === "pass" ? ("pass" as const) : undefined;
+      (flags.unsafeAssumeVerificationResult as string | undefined) === "pass" ? ("pass" as const) : undefined;
 
     // CI-neutral provenance authority (additive, signed). An explicit
     // --authority-file (a JSON authority record) wins — for unknown CI / overrides;
     // otherwise auto-detect from the process env. The GitHub-shaped `producer` block
     // below is still populated exactly as before, beside the authority.
     let authority: CiAuthority;
-    const authorityFileRaw = valueAfter(argv, "--authority-file");
+    const authorityFileRaw = flags.authorityFile as string | undefined;
     if (authorityFileRaw) {
       const authorityPath = resolve(process.cwd(), authorityFileRaw);
       let authorityText: string;
@@ -362,25 +361,25 @@ export const markersProveCommand: CliCommand = {
       productRoot: paths.productRoot,
       bindingsPath: paths.bindingsPath,
       evidencePath: paths.evidencePath,
-      publicKeyResolver: markerPublicKeyResolver(argv),
+      publicKeyResolver: markerPublicKeyResolver(flags),
       rowId,
       all,
-      refresh: argv.includes("--refresh"),
-      trustedCi: argv.includes("--trusted-ci"),
-      append: argv.includes("--append"),
-      dryRun: argv.includes("--dry-run"),
+      refresh: flags.refresh as boolean,
+      trustedCi: flags.trustedCi as boolean,
+      append: flags.append as boolean,
+      dryRun: flags.dryRun as boolean,
       verificationResults,
       unsafeAssumeVerificationResult: unsafeAssume,
-      signingKey: markerSigningKey(argv),
+      signingKey: markerSigningKey(flags),
       producer: {
         ci_run_id: process.env.GITHUB_RUN_ID,
         repo: process.env.GITHUB_REPOSITORY,
         commit: process.env.GITHUB_SHA
       },
       authority,
-      generatedAt: valueAfter(argv, "--generated-at") ?? new Date().toISOString(),
+      generatedAt: (flags.generatedAt as string | undefined) ?? new Date().toISOString(),
       idFactory: generateUlid,
-      baseRef: valueAfter(argv, "--base-ref"),
+      baseRef: flags.baseRef as string | undefined,
       repoCwd: ctx.workspace_root
     });
     return markerOutput("markers.prove", result, ctx, result.exit_code === 0);
@@ -401,33 +400,33 @@ export const markersVerifyCommand: CliCommand = {
     { key: "generatedAt", name: "--generated-at", kind: "string", valueName: "<iso>", summary: "Override the generated-at timestamp." },
     { key: "baseRef", name: "--base-ref", kind: "string", valueName: "<ref>", summary: "Diff base for the append-only check." }
   ],
-  handler: ({ argv }) => {
+  handler: ({ argv, flags }) => {
     const context = resolveContextOrError(argv, "markers.verify");
     if (context.kind === "error") {
       return { envelope: context.envelope, exitCode: context.exitCode };
     }
     const ctx = context.context;
-    const all = argv.includes("--all");
-    const rowId = valueAfter(argv, "--row");
+    const all = flags.all as boolean;
+    const rowId = flags.row as string | undefined;
     if (!all && !rowId) {
       return {
         envelope: errorEnvelope("markers.verify", "cli_invalid_arguments", "Missing --all or --row <slug>."),
         exitCode: 2
       };
     }
-    const paths = markerPaths(argv, ctx);
-    const outRaw = valueAfter(argv, "--out");
+    const paths = markerPaths(flags, ctx);
+    const outRaw = flags.out as string | undefined;
     const result = runVerifyCommand({
       context: ctx,
       productRoot: paths.productRoot,
       bindingsPath: paths.bindingsPath,
       evidencePath: paths.evidencePath,
-      publicKeyResolver: markerPublicKeyResolver(argv),
+      publicKeyResolver: markerPublicKeyResolver(flags),
       all,
       rowId,
       outPath: outRaw ? resolve(process.cwd(), outRaw) : undefined,
-      generatedAt: valueAfter(argv, "--generated-at") ?? new Date().toISOString(),
-      baseRef: valueAfter(argv, "--base-ref"),
+      generatedAt: (flags.generatedAt as string | undefined) ?? new Date().toISOString(),
+      baseRef: flags.baseRef as string | undefined,
       repoCwd: ctx.workspace_root
     });
     return markerOutput("markers.verify", result, ctx, result.exit_code === 0);
@@ -444,19 +443,19 @@ export const markersValidateLedgerCommand: CliCommand = {
     ...trustedKeyFlags,
     { key: "baseRef", name: "--base-ref", kind: "string", valueName: "<ref>", summary: "Diff base for the append-only check." }
   ],
-  handler: ({ argv }) => {
+  handler: ({ argv, flags }) => {
     const context = resolveContextOrError(argv, "markers.validate-ledger");
     if (context.kind === "error") {
       return { envelope: context.envelope, exitCode: context.exitCode };
     }
     const ctx = context.context;
-    const paths = markerPaths(argv, ctx);
+    const paths = markerPaths(flags, ctx);
     const result = runValidateLedgerCommand({
       context: ctx,
       evidencePath: paths.evidencePath,
       bindingsPath: paths.bindingsPath,
-      publicKeyResolver: markerPublicKeyResolver(argv),
-      baseRef: valueAfter(argv, "--base-ref"),
+      publicKeyResolver: markerPublicKeyResolver(flags),
+      baseRef: flags.baseRef as string | undefined,
       repoCwd: ctx.workspace_root
     });
     // validate-ledger uses result.ok (NOT exit_code === 0) for the envelope ok/

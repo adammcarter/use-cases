@@ -1,5 +1,4 @@
 import type { CliCommand } from "../command/types.js";
-import { valueAfter } from "../args/parse.js";
 import {
   appendEvidenceEvent,
   appendEvidenceVoidEvent,
@@ -43,12 +42,12 @@ export const evidenceRecordCommand: CliCommand = {
     { key: "summary", name: "--summary", kind: "string", valueName: "<text>", summary: "Human summary of the evidence." },
     { key: "idempotencyKey", name: "--idempotency-key", kind: "string", valueName: "<key>", summary: "Idempotency key (defaults to a derived cli: key)." }
   ],
-  handler: ({ argv }) => {
+  handler: ({ argv, flags }) => {
     const context = resolveContextOrError(argv, "evidence.record");
     if (context.kind === "error") {
       return { envelope: context.envelope, exitCode: context.exitCode };
     }
-    const useCaseId = valueAfter(argv, "--use-case");
+    const useCaseId = flags.useCase as string | undefined;
     if (!useCaseId) {
       return {
         envelope: errorEnvelope("evidence.record", "evidence.use_case.required", "Missing --use-case."),
@@ -63,18 +62,18 @@ export const evidenceRecordCommand: CliCommand = {
         exitCode: 2
       };
     }
-    const kind = valueAfter(argv, "--kind") ?? "manual_observation";
-    const result = valueAfter(argv, "--result") ?? "observed";
+    const kind = (flags.kind as string | undefined) ?? "manual_observation";
+    const result = (flags.result as string | undefined) ?? "observed";
     const append = appendEvidenceEvent({
       context: context.context,
-      idempotencyKey: valueAfter(argv, "--idempotency-key") ?? `cli:${useCaseId}:${kind}:${result}`,
+      idempotencyKey: (flags.idempotencyKey as string | undefined) ?? `cli:${useCaseId}:${kind}:${result}`,
       target: {
         use_case_id: useCaseId,
         use_case_semantic_hash: resolved.useCase.semanticHash
       },
       kind: kind as Parameters<typeof appendEvidenceEvent>[0]["kind"],
       result: result as Parameters<typeof appendEvidenceEvent>[0]["result"],
-      summary: valueAfter(argv, "--summary") ?? `Recorded ${kind} evidence for ${useCaseId}.`,
+      summary: (flags.summary as string | undefined) ?? `Recorded ${kind} evidence for ${useCaseId}.`,
       actorType: "agent",
       hostSurface: "codex.cli"
     });
@@ -148,14 +147,14 @@ export const evidenceVoidCommand: CliCommand = {
     { key: "reason", name: "--reason", kind: "string", required: true, valueName: "<text>", summary: "Why the evidence is being voided." },
     { key: "idempotencyKey", name: "--idempotency-key", kind: "string", valueName: "<key>", summary: "Idempotency key (defaults to a derived cli:void: key)." }
   ],
-  handler: ({ argv }) => {
+  handler: ({ argv, flags }) => {
     const context = resolveContextOrError(argv, "evidence.void");
     if (context.kind === "error") {
       return { envelope: context.envelope, exitCode: context.exitCode };
     }
-    const evidenceId = valueAfter(argv, "--evidence");
-    const expectedHead = valueAfter(argv, "--expected-head");
-    const reason = valueAfter(argv, "--reason");
+    const evidenceId = flags.evidence as string | undefined;
+    const expectedHead = flags.expectedHead as string | undefined;
+    const reason = flags.reason as string | undefined;
     if (!evidenceId || !expectedHead || !reason) {
       return {
         envelope: errorEnvelope("evidence.void", "cli_invalid_arguments", "Missing --evidence, --expected-head, or --reason."),
@@ -180,7 +179,7 @@ export const evidenceVoidCommand: CliCommand = {
         evidenceId,
         expectedHeadEventId: expectedHead,
         reason,
-        idempotencyKey: valueAfter(argv, "--idempotency-key") ?? `cli:void:${evidenceId}:${expectedHead}`,
+        idempotencyKey: (flags.idempotencyKey as string | undefined) ?? `cli:void:${evidenceId}:${expectedHead}`,
         actorType: "agent",
         hostSurface: "codex.cli"
       });
