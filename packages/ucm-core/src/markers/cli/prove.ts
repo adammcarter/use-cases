@@ -373,7 +373,7 @@ function proveOneRow(args: ProveOneRowArgs): ProveRowResult {
       return rowResult(rowId, "failed", {
         ...hashes,
         reason: "NO_PASSING_RESULT",
-        message: `no verification result for row ${rowId}; run \`use-cases verify --row ${rowId} --out <path>\` first`
+        message: `no verification result for row ${rowId}; run \`ucp verify --row ${rowId} --out <path>\` first`
       });
     }
     if (record.status === "blocked") {

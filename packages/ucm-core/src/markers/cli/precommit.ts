@@ -72,8 +72,8 @@ function defaultRequiredAction(row: FreshnessRowOut): string {
     return row.required_action;
   }
   return row.status === "UNBOUND"
-    ? `use-cases bind --row ${row.row_id}`
-    : `use-cases prove --row ${row.row_id}`;
+    ? `ucp bind --row ${row.row_id}`
+    : `ucp prove --row ${row.row_id}`;
 }
 
 // Build the loud warning block exactly as spec 10.1 mandates for SUSPECT (the

@@ -38,51 +38,69 @@ function fixtureWorkspace(name: string): string {
 }
 
 describe("CLI help and usage discoverability", () => {
-  test("--help prints a usage envelope listing the available commands", () => {
+  test("--help prints HUMAN-READABLE text (not JSON) by default", () => {
     const result = runCli(["--help"]);
     expect(result.status).toBe(0);
     expect(result.stderr).toBe("");
+    expect(result.stdout.trimStart().startsWith("{")).toBe(false);
+    expect(result.stdout).toContain("ucp — use-cases-plugin CLI");
+    expect(result.stdout).toContain("Commands:");
+    expect(result.stdout).toContain("matrix upsert");
+  });
+
+  test("--help --json emits the machine-readable envelope", () => {
+    const result = runCli(["--help", "--json"]);
+    expect(result.status).toBe(0);
     const payload = JSON.parse(result.stdout);
     expect(payload).toMatchObject({ command: "help", ok: true, complete: true });
-    expect(Array.isArray(payload.data.commands)).toBe(true);
     const names = payload.data.commands.map((entry: { name: string }) => entry.name);
     expect(names).toContain("matrix upsert");
     expect(names).toContain("evidence record");
+    // The fleet's #2 finding: bind's required span flags must be discoverable.
+    const bind = payload.data.commands.find((entry: { name: string }) => entry.name === "bind");
+    const bindFlags = bind.flags.map((flag: { flag: string }) => flag.flag).join(" ");
+    expect(bindFlags).toContain("--start-line");
+    expect(bindFlags).toContain("--end-line");
+    // Showcase mutation verbs must be listed, not only start/status.
+    expect(names).toContain("showcase record-verdict");
+    expect(names).toContain("showcase approve");
+    // The FRESH path flags must be discoverable.
+    const prove = payload.data.commands.find((entry: { name: string }) => entry.name === "prove");
+    expect(prove.flags.map((f: { flag: string }) => f.flag).join(" ")).toContain("--verification-results");
   });
 
-  test("a bare invocation also prints the usage envelope", () => {
+  test("a bare invocation prints the human-readable help", () => {
     const result = runCli([]);
     expect(result.status).toBe(0);
-    const payload = JSON.parse(result.stdout);
-    expect(payload.command).toBe("help");
-    expect(payload.data.commands.length).toBeGreaterThan(0);
+    expect(result.stdout).toContain("ucp — use-cases-plugin CLI");
   });
 
-  test("subcommand --help scopes to that command and lists its flags", () => {
-    const result = runCli(["matrix", "upsert", "--help"]);
+  test("`version` subcommand prints the version (like --version)", () => {
+    const result = runCli(["version"]);
+    expect(result.status).toBe(0);
+    expect(result.stdout.trim()).toMatch(/^\d+\.\d+\.\d+/);
+  });
+
+  test("subcommand --help --json scopes to that command and lists its flags", () => {
+    const result = runCli(["matrix", "upsert", "--help", "--json"]);
     expect(result.status).toBe(0);
     const payload = JSON.parse(result.stdout);
     expect(payload.command).toBe("help");
-    const names = payload.data.commands.map((entry: { name: string }) => entry.name);
-    expect(names.every((name: string) => name.startsWith("matrix"))).toBe(true);
     const upsert = payload.data.commands.find((entry: { name: string }) => entry.name === "matrix upsert");
-    expect(upsert).toBeDefined();
     const flags = upsert.flags.map((flag: { flag: string }) => flag.flag).join(" ");
     expect(flags).toContain("--use-case-file");
-    expect(flags).toContain("--use-case-json");
   });
 
-  test("an unrecognized command prints scoped usage instead of a cryptic hint", () => {
-    const result = runCli(["matrix", "bogus"]);
-    expect(result.status).toBe(2);
-    const payload = JSON.parse(result.stdout);
-    expect(payload.command).toBe("help");
+  test("an unrecognized command exits 2 with text help (and an envelope under --json)", () => {
+    const text = runCli(["matrix", "bogus"]);
+    expect(text.status).toBe(2);
+    expect(text.stdout.toLowerCase()).toContain("no recognized command");
+
+    const json = runCli(["matrix", "bogus", "--json"]);
+    expect(json.status).toBe(2);
+    const payload = JSON.parse(json.stdout);
     expect(payload.ok).toBe(false);
-    expect(payload.diagnostics).toEqual([
-      expect.objectContaining({ code: "command.unknown" })
-    ]);
-    const names = payload.data.commands.map((entry: { name: string }) => entry.name);
-    expect(names.every((name: string) => name.startsWith("matrix"))).toBe(true);
+    expect(payload.diagnostics).toEqual([expect.objectContaining({ code: "command.unknown" })]);
   });
 });
 

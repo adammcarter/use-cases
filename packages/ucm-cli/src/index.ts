@@ -113,7 +113,8 @@ export function isMissingCoreModule(error: unknown): boolean {
 
 export function runCli(argv: string[]): number {
   const normalizedArgv = argv[0] === "--" ? argv.slice(1) : argv;
-  const wantsVersion = normalizedArgv.includes("--version") || normalizedArgv.includes("-v");
+  const wantsVersion =
+    normalizedArgv.includes("--version") || normalizedArgv.includes("-v") || normalizedArgv[0] === "version";
   const wantsJson = normalizedArgv.includes("--json");
 
   if (wantsVersion) {
@@ -130,7 +131,7 @@ export function runCli(argv: string[]): number {
   // bare or help-flagged invocation must answer with the command/flag catalog
   // rather than the cryptic command.unknown response.
   if (normalizedArgv.length === 0 || normalizedArgv.includes("--help") || normalizedArgv.includes("-h")) {
-    return runHelp(normalizedArgv);
+    return runHelp(normalizedArgv, { json: wantsJson });
   }
 
   if (normalizedArgv[0] === "schema" && normalizedArgv[1] === "list" && wantsJson) {
@@ -276,7 +277,7 @@ export function runCli(argv: string[]): number {
   // No recognized command: instead of a cryptic one-line hint, print the usage
   // envelope scoped to whatever group the caller named (e.g. `matrix`) so they
   // can immediately see the valid subcommands and flags.
-  return runHelp(normalizedArgv, { unknown: true });
+  return runHelp(normalizedArgv, { unknown: true, json: wantsJson });
 }
 
 type UsageFlag = { flag: string; summary: string };
@@ -417,6 +418,15 @@ const USAGE: UsageEntry[] = [
     ]
   },
   { name: "showcase status", summary: "Replay a showcase run.", flags: [...COMMON_FLAGS, { flag: "--run <id>", summary: "Run id." }] },
+  { name: "showcase record-observation", summary: "Record an observation for a run item.", flags: [...COMMON_FLAGS, { flag: "--run <id>", summary: "Run id." }, { flag: "--item <plan_item_id>", summary: "Plan item id (from showcase status — NOT the use-case id)." }, { flag: "--text <text>", summary: "What was observed." }] },
+  { name: "showcase record-verdict", summary: "Record a verdict for a run item (observation first).", flags: [...COMMON_FLAGS, { flag: "--run <id>", summary: "Run id." }, { flag: "--item <plan_item_id>", summary: "Plan item id." }, { flag: "--verdict <v>", summary: "pass | fail | blocked." }, { flag: "--actor <type>", summary: "agent | user (default agent)." }] },
+  { name: "showcase decide", summary: "Record a failure decision before finishing.", flags: [...COMMON_FLAGS, { flag: "--run <id>", summary: "Run id." }, { flag: "--verdict-event <id>", summary: "Failing verdict event id." }, { flag: "--decision <d>", summary: "The decision." }, { flag: "--reason <text>", summary: "Why." }] },
+  { name: "showcase pause", summary: "Pause a showcase run.", flags: [...COMMON_FLAGS, { flag: "--run <id>", summary: "Run id." }] },
+  { name: "showcase resume", summary: "Resume a paused run.", flags: [...COMMON_FLAGS, { flag: "--run <id>", summary: "Run id." }] },
+  { name: "showcase finish", summary: "Finish a run; status is derived from events.", flags: [...COMMON_FLAGS, { flag: "--run <id>", summary: "Run id." }] },
+  { name: "showcase approve", summary: "Record an approval (user approval requires a trusted confirmation path).", flags: [...COMMON_FLAGS, { flag: "--run <id>", summary: "Run id." }, { flag: "--statement <text>", summary: "Approval statement." }, { flag: "--actor <type>", summary: "agent | user." }] },
+  { name: "showcase reject", summary: "Record a rejection.", flags: [...COMMON_FLAGS, { flag: "--run <id>", summary: "Run id." }, { flag: "--statement <text>", summary: "Reason." }] },
+  { name: "showcase correct", summary: "Append a correction for a mistaken entry (no history edits).", flags: [...COMMON_FLAGS, { flag: "--run <id>", summary: "Run id." }] },
   { name: "host doctor", summary: "Diagnose a host profile.", flags: [...COMMON_FLAGS, { flag: "--host <name>", summary: "claude | codex | copilot | opencode." }] },
   {
     name: "host project",
@@ -434,11 +444,57 @@ const USAGE: UsageEntry[] = [
   { name: "workflow mode", summary: "Print the effective advisory workflow mode.", flags: COMMON_FLAGS },
   { name: "workflow set-mode", summary: "Persist the advisory workflow mode.", flags: [...COMMON_FLAGS, { flag: "--mode <mode>", summary: "Advisory workflow mode." }] },
   { name: "migrate test-matrix", summary: "Migrate a legacy TEST-MATRIX.md.", flags: [...COMMON_FLAGS, { flag: "--source <path>", summary: "Source file." }, { flag: "--dry-run | --write", summary: "Migration mode." }, { flag: "--out <dir>", summary: "Output directory." }] },
-  { name: "bind", summary: "Bind a use-case row to a code marker.", flags: [...COMMON_FLAGS, { flag: "--row <id>", summary: "Row id." }, { flag: "--file <path>", summary: "Source file." }, { flag: "--mode <mode>", summary: "explicit | swift-func." }] },
-  { name: "scan", summary: "Scan markers against the bindings ledger.", flags: [...COMMON_FLAGS, { flag: "--policy-mode <mode>", summary: "feature | release | custom." }] },
-  { name: "prove", summary: "Produce signed proofs from verification results.", flags: [...COMMON_FLAGS, { flag: "--row <id> | --all", summary: "Target row(s)." }] },
-  { name: "verify", summary: "Run verifiers and emit verification results.", flags: [...COMMON_FLAGS, { flag: "--row <id> | --all", summary: "Target row(s)." }, { flag: "--out <path>", summary: "Write the unsigned results ledger." }] },
-  { name: "validate-ledger", summary: "Validate the marker evidence ledger.", flags: COMMON_FLAGS }
+  {
+    name: "bind",
+    summary: "Bind a use-case row to a code marker (inserts the marker into the source).",
+    flags: [
+      ...COMMON_FLAGS,
+      { flag: "--row <id>", summary: "Row id to bind." },
+      { flag: "--file <path>", summary: "Source file to place the marker in." },
+      { flag: "--mode <mode>", summary: "explicit | swift-func." },
+      { flag: "--start-line <n>", summary: "Span start line (REQUIRED for --mode explicit)." },
+      { flag: "--end-line <n>", summary: "Span end line (REQUIRED for --mode explicit)." },
+      { flag: "--line <n>", summary: "Function line (REQUIRED for --mode swift-func)." },
+      { flag: "--register-existing", summary: "Register a marker already present in the source." },
+      { flag: "--comment-prefix <s>", summary: "Override the line-comment prefix (else inferred from extension/shebang)." }
+    ]
+  },
+  {
+    name: "scan",
+    summary: "Scan code markers against the bindings ledger and report freshness.",
+    flags: [
+      ...COMMON_FLAGS,
+      { flag: "--product-root <path>", summary: "Root to scan for markers (default --repo)." },
+      { flag: "--policy-mode <mode>", summary: "feature | release." },
+      { flag: "--public-key <path>", summary: "Trusted public key to verify proof signatures (else proofs read UNPROVEN)." },
+      { flag: "--ci", summary: "CI mode (print inferred spans)." }
+    ]
+  },
+  {
+    name: "verify",
+    summary: "Run each bound row's verifier and write an UNSIGNED results ledger.",
+    flags: [
+      ...COMMON_FLAGS,
+      { flag: "--product-root <path>", summary: "Root for verifier execution (default --repo)." },
+      { flag: "--row <id> | --all", summary: "Target row(s)." },
+      { flag: "--out <path>", summary: "Write the unsigned results ledger (feed this to `prove --verification-results`). Keep it OUTSIDE the evidence dir." },
+      { flag: "--public-key <path>", summary: "Trusted public key." }
+    ]
+  },
+  {
+    name: "prove",
+    summary: "Mint SIGNED proofs from verification results (CI-only signing key).",
+    flags: [
+      ...COMMON_FLAGS,
+      { flag: "--row <id> | --all", summary: "Target row(s)." },
+      { flag: "--verification-results <path>", summary: "The results file written by `verify --out` (REQUIRED)." },
+      { flag: "--trusted-ci", summary: "Mint as the trusted CI prover." },
+      { flag: "--signing-key-env <name>", summary: "Env var holding the signing key (CI secret)." },
+      { flag: "--append", summary: "Append minted proofs to the evidence ledger." },
+      { flag: "--public-key <path>", summary: "Trusted public key." }
+    ]
+  },
+  { name: "validate-ledger", summary: "Validate the marker evidence ledger (append-only, signatures, schema).", flags: [...COMMON_FLAGS, { flag: "--public-key <path>", summary: "Trusted public key." }, { flag: "--base-ref <ref>", summary: "Diff base for the append-only check." }] }
 ];
 
 function selectUsageEntries(tokens: string[]): UsageEntry[] {
@@ -455,13 +511,23 @@ function selectUsageEntries(tokens: string[]): UsageEntry[] {
 }
 
 //: @use-case: diagnostics.contracts.cli_self_documents
-function runHelp(argv: string[], options: { unknown?: boolean } = {}): number {
+function runHelp(argv: string[], options: { unknown?: boolean; json?: boolean } = {}): number {
   const tokens = argv.filter((arg) => !arg.startsWith("-"));
   const commands = selectUsageEntries(tokens);
+  const requested = tokens.length > 0 ? tokens.join(" ") : null;
+  const unknownMessage = `No recognized command for '${requested ?? "(none)"}'. See the commands listed below or run \`ucp --help\`.`;
+
+  // Default to human-readable text; emit the JSON envelope only on --json. Agents
+  // (and people) reach for `--help` first and expect prose, not a minified blob.
+  if (!options.json) {
+    process.stdout.write(renderHelpText(commands, { unknown: options.unknown, requested, unknownMessage }));
+    return options.unknown ? 2 : 0;
+  }
+
   const data = {
     schema_version: 1,
     usage: "ucp <command> [subcommand] [flags] --json",
-    requested: tokens.length > 0 ? tokens.join(" ") : null,
+    requested,
     commands
   };
   const diagnostics = options.unknown
@@ -469,7 +535,7 @@ function runHelp(argv: string[], options: { unknown?: boolean } = {}): number {
         {
           code: "command.unknown",
           severity: "error" as const,
-          message: `No recognized command for '${tokens.join(" ") || "(none)"}'. See the commands listed below or run \`ucp --help\`.`,
+          message: unknownMessage,
           source_path: null,
           json_pointer: null,
           entity_id: null,
@@ -487,6 +553,38 @@ function runHelp(argv: string[], options: { unknown?: boolean } = {}): number {
     )}\n`
   );
   return options.unknown ? 2 : 0;
+}
+
+// Render the usage catalog as readable text. A single matched command shows its
+// full flag list; the broad list stays compact with a pointer to per-command help.
+function renderHelpText(
+  commands: UsageEntry[],
+  options: { unknown?: boolean; requested: string | null; unknownMessage: string }
+): string {
+  const lines: string[] = [];
+  if (options.unknown) {
+    lines.push(`error: ${options.unknownMessage}`, "");
+  }
+  lines.push("ucp — use-cases-plugin CLI", "");
+  lines.push("Usage: ucp <command> [subcommand] [flags] [--json]", "");
+  const detailed = commands.length <= 3;
+  const heading = options.requested ? `Commands matching '${options.requested}':` : "Commands:";
+  lines.push(heading);
+  const width = Math.min(28, commands.reduce((max, c) => Math.max(max, c.name.length), 0));
+  for (const command of commands) {
+    lines.push(`  ${command.name.padEnd(width)}  ${command.summary}`);
+    if (detailed) {
+      for (const f of command.flags) {
+        lines.push(`      ${f.flag.padEnd(34)} ${f.summary}`);
+      }
+    }
+  }
+  lines.push("");
+  if (!detailed) {
+    lines.push("Run `ucp <command> --help` for that command's flags.");
+  }
+  lines.push("Add --json to any command for the machine-readable result envelope.");
+  return `${lines.join("\n")}\n`;
 }
 //: @use-case: end diagnostics.contracts.cli_self_documents
 
