@@ -87,9 +87,13 @@ cannot expose (e.g. `protected_ref` on GitHub), pass a JSON authority record:
 
 ```sh
 ucp prove --all --trusted-ci \
+  --verification-results "$UCM_VERIFICATION_RESULTS" \
   --signing-key-env UCP_CI_SIGNING_KEY --key-id ci-key-1 \
   --authority-file authority.json
 ```
+
+`--verification-results` is required — it is the unsigned results ledger written
+earlier by `ucp verify --out "$UCM_VERIFICATION_RESULTS"`.
 
 ```json
 {

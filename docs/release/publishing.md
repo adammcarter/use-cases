@@ -79,7 +79,7 @@ Everything below is normal repo work an agent or maintainer can do.
    npm version 1.0.0 --no-git-tag-version --workspaces --include-workspace-root
    ```
 
-   (Or edit each `packages/ucp-*/package.json` + root `package.json` by hand.)
+   (Or edit each `packages/ucm-*/package.json` + root `package.json` by hand.)
    Do **not** change package names.
 
 3. **Update the changelog.** Add the release section to `CHANGELOG.md`.

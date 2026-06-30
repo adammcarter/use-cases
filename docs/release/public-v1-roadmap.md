@@ -1,5 +1,11 @@
 # Public v1 Roadmap — Use Cases Plugin (UCM)
 
+> **Historical planning document.** This roadmap captures the *proposed* design as
+> it was being built. Some command names and flags here are illustrative
+> proposals and do **not** all match the shipped CLI — run `ucp --help` for the
+> authoritative command surface, and see [docs/cli.md](../cli.md). Kept for
+> provenance, not as a current reference.
+
 > Canonical program of work to take this project from a working internal trust
 > engine to a **public v1 anyone can adopt**. Owner directive: full surface, no
 > corners cut. Designed with deep-reasoning review (Albus/ChatGPT Pro). This file

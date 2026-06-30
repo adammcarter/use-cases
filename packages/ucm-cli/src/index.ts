@@ -293,6 +293,7 @@ const COMMON_FLAGS: UsageFlag[] = [
 const USAGE: UsageEntry[] = [
   { name: "version", summary: "Print the CLI version.", flags: [{ flag: "--json", summary: "Emit the version envelope." }] },
   { name: "schema list", summary: "List the public schema ids.", flags: [{ flag: "--json", summary: "Required." }] },
+  { name: "schema validate-fixtures", summary: "Validate the bundled fixtures against the published schemas.", flags: [{ flag: "--json", summary: "Required." }] },
   {
     name: "init",
     summary: "Scaffold a Use Cases Plugin workspace.",
@@ -455,8 +456,10 @@ const USAGE: UsageEntry[] = [
       { flag: "--start-line <n>", summary: "Span start line (REQUIRED for --mode explicit)." },
       { flag: "--end-line <n>", summary: "Span end line (REQUIRED for --mode explicit)." },
       { flag: "--line <n>", summary: "Function line (REQUIRED for --mode swift-func)." },
+      { flag: "--suffix <s>", summary: "Disambiguating suffix when a file binds more than one row." },
       { flag: "--register-existing", summary: "Register a marker already present in the source." },
-      { flag: "--comment-prefix <s>", summary: "Override the line-comment prefix (else inferred from extension/shebang)." }
+      { flag: "--comment-prefix <s>", summary: "Override the line-comment prefix (else inferred from extension/shebang)." },
+      { flag: "--dry-run", summary: "Preview the marker placement without writing the source or registry." }
     ]
   },
   {
@@ -465,8 +468,9 @@ const USAGE: UsageEntry[] = [
     flags: [
       ...COMMON_FLAGS,
       { flag: "--product-root <path>", summary: "Root to scan for markers (default --repo)." },
-      { flag: "--policy-mode <mode>", summary: "feature | release." },
+      { flag: "--policy-mode <mode>", summary: "feature | release | custom." },
       { flag: "--public-key <path>", summary: "Trusted public key to verify proof signatures (else proofs read UNPROVEN)." },
+      { flag: "--keyring <path>", summary: "Multi-key public-key registry (alternative to --public-key)." },
       { flag: "--ci", summary: "CI mode (print inferred spans)." }
     ]
   },
@@ -478,7 +482,8 @@ const USAGE: UsageEntry[] = [
       { flag: "--product-root <path>", summary: "Root for verifier execution (default --repo)." },
       { flag: "--row <id> | --all", summary: "Target row(s)." },
       { flag: "--out <path>", summary: "Write the unsigned results ledger (feed this to `prove --verification-results`). Keep it OUTSIDE the evidence dir." },
-      { flag: "--public-key <path>", summary: "Trusted public key." }
+      { flag: "--public-key <path>", summary: "Trusted public key." },
+      { flag: "--keyring <path>", summary: "Multi-key public-key registry (alternative to --public-key)." }
     ]
   },
   {
@@ -486,15 +491,19 @@ const USAGE: UsageEntry[] = [
     summary: "Mint SIGNED proofs from verification results (CI-only signing key).",
     flags: [
       ...COMMON_FLAGS,
+      { flag: "--product-root <path>", summary: "Root the proofs are scoped to (default --repo)." },
       { flag: "--row <id> | --all", summary: "Target row(s)." },
       { flag: "--verification-results <path>", summary: "The results file written by `verify --out` (REQUIRED)." },
       { flag: "--trusted-ci", summary: "Mint as the trusted CI prover." },
       { flag: "--signing-key-env <name>", summary: "Env var holding the signing key (CI secret)." },
+      { flag: "--key-id <id>", summary: "Signing key id (default trusted-ci)." },
+      { flag: "--authority-file <path>", summary: "Explicit CI authority record (JSON)." },
       { flag: "--append", summary: "Append minted proofs to the evidence ledger." },
-      { flag: "--public-key <path>", summary: "Trusted public key." }
+      { flag: "--refresh", summary: "Re-mint proofs for rows whose context changed." },
+      { flag: "--public-key <path> | --keyring <path>", summary: "Trusted key(s) for verification." }
     ]
   },
-  { name: "validate-ledger", summary: "Validate the marker evidence ledger (append-only, signatures, schema).", flags: [...COMMON_FLAGS, { flag: "--public-key <path>", summary: "Trusted public key." }, { flag: "--base-ref <ref>", summary: "Diff base for the append-only check." }] }
+  { name: "validate-ledger", summary: "Validate the marker evidence ledger (append-only, signatures, schema).", flags: [...COMMON_FLAGS, { flag: "--public-key <path> | --keyring <path>", summary: "Trusted key(s)." }, { flag: "--base-ref <ref>", summary: "Diff base for the append-only check." }] }
 ];
 
 function selectUsageEntries(tokens: string[]): UsageEntry[] {

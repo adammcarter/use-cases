@@ -26,7 +26,7 @@ observe different behaviour. When in doubt, treat it as major.
 
 These are versioned contracts:
 
-- **CLI command + subcommand names and their flags** — e.g. `ucp matrix validate`, `ucp verify`, `ucp prove`, `ucp bind scan`. Renames/removals are breaking.
+- **CLI command + subcommand names and their flags** — e.g. `ucp matrix validate`, `ucp verify`, `ucp prove`, `ucp bind`, `ucp scan`. Renames/removals are breaking.
 - **CLI `--json` output** — the envelope and every command's `data` shape (see below). Human/text output is **not** part of the contract.
 - **CLI exit codes** and their meanings (see below).
 - **The result envelope** shared by CLI `--json` and MCP structured results.

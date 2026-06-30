@@ -40,13 +40,15 @@ All commands use JSON envelopes with `schema_version`, `protocol_version`,
 - `evidence record --repo <path> --use-case <id> --kind <kind> --result <result> --json`
   appends one evidence event.
 - `evidence status --repo <path> --json` replays append-only JSONL history.
-- `evidence void --repo <path> --evidence <id> --expected-head <event> --reason <text> --json`
+- `evidence void --repo <path> --evidence <id> --expected-head <event-id> --reason <text> --json`
   records a correction event without deleting history.
 
 ## Planning And Showcases
 
 - `plan showcase --repo <path> --json` selects high-value live-demo items.
 - `plan walkthrough --repo <path> --json` selects broader review coverage.
+- `plan cards --repo <path> --plan-file <path> --json` renders presentation cards
+  from a saved plan file.
 - `capsule validate|list|plan --repo <path> --json` works with persisted demo
   capsules.
 - `capsule run --repo <path> --capsule <id> --json` performs a persisted demo
