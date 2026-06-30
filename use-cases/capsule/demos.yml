@@ -18,7 +18,7 @@ use_cases:
       - kind: file
         path: docs/showcase.md
       - kind: file
-        path: packages/ucm-core/src/capsules/loadCapsule.ts
+        path: packages/core/src/capsules/loadCapsule.ts
     actor: agent
     intent: Provide a reusable capsule that references use-case IDs and supports repeatable demos.
     preconditions:
@@ -60,7 +60,7 @@ use_cases:
       - kind: file
         path: docs/showcase.md
       - kind: file
-        path: packages/ucm-core/src/showcase/startRun.ts
+        path: packages/core/src/showcase/startRun.ts
     actor: agent
     intent: Generate a one-run plan for release proof without saving it as a reusable recipe.
     preconditions:
@@ -99,7 +99,7 @@ use_cases:
       - security
     source_refs:
       - kind: file
-        path: packages/ucm-core/src/capsules/runCapsule.ts
+        path: packages/core/src/capsules/runCapsule.ts
       - kind: file
         path: docs/security.md
     actor: script
@@ -141,9 +141,9 @@ use_cases:
       - diagnostics
     source_refs:
       - kind: file
-        path: packages/ucm-core/src/capsules/loadCapsule.ts
+        path: packages/core/src/capsules/loadCapsule.ts
       - kind: file
-        path: packages/ucm-core/src/capsules/index.ts
+        path: packages/core/src/capsules/index.ts
     actor: agent
     intent: Warn when a persisted capsule points at missing, removed, or semantically changed rows.
     preconditions:
@@ -183,7 +183,7 @@ use_cases:
       - kind: file
         path: docs/showcase.md
       - kind: file
-        path: packages/ucm-core/src/capsules/runCapsule.ts
+        path: packages/core/src/capsules/runCapsule.ts
     actor: agent
     intent: Never treat a persisted or generated capsule as evidence until a live run records events.
     preconditions:

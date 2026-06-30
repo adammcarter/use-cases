@@ -16,7 +16,7 @@ use_cases:
       - assets
     source_refs:
       - kind: file
-        path: packages/ucm-core/src/skills/validateSkillAssets.ts
+        path: packages/core/src/skills/validateSkillAssets.ts
       - kind: file
         path: .agents/skills/use-cases-plugin/SKILL.md
       - kind: file
@@ -60,7 +60,7 @@ use_cases:
       - diagnostics
     source_refs:
       - kind: file
-        path: packages/ucm-core/src/skills/validateSkillAssets.ts
+        path: packages/core/src/skills/validateSkillAssets.ts
       - kind: file
         path: tests/skills/p7-skills.test.ts
     actor: script

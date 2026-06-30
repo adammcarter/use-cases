@@ -18,7 +18,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
-import { parseYamlToJson, validateBySchemaId } from "../../../packages/ucm-core/src/schema/index.js";
+import { parseYamlToJson, validateBySchemaId } from "../../../packages/core/src/schema/index.js";
 
 const repoRoot = resolve(import.meta.dirname, "../../..");
 const ENVELOPE_SCHEMA_ID = "https://use-cases-plugin.dev/schemas/v1/cli-result.schema.json";
@@ -34,7 +34,7 @@ function freshRepo(label: string): string {
 }
 
 function runCli(args: string[]) {
-  return spawnSync("node", ["packages/ucm-cli/dist/index.js", ...args], {
+  return spawnSync("node", ["packages/cli/dist/index.js", ...args], {
     cwd: repoRoot,
     encoding: "utf8",
     env: { ...process.env, COREPACK_ENABLE_DOWNLOAD_PROMPT: "0" }

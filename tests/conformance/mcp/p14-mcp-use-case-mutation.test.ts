@@ -3,7 +3,7 @@ import { cpSync, mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { beforeAll, describe, expect, test } from "vitest";
-import { handleMcpMessage } from "../../../packages/ucm-mcp/src/index.js";
+import { handleMcpMessage } from "../../../packages/mcp/src/index.js";
 
 const repoRoot = resolve(import.meta.dirname, "../../..");
 

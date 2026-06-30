@@ -1,6 +1,6 @@
 <!-- GENERATED FILE — do not edit by hand.
-     Regenerate with `node packages/ucm-core/scripts/generate-error-codes.mjs`
-     (source of truth: packages/ucm-core/src/errors/registry.ts). -->
+     Regenerate with `node packages/core/scripts/generate-error-codes.mjs`
+     (source of truth: packages/core/src/errors/registry.ts). -->
 
 # Error Codes
 

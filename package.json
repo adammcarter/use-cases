@@ -13,10 +13,10 @@
     "node": ">=22"
   },
   "bin": {
-    "ucp": "./packages/ucm-cli/dist/index.js",
-    "use-cases-plugin": "./packages/ucm-cli/dist/index.js",
-    "ucp-mcp": "./packages/ucm-mcp/dist/index.js",
-    "use-cases-plugin-mcp": "./packages/ucm-mcp/dist/index.js"
+    "ucp": "./packages/cli/dist/index.js",
+    "use-cases-plugin": "./packages/cli/dist/index.js",
+    "ucp-mcp": "./packages/mcp/dist/index.js",
+    "use-cases-plugin-mcp": "./packages/mcp/dist/index.js"
   },
   "files": [
     ".agents/skills",
@@ -42,21 +42,21 @@
     "docs/showcase.md",
     "examples",
     "hosts",
-    "packages/ucm-cli/dist",
-    "packages/ucm-cli/package.json",
-    "packages/ucm-core/dist",
-    "packages/ucm-core/package.json",
-    "packages/ucm-mcp/dist",
-    "packages/ucm-mcp/package.json",
+    "packages/cli/dist",
+    "packages/cli/package.json",
+    "packages/core/dist",
+    "packages/core/package.json",
+    "packages/mcp/dist",
+    "packages/mcp/package.json",
     "plugin.json",
     "use-cases-plugin.yml",
     "schemas/v1",
     "use-cases"
   ],
   "scripts": {
-    "build": "tsc -b packages/ucm-core packages/ucm-cli packages/ucm-mcp && node packages/ucm-core/scripts/copy-schemas.mjs && chmod +x packages/ucm-cli/dist/index.js packages/ucm-mcp/dist/index.js",
+    "build": "tsc -b packages/core packages/cli packages/mcp && node packages/core/scripts/copy-schemas.mjs && chmod +x packages/cli/dist/index.js packages/mcp/dist/index.js",
     "clean": "rm -rf packages/*/dist coverage",
-    "cli": "node packages/ucm-cli/dist/index.js",
+    "cli": "node packages/cli/dist/index.js",
     "lint": "tsc -b --pretty false --dry",
     "test": "vitest run",
     "typecheck": "tsc -b --pretty false"

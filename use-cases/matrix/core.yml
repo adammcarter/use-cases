@@ -15,7 +15,7 @@ use_cases:
       - acceptance
     source_refs:
       - kind: file
-        path: packages/ucm-core/src/useCases/loadUseCaseMatrix.ts
+        path: packages/core/src/useCases/loadUseCaseMatrix.ts
     actor: agent
     intent: Confirm the matrix is current and structurally clean.
     preconditions:
@@ -48,9 +48,9 @@ use_cases:
       - lifecycle
     source_refs:
       - kind: file
-        path: packages/ucm-core/src/useCases/mutateUseCaseMatrix.ts
+        path: packages/core/src/useCases/mutateUseCaseMatrix.ts
       - kind: file
-        path: packages/ucm-cli/src/index.ts
+        path: packages/cli/src/index.ts
     actor: agent
     intent: Keep the living use-case matrix current during planning, implementation, and review without bypassing validation.
     preconditions:

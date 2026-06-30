@@ -34,7 +34,7 @@ use_cases:
       - kind: file
         path: docs/adr/0006-trusted-user-approval-path.md
       - kind: file
-        path: packages/ucm-core/src/showcase/approvalAuthority.ts
+        path: packages/core/src/showcase/approvalAuthority.ts
       - kind: file
         path: docs/security.md
     actor: user

@@ -77,7 +77,7 @@ use_cases:
       - kind: file
         path: docs/hosts.md
       - kind: file
-        path: packages/ucm-core/src/hosts/projectHostFiles.ts
+        path: packages/core/src/hosts/projectHostFiles.ts
     actor: script
     intent: Project host files from canonical skills and detect drift with source hashes.
     preconditions:
@@ -167,7 +167,7 @@ use_cases:
       - kind: file
         path: bootstrap/use-cases-plugin.md
       - kind: file
-        path: packages/ucm-core/src/skills/validateSkillAssets.ts
+        path: packages/core/src/skills/validateSkillAssets.ts
     actor: script
     intent: Check whether the trusted bootstrap is present or visible through each host projection path.
     preconditions:
@@ -261,7 +261,7 @@ use_cases:
       - resilience
     source_refs:
       - kind: file
-        path: packages/ucm-core/src/hosts/conformanceStatus.ts
+        path: packages/core/src/hosts/conformanceStatus.ts
       - kind: file
         path: tests/conformance/hosts/p13-host-conformance.test.ts
     actor: script

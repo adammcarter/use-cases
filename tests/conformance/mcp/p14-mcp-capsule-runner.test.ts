@@ -17,7 +17,7 @@ beforeAll(async () => {
   if (result.status !== 0) {
     throw new Error(result.stderr || result.stdout);
   }
-  const moduleUrl = `${pathToFileURL(join(repoRoot, "packages/ucm-mcp/dist/index.js")).href}?cache=${Date.now()}`;
+  const moduleUrl = `${pathToFileURL(join(repoRoot, "packages/mcp/dist/index.js")).href}?cache=${Date.now()}`;
   ({ handleMcpMessage } = await import(/* @vite-ignore */ moduleUrl));
 }, 30_000);
 

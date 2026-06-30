@@ -2,7 +2,7 @@
   "mcpServers": {
     "use-cases-plugin": {
       "command": "node",
-      "args": ["./packages/ucm-mcp/dist/index.js"]
+      "args": ["./packages/mcp/dist/index.js"]
     }
   }
 }

@@ -104,7 +104,7 @@ function fixtureWorkspace(): string {
 }
 
 function runCliJson(args: string[]) {
-  const result = spawnSync("node", ["packages/ucm-cli/dist/index.js", ...args], {
+  const result = spawnSync("node", ["packages/cli/dist/index.js", ...args], {
     cwd: repoRoot,
     encoding: "utf8",
     env: { ...process.env, COREPACK_ENABLE_DOWNLOAD_PROMPT: "0" }

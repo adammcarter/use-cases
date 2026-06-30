@@ -6,7 +6,7 @@
 // proof is distinguishable from a current match.
 //
 // It drives the REAL linkage primitive the bound code implements
-// (packages/ucm-core/src/evidence/linkEvidence.ts: linkEvidenceToMatrix) over a
+// (packages/core/src/evidence/linkEvidence.ts: linkEvidenceToMatrix) over a
 // temp copy of the `evidence-basic` fixture: evidence is recorded through the real
 // append+replay path, then linked against the live matrix. It asserts the three
 // resolutions that make the proof map trustworthy — a current "match", a
@@ -16,13 +16,13 @@ import { cpSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
-import { resolveWorkspaceContext } from "../../packages/ucm-core/src/roots.js";
-import { loadUseCaseMatrix } from "../../packages/ucm-core/src/useCases/loadUseCaseMatrix.js";
+import { resolveWorkspaceContext } from "../../packages/core/src/roots.js";
+import { loadUseCaseMatrix } from "../../packages/core/src/useCases/loadUseCaseMatrix.js";
 import {
   appendEvidenceEvent,
   linkEvidenceToMatrix,
   replayEvidence
-} from "../../packages/ucm-core/src/evidence/index.js";
+} from "../../packages/core/src/evidence/index.js";
 
 const repoRoot = resolve(import.meta.dirname, "../..");
 const fixturesRoot = join(repoRoot, "tests/fixtures/workspaces");

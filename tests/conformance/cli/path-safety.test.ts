@@ -21,7 +21,7 @@ function run(command: string, args: string[]) {
 }
 
 function runCli(args: string[]) {
-  return run("node", ["packages/ucm-cli/dist/index.js", ...args]);
+  return run("node", ["packages/cli/dist/index.js", ...args]);
 }
 
 function fixtureWorkspace(name: string): string {

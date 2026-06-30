@@ -107,7 +107,7 @@ type McpEnvelope = {
 };
 
 async function startMcpServer() {
-  const child = spawn(process.execPath, ["packages/ucm-mcp/dist/index.js", "--stdio"], {
+  const child = spawn(process.execPath, ["packages/mcp/dist/index.js", "--stdio"], {
     cwd: repoRoot,
     stdio: ["pipe", "pipe", "pipe"],
     env: {

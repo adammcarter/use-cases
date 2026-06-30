@@ -1,0 +1,42 @@
+{
+  "name": "@use-cases-plugin/core",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Core domain library for use-cases-plugin.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adammcarter/use-cases-plugin.git",
+    "directory": "packages/core"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "package.json"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b --pretty false",
+    "prepublishOnly": "tsc -b && node scripts/copy-schemas.mjs"
+  },
+  "dependencies": {
+    "ajv": "^8.20.0",
+    "remark-gfm": "^4.0.1",
+    "remark-parse": "^11.0.0",
+    "unified": "^11.0.5",
+    "yaml": "^2.9.0"
+  }
+}

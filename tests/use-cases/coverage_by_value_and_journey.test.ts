@@ -7,15 +7,15 @@
 // set.
 //
 // It drives the REAL query engine the bound code implements
-// (packages/ucm-core/src/useCases/query.ts: queryUseCases) over THIS repository's
+// (packages/core/src/useCases/query.ts: queryUseCases) over THIS repository's
 // own living use-case matrix, asserting the filters are sound (every returned row
 // matches, the slice is a proper non-empty subset) without hard-coding volatile
 // row counts.
 import { resolve } from "node:path";
 import { describe, expect, test } from "vitest";
-import { resolveWorkspaceContext } from "../../packages/ucm-core/src/roots.js";
-import { loadUseCaseMatrix } from "../../packages/ucm-core/src/useCases/loadUseCaseMatrix.js";
-import { queryUseCases } from "../../packages/ucm-core/src/useCases/query.js";
+import { resolveWorkspaceContext } from "../../packages/core/src/roots.js";
+import { loadUseCaseMatrix } from "../../packages/core/src/useCases/loadUseCaseMatrix.js";
+import { queryUseCases } from "../../packages/core/src/useCases/query.js";
 
 const repoRoot = resolve(import.meta.dirname, "../..");
 

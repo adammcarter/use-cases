@@ -55,7 +55,7 @@ describe("P0 package entrypoints", () => {
     requireSuccess(run("corepack", ["pnpm", "build"]));
 
     const core = await import(
-      resolve(repoRoot, "packages/ucm-core/dist/index.js")
+      resolve(repoRoot, "packages/core/dist/index.js")
     );
 
     expect(core.getVersionInfo()).toEqual({
@@ -68,7 +68,7 @@ describe("P0 package entrypoints", () => {
     requireSuccess(run("corepack", ["pnpm", "build"]));
 
     const result = run("node", [
-      "packages/ucm-cli/dist/index.js",
+      "packages/cli/dist/index.js",
       "--version",
       "--json"
     ]);
@@ -209,14 +209,14 @@ describe("P0 staged plugin", () => {
     const staged = mkdtempSync(join(tmpdir(), "use-cases-plugin-plugin-"));
     mkdirSync(join(staged, ".codex-plugin"), { recursive: true });
     mkdirSync(join(staged, ".claude-plugin"), { recursive: true });
-    mkdirSync(join(staged, "packages/ucm-mcp/dist"), { recursive: true });
+    mkdirSync(join(staged, "packages/mcp/dist"), { recursive: true });
 
     for (const [from, to] of [
       [".codex-plugin/plugin.json", ".codex-plugin/plugin.json"],
       [".claude-plugin/plugin.json", ".claude-plugin/plugin.json"],
       ["plugin.json", "plugin.json"],
       [".mcp.json", ".mcp.json"],
-      ["packages/ucm-mcp/dist/index.js", "packages/ucm-mcp/dist/index.js"]
+      ["packages/mcp/dist/index.js", "packages/mcp/dist/index.js"]
     ] as const) {
       writeFileSync(join(staged, to), readFileSync(join(repoRoot, from)));
     }
@@ -235,7 +235,7 @@ describe("P0 staged plugin", () => {
     const server = mcpConfig.mcpServers["use-cases-plugin"];
     expect(server.command).toBe("node");
     expect(resolve(staged, server.args[0])).toBe(
-      join(staged, "packages/ucm-mcp/dist/index.js")
+      join(staged, "packages/mcp/dist/index.js")
     );
   });
 });

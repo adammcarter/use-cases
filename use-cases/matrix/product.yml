@@ -18,7 +18,7 @@ use_cases:
       - kind: file
         path: docs/data-model.md
       - kind: file
-        path: packages/ucm-core/src/useCases/loadUseCaseMatrix.ts
+        path: packages/core/src/useCases/loadUseCaseMatrix.ts
     actor: agent
     intent: Represent Use Cases Plugin product behavior as stable, addressable use-case rows.
     preconditions:
@@ -100,9 +100,9 @@ use_cases:
       - partial
     source_refs:
       - kind: file
-        path: packages/ucm-core/src/useCases/loadUseCaseMatrix.ts
+        path: packages/core/src/useCases/loadUseCaseMatrix.ts
       - kind: file
-        path: packages/ucm-core/src/useCases/integrity.ts
+        path: packages/core/src/useCases/integrity.ts
     actor: agent
     intent: Load valid rows despite damaged files while clearly blocking full coverage or sign-off when relevant.
     preconditions:
@@ -155,9 +155,9 @@ use_cases:
       - prioritization
     source_refs:
       - kind: file
-        path: packages/ucm-core/src/useCases/query.ts
+        path: packages/core/src/useCases/query.ts
       - kind: file
-        path: packages/ucm-core/src/presentation/scoring.ts
+        path: packages/core/src/presentation/scoring.ts
     actor: agent
     intent: Let agents select and report rows by value tier, journey role, lifecycle, tags, and host relevance.
     preconditions:
@@ -257,7 +257,7 @@ use_cases:
       - summary
     source_refs:
       - kind: file
-        path: packages/ucm-core/src/useCases/query.ts
+        path: packages/core/src/useCases/query.ts
       - kind: file
         path: docs/cli.md
     actor: agent

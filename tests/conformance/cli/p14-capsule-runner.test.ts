@@ -324,7 +324,7 @@ describe("P14 demo capsule live runner", () => {
 });
 
 function runCli(args: string[]) {
-  return spawnSync("node", ["packages/ucm-cli/dist/index.js", ...args], {
+  return spawnSync("node", ["packages/cli/dist/index.js", ...args], {
     cwd: repoRoot,
     encoding: "utf8"
   });

@@ -17,13 +17,13 @@ const requiredRootArtifactPaths = [
   "docs/release.md",
   "docs/security.md",
   "hosts/codex.yml",
-  "packages/ucm-cli/dist/index.js",
-  "packages/ucm-cli/package.json",
-  "packages/ucm-core/dist/index.js",
-  "packages/ucm-core/dist/schemas/v1/use-case-file.schema.json",
-  "packages/ucm-core/package.json",
-  "packages/ucm-mcp/dist/index.js",
-  "packages/ucm-mcp/package.json",
+  "packages/cli/dist/index.js",
+  "packages/cli/package.json",
+  "packages/core/dist/index.js",
+  "packages/core/dist/schemas/v1/use-case-file.schema.json",
+  "packages/core/package.json",
+  "packages/mcp/dist/index.js",
+  "packages/mcp/package.json",
   "plugin.json",
   "README.md",
   "CHANGELOG.md",
@@ -89,7 +89,7 @@ describe("P13 installable root package artifact", () => {
     expect(installedRoot.startsWith(repoRoot)).toBe(false);
 
     const cli = run(process.execPath, [
-      join(installedRoot, "packages/ucm-cli/dist/index.js"),
+      join(installedRoot, "packages/cli/dist/index.js"),
       "schema",
       "list",
       "--json"
@@ -124,7 +124,7 @@ describe("P13 installable root package artifact", () => {
 
     const mcp = runWithInput(
       process.execPath,
-      [join(installedRoot, "packages/ucm-mcp/dist/index.js")],
+      [join(installedRoot, "packages/mcp/dist/index.js")],
       [
         JSON.stringify({
           jsonrpc: "2.0",
@@ -178,8 +178,8 @@ describe("P13 installable root package artifact", () => {
           path: tarball
         },
         required_paths: expect.arrayContaining([
-          expect.objectContaining({ path: "packages/ucm-cli/dist/index.js", status: "present" }),
-          expect.objectContaining({ path: "packages/ucm-mcp/dist/index.js", status: "present" })
+          expect.objectContaining({ path: "packages/cli/dist/index.js", status: "present" }),
+          expect.objectContaining({ path: "packages/mcp/dist/index.js", status: "present" })
         ]),
         forbidden_paths: [],
         forbidden_text: []
@@ -287,7 +287,7 @@ function isTextFile(path: string): boolean {
 }
 
 function runCli(args: string[]): SpawnSyncReturns<string> {
-  return run(process.execPath, ["packages/ucm-cli/dist/index.js", ...args]);
+  return run(process.execPath, ["packages/cli/dist/index.js", ...args]);
 }
 
 function run(command: string, args: string[], cwd = repoRoot): SpawnSyncReturns<string> {

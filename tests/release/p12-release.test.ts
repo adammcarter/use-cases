@@ -24,14 +24,14 @@ describe("P12 release hardening", () => {
           expect.objectContaining({ path: ".codex-plugin/plugin.json", status: "present" }),
           expect.objectContaining({ path: ".mcp.json", status: "present" }),
           expect.objectContaining({ path: ".agents/skills/use-cases-plugin/SKILL.md", status: "present" }),
-          expect.objectContaining({ path: "packages/ucm-cli/dist/index.js", status: "present" }),
-          expect.objectContaining({ path: "packages/ucm-mcp/dist/index.js", status: "present" }),
-          expect.objectContaining({ path: "packages/ucm-core/dist/schemas/v1/use-case-file.schema.json", status: "present" })
+          expect.objectContaining({ path: "packages/cli/dist/index.js", status: "present" }),
+          expect.objectContaining({ path: "packages/mcp/dist/index.js", status: "present" }),
+          expect.objectContaining({ path: "packages/core/dist/schemas/v1/use-case-file.schema.json", status: "present" })
         ]),
         forbidden_paths: [],
         manifest_references: expect.arrayContaining([
           expect.objectContaining({ from: ".codex-plugin/plugin.json", target: ".mcp.json", status: "resolved" }),
-          expect.objectContaining({ from: ".mcp.json", target: "packages/ucm-mcp/dist/index.js", status: "resolved" })
+          expect.objectContaining({ from: ".mcp.json", target: "packages/mcp/dist/index.js", status: "resolved" })
         ])
       }
     });
@@ -47,9 +47,9 @@ describe("P12 release hardening", () => {
       ".agents/skills/use-cases-plugin/SKILL.md",
       ".codex-plugin/plugin.json",
       ".mcp.json",
-      "packages/ucm-cli/dist/index.js",
-      "packages/ucm-core/dist/schemas/v1/use-case-file.schema.json",
-      "packages/ucm-mcp/dist/index.js",
+      "packages/cli/dist/index.js",
+      "packages/core/dist/schemas/v1/use-case-file.schema.json",
+      "packages/mcp/dist/index.js",
       "README.md",
       "docs/release.md",
       "CHANGELOG.md"
@@ -66,9 +66,9 @@ describe("P12 release hardening", () => {
       .join("\n");
     for (const forbidden of [
       "tests/",
-      "packages/ucm-cli/src/",
-      "packages/ucm-core/src/",
-      "packages/ucm-mcp/src/",
+      "packages/cli/src/",
+      "packages/core/src/",
+      "packages/mcp/src/",
       ".agent-cache/",
       ".agent-receipts/",
       ".copy-schemas.lock"
@@ -103,7 +103,7 @@ describe("P12 release hardening", () => {
 });
 
 function runCli(args: string[]): SpawnSyncReturns<string> {
-  return run("node", ["packages/ucm-cli/dist/index.js", ...args]);
+  return run("node", ["packages/cli/dist/index.js", ...args]);
 }
 
 function run(command: string, args: string[], cwd = repoRoot): SpawnSyncReturns<string> {

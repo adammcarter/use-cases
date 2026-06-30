@@ -77,7 +77,7 @@ only distributable files.
 
 - JSON Schemas under `schemas/v1/` are canonical persisted contracts.
 - TypeScript types are derived from or checked against schemas.
-- `ucm-core` owns schema loading and exports schema metadata through public
+- `core` owns schema loading and exports schema metadata through public
   package exports.
 - Hand-maintaining unrelated TypeScript interfaces and JSON Schemas for the
   same persisted object is not allowed.

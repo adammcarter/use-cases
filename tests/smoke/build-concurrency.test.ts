@@ -19,7 +19,7 @@ describe("build artifact generation", () => {
 async function runCopySchemas(index: number) {
   const child = spawn(
     process.execPath,
-    ["packages/ucm-core/scripts/copy-schemas.mjs"],
+    ["packages/core/scripts/copy-schemas.mjs"],
     {
       cwd: repoRoot,
       stdio: ["ignore", "pipe", "pipe"]
