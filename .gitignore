@@ -2,6 +2,7 @@
 .claude/
 .agent-tool/
 .agent-receipts/
+.remember/
 .DS_Store
 coverage/
 node_modules/
