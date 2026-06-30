@@ -111,15 +111,112 @@ export function isMissingCoreModule(error: unknown): boolean {
   );
 }
 
+// Output mode for the whole process. Every command builds the SAME normative
+// envelope; `rendered()` is the single choke-point that decides whether the
+// caller sees the machine JSON (`--json`) or a human-readable view (the default).
+// This is what lets `ucp matrix list` work bare while `--json` stays byte-stable.
+let outputJson = false;
+
+type CliEnvelope = ReturnType<typeof createCliResult>;
+
+function rendered(envelope: CliEnvelope): string {
+  return outputJson ? `${JSON.stringify(envelope)}\n` : renderHumanEnvelope(envelope);
+}
+
+// Render any result envelope as readable text. Because the envelope shape is
+// uniform across every command, one renderer covers them all: a status header,
+// a YAML-ish view of `data`, then diagnostics — with a pointer to `--json` for
+// the machine-readable form.
+function renderHumanEnvelope(env: CliEnvelope): string {
+  const record = env as unknown as {
+    command: string;
+    ok?: boolean;
+    complete?: boolean;
+    data?: unknown;
+    diagnostics?: Array<{ code: string; severity?: string; message: string }>;
+  };
+  const mark = record.ok === true ? "✓" : "✗";
+  const head = `${mark} ${record.command}${record.complete === false ? "  (incomplete)" : ""}`;
+  const lines: string[] = [head];
+  const body = renderHumanValue(record.data, 1);
+  if (body.length > 0) {
+    lines.push(...body);
+  }
+  const diagnostics = record.diagnostics ?? [];
+  if (diagnostics.length > 0) {
+    lines.push("");
+    for (const diagnostic of diagnostics) {
+      const severity = diagnostic.severity ?? "info";
+      const glyph = severity === "error" ? "✗" : severity === "warning" ? "!" : "·";
+      lines.push(`  ${glyph} ${diagnostic.code}: ${diagnostic.message}`);
+    }
+  }
+  lines.push("");
+  lines.push("Add --json for the full machine-readable result envelope.");
+  return `${lines.join("\n")}\n`;
+}
+
+function formatScalar(value: unknown): string {
+  return typeof value === "string" ? value : String(value);
+}
+
+function renderHumanValue(value: unknown, depth: number): string[] {
+  const pad = "  ".repeat(depth);
+  if (value === null || value === undefined) {
+    return [];
+  }
+  if (Array.isArray(value)) {
+    const out: string[] = [];
+    for (const item of value) {
+      if (item !== null && typeof item === "object") {
+        out.push(`${pad}-`);
+        out.push(...renderHumanValue(item, depth + 1));
+      } else {
+        out.push(`${pad}- ${formatScalar(item)}`);
+      }
+    }
+    return out;
+  }
+  if (typeof value === "object") {
+    const out: string[] = [];
+    for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
+      if (item === null || item === undefined) {
+        continue;
+      }
+      if (Array.isArray(item)) {
+        if (item.length === 0) {
+          out.push(`${pad}${key}: (none)`);
+          continue;
+        }
+        const allScalar = item.every((entry) => entry === null || typeof entry !== "object");
+        if (allScalar) {
+          out.push(`${pad}${key}: ${item.map(formatScalar).join(", ")}`);
+        } else {
+          out.push(`${pad}${key}:`);
+          out.push(...renderHumanValue(item, depth + 1));
+        }
+      } else if (typeof item === "object") {
+        out.push(`${pad}${key}:`);
+        out.push(...renderHumanValue(item, depth + 1));
+      } else {
+        out.push(`${pad}${key}: ${formatScalar(item)}`);
+      }
+    }
+    return out;
+  }
+  return [`${pad}${formatScalar(value)}`];
+}
+
 export function runCli(argv: string[]): number {
   const normalizedArgv = argv[0] === "--" ? argv.slice(1) : argv;
   const wantsVersion =
     normalizedArgv.includes("--version") || normalizedArgv.includes("-v") || normalizedArgv[0] === "version";
   const wantsJson = normalizedArgv.includes("--json");
+  outputJson = wantsJson;
 
   if (wantsVersion) {
     if (wantsJson) {
-      process.stdout.write(`${JSON.stringify(createCliResult("version", getVersionInfo()))}\n`);
+      process.stdout.write(rendered(createCliResult("version", getVersionInfo())));
     } else {
       process.stdout.write(`${getVersionInfo().version}\n`);
     }
@@ -134,23 +231,23 @@ export function runCli(argv: string[]): number {
     return runHelp(normalizedArgv, { json: wantsJson });
   }
 
-  if (normalizedArgv[0] === "schema" && normalizedArgv[1] === "list" && wantsJson) {
+  if (normalizedArgv[0] === "schema" && normalizedArgv[1] === "list") {
     process.stdout.write(
-      `${JSON.stringify(
+      rendered(
         createCliResult("schema.list", {
           schemas: PUBLIC_SCHEMA_IDS.map((id) => ({ id }))
         })
-      )}\n`
+      )
     );
     return 0;
   }
 
-  if (normalizedArgv[0] === "schema" && normalizedArgv[1] === "validate-fixtures" && wantsJson) {
+  if (normalizedArgv[0] === "schema" && normalizedArgv[1] === "validate-fixtures") {
     const fixture = valueAfter(normalizedArgv, "--fixture") ?? "tests/fixtures/workspaces/minimal-valid";
     const fixturePath = resolve(process.cwd(), fixture);
     const result = validateFixtureWorkspace(fixturePath);
     process.stdout.write(
-      `${JSON.stringify(
+      rendered(
         createCliResult(
           "schema.validate-fixtures",
           {
@@ -165,7 +262,7 @@ export function runCli(argv: string[]): number {
             dataRoot: fixturePath
           }
         )
-      )}\n`
+      )
     );
     return 0;
   }
@@ -174,83 +271,83 @@ export function runCli(argv: string[]): number {
     return runInit(normalizedArgv, wantsJson);
   }
 
-  if (normalizedArgv[0] === "matrix" && normalizedArgv[1] === "validate" && wantsJson) {
+  if (normalizedArgv[0] === "matrix" && normalizedArgv[1] === "validate") {
     return runMatrixValidate(normalizedArgv);
   }
 
-  if (normalizedArgv[0] === "matrix" && normalizedArgv[1] === "list" && wantsJson) {
+  if (normalizedArgv[0] === "matrix" && normalizedArgv[1] === "list") {
     return runMatrixList(normalizedArgv);
   }
 
-  if (normalizedArgv[0] === "matrix" && normalizedArgv[1] === "status" && wantsJson) {
+  if (normalizedArgv[0] === "matrix" && normalizedArgv[1] === "status") {
     return runMatrixStatus(normalizedArgv);
   }
 
-  if (normalizedArgv[0] === "matrix" && normalizedArgv[1] === "upsert" && wantsJson) {
+  if (normalizedArgv[0] === "matrix" && normalizedArgv[1] === "upsert") {
     return runMatrixUpsert(normalizedArgv);
   }
 
-  if (normalizedArgv[0] === "matrix" && normalizedArgv[1] === "remove" && wantsJson) {
+  if (normalizedArgv[0] === "matrix" && normalizedArgv[1] === "remove") {
     return runMatrixRemove(normalizedArgv);
   }
 
-  if (normalizedArgv[0] === "plan" && normalizedArgv[1] === "showcase" && wantsJson) {
+  if (normalizedArgv[0] === "plan" && normalizedArgv[1] === "showcase") {
     return runPlan(normalizedArgv, "showcase");
   }
 
-  if (normalizedArgv[0] === "plan" && normalizedArgv[1] === "walkthrough" && wantsJson) {
+  if (normalizedArgv[0] === "plan" && normalizedArgv[1] === "walkthrough") {
     return runPlan(normalizedArgv, "walkthrough");
   }
 
-  if (normalizedArgv[0] === "plan" && normalizedArgv[1] === "cards" && wantsJson) {
+  if (normalizedArgv[0] === "plan" && normalizedArgv[1] === "cards") {
     return runPlanCards(normalizedArgv);
   }
 
-  if (normalizedArgv[0] === "capsule" && wantsJson) {
+  if (normalizedArgv[0] === "capsule") {
     return runCapsule(normalizedArgv);
   }
 
-  if (normalizedArgv[0] === "evidence" && normalizedArgv[1] === "record" && wantsJson) {
+  if (normalizedArgv[0] === "evidence" && normalizedArgv[1] === "record") {
     return runEvidenceRecord(normalizedArgv);
   }
 
-  if (normalizedArgv[0] === "showcase" && wantsJson) {
+  if (normalizedArgv[0] === "showcase") {
     return runShowcase(normalizedArgv);
   }
 
-  if (normalizedArgv[0] === "evidence" && normalizedArgv[1] === "status" && wantsJson) {
+  if (normalizedArgv[0] === "evidence" && normalizedArgv[1] === "status") {
     return runEvidenceStatus(normalizedArgv);
   }
 
-  if (normalizedArgv[0] === "evidence" && normalizedArgv[1] === "void" && wantsJson) {
+  if (normalizedArgv[0] === "evidence" && normalizedArgv[1] === "void") {
     return runEvidenceVoid(normalizedArgv);
   }
 
-  if (normalizedArgv[0] === "workflow" && normalizedArgv[1] === "set-mode" && wantsJson) {
+  if (normalizedArgv[0] === "workflow" && normalizedArgv[1] === "set-mode") {
     return runWorkflowSetMode(normalizedArgv);
   }
 
-  if (normalizedArgv[0] === "workflow" && normalizedArgv[1] === "mode" && wantsJson) {
+  if (normalizedArgv[0] === "workflow" && normalizedArgv[1] === "mode") {
     return runWorkflowMode(normalizedArgv);
   }
 
-  if (normalizedArgv[0] === "migrate" && wantsJson) {
+  if (normalizedArgv[0] === "migrate") {
     return runMigrate(normalizedArgv);
   }
 
-  if (normalizedArgv[0] === "host" && wantsJson) {
+  if (normalizedArgv[0] === "host") {
     return runHost(normalizedArgv);
   }
 
-  if (normalizedArgv[0] === "doctor" && normalizedArgv[1] === "skills" && wantsJson) {
+  if (normalizedArgv[0] === "doctor" && normalizedArgv[1] === "skills") {
     return runDoctorSkills(normalizedArgv);
   }
 
-  if (normalizedArgv[0] === "doctor" && normalizedArgv[1] === "package" && wantsJson) {
+  if (normalizedArgv[0] === "doctor" && normalizedArgv[1] === "package") {
     return runDoctorPackage(normalizedArgv);
   }
 
-  if (normalizedArgv[0] === "doctor" && normalizedArgv[1] === "roots" && wantsJson) {
+  if (normalizedArgv[0] === "doctor" && normalizedArgv[1] === "roots") {
     return runDoctorRoots(normalizedArgv);
   }
 
@@ -287,13 +384,13 @@ const COMMON_FLAGS: UsageFlag[] = [
   { flag: "--repo <path>", summary: "Workspace root (defaults to the current directory)." },
   { flag: "--data-root <path>", summary: "Override the data root (must stay inside --repo)." },
   { flag: "--component <id>", summary: "Select a component within the workspace." },
-  { flag: "--json", summary: "Emit the machine-readable JSON result envelope (required for most commands)." }
+  { flag: "--json", summary: "Emit the machine-readable JSON result envelope (default output is human-readable)." }
 ];
 
 const USAGE: UsageEntry[] = [
   { name: "version", summary: "Print the CLI version.", flags: [{ flag: "--json", summary: "Emit the version envelope." }] },
-  { name: "schema list", summary: "List the public schema ids.", flags: [{ flag: "--json", summary: "Required." }] },
-  { name: "schema validate-fixtures", summary: "Validate the bundled fixtures against the published schemas.", flags: [{ flag: "--json", summary: "Required." }] },
+  { name: "schema list", summary: "List the public schema ids.", flags: [{ flag: "--json", summary: "Emit the JSON envelope." }] },
+  { name: "schema validate-fixtures", summary: "Validate the bundled fixtures against the published schemas.", flags: [{ flag: "--json", summary: "Emit the JSON envelope." }] },
   {
     name: "init",
     summary: "Scaffold a Use Cases Plugin workspace.",
@@ -553,13 +650,13 @@ function runHelp(argv: string[], options: { unknown?: boolean; json?: boolean } 
       ]
     : [];
   process.stdout.write(
-    `${JSON.stringify(
+    rendered(
       createCliResult("help", data, {
         ok: !options.unknown,
         complete: !options.unknown,
         diagnostics
       })
-    )}\n`
+    )
   );
   return options.unknown ? 2 : 0;
 }
@@ -617,7 +714,7 @@ function runInit(argv: string[], wantsJson: boolean): number {
 
   if (wantsJson) {
     process.stdout.write(
-      `${JSON.stringify(
+      rendered(
         createCliResult("init", result, {
           ok,
           complete: ok,
@@ -626,7 +723,7 @@ function runInit(argv: string[], wantsJson: boolean): number {
           dataRoot: repoRoot,
           componentId: result.component_id
         })
-      )}\n`
+      )
     );
   } else if (ok) {
     const lines = [
@@ -702,7 +799,7 @@ function runEvidenceRecord(argv: string[]): number {
       ]
     : [];
   process.stdout.write(
-    `${JSON.stringify(
+    rendered(
       createCliResult("evidence.record", toEvidenceAppendResult(append), {
         ok: true,
         complete: true,
@@ -711,7 +808,7 @@ function runEvidenceRecord(argv: string[]): number {
         dataRoot: context.data_root,
         componentId: context.component_id
       })
-    )}\n`
+    )
   );
   return 0;
 }
@@ -756,7 +853,7 @@ function runEvidenceVoid(argv: string[]): number {
       hostSurface: "codex.cli"
     });
     process.stdout.write(
-      `${JSON.stringify(
+      rendered(
         createCliResult("evidence.void", toEvidenceAppendResult(append), {
           ok: true,
           complete: true,
@@ -764,7 +861,7 @@ function runEvidenceVoid(argv: string[]): number {
           dataRoot: contextResult.data_root,
           componentId: contextResult.component_id
         })
-      )}\n`
+      )
     );
     return 0;
   } catch (error) {
@@ -782,7 +879,7 @@ function runEvidenceStatus(argv: string[]): number {
   const context = contextResult;
   const snapshot = replayEvidence({ context });
   process.stdout.write(
-    `${JSON.stringify(
+    rendered(
       createCliResult("evidence.status", toEvidenceStatusResult(snapshot), {
         ok: snapshot.complete,
         complete: snapshot.complete,
@@ -791,7 +888,7 @@ function runEvidenceStatus(argv: string[]): number {
         dataRoot: context.data_root,
         componentId: context.component_id
       })
-    )}\n`
+    )
   );
   return snapshot.complete ? 0 : 1;
 }
@@ -804,7 +901,7 @@ function runMatrixValidate(argv: string[]): number {
   const context = contextResult;
   const snapshot = loadUseCaseMatrix({ context });
   process.stdout.write(
-    `${JSON.stringify(
+    rendered(
       createCliResult("matrix.validate", toMatrixValidationResult(snapshot), {
         ok: true,
         complete: snapshot.complete,
@@ -813,7 +910,7 @@ function runMatrixValidate(argv: string[]): number {
         dataRoot: context.data_root,
         componentId: context.component_id
       })
-    )}\n`
+    )
   );
   return snapshot.complete ? 0 : 1;
 }
@@ -836,7 +933,7 @@ function runMatrixList(argv: string[]): number {
   });
   const ok = strict ? snapshot.complete : true;
   process.stdout.write(
-    `${JSON.stringify(
+    rendered(
       createCliResult("matrix.list", toMatrixListResult(snapshot, selected), {
         ok,
         complete: snapshot.complete,
@@ -845,7 +942,7 @@ function runMatrixList(argv: string[]): number {
         dataRoot: context.data_root,
         componentId: context.component_id
       })
-    )}\n`
+    )
   );
   return ok ? 0 : 3;
 }
@@ -864,7 +961,7 @@ function runMatrixStatus(argv: string[]): number {
     evidence: toEvidenceStatusResult(evidence)
   };
   process.stdout.write(
-    `${JSON.stringify(
+    rendered(
       createCliResult("matrix.status", data, {
         ok: data.complete,
         complete: data.complete,
@@ -873,7 +970,7 @@ function runMatrixStatus(argv: string[]): number {
         dataRoot: contextResult.data_root,
         componentId: contextResult.component_id
       })
-    )}\n`
+    )
   );
   return data.complete ? 0 : 1;
 }
@@ -964,7 +1061,7 @@ function writeMutationResult(
 ): number {
   const ok = result.status !== "blocked";
   process.stdout.write(
-    `${JSON.stringify(
+    rendered(
       createCliResult(command, result, {
         ok,
         complete: ok,
@@ -973,7 +1070,7 @@ function writeMutationResult(
         dataRoot: context.data_root,
         componentId: context.component_id
       })
-    )}\n`
+    )
   );
   if (ok) {
     return 0;
@@ -1005,7 +1102,7 @@ function runPlan(argv: string[], mode: "showcase" | "walkthrough"): number {
   const ok = result.outcome !== "integrity_blocked";
   const complete = result.plan?.complete ?? (result.outcome === "no_eligible_items" && matrix.complete && evidence.complete);
   process.stdout.write(
-    `${JSON.stringify(
+    rendered(
       createCliResult(`plan.${mode}`, result, {
         ok,
         complete,
@@ -1014,7 +1111,7 @@ function runPlan(argv: string[], mode: "showcase" | "walkthrough"): number {
         dataRoot: contextResult.data_root,
         componentId: contextResult.component_id
       })
-    )}\n`
+    )
   );
   if (result.outcome === "integrity_blocked") {
     return 3;
@@ -1052,7 +1149,7 @@ function runPlanCards(argv: string[]): number {
       }))
     };
     process.stdout.write(
-      `${JSON.stringify(
+      rendered(
         createCliResult("plan.cards", data, {
           ok: true,
           complete: true,
@@ -1060,7 +1157,7 @@ function runPlanCards(argv: string[]): number {
           dataRoot: contextResult.data_root,
           componentId: contextResult.component_id
         })
-      )}\n`
+      )
     );
     return 0;
   } catch (error) {
@@ -1093,7 +1190,7 @@ function runCapsuleValidate(argv: string[]): number {
   }
   const snapshot = loadDemoCapsules({ context: contextResult });
   process.stdout.write(
-    `${JSON.stringify(
+    rendered(
       createCliResult("capsule.validate", snapshot, {
         ok: snapshot.complete,
         complete: snapshot.complete,
@@ -1102,7 +1199,7 @@ function runCapsuleValidate(argv: string[]): number {
         dataRoot: contextResult.data_root,
         componentId: contextResult.component_id
       })
-    )}\n`
+    )
   );
   return snapshot.complete ? 0 : 1;
 }
@@ -1128,7 +1225,7 @@ function runCapsuleList(argv: string[]): number {
     }))
   };
   process.stdout.write(
-    `${JSON.stringify(
+    rendered(
       createCliResult("capsule.list", data, {
         ok: true,
         complete: snapshot.complete,
@@ -1137,7 +1234,7 @@ function runCapsuleList(argv: string[]): number {
         dataRoot: contextResult.data_root,
         componentId: contextResult.component_id
       })
-    )}\n`
+    )
   );
   return 0;
 }
@@ -1154,7 +1251,7 @@ function runCapsulePlan(argv: string[]): number {
   const result = planDemoCapsule({ context: contextResult, capsuleId });
   const ok = result.outcome === "generated";
   process.stdout.write(
-    `${JSON.stringify(
+    rendered(
       createCliResult("capsule.plan", result, {
         ok,
         complete: result.outcome === "generated" && (result.plan_result?.plan?.complete ?? false),
@@ -1163,7 +1260,7 @@ function runCapsulePlan(argv: string[]): number {
         dataRoot: contextResult.data_root,
         componentId: contextResult.component_id
       })
-    )}\n`
+    )
   );
   return result.outcome === "generated" ? 0 : result.outcome === "integrity_blocked" ? 3 : 1;
 }
@@ -1201,7 +1298,7 @@ function writeCapsuleRunResult(
 ): number {
   const ok = result.outcome !== "blocked";
   process.stdout.write(
-    `${JSON.stringify(
+    rendered(
       createCliResult("capsule.run", result, {
         ok,
         complete: result.complete,
@@ -1210,7 +1307,7 @@ function writeCapsuleRunResult(
         dataRoot: context.data_root,
         componentId: context.component_id
       })
-    )}\n`
+    )
   );
   if (!ok) {
     return result.diagnostics.some((item) => item.code === "capsule.command_cwd_escape") ? 4 : 1;
@@ -1534,7 +1631,7 @@ function runShowcaseStatus(argv: string[]): number {
   }
   const status = replayShowcaseRun({ context: contextResult, runId });
   process.stdout.write(
-    `${JSON.stringify(
+    rendered(
       createCliResult("showcase.status", status, {
         ok: true,
         complete: status.complete,
@@ -1542,7 +1639,7 @@ function runShowcaseStatus(argv: string[]): number {
         dataRoot: contextResult.data_root,
         componentId: contextResult.component_id
       })
-    )}\n`
+    )
   );
   return 0;
 }
@@ -1651,7 +1748,7 @@ function writeShowcaseResult(
   exitCode: number
 ): number {
   process.stdout.write(
-    `${JSON.stringify(
+    rendered(
       createCliResult(command, result, {
         ok: true,
         complete: result.status.complete,
@@ -1659,7 +1756,7 @@ function writeShowcaseResult(
         dataRoot: context.data_root,
         componentId: context.component_id
       })
-    )}\n`
+    )
   );
   return exitCode;
 }
@@ -1698,7 +1795,7 @@ function runMigrate(argv: string[]): number {
     });
     const hasConflict = result.would_write.some((operation) => operation.action === "conflict");
     process.stdout.write(
-      `${JSON.stringify(
+      rendered(
         createCliResult("migrate.test-matrix", result, {
           ok: !hasConflict,
           complete: result.warnings.length === 0 && !hasConflict,
@@ -1707,7 +1804,7 @@ function runMigrate(argv: string[]): number {
           dataRoot: contextResult.data_root,
           componentId: contextResult.component_id
         })
-      )}\n`
+      )
     );
     return hasConflict ? 1 : 0;
   } catch (error) {
@@ -1742,7 +1839,7 @@ function runHostDoctor(argv: string[]): number {
   }
   const result = runHostDoctorCore({ context: contextResult, profile: profileResult.profile });
   process.stdout.write(
-    `${JSON.stringify(
+    rendered(
       createCliResult("host.doctor", result, {
         ok: true,
         complete: true,
@@ -1750,7 +1847,7 @@ function runHostDoctor(argv: string[]): number {
         dataRoot: contextResult.data_root,
         componentId: contextResult.component_id
       })
-    )}\n`
+    )
   );
   return 0;
 }
@@ -1775,7 +1872,7 @@ function runHostProject(argv: string[]): number {
   const mode = selectedModes[0];
   const result = projectHostFiles({ context: contextResult, profile: profileResult.profile, mode });
   process.stdout.write(
-    `${JSON.stringify(
+    rendered(
       createCliResult("host.project", result, {
         ok: result.complete,
         complete: result.complete,
@@ -1784,7 +1881,7 @@ function runHostProject(argv: string[]): number {
         dataRoot: contextResult.data_root,
         componentId: contextResult.component_id
       })
-    )}\n`
+    )
   );
   return result.complete ? 0 : 1;
 }
@@ -1832,7 +1929,7 @@ function runHostConformance(argv: string[]): number {
       }
     };
     process.stdout.write(
-      `${JSON.stringify(
+      rendered(
         createCliResult("host.conformance", data, {
           ok: !hasBlockingDiagnostics,
           complete: !hasBlockingDiagnostics,
@@ -1841,7 +1938,7 @@ function runHostConformance(argv: string[]): number {
           dataRoot: contextResult.data_root,
           componentId: contextResult.component_id
         })
-      )}\n`
+      )
     );
     return hasBlockingDiagnostics ? 1 : 0;
   }
@@ -1851,7 +1948,7 @@ function runHostConformance(argv: string[]): number {
   }
   const result = runHostConformanceCore({ context: contextResult, profile: profileResult.profile });
   process.stdout.write(
-    `${JSON.stringify(
+    rendered(
       createCliResult("host.conformance", result, {
         ok: !hasBlockingHostDiagnostics(result.diagnostics),
         complete: !hasBlockingHostDiagnostics(result.diagnostics),
@@ -1860,7 +1957,7 @@ function runHostConformance(argv: string[]): number {
         dataRoot: contextResult.data_root,
         componentId: contextResult.component_id
       })
-    )}\n`
+    )
   );
   return hasBlockingHostDiagnostics(result.diagnostics) ? 1 : 0;
 }
@@ -1909,7 +2006,7 @@ function runWorkflowMode(argv: string[]): number {
   }
   const mode = readWorkflowMode(contextResult.workspace_root);
   process.stdout.write(
-    `${JSON.stringify(
+    rendered(
       createCliResult("workflow.get-mode", {
         schema_version: 1,
         effective_mode: mode,
@@ -1920,7 +2017,7 @@ function runWorkflowMode(argv: string[]): number {
         dataRoot: contextResult.data_root,
         componentId: contextResult.component_id
       })
-    )}\n`
+    )
   );
   return 0;
 }
@@ -1940,7 +2037,7 @@ function runWorkflowSetMode(argv: string[]): number {
     writeWorkflowMode(contextResult.workspace_root, requested);
   }
   process.stdout.write(
-    `${JSON.stringify(
+    rendered(
       createCliResult("workflow.set-mode", {
         schema_version: 1,
         previous_mode: previous,
@@ -1954,7 +2051,7 @@ function runWorkflowSetMode(argv: string[]): number {
         dataRoot: contextResult.data_root,
         componentId: contextResult.component_id
       })
-    )}\n`
+    )
   );
   return 0;
 }
@@ -1966,7 +2063,7 @@ function runDoctorRoots(argv: string[]): number {
   }
   const writable = canWrite(contextResult.data_root);
   process.stdout.write(
-    `${JSON.stringify(
+    rendered(
       createCliResult("doctor.roots", {
         schema_version: 1,
         workspace_root: contextResult.workspace_root,
@@ -1981,7 +2078,7 @@ function runDoctorRoots(argv: string[]): number {
         dataRoot: contextResult.data_root,
         componentId: contextResult.component_id
       })
-    )}\n`
+    )
   );
   return 0;
 }
@@ -1993,7 +2090,7 @@ function runDoctorSkills(argv: string[]): number {
   }
   const result = validateSkillAssets({ context: contextResult });
   process.stdout.write(
-    `${JSON.stringify(
+    rendered(
       createCliResult("doctor.skills", result, {
         ok: result.complete,
         complete: result.complete,
@@ -2002,7 +2099,7 @@ function runDoctorSkills(argv: string[]): number {
         dataRoot: contextResult.data_root,
         componentId: contextResult.component_id
       })
-    )}\n`
+    )
   );
   return result.complete ? 0 : 1;
 }
@@ -2026,7 +2123,7 @@ function runDoctorPackage(argv: string[]): number {
           : { kind: "workspace", path: contextResult.workspace_root, build: true }
     });
     process.stdout.write(
-      `${JSON.stringify(
+      rendered(
         createCliResult("doctor.package", data, {
           ok: data.complete,
           complete: data.complete,
@@ -2035,7 +2132,7 @@ function runDoctorPackage(argv: string[]): number {
           dataRoot: contextResult.data_root,
           componentId: contextResult.component_id
         })
-      )}\n`
+      )
     );
     return data.complete ? 0 : 1;
   } catch (error) {
@@ -2316,7 +2413,7 @@ function emitMarkerResult(
   ok: boolean
 ): void {
   process.stdout.write(
-    `${JSON.stringify(
+    rendered(
       createCliResult(command, data, {
         ok,
         complete: ok,
@@ -2324,7 +2421,7 @@ function emitMarkerResult(
         dataRoot: context.data_root,
         componentId: context.component_id
       })
-    )}\n`
+    )
   );
 }
 
@@ -2395,7 +2492,7 @@ function containedFilePath(
 
 function writeError(command: string, code: string, message: string, exitCode = 2): number {
   process.stdout.write(
-    `${JSON.stringify(
+    rendered(
       createCliResult(
         command,
         {},
@@ -2415,7 +2512,7 @@ function writeError(command: string, code: string, message: string, exitCode = 2
           ]
         }
       )
-    )}\n`
+    )
   );
   return exitCode;
 }
