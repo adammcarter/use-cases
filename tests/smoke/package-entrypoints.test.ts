@@ -60,7 +60,7 @@ describe("P0 package entrypoints", () => {
 
     expect(core.getVersionInfo()).toEqual({
       name: "use-cases-plugin",
-      version: "1.0.0-rc.1"
+      version: "1.0.0"
     });
   });
 
@@ -82,7 +82,7 @@ describe("P0 package entrypoints", () => {
       complete: true,
       data: {
         name: "use-cases-plugin",
-        version: "1.0.0-rc.1"
+        version: "1.0.0"
       },
       diagnostics: []
     });
@@ -116,9 +116,9 @@ describe("P0 package entrypoints", () => {
     );
 
     const tarballs = [
-      "use-cases-plugin-core-1.0.0-rc.1.tgz",
-      "use-cases-plugin-cli-1.0.0-rc.1.tgz",
-      "use-cases-plugin-mcp-1.0.0-rc.1.tgz"
+      "use-cases-plugin-core-1.0.0.tgz",
+      "use-cases-plugin-cli-1.0.0.tgz",
+      "use-cases-plugin-mcp-1.0.0.tgz"
     ].map((name) => join(packDir, name));
     requireSuccess(run("npm", ["install", "--cache", npmCacheDir(), "--no-audit", "--no-fund", ...tarballs], consumer));
 
@@ -127,7 +127,7 @@ describe("P0 package entrypoints", () => {
       [
         "import { getVersionInfo } from '@use-cases-plugin/core';",
         "const info = getVersionInfo();",
-        "if (info.name !== 'use-cases-plugin' || info.version !== '1.0.0-rc.1') throw new Error('bad version export');"
+        "if (info.name !== 'use-cases-plugin' || info.version !== '1.0.0') throw new Error('bad version export');"
       ].join("\n")
     );
     requireSuccess(run("node", ["check.mjs"], consumer));
@@ -135,7 +135,7 @@ describe("P0 package entrypoints", () => {
     const binDir = join(consumer, "node_modules/.bin");
     const cli = run(join(binDir, "ucp"), ["--version", "--json"], consumer);
     requireSuccess(cli);
-    expect(JSON.parse(cli.stdout).data.version).toBe("1.0.0-rc.1");
+    expect(JSON.parse(cli.stdout).data.version).toBe("1.0.0");
 
     const mcp = runWithInput(
       join(binDir, "ucp-mcp"),
@@ -170,7 +170,7 @@ describe("P0 package entrypoints", () => {
       expect.objectContaining({
         id: 1,
         result: expect.objectContaining({
-          serverInfo: { name: "use-cases-plugin", version: "1.0.0-rc.1" }
+          serverInfo: { name: "use-cases-plugin", version: "1.0.0" }
         })
       }),
       expect.objectContaining({

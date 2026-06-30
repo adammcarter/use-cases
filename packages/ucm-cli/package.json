@@ -1,6 +1,6 @@
 {
   "name": "@use-cases-plugin/cli",
-  "version": "1.0.0-rc.1",
+  "version": "1.0.0",
   "type": "module",
   "description": "CLI for use-cases-plugin.",
   "license": "MIT",

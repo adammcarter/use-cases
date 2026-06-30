@@ -2,8 +2,53 @@
 
 All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
-follows [Semantic Versioning](https://semver.org) as declared in
-[`docs/reference/stability.md`](docs/reference/stability.md).
+follows [Semantic Versioning](https://semver.org) (see docs/release.md).
+
+## 1.0.0 - 2026-06-30
+
+First public release. Builds on rc.1 with a full identity completion, an
+adoption-hardening pass driven by real foreign-agent usage, and session-start
+bootstrap delivery.
+
+### Added
+
+- **Session-start bootstrap delivery** across all four host families: a polyglot
+  `hooks/session-start` (Claude/Copilot/Codex via `hooks.json` + `hooks-codex.json`)
+  and an OpenCode plugin (`.opencode/plugin/use-cases-plugin.js`) inject the
+  trusted `bootstrap/use-cases-plugin.md` at session start (use case
+  `hosts.profiles.bootstrap_autoinject`).
+- `matrix upsert --use-case-file` (read a row from a file, not just inline JSON).
+- Human-readable `ucp --help` / `ucp <command> --help` (text by default; `--json`
+  for the envelope) with a complete flag catalog (bind span flags, the
+  prove/verify/scan key flags, and the full showcase verb set).
+- The code-marker grammar is documented (`docs/markers-adoption.md`, now shipped)
+  and ADR 0006 specs the planned trusted user-approval path.
+
+### Changed
+
+- Completed the `presentation-skills` → `use-cases-plugin` identity rename
+  (envelopes, defaults, config, the self-matrix, source markers); CI mints FRESH
+  proof for the plugin's own bound rows.
+- The result envelope's `ok` is now `false` whenever an error-severity diagnostic
+  is present; enum validation messages list the allowed values.
+
+### Fixed
+
+- `ucp bind` preserves a source file's executable bit when inserting a marker.
+- Comment-prefix resolution recognises shebang (`#!`) scripts, so extensionless
+  hooks can carry markers.
+- The marker scanner skips `.claude/` (avoids duplicate-slug false positives from
+  worktree copies); the evidence ledger tolerates foreign JSONL files instead of
+  throwing; TEST-MATRIX migration accepts the British "Behaviour" header.
+- Corrected stale `use-cases <cmd>` guidance to `ucp <cmd>` and fixed dead
+  documentation links / `init` next-steps.
+
+### Validated
+
+- Adoption tested across a fleet of varied sandbox repos (greenfield Python/TS/Go/
+  Swift/shell, a monorepo, docs-only, a legacy TEST-MATRIX migration, the live
+  showcase lifecycle, cross-host activation) plus retroactive adoption on large
+  real repositories. All findings triaged; the high-value gaps above were fixed.
 
 ## 1.0.0-rc.1 - 2026-06-29
 

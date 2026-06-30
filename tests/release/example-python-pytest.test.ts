@@ -224,8 +224,8 @@ beforeAll(() => {
       `pack ${filter}`
     );
   }
-  coreTarball = join(packDir, "use-cases-plugin-core-1.0.0-rc.1.tgz");
-  cliTarball = join(packDir, "use-cases-plugin-cli-1.0.0-rc.1.tgz");
+  coreTarball = join(packDir, "use-cases-plugin-core-1.0.0.tgz");
+  cliTarball = join(packDir, "use-cases-plugin-cli-1.0.0.tgz");
 }, 180_000);
 
 afterAll(() => {
