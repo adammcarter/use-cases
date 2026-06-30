@@ -2,7 +2,7 @@
 // version, the `--help` usage catalog, `init` scaffolding, and `schema`
 // introspection — plus the core loader. These either emit bespoke (non-envelope)
 // output or hold CI-signed `@use-case` markers, so they live here as a small,
-// marker-stable module. `runLegacyCli` is the builtins-only fallback the registry
+// marker-stable module. `runBuiltinCli` is the builtins-only fallback the registry
 // dispatcher (index.ts) delegates to when no registry command matches.
 import { resolve } from "node:path";
 import { renderEnvelope } from "./render.js";
@@ -70,7 +70,7 @@ function rendered(envelope: CliEnvelope): string {
   return renderEnvelope(envelope, outputJson);
 }
 
-export function runLegacyCli(argv: string[]): number {
+export function runBuiltinCli(argv: string[]): number {
   const normalizedArgv = argv[0] === "--" ? argv.slice(1) : argv;
   const wantsVersion =
     normalizedArgv.includes("--version") || normalizedArgv.includes("-v") || normalizedArgv[0] === "version";
