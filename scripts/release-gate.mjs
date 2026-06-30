@@ -14,6 +14,12 @@ const steps = [
   ["corepack pnpm cli -- doctor package --json", "corepack", ["pnpm", "cli", "--", "doctor", "package", "--json"]],
   ["corepack pnpm cli -- matrix validate --repo . --json", "corepack", ["pnpm", "cli", "--", "matrix", "validate", "--repo", ".", "--json"]],
   ["corepack pnpm cli -- matrix list --repo . --json", "corepack", ["pnpm", "cli", "--", "matrix", "list", "--repo", ".", "--json"]],
+  // README guard: the documented quickstart uses the HUMAN (bare, no --json) form.
+  // Run the exact commands so a regression in the human path fails the release
+  // gate instead of shipping a quickstart that errors (the arch review's #1).
+  ["corepack pnpm cli -- matrix validate --repo . (human)", "corepack", ["pnpm", "cli", "--", "matrix", "validate", "--repo", "."]],
+  ["corepack pnpm cli -- matrix list --repo . (human)", "corepack", ["pnpm", "cli", "--", "matrix", "list", "--repo", "."]],
+  ["corepack pnpm cli -- plan showcase --repo . --max-items 3 (human)", "corepack", ["pnpm", "cli", "--", "plan", "showcase", "--repo", ".", "--max-items", "3"]],
   [
     "corepack pnpm pack --json --pack-destination",
     "corepack",
