@@ -3,6 +3,22 @@
 Project data lives under the configured `data_root`; installed plugin code is
 read-only.
 
+## Directory layout at a glance
+
+Two pairs of similarly-named paths are deliberately distinct — the dot-prefixed
+ones are tool-managed machine state (like `.git`), the others are yours:
+
+| Path | Owner | Holds |
+|---|---|---|
+| `use-cases/` | you (authored) | the sharded use-case matrix YAML |
+| `.use-cases/` | the tool (machine state) | the code-marker **binding registry** + **signed proof** ledger + the trusted public key |
+| `evidence/` | the tool (append-only) | **use-case evidence** events (observations, results) keyed by id |
+| `showcase-runs/` | the tool (append-only) | performed **showcase run** event ledgers |
+
+Note the two "evidence" surfaces are different things: `evidence/` is evidence
+attached to use cases, while `.use-cases/evidence.jsonl` is the marker-freshness
+**proof** ledger (CI-signed). Both are append-only and content-addressed.
+
 ## Use Cases
 
 Use cases are sharded YAML files under `use-cases/`. Each file describes one

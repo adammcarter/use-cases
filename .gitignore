@@ -2,6 +2,7 @@
 .claude/
 .Codex/
 .cowork-receipts/
+.remember/
 .DS_Store
 coverage/
 node_modules/
