@@ -1,6 +1,6 @@
 # @use-cases-plugin/cli
 
-Command-line interface for **Use Cases Plugin (UCM)** — a repo-local, agent-facing
+Command-line interface for **Use Cases Plugin** — a repo-local, agent-facing
 assurance system for keeping product claims, code spans, demonstrations,
 evidence, and release decisions aligned.
 
