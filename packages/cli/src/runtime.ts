@@ -33,8 +33,37 @@ export const {
   loadPresentationPlanFile,
   renderCard,
   resolveContainedPath,
-  isValidId
+  isValidId,
+  migrateTestMatrix,
+  loadHostProfile,
+  projectHostFiles,
+  runHostConformance,
+  runHostDoctor,
+  validateSkillAssets,
+  inspectPackageArtifact,
+  runBindCommand,
+  runScanCommand,
+  runProveCommand,
+  runVerifyCommand,
+  runValidateLedgerCommand,
+  detectCiAuthority,
+  singleKeyResolver,
+  keyringPublicKeyResolverFromFile,
+  replayShowcaseRun,
+  startShowcaseRun,
+  appendShowcaseObservation,
+  appendShowcaseVerdict,
+  appendShowcaseFailureDecision,
+  appendShowcaseApproval,
+  rejectShowcaseApproval,
+  correctShowcaseVerdict,
+  finishShowcaseRun,
+  pauseShowcaseRun,
+  resumeShowcaseRun
 } = core;
+
+// Hosts the CLI supports (mirrors the legacy SUPPORTED_HOSTS constant).
+export const SUPPORTED_HOSTS = ["claude", "codex", "copilot", "opencode"] as const;
 
 export type CliEnvelope = ReturnType<typeof createCliResult>;
 export type ResolvedContext = ReturnType<typeof resolveWorkspaceContext>;
@@ -61,6 +90,23 @@ export function errorEnvelope(command: string, code: string, message: string): C
       ]
     }
   );
+}
+
+// Non-writing port of the legacy `containedFilePath`: bound a user-supplied path
+// to the workspace, returning a tagged error (envelope + exit 4) on escape.
+export type ContainedPathResult =
+  | { readonly kind: "ok"; readonly path: string }
+  | { readonly kind: "error"; readonly envelope: CliEnvelope; readonly exitCode: number };
+
+export function containedPathOrError(command: string, workspaceRoot: string, candidate: string): ContainedPathResult {
+  try {
+    return { kind: "ok", path: resolveContainedPath(workspaceRoot, candidate) };
+  } catch (error) {
+    if (error instanceof Error && "code" in error && (error as { code?: unknown }).code === "path.escape") {
+      return { kind: "error", envelope: errorEnvelope(command, "UCP_PATH_ESCAPE", error.message), exitCode: 4 };
+    }
+    throw error;
+  }
 }
 
 export type ContextResult =
