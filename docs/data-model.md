@@ -15,9 +15,10 @@ ones are tool-managed machine state (like `.git`), the others are yours:
 | `evidence/` | the tool (append-only) | **use-case evidence** events (observations, results) keyed by id |
 | `showcase-runs/` | the tool (append-only) | performed **showcase run** event ledgers |
 
-Note the two "evidence" surfaces are different things: `evidence/` is evidence
-attached to use cases, while `.use-cases/evidence.jsonl` is the marker-freshness
-**proof** ledger (CI-signed). Both are append-only and content-addressed.
+Don't confuse `evidence/` with the proof ledger: `evidence/` holds **use-case
+evidence** (observations attached to use cases), while `.use-cases/proofs.jsonl`
+is the marker-freshness **proof** ledger (CI-signed). The names now make the
+distinction plain — proofs vs evidence. Both are append-only and content-addressed.
 
 ## Use Cases
 

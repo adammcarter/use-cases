@@ -112,7 +112,7 @@ Recommended file layout:
 
 ```txt
 .use-cases/
-  evidence.jsonl
+  proofs.jsonl
   bindings.jsonl
   trusted-ci-public-key.pem
   use-cases.config.json
@@ -554,7 +554,7 @@ binding_set_hash = sha256(canonical_json(binding_set_material))
 ## 5.1 File
 
 ```txt
-.use-cases/evidence.jsonl
+.use-cases/proofs.jsonl
 ```
 
 Append-only.
@@ -783,7 +783,7 @@ Compute these inputs first:
 R = all YAML rows
 K(row) = registered binding slugs for row from bindings.jsonl
 C(row) = current scanned, valid, registered binding records for row
-P(row) = valid trusted passing proof events for row from evidence.jsonl
+P(row) = valid trusted passing proof events for row from proofs.jsonl
 Hrow(row) = current semantic row hash
 Hverify(row) = current verification policy hash
 Happrove(row) = current approval policy hash
@@ -1054,7 +1054,7 @@ Must do:
 Must not do:
 
 ```txt
-1. Must not write evidence.jsonl.
+1. Must not write proofs.jsonl.
 2. Must not emit proof events.
 3. Must not write row freshness.
 4. Must not accept caller-supplied span hash.
@@ -1113,7 +1113,7 @@ Command:
 use-cases scan \
   --product-root . \
   --rows-root usecases \
-  --evidence .use-cases/evidence.jsonl \
+  --proofs .use-cases/proofs.jsonl \
   --bindings .use-cases/bindings.jsonl \
   --policy-mode feature \
   --json
@@ -1124,7 +1124,7 @@ Inputs:
 ```txt
 --product-root <path>
 --rows-root <path>
---evidence <path>
+--proofs <path>
 --bindings <path>
 --config <path> optional
 --policy-mode feature | release | custom
@@ -1162,7 +1162,7 @@ Must not do:
 ```txt
 1. Must not write source files.
 2. Must not write bindings.jsonl.
-3. Must not write evidence.jsonl.
+3. Must not write proofs.jsonl.
 4. Must not append proof events.
 5. Must not mark anything fresh from comments.
 6. Must not do best-effort inference.
@@ -1219,7 +1219,7 @@ use-cases prove \
   --row checkout.apply_coupon \
   --product-root . \
   --rows-root usecases \
-  --evidence .use-cases/evidence.jsonl \
+  --proofs .use-cases/proofs.jsonl \
   --bindings .use-cases/bindings.jsonl \
   --trusted-ci \
   --signing-key-env USE_CASES_CI_SIGNING_KEY
@@ -1231,7 +1231,7 @@ Inputs:
 --row <row_id> or --all
 --product-root <path>
 --rows-root <path>
---evidence <path>
+--proofs <path>
 --bindings <path>
 --config <path> optional
 --trusted-ci optional
@@ -1252,7 +1252,7 @@ Must do:
 7. On pass, recompute binding_set_hash.
 8. Build proof event from recomputed data.
 9. Sign proof event in trusted CI mode.
-10. Append proof event to evidence.jsonl only after verification pass and signature success.
+10. Append proof event to proofs.jsonl only after verification pass and signature success.
 11. Emit proof result JSON.
 ```
 
@@ -1322,7 +1322,7 @@ Command:
 
 ```txt
 use-cases validate-ledger \
-  --evidence .use-cases/evidence.jsonl \
+  --proofs .use-cases/proofs.jsonl \
   --bindings .use-cases/bindings.jsonl \
   --base-ref origin/main \
   --public-key .use-cases/trusted-ci-public-key.pem \
@@ -1332,7 +1332,7 @@ use-cases validate-ledger \
 Inputs:
 
 ```txt
---evidence <path>
+--proofs <path>
 --bindings <path>
 --base-ref <git-ref> optional
 --public-key <path>
@@ -1878,7 +1878,7 @@ Acceptance criteria:
 Build:
 
 ```txt
-1. evidence.jsonl reader
+1. proofs.jsonl reader
 2. proof event schema validator
 3. ed25519 signature verifier
 4. ed25519 signer for trusted CI prove
@@ -2081,7 +2081,7 @@ Expected:
 
 ```txt
 verification command passes
-signed proof event appended to evidence.jsonl
+signed proof event appended to proofs.jsonl
 ```
 
 Then:
