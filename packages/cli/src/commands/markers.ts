@@ -1,0 +1,474 @@
+// The "markers" command group: bind / scan / prove / verify / validate-ledger.
+// This is the security core — the FRESH proof path — so every handler is a
+// byte-for-byte port of the legacy run* functions: identical core calls,
+// identical arguments (including new Date().toISOString() defaults, repoCwd, the
+// GitHub-shaped producer block, and the CI authority), identical createCliResult
+// shapes, and identical exit codes on every path. The local legacy helpers
+// (markerPaths / markerPublicKeyResolver / markerSigningKey / generateUlid) are
+// ported in VERBATIM; emitMarkerResult becomes a non-writing helper that returns
+// { envelope, exitCode } instead of writing stdout.
+import { readFileSync } from "node:fs";
+import { createPrivateKey, createPublicKey } from "node:crypto";
+import { join, resolve } from "node:path";
+import type { CiAuthority, VerificationResultRecord } from "@use-cases-plugin/core";
+import type { CliCommand, CommandOutput } from "../command/types.js";
+import { numberAfter, valueAfter } from "../args/parse.js";
+import {
+  createCliResult,
+  detectCiAuthority,
+  errorEnvelope,
+  keyringPublicKeyResolverFromFile,
+  resolveContextOrError,
+  runBindCommand,
+  runProveCommand,
+  runScanCommand,
+  runValidateLedgerCommand,
+  runVerifyCommand,
+  singleKeyResolver,
+  type ResolvedContext
+} from "../runtime.js";
+import { loadUcmCore } from "../legacy.js";
+import { workspaceFlags } from "./common.js";
+
+// getVersionInfo is not re-exported by runtime.ts, and a static import of core
+// from a command module would bypass the diagnostics.contracts.missing_build_hint
+// friendly fallback (see legacy.ts). Reach it through the SAME cached loadUcmCore
+// path every other module uses, so the missing-build hint stays intact.
+const { getVersionInfo } = await loadUcmCore();
+
+// --- ported legacy helpers (made non-writing where they emitted output) -------
+
+// Verbatim port of the legacy `markerPaths`: resolve the product root and the
+// bindings/evidence ledger paths from flags, defaulting to the workspace root and
+// the .use-cases ledgers under the data root.
+function markerPaths(argv: string[], context: ResolvedContext) {
+  const productRoot = valueAfter(argv, "--product-root")
+    ? resolve(process.cwd(), valueAfter(argv, "--product-root") as string)
+    : context.workspace_root;
+  const bindingsPath = valueAfter(argv, "--bindings")
+    ? resolve(process.cwd(), valueAfter(argv, "--bindings") as string)
+    : join(context.data_root, ".use-cases", "bindings.jsonl");
+  const evidencePath = valueAfter(argv, "--evidence")
+    ? resolve(process.cwd(), valueAfter(argv, "--evidence") as string)
+    : join(context.data_root, ".use-cases", "evidence.jsonl");
+  return { productRoot, bindingsPath, evidencePath };
+}
+
+// Verbatim port of the legacy `markerPublicKeyResolver`.
+function markerPublicKeyResolver(argv: string[]): ReturnType<typeof singleKeyResolver> {
+  // Opt-in multi-key path: --keyring builds a resolver that enforces per-key
+  // status (active/revoked) and validity windows against the proof's created_at.
+  // When both flags are present the keyring wins over the single --public-key.
+  const keyringPath = valueAfter(argv, "--keyring");
+  if (keyringPath) {
+    return keyringPublicKeyResolverFromFile(resolve(process.cwd(), keyringPath));
+  }
+  const keyPath = valueAfter(argv, "--public-key");
+  if (!keyPath) {
+    // No configured key: any proof signature fails (ledger with proofs is invalid).
+    return () => undefined;
+  }
+  const pem = readFileSync(resolve(process.cwd(), keyPath), "utf8");
+  return singleKeyResolver(createPublicKey(pem));
+}
+
+// Verbatim port of the legacy `markerSigningKey`.
+function markerSigningKey(argv: string[]): { privateKey: ReturnType<typeof createPrivateKey>; keyId: string } | undefined {
+  const envName = valueAfter(argv, "--signing-key-env");
+  if (!envName) {
+    return undefined;
+  }
+  const pem = process.env[envName];
+  if (!pem) {
+    return undefined;
+  }
+  return { privateKey: createPrivateKey(pem), keyId: valueAfter(argv, "--key-id") ?? "trusted-ci" };
+}
+
+// Minimal ULID-shaped id for registry/proof event ids (uniqueness from the tail).
+// Verbatim port of the legacy `generateUlid`.
+function generateUlid(): string {
+  const alphabet = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+  const time = Date.now().toString(32).toUpperCase().padStart(10, "0").slice(0, 10);
+  let tail = "";
+  for (let i = 0; i < 16; i += 1) {
+    tail += alphabet[Math.floor(Math.random() * alphabet.length)];
+  }
+  return `${time}${tail}`.slice(0, 26).padEnd(26, "0");
+}
+
+// Non-writing port of the legacy `emitMarkerResult`: build the SAME envelope it
+// built (createCliResult with ok/complete:ok and the workspace/data/component
+// trio) and return it with the exit code instead of writing stdout. The legacy
+// caller returned `result.exit_code` for every command, so the exit code is the
+// command result's own exit_code in all five cases.
+function markerOutput(
+  command: string,
+  result: { exit_code: number },
+  context: ResolvedContext,
+  ok: boolean
+): CommandOutput {
+  return {
+    envelope: createCliResult(command, result, {
+      ok,
+      complete: ok,
+      workspaceRoot: context.workspace_root,
+      dataRoot: context.data_root,
+      componentId: context.component_id
+    }),
+    exitCode: result.exit_code
+  };
+}
+
+// --- shared flag specs --------------------------------------------------------
+
+// markerPaths reads these for EVERY marker command, so they are listed on each.
+const markerPathFlags = [
+  { key: "productRoot", name: "--product-root", kind: "string", valueName: "<path>", summary: "Root to scope markers/verifiers to (default --repo)." },
+  { key: "bindings", name: "--bindings", kind: "string", valueName: "<path>", summary: "Override the bindings ledger path (default <data-root>/.use-cases/bindings.jsonl)." },
+  { key: "evidence", name: "--evidence", kind: "string", valueName: "<path>", summary: "Override the evidence ledger path (default <data-root>/.use-cases/evidence.jsonl)." }
+] as const;
+
+const trustedKeyFlags = [
+  { key: "publicKey", name: "--public-key", kind: "string", valueName: "<path>", summary: "Trusted public key to verify proof signatures (else proofs read UNPROVEN)." },
+  { key: "keyring", name: "--keyring", kind: "string", valueName: "<path>", summary: "Multi-key public-key registry (alternative to --public-key)." }
+] as const;
+
+// --- commands -----------------------------------------------------------------
+
+export const markersBindCommand: CliCommand = {
+  path: ["bind"],
+  command: "markers.bind",
+  summary: "Bind a use-case row to a code marker (inserts the marker into the source).",
+  flags: [
+    ...workspaceFlags,
+    ...markerPathFlags,
+    { key: "row", name: "--row", kind: "string", valueName: "<id>", summary: "Row id to bind." },
+    { key: "file", name: "--file", kind: "string", valueName: "<path>", summary: "Source file to place the marker in." },
+    { key: "mode", name: "--mode", kind: "string", valueName: "<mode>", summary: "explicit | swift-func." },
+    { key: "startLine", name: "--start-line", kind: "integer", valueName: "<n>", summary: "Span start line (REQUIRED for --mode explicit)." },
+    { key: "endLine", name: "--end-line", kind: "integer", valueName: "<n>", summary: "Span end line (REQUIRED for --mode explicit)." },
+    { key: "line", name: "--line", kind: "integer", valueName: "<n>", summary: "Function line (REQUIRED for --mode swift-func)." },
+    { key: "suffix", name: "--suffix", kind: "string", valueName: "<s>", summary: "Disambiguating suffix when a file binds more than one row." },
+    { key: "registerExisting", name: "--register-existing", kind: "boolean", summary: "Register a marker already present in the source." },
+    { key: "commentPrefix", name: "--comment-prefix", kind: "string", valueName: "<s>", summary: "Override the line-comment prefix (else inferred from extension/shebang)." },
+    { key: "dryRun", name: "--dry-run", kind: "boolean", summary: "Preview the marker placement without writing the source or registry." }
+  ],
+  handler: ({ argv }) => {
+    const context = resolveContextOrError(argv, "markers.bind");
+    if (context.kind === "error") {
+      return { envelope: context.envelope, exitCode: context.exitCode };
+    }
+    const ctx = context.context;
+    const rowId = valueAfter(argv, "--row");
+    const file = valueAfter(argv, "--file");
+    const modeRaw = valueAfter(argv, "--mode");
+    if (!rowId || !file || (modeRaw !== "explicit" && modeRaw !== "swift-func")) {
+      return {
+        envelope: errorEnvelope("markers.bind", "cli_invalid_arguments", "Missing --row, --file, or --mode (explicit|swift-func)."),
+        exitCode: 2
+      };
+    }
+    const paths = markerPaths(argv, ctx);
+    const result = runBindCommand({
+      context: ctx,
+      productRoot: paths.productRoot,
+      bindingsPath: paths.bindingsPath,
+      rowId,
+      suffix: valueAfter(argv, "--suffix"),
+      file,
+      mode: modeRaw,
+      line: numberAfter(argv, "--line"),
+      startLine: numberAfter(argv, "--start-line"),
+      endLine: numberAfter(argv, "--end-line"),
+      commentPrefix: valueAfter(argv, "--comment-prefix"),
+      registerExisting: argv.includes("--register-existing"),
+      dryRun: argv.includes("--dry-run"),
+      clock: () => new Date().toISOString(),
+      idFactory: generateUlid,
+      version: getVersionInfo().version
+    });
+    return markerOutput("markers.bind", result, ctx, result.exit_code === 0);
+  }
+};
+
+export const markersScanCommand: CliCommand = {
+  path: ["scan"],
+  command: "markers.scan",
+  summary: "Scan code markers against the bindings ledger and report freshness.",
+  flags: [
+    ...workspaceFlags,
+    ...markerPathFlags,
+    { key: "policyMode", name: "--policy-mode", kind: "string", valueName: "<mode>", summary: "feature | release | custom." },
+    ...trustedKeyFlags,
+    { key: "generatedAt", name: "--generated-at", kind: "string", valueName: "<iso>", summary: "Override the generated-at timestamp." },
+    { key: "baseRef", name: "--base-ref", kind: "string", valueName: "<ref>", summary: "Diff base for the append-only check." },
+    { key: "ci", name: "--ci", kind: "boolean", summary: "CI mode (print inferred spans)." }
+  ],
+  handler: ({ argv }) => {
+    const context = resolveContextOrError(argv, "markers.scan");
+    if (context.kind === "error") {
+      return { envelope: context.envelope, exitCode: context.exitCode };
+    }
+    const ctx = context.context;
+    const paths = markerPaths(argv, ctx);
+    const policyModeRaw = valueAfter(argv, "--policy-mode") ?? "feature";
+    const policyMode = ["feature", "release", "custom"].includes(policyModeRaw)
+      ? (policyModeRaw as "feature" | "release" | "custom")
+      : "feature";
+    const result = runScanCommand({
+      context: ctx,
+      productRoot: paths.productRoot,
+      bindingsPath: paths.bindingsPath,
+      evidencePath: paths.evidencePath,
+      policyMode,
+      publicKeyResolver: markerPublicKeyResolver(argv),
+      generatedAt: valueAfter(argv, "--generated-at") ?? new Date().toISOString(),
+      baseRef: valueAfter(argv, "--base-ref"),
+      repoCwd: ctx.workspace_root
+    });
+    // CI mode prints the inferred spans to stderr (a human/log side-channel, NOT
+    // the result envelope) before the dispatcher renders stdout. The dispatcher
+    // has no stderr channel, so this side-effect stays here to keep behaviour
+    // byte-identical with the legacy scan handler. Ordering (stderr then the
+    // stdout envelope) is preserved because the handler runs before the render.
+    if (argv.includes("--ci") && result.inferred_spans.length > 0) {
+      process.stderr.write(`${result.inferred_spans.join("\n\n")}\n`);
+    }
+    return markerOutput("markers.scan", result, ctx, result.exit_code === 0);
+  }
+};
+
+export const markersProveCommand: CliCommand = {
+  path: ["prove"],
+  command: "markers.prove",
+  summary: "Mint SIGNED proofs from verification results (CI-only signing key).",
+  flags: [
+    ...workspaceFlags,
+    ...markerPathFlags,
+    { key: "row", name: "--row", kind: "string", valueName: "<id>", summary: "Target row id." },
+    { key: "all", name: "--all", kind: "boolean", summary: "Target every bound row." },
+    { key: "verificationResults", name: "--verification-results", kind: "string", valueName: "<path>", summary: "The results file written by `verify --out` (REQUIRED)." },
+    { key: "trustedCi", name: "--trusted-ci", kind: "boolean", summary: "Mint as the trusted CI prover." },
+    { key: "signingKeyEnv", name: "--signing-key-env", kind: "string", valueName: "<name>", summary: "Env var holding the signing key (CI secret)." },
+    { key: "keyId", name: "--key-id", kind: "string", valueName: "<id>", summary: "Signing key id (default trusted-ci)." },
+    { key: "authorityFile", name: "--authority-file", kind: "string", valueName: "<path>", summary: "Explicit CI authority record (JSON)." },
+    { key: "append", name: "--append", kind: "boolean", summary: "Append minted proofs to the evidence ledger." },
+    { key: "refresh", name: "--refresh", kind: "boolean", summary: "Re-mint proofs for rows whose context changed." },
+    { key: "dryRun", name: "--dry-run", kind: "boolean", summary: "Preview without writing the evidence ledger." },
+    { key: "unsafeAssumeVerificationResult", name: "--unsafe-assume-verification-result", kind: "string", valueName: "<result>", summary: "DANGEROUS: assume the row's verification passed (honoured only with UCP_ALLOW_UNSAFE_VERIFICATION=1)." },
+    ...trustedKeyFlags,
+    { key: "generatedAt", name: "--generated-at", kind: "string", valueName: "<iso>", summary: "Override the generated-at timestamp." },
+    { key: "baseRef", name: "--base-ref", kind: "string", valueName: "<ref>", summary: "Diff base for the append-only check." }
+  ],
+  handler: ({ argv }) => {
+    const context = resolveContextOrError(argv, "markers.prove");
+    if (context.kind === "error") {
+      return { envelope: context.envelope, exitCode: context.exitCode };
+    }
+    const ctx = context.context;
+    const all = argv.includes("--all");
+    const rowId = valueAfter(argv, "--row");
+    if (!all && !rowId) {
+      return {
+        envelope: errorEnvelope("markers.prove", "cli_invalid_arguments", "Missing --row or --all."),
+        exitCode: 2
+      };
+    }
+    const paths = markerPaths(argv, ctx);
+
+    // prove no longer runs verifiers; it CONSUMES the unsigned verification-results
+    // ledger that `verify --out` produced (one JSONL record per row).
+    let verificationResults: VerificationResultRecord[] | undefined;
+    const resultsPathRaw = valueAfter(argv, "--verification-results");
+    if (resultsPathRaw) {
+      const resultsPath = resolve(process.cwd(), resultsPathRaw);
+      let text: string;
+      try {
+        text = readFileSync(resultsPath, "utf8");
+      } catch {
+        return {
+          envelope: errorEnvelope(
+            "markers.prove",
+            "cli_invalid_arguments",
+            `Could not read --verification-results file: ${resultsPath}`
+          ),
+          exitCode: 2
+        };
+      }
+      try {
+        verificationResults = text
+          .split("\n")
+          .map((line) => line.trim())
+          .filter((line) => line.length > 0)
+          .map((line) => JSON.parse(line) as VerificationResultRecord);
+      } catch {
+        return {
+          envelope: errorEnvelope(
+            "markers.prove",
+            "cli_invalid_arguments",
+            `--verification-results file is not valid JSONL: ${resultsPath}`
+          ),
+          exitCode: 2
+        };
+      }
+    }
+
+    // DANGEROUS seam (renamed from --verification-result): assume the row's
+    // verification passed. The core honours it ONLY when env
+    // UCP_ALLOW_UNSAFE_VERIFICATION=1 is set; otherwise it is ignored.
+    const unsafeAssume =
+      valueAfter(argv, "--unsafe-assume-verification-result") === "pass" ? ("pass" as const) : undefined;
+
+    // CI-neutral provenance authority (additive, signed). An explicit
+    // --authority-file (a JSON authority record) wins — for unknown CI / overrides;
+    // otherwise auto-detect from the process env. The GitHub-shaped `producer` block
+    // below is still populated exactly as before, beside the authority.
+    let authority: CiAuthority;
+    const authorityFileRaw = valueAfter(argv, "--authority-file");
+    if (authorityFileRaw) {
+      const authorityPath = resolve(process.cwd(), authorityFileRaw);
+      let authorityText: string;
+      try {
+        authorityText = readFileSync(authorityPath, "utf8");
+      } catch {
+        return {
+          envelope: errorEnvelope(
+            "markers.prove",
+            "cli_invalid_arguments",
+            `Could not read --authority-file: ${authorityPath}`
+          ),
+          exitCode: 2
+        };
+      }
+      try {
+        authority = JSON.parse(authorityText) as CiAuthority;
+      } catch {
+        return {
+          envelope: errorEnvelope(
+            "markers.prove",
+            "cli_invalid_arguments",
+            `--authority-file is not valid JSON: ${authorityPath}`
+          ),
+          exitCode: 2
+        };
+      }
+    } else {
+      authority = detectCiAuthority(process.env);
+    }
+
+    const result = runProveCommand({
+      context: ctx,
+      productRoot: paths.productRoot,
+      bindingsPath: paths.bindingsPath,
+      evidencePath: paths.evidencePath,
+      publicKeyResolver: markerPublicKeyResolver(argv),
+      rowId,
+      all,
+      refresh: argv.includes("--refresh"),
+      trustedCi: argv.includes("--trusted-ci"),
+      append: argv.includes("--append"),
+      dryRun: argv.includes("--dry-run"),
+      verificationResults,
+      unsafeAssumeVerificationResult: unsafeAssume,
+      signingKey: markerSigningKey(argv),
+      producer: {
+        ci_run_id: process.env.GITHUB_RUN_ID,
+        repo: process.env.GITHUB_REPOSITORY,
+        commit: process.env.GITHUB_SHA
+      },
+      authority,
+      generatedAt: valueAfter(argv, "--generated-at") ?? new Date().toISOString(),
+      idFactory: generateUlid,
+      baseRef: valueAfter(argv, "--base-ref"),
+      repoCwd: ctx.workspace_root
+    });
+    return markerOutput("markers.prove", result, ctx, result.exit_code === 0);
+  }
+};
+
+export const markersVerifyCommand: CliCommand = {
+  path: ["verify"],
+  command: "markers.verify",
+  summary: "Run each bound row's verifier and write an UNSIGNED results ledger.",
+  flags: [
+    ...workspaceFlags,
+    ...markerPathFlags,
+    { key: "row", name: "--row", kind: "string", valueName: "<id>", summary: "Target row id." },
+    { key: "all", name: "--all", kind: "boolean", summary: "Target every bound row." },
+    { key: "out", name: "--out", kind: "string", valueName: "<path>", summary: "Write the unsigned results ledger (feed this to `prove --verification-results`). Keep it OUTSIDE the evidence dir." },
+    ...trustedKeyFlags,
+    { key: "generatedAt", name: "--generated-at", kind: "string", valueName: "<iso>", summary: "Override the generated-at timestamp." },
+    { key: "baseRef", name: "--base-ref", kind: "string", valueName: "<ref>", summary: "Diff base for the append-only check." }
+  ],
+  handler: ({ argv }) => {
+    const context = resolveContextOrError(argv, "markers.verify");
+    if (context.kind === "error") {
+      return { envelope: context.envelope, exitCode: context.exitCode };
+    }
+    const ctx = context.context;
+    const all = argv.includes("--all");
+    const rowId = valueAfter(argv, "--row");
+    if (!all && !rowId) {
+      return {
+        envelope: errorEnvelope("markers.verify", "cli_invalid_arguments", "Missing --all or --row <slug>."),
+        exitCode: 2
+      };
+    }
+    const paths = markerPaths(argv, ctx);
+    const outRaw = valueAfter(argv, "--out");
+    const result = runVerifyCommand({
+      context: ctx,
+      productRoot: paths.productRoot,
+      bindingsPath: paths.bindingsPath,
+      evidencePath: paths.evidencePath,
+      publicKeyResolver: markerPublicKeyResolver(argv),
+      all,
+      rowId,
+      outPath: outRaw ? resolve(process.cwd(), outRaw) : undefined,
+      generatedAt: valueAfter(argv, "--generated-at") ?? new Date().toISOString(),
+      baseRef: valueAfter(argv, "--base-ref"),
+      repoCwd: ctx.workspace_root
+    });
+    return markerOutput("markers.verify", result, ctx, result.exit_code === 0);
+  }
+};
+
+export const markersValidateLedgerCommand: CliCommand = {
+  path: ["validate-ledger"],
+  command: "markers.validate-ledger",
+  summary: "Validate the marker evidence ledger (append-only, signatures, schema).",
+  flags: [
+    ...workspaceFlags,
+    ...markerPathFlags,
+    ...trustedKeyFlags,
+    { key: "baseRef", name: "--base-ref", kind: "string", valueName: "<ref>", summary: "Diff base for the append-only check." }
+  ],
+  handler: ({ argv }) => {
+    const context = resolveContextOrError(argv, "markers.validate-ledger");
+    if (context.kind === "error") {
+      return { envelope: context.envelope, exitCode: context.exitCode };
+    }
+    const ctx = context.context;
+    const paths = markerPaths(argv, ctx);
+    const result = runValidateLedgerCommand({
+      context: ctx,
+      evidencePath: paths.evidencePath,
+      bindingsPath: paths.bindingsPath,
+      publicKeyResolver: markerPublicKeyResolver(argv),
+      baseRef: valueAfter(argv, "--base-ref"),
+      repoCwd: ctx.workspace_root
+    });
+    // validate-ledger uses result.ok (NOT exit_code === 0) for the envelope ok/
+    // complete flags, exactly as the legacy handler did.
+    return markerOutput("markers.validate-ledger", result, ctx, result.ok);
+  }
+};
+
+export const markersCommands: CliCommand[] = [
+  markersBindCommand,
+  markersScanCommand,
+  markersProveCommand,
+  markersVerifyCommand,
+  markersValidateLedgerCommand
+];
