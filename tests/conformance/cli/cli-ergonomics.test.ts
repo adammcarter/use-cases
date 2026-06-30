@@ -66,7 +66,19 @@ describe("CLI help and usage discoverability", () => {
     expect(names).toContain("showcase approve");
     // The FRESH path flags must be discoverable.
     const prove = payload.data.commands.find((entry: { name: string }) => entry.name === "prove");
-    expect(prove.flags.map((f: { flag: string }) => f.flag).join(" ")).toContain("--verification-results");
+    const proveFlags = prove.flags.map((f: { flag: string }) => f.flag).join(" ");
+    expect(proveFlags).toContain("--verification-results");
+    // Catalog completeness: real flags the docs reference must appear in --help
+    // (a docs-review fleet caught these missing from the usage table).
+    expect(bindFlags).toContain("--suffix");
+    expect(bindFlags).toContain("--dry-run");
+    expect(proveFlags).toContain("--key-id");
+    expect(proveFlags).toContain("--keyring");
+    const scan = payload.data.commands.find((entry: { name: string }) => entry.name === "scan");
+    const scanFlags = scan.flags.map((f: { flag: string }) => `${f.flag} ${f.summary}`).join(" ");
+    expect(scanFlags).toContain("--keyring");
+    expect(scanFlags).toContain("custom");
+    expect(names).toContain("schema validate-fixtures");
   });
 
   test("a bare invocation prints the human-readable help", () => {

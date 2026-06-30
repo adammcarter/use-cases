@@ -44,4 +44,4 @@ and the
 
 ## License
 
-[MIT](./LICENSE)
+[MIT](https://github.com/adammcarter/use-cases-plugin/blob/main/LICENSE)

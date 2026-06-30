@@ -64,7 +64,7 @@ def checkout():
 
 | Use-case row | Code |
 |---|---|
-| `presentation_skills.evidence.crash_durable_ledger_writes` | `packages/ucm-core/src/durableWrite.ts` :: `fsyncBestEffortForTemp` (explicit span) |
+| `evidence.ledger.crash_durable_ledger_writes` | `packages/ucm-core/src/durableWrite.ts` :: `fsyncBestEffortForTemp` (explicit span) |
 
 Registration: `.use-cases/bindings.jsonl`. Current status on a clean checkout:
 **UNPROVEN** (linked, awaiting a trusted CI proof) — 1 row bound, 81 unbound.
@@ -90,7 +90,7 @@ source — that read as a duplicate slug (src + dist) and marked the row INVALID
 Fixed: `collectSourceInputs` now skips common build-output dirs
 (`dist`, `dist-ts`, `build`, `out`, `coverage`, `.next`, `.turbo`, `.svelte-kit`)
 in addition to `.git` / `node_modules` / `.use-cases`. Covered by
-`test/markers/skipBuildDirs.test.ts`.
+`packages/ucm-core/test/markers/skipBuildDirs.test.ts`.
 
 ## Next adoption steps
 
