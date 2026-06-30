@@ -46,6 +46,21 @@ describe("collectSourceInputs skips build-output dirs", () => {
     expect(result.bindings.map((b) => b.binding_slug)).toEqual(["demo.row"]);
   });
 
+  test("a marker inside .claude/worktrees (a repo COPY) is not scanned", () => {
+    // Workflow isolation creates full repo copies under .claude/worktrees/; their
+    // source markers would otherwise duplicate the real slug and poison the scan.
+    const root = mkdtempSync(join(tmpdir(), "ucp-skip-claude-"));
+    dirs.push(root);
+    write(root, "Sources/F.swift", SRC); // the real source marker
+    write(root, ".claude/worktrees/wf-1/Sources/F.swift", SRC); // a leftover copy
+
+    const inputs = collectSourceInputs(root);
+    expect(inputs.map((i) => i.file_path).sort()).toEqual(["Sources/F.swift"]);
+    const result = scanFiles(inputs, {});
+    expect(result.errors).toEqual([]);
+    expect(result.bindings.map((b) => b.binding_slug)).toEqual(["demo.row"]);
+  });
+
   test("a marker in a nested examples/ project is not scanned by the parent", () => {
     // examples/ ship their own matrix + markers (a nested workspace); scanning
     // them from the parent repo would read their rows as INVALID. They must be
