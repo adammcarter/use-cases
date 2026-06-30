@@ -5,7 +5,7 @@
 // exit code) instead of emitting it. The envelopes are constructed identically to
 // the legacy ones, so `--json` output stays byte-for-byte the same.
 import { isAbsolute, relative, resolve } from "node:path";
-import { loadUcmCore } from "./legacy.js";
+import { loadUcmCore } from "./builtins.js";
 import { valueAfter } from "./args/parse.js";
 
 const core = await loadUcmCore();

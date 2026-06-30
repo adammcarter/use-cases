@@ -12,9 +12,9 @@ import { workflowCommands } from "../commands/workflow.js";
 import type { CliCommand } from "./types.js";
 
 // The declarative command registry. Anything not listed here falls through to the
-// legacy dispatcher; each migrated command is parity-verified to stay
-// byte-identical. Still on the legacy path: version/init/help (bespoke
-// non-envelope output) — kept there permanently in phase 10.
+// builtins fallback (builtins.ts); each registered command is parity-verified to
+// stay byte-identical. Handled as builtins, NOT registry commands: version /
+// init / help (bespoke non-envelope output) — kept there permanently.
 export const allCommands: CliCommand[] = [
   ...schemaCommands,
   ...matrixCommands,
