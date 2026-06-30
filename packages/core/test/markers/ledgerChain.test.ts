@@ -182,7 +182,7 @@ function makeWorkspace(): Workspace {
   return {
     productRoot: context.workspace_root,
     bindingsPath: join(context.data_root, ".use-cases", "bindings.jsonl"),
-    evidencePath: join(context.data_root, ".use-cases", "evidence.jsonl"),
+    evidencePath: join(context.data_root, ".use-cases", "proofs.jsonl"),
     context
   };
 }

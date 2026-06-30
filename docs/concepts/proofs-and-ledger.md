@@ -52,7 +52,7 @@ with the CI-only key) → persist the ledger back to the repo.
 
 ## The tamper-evident ledger
 
-Proof events are appended to the ledger (`.use-cases/evidence.jsonl` by default).
+Proof events are appended to the ledger (`.use-cases/proofs.jsonl` by default).
 It is:
 
 - **Append-only** — events are never edited or deleted; corrections are new

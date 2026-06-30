@@ -157,7 +157,7 @@ function makeWorkspace(sourceFiles: Record<string, string> = {}): Workspace {
   return {
     productRoot: context.workspace_root,
     bindingsPath: join(context.data_root, ".use-cases", "bindings.jsonl"),
-    evidencePath: join(context.data_root, ".use-cases", "evidence.jsonl"),
+    evidencePath: join(context.data_root, ".use-cases", "proofs.jsonl"),
     context
   };
 }
@@ -287,7 +287,7 @@ describe("bind command", () => {
     expect(rowStatus(scan(ws), ROW_ID)).toBe("UNPROVEN");
   });
 
-  test("acceptance 3: bind never writes evidence.jsonl", () => {
+  test("acceptance 3: bind never writes proofs.jsonl", () => {
     const ws = makeWorkspace({ "Sources/Checkout/CouponService.swift": SWIFT_FUNC_SOURCE });
     bindSwiftFunc(ws);
     expect(existsSync(ws.evidencePath)).toBe(false);
@@ -338,7 +338,7 @@ describe("scan command", () => {
 });
 
 describe("prove command", () => {
-  test("acceptance 5: prove WITHOUT --trusted-ci does not append to evidence.jsonl", () => {
+  test("acceptance 5: prove WITHOUT --trusted-ci does not append to proofs.jsonl", () => {
     const ws = makeWorkspace({ "Sources/Checkout/CouponService.swift": SWIFT_FUNC_SOURCE });
     bindSwiftFunc(ws);
     const result = runProveCommand({

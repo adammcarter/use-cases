@@ -106,7 +106,7 @@ function codes(errors: Array<{ code: string }>): string[] {
   return errors.map((e) => e.code);
 }
 
-describe("evidence.jsonl reader", () => {
+describe("proofs.jsonl reader", () => {
   test("parses one event per line and tolerates a trailing newline", () => {
     const text = `${jsonl(signedEvent())}\n`;
     const result = readEvidenceJsonl(text);

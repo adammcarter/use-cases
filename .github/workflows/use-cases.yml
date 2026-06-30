@@ -21,7 +21,7 @@ on:
 # Release policy applies on the release branch(es) or when explicitly requested;
 # every other ref is gated as a feature branch (block INVALID only).
 env:
-  UCM_EVIDENCE: .use-cases/evidence.jsonl
+  UCM_PROOFS: .use-cases/proofs.jsonl
   UCM_BINDINGS: .use-cases/bindings.jsonl
   UCM_PUBLIC_KEY: .use-cases/trusted-ci-public-key.pem
   # Transient, per-run unsigned verification results (verify -> prove handoff).
@@ -73,7 +73,7 @@ jobs:
           if [ -f "$UCM_PUBLIC_KEY" ]; then key_args=(--public-key "$UCM_PUBLIC_KEY"); fi
           corepack pnpm cli -- validate-ledger \
             --repo . \
-            --evidence "$UCM_EVIDENCE" \
+            --proofs "$UCM_PROOFS" \
             --bindings "$UCM_BINDINGS" \
             --base-ref origin/${{ github.event.repository.default_branch }} \
             "${key_args[@]}" \
@@ -112,7 +112,7 @@ jobs:
           corepack pnpm cli -- scan \
             --repo . \
             --product-root . \
-            --evidence "$UCM_EVIDENCE" \
+            --proofs "$UCM_PROOFS" \
             --bindings "$UCM_BINDINGS" \
             --policy-mode feature \
             "${key_args[@]}" \
@@ -173,7 +173,7 @@ jobs:
           corepack pnpm cli -- verify \
             --repo . \
             --product-root . \
-            --evidence "$UCM_EVIDENCE" \
+            --proofs "$UCM_PROOFS" \
             --bindings "$UCM_BINDINGS" \
             "${key_args[@]}" \
             --all \
@@ -192,7 +192,7 @@ jobs:
           corepack pnpm cli -- prove \
             --repo . \
             --product-root . \
-            --evidence "$UCM_EVIDENCE" \
+            --proofs "$UCM_PROOFS" \
             --bindings "$UCM_BINDINGS" \
             "${key_args[@]}" \
             --all \
@@ -208,13 +208,13 @@ jobs:
       - name: persist proof ledger
         if: ${{ env.UCM_CI_SIGNING_KEY != '' }}
         run: |
-          if ! git status --porcelain "$UCM_EVIDENCE" | grep -q .; then
+          if ! git status --porcelain "$UCM_PROOFS" | grep -q .; then
             echo "no new proof events to persist"
             exit 0
           fi
           git config user.name "use-cases-ci[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "$UCM_EVIDENCE"
+          git add "$UCM_PROOFS"
           git commit -m "ci: persist use-case proof ledger [skip ci]"
           # Rebase onto the latest tip in case the branch advanced, then push the
           # append back to the same branch the release run is on.
@@ -234,7 +234,7 @@ jobs:
           corepack pnpm cli -- scan \
             --repo . \
             --product-root . \
-            --evidence "$UCM_EVIDENCE" \
+            --proofs "$UCM_PROOFS" \
             --bindings "$UCM_BINDINGS" \
             --policy-mode release \
             "${key_args[@]}" \

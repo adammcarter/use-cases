@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://use-cases-plugin.dev/schemas/v1/ledger.schema.json",
   "title": "ucase-evidence-ledger-v1",
-  "description": "The whole proof/evidence ledger (`.use-cases/evidence.jsonl`) modelled as an ordered, append-only sequence of proof events. This is the file-level contract — distinct from the per-entry proof-event schema (ucase-proof-event-v1). The append-only/ordering contract: existing lines are never edited or deleted, new proof events are only appended at the tail, and entry index order is significant and immutable. Each entry MUST additionally validate against the ucase-proof-event-v1 schema.",
+  "description": "The whole proof/evidence ledger (`.use-cases/proofs.jsonl`) modelled as an ordered, append-only sequence of proof events. This is the file-level contract — distinct from the per-entry proof-event schema (ucase-proof-event-v1). The append-only/ordering contract: existing lines are never edited or deleted, new proof events are only appended at the tail, and entry index order is significant and immutable. Each entry MUST additionally validate against the ucase-proof-event-v1 schema.",
   "type": "object",
   "additionalProperties": false,
   "$defs": {

@@ -1,6 +1,6 @@
 // Evidence ledger validation (spec section 5; Phase 5).
 //
-// The evidence ledger (`.use-cases/evidence.jsonl`) is an append-only log of
+// The evidence ledger (`.use-cases/proofs.jsonl`) is an append-only log of
 // signed, trusted-CI proof events (spec 5.1, amendment 3). This module turns the
 // JSONL text into validated proof events and reports precise error codes for
 // every way the ledger can be invalid:

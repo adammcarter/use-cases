@@ -13,7 +13,7 @@ have to be reverse-engineered from the code. For *where* each one is stored, see
 | **Use case** (matrix row) | A claimed product behaviour: intent, scenarios, value tier, observable outcomes. Authored YAML under `use-cases/`. | the claim |
 | **Marker / binding** | A `@use-case:` code-span marker tying a row to the code that satisfies it, recorded in the append-only **binding registry** (`.use-cases/bindings.jsonl`). | the link |
 | **Verifier** | The row's configured check (e.g. a test command) whose run is recorded. | the check |
-| **Proof** | A CI-signed Ed25519 event asserting the bound code + verifier still match the row — the only thing that makes a row `FRESH`. Lives in the **proof ledger** (`.use-cases/evidence.jsonl`). | **real** (CI-attested) |
+| **Proof** | A CI-signed Ed25519 event asserting the bound code + verifier still match the row — the only thing that makes a row `FRESH`. Lives in the **proof ledger** (`.use-cases/proofs.jsonl`). | **real** (CI-attested) |
 | **Use-case evidence** | Append-only *observations* attached to a use case (`evidence record`), graded by assurance — a self-reported agent "pass" is the weakest tier. Stored under `evidence/`. | **real** (but graded) |
 | **Plan** | A *selected* set of high-value rows to present — `plan showcase` / `plan walkthrough`. Prepared material, not performed. | prepared |
 | **Walkthrough** | A non-live, narrated plan variant (explain caveats/gaps/evidence). | prepared |
@@ -41,12 +41,11 @@ agent's self-report is not CI-signed freshness.
 
 ## Two things to keep straight
 
-1. **"Evidence" names two different surfaces.** *Use-case evidence* (`evidence/`)
-   is graded observations attached to a row. The *proof ledger*
-   (`.use-cases/evidence.jsonl`) is the marker-freshness proof chain. They are
-   not interchangeable — the proof ledger is the trust root; use-case evidence is
-   supporting, assurance-graded material. (The ledger filename predates this
-   split; treat `.use-cases/evidence.jsonl` as "the proof ledger".)
+1. **Proofs ≠ use-case evidence.** The *proof ledger* (`.use-cases/proofs.jsonl`)
+   is the marker-freshness proof chain — the trust root. *Use-case evidence*
+   (`evidence/`) is graded observations attached to a row — supporting,
+   assurance-graded material. They are not interchangeable, and the filenames now
+   say which is which (proofs vs evidence).
 
 2. **Prepared ≠ performed.** Plans, walkthroughs, and capsules are *prepared
    material* — generated, not yet enacted. A **showcase** is the only thing that

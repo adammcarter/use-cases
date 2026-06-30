@@ -47,9 +47,9 @@ function markerPaths(flags: ParsedFlags, context: ResolvedContext) {
   const bindingsPath = (flags.bindings as string | undefined)
     ? resolve(process.cwd(), flags.bindings as string)
     : join(context.data_root, ".use-cases", "bindings.jsonl");
-  const evidencePath = (flags.evidence as string | undefined)
-    ? resolve(process.cwd(), flags.evidence as string)
-    : join(context.data_root, ".use-cases", "evidence.jsonl");
+  const evidencePath = (flags.proofs as string | undefined)
+    ? resolve(process.cwd(), flags.proofs as string)
+    : join(context.data_root, ".use-cases", "proofs.jsonl");
   return { productRoot, bindingsPath, evidencePath };
 }
 
@@ -125,7 +125,7 @@ function markerOutput(
 const markerPathFlags = [
   { key: "productRoot", name: "--product-root", kind: "string", valueName: "<path>", summary: "Root to scope markers/verifiers to (default --repo)." },
   { key: "bindings", name: "--bindings", kind: "string", valueName: "<path>", summary: "Override the bindings ledger path (default <data-root>/.use-cases/bindings.jsonl)." },
-  { key: "evidence", name: "--evidence", kind: "string", valueName: "<path>", summary: "Override the evidence ledger path (default <data-root>/.use-cases/evidence.jsonl)." }
+  { key: "proofs", name: "--proofs", kind: "string", valueName: "<path>", summary: "Override the proof ledger path (default <data-root>/.use-cases/proofs.jsonl)." }
 ] as const;
 
 const trustedKeyFlags = [
