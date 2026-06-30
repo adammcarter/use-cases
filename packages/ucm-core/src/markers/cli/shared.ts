@@ -50,6 +50,9 @@ export function findRow(rows: ReadonlyArray<FreshnessInputRow>, rowId: string): 
 // a marker comment from source, which would otherwise read as a duplicate slug.
 const DEFAULT_SKIP_DIRS = new Set([
   ".git",
+  // Agent/session state — notably .claude/worktrees holds full repo COPIES whose
+  // source markers would otherwise read as duplicate slugs and poison the scan.
+  ".claude",
   "node_modules",
   ".use-cases",
   "dist",
