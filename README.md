@@ -1,68 +1,103 @@
-# Use Cases Plugin (UCM)
+# Use Cases Plugin
 
-Use Cases Plugin keeps an agent's product claims honest. It gives a repo a living
-use-case matrix, binds each row to the code that satisfies it, and marks a row
-**FRESH** only when trusted CI has signed proof that the current code, binding,
-and verifier context still match — so stale claims become visible instead of
-silently trusted. On top of that trust core it adds plans, capsules, host
-applicability, evidence, and live showcase runs, replacing static
-`TEST-MATRIX.md` files with behaviour rows that are planned up front, updated
-during work, proven in CI, and demonstrated when that is valuable.
+**Keep your AI agent's "it works" honest.**
 
-> Installs as `@use-cases-plugin/cli` (binary `ucp`) plus an MCP server
-> (`@use-cases-plugin/mcp`, binary `ucp-mcp`) that agents drive directly.
+AI coding agents ship fast and claim confidently — "done", "tested", "this works". Some of those claims are true. Some were true last week. Some were never checked. You can't tell which by looking, and stale claims fail silently.
 
-New here? Start with [the documentation index](docs/README.md) and the
-[getting-started tutorial](docs/getting-started.md).
+Use Cases Plugin gives your repo a **living matrix of product behaviours**, binds each one to the code that satisfies it, and marks it **`FRESH` only when trusted CI has cryptographically signed proof that the current code still backs the claim.** Edit the code behind a behaviour and its row flips to `SUSPECT` on its own — the lie surfaces instead of being trusted.
 
-## Workflows
+It's the difference between *"the agent said the checkout flow works"* and *"the checkout flow has a behaviour row, bound to `applyCoupon()`, proven `FRESH` by CI at commit `a1b2c3`, demonstrated to a human who signed off."*
 
-- continuous: recommended default. Add or adjust use cases during planning,
-  record evidence as work lands, and finish with a focused showcase when the
-  work needs visible proof.
-- backfill: migrate old `TEST-MATRIX.md` rows into draft use cases, then review
-  and activate the useful rows.
-- showcase-only: select a few high-value use cases and run a live demo without
-  adopting the full lifecycle.
-- audit-only: load and validate the matrix, evidence, and histories to inspect
-  current project risk.
-- migration: run the TEST-MATRIX importer in dry-run first, then write draft
-  use-case YAML only when the report looks right.
+---
 
-## Main Commands
+## The problem it solves
+
+| You've seen this | What's actually happening |
+|---|---|
+| "Tests pass ✅" but the feature is broken | Green tests ≠ verified behaviour. Nothing ties a *behaviour* to the code or the proof. |
+| An agent says "done" and moves on | The claim is prose. There's no durable, checkable record — and no way to know when it goes stale. |
+| A slick generated "demo plan" gets treated as a demo | A plan is *prepared material*, not a performed, recorded result. |
+| `TEST-MATRIX.md` rotted months ago | Hand-maintained status tables drift the moment code changes; old `PASS` marks lie. |
+| "It's signed off" — by whom? when? | Approvals are vibes. An agent can type "approved" as easily as a human. |
+
+Use Cases Plugin replaces all of that with one append-only, content-addressed source of truth that an agent maintains as it works — and that *cannot* quietly lie.
+
+---
+
+## What you get
+
+### 🧬 A living use-case matrix
+Behaviours, not just tests. Each row captures intent, scenarios, value tier, and observable outcomes in readable YAML the agent keeps current during planning and implementation. Query it (`ucp matrix list`), validate it, and see coverage by value and journey role at a glance.
+
+### 🔐 Cryptographic freshness (the headline)
+Bind a row to the exact code that satisfies it with a one-line marker. Trusted CI runs the verifier and signs an Ed25519 proof — only then does the row read `FRESH`. **Change the bound code and the row automatically becomes `SUSPECT`** (the signed proof no longer matches the code span). No human can fake `FRESH`; the signing key lives only in CI. Freshness is math, not a checkbox.
+
+### 📒 An honest evidence ledger
+Append-only, content-addressed history of what was actually observed. It grades itself: a self-reported agent "pass" is stamped the **weakest** assurance tier, never dressed up as verified. Corrections are appended, never edited. Nothing is laundered into proof.
+
+### 🎬 Live showcases with un-fakeable sign-off
+Perform a behaviour live — observe, verdict, finish — recorded as an event-sourced run. An agent can drive the whole show **but is structurally barred from approving it as the user**: user sign-off requires a trusted confirmation path the agent can't command. "Approved by a human" finally means it.
+
+### ♻️ Painless migration
+Point the importer at a legacy `TEST-MATRIX.md` and it backfills draft use cases — while explicitly refusing to turn old `PASS` marks into evidence. Review the drafts, activate the keepers.
+
+### 🔌 Works inside your agent
+Ships for **Claude Code, Codex, Copilot, and OpenCode** as a CLI (`ucp`) and an MCP server, with the same JSON contract on both. On install it auto-injects a trusted bootstrap at session start, so the agent knows how to use it without being told.
+
+---
+
+## Who it's for
+
+- **Teams building with AI agents** who want acceptance to stay true as the agent (and the code) churns.
+- **Anyone who needs pre-merge proof** — a signed, demonstrable record that the behaviours a PR claims actually hold.
+- **Demos & sign-offs** — turn "trust me" into a performed, human-approved showcase.
+- **Inheriting a messy repo** — migrate its `TEST-MATRIX.md`, or backfill behaviours and audit current risk.
+
+Typical workflows: **continuous** (keep the matrix live as you build), **backfill** (adopt onto an existing codebase), **showcase-only** (just perform a few high-value demos), **audit-only** (load and inspect risk), **migration** (import a legacy matrix safely).
+
+---
+
+## Quickstart
 
 ```bash
-ucp matrix validate --repo . --json
-ucp evidence record --repo . --use-case matrix.core.validate --kind test_result --result pass --json
-ucp plan showcase --repo . --max-items 3 --json
-ucp showcase start --repo . --adhoc --select matrix.core.validate --json
-ucp host conformance --all --repo . --json
-ucp doctor package --json
+# Install the CLI (and MCP server) into your project
+npm i -D @use-cases-plugin/cli @use-cases-plugin/mcp
+
+# Scaffold a workspace
+npx ucp init
+
+# See everything ucp can do (human-readable; add --json for machine output)
+npx ucp --help
+
+# The core loop
+npx ucp matrix validate --repo .                       # is the matrix clean?
+npx ucp matrix list --repo .                            # what behaviours exist?
+npx ucp bind --row checkout.apply_coupon \              # tie a row to code
+  --file src/checkout.ts --mode explicit --start-line 40 --end-line 58
+npx ucp plan showcase --repo . --max-items 3            # pick a demo
+npx ucp showcase start --repo . --adhoc --select checkout.apply_coupon
 ```
 
-MCP tools wrap the same CLI envelopes. Host projections are thin activation
-stubs for Claude, Codex, Copilot, and OpenCode; they are not proof of live host
-support by themselves.
+New here? Start with the **[getting-started tutorial](docs/getting-started.md)** and the **[documentation index](docs/README.md)**.
 
-## Use-case markers: precommit + CI
+---
 
-The use-case-markers guard (spec `docs/superpowers/specs/2026-06-28-use-case-markers-v1.md`)
-is wired into both a local precommit hook and CI:
+## Under the hood
 
-- Precommit (ergonomics, not authority): `scripts/use-cases-precommit.sh` runs
-  `validate-ledger --staged` and `scan --policy-mode feature`. It BLOCKS the
-  commit on integrity failures (malformed/duplicate/unregistered markers,
-  non-append ledger or registry edits, invalid proof schema/signature, registry
-  conflict) and prints a loud, non-blocking warning for SUSPECT / UNPROVEN /
-  UNBOUND rows. It is not installed automatically; enable it with:
+For the technically curious — the high-level shape:
 
-  ```bash
-  ln -s ../../scripts/use-cases-precommit.sh .git/hooks/pre-commit
-  ```
+- **Contract-first.** Every command returns a versioned, schema-validated JSON envelope (`ok`, `complete`, `data`, `diagnostics`, `context`). The MCP tools wrap the exact same envelopes, so agents get identical behaviour over either transport.
+- **The trust core.** A behaviour row → a code-span *marker* → an append-only *binding registry* → a *signed proof event* in the evidence ledger. CI is the only authority that can mint proof (Ed25519 key held as a CI secret; a public-key keyring verifies it). `scan` derives each row's freshness (`FRESH` / `SUSPECT` / `UNPROVEN` / `UNBOUND` / `INVALID`) from the current code, the registry, and the proofs.
+- **Markers are language-agnostic.** `//: @use-case: <id>` … `//: @use-case: end <id>` with the comment prefix inferred per file type (`#` for Python/shell/YAML, shebang-detected for extensionless scripts, a dedicated mode for Swift functions).
+- **Built-in CI + precommit.** `.github/workflows/use-cases.yml` runs `validate-ledger` and `scan`, and (on release) `verify → prove → release-gate` so required rows must be `FRESH` to ship. An optional local precommit hook gives fast, non-authoritative feedback. Publishing uses npm Trusted Publishing (OIDC) with build provenance — no tokens.
+- **Append-only everywhere.** The matrix, the binding registry, the evidence ledger, and showcase runs are all event-sourced and content-addressed: status is *derived* from history, never asserted.
 
-- CI (authority): `.github/workflows/use-cases.yml` runs `validate-ledger`
-  (blocks on failure), `scan` (feature blocks INVALID only; release also blocks
-  required rows that are not FRESH, and prints inferred Swift spans), and an
-  optional `prove` job that mints signed proof events on the release branch from
-  the `UCP_CI_SIGNING_KEY` secret. The policy mode is selected from the branch
-  (release on `main` / `release/**`, feature elsewhere) or a manual input.
+Packages: **`@use-cases-plugin/cli`** (binary `ucp`), **`@use-cases-plugin/mcp`** (binary `ucp-mcp`), **`@use-cases-plugin/core`**.
+
+Deeper reading: [CLI reference](docs/cli.md) · [data model](docs/data-model.md) · [code markers & freshness](docs/markers-adoption.md) · [evidence & security](docs/security.md) · [showcase runs](docs/showcase.md) · [hosts & activation](docs/hosts.md) · [MCP](docs/mcp.md) · [migration](docs/migration.md).
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE).
