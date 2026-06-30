@@ -1,7 +1,7 @@
 # @use-cases-plugin/mcp
 
 Local stdio [Model Context Protocol](https://modelcontextprotocol.io) server for
-**Use Cases Plugin (UCM)** — exposing the full UCM workflow (matrix, freshness,
+**Use Cases Plugin** — exposing the full workflow (matrix, freshness,
 evidence, showcase, host applicability, and more) to coding agents without a GUI.
 
 ## Install

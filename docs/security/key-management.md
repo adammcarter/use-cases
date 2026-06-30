@@ -10,7 +10,7 @@ There are two ways to tell the tool which public key(s) to trust:
 
 | Flag | Trust model | Use when |
 |---|---|---|
-| `--public-key <file.pem>` | A **single** key, trusted unconditionally. | One signer, no rotation. The original, simplest path. |
+| `--public-key <file.pem>` | A **single** key, trusted unconditionally — only as safe as the file the verifier is pointed at, so commit it where the agent cannot swap it (see [threat model](../security.md#threat-model--what-holds-on-its-own-and-what-needs-setup)). | One signer, no rotation. The original, simplest path. |
 | `--keyring <file.json>` | A **registry** of keys, each with a status and validity window. | You need rotation and/or revocation. **Opt-in**, additive. |
 
 Both flags are accepted by `scan`, `verify`, `prove`, and `validate-ledger`.

@@ -1,4 +1,4 @@
-// MCP resources: READ-ONLY views of UCM workspace state (MCP 2025-11-25).
+// MCP resources: READ-ONLY views of Use Cases Plugin workspace state (MCP 2025-11-25).
 //
 // Each resource reuses the same read-only cores the CLI/tools wrap and returns
 // the SAME structured JSON. Resources NEVER mutate, run verifiers, or mint
@@ -99,7 +99,7 @@ export const mcpResources: McpResourceDescriptor[] = [
   {
     uri: "ucp://schemas",
     name: "Public schema index",
-    description: "Index of public UCM JSON schemas. Read an individual schema at ucp://schemas/{name} (e.g. ucp://schemas/common.schema.json). No repo required.",
+    description: "Index of public Use Cases Plugin JSON schemas. Read an individual schema at ucp://schemas/{name} (e.g. ucp://schemas/common.schema.json). No repo required.",
     mimeType: JSON_MIME
   },
   {

@@ -1,6 +1,6 @@
 # Stability & Versioning Policy
 
-Use Cases Plugin (UCM) follows [Semantic Versioning](https://semver.org). At
+Use Cases Plugin follows [Semantic Versioning](https://semver.org). At
 `1.0.0` the surfaces listed under **Public API** below are a contract: they only
 change in breaking ways across a **major** version bump. This page is the
 authoritative declaration of what is stable, what is experimental, and how

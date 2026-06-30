@@ -1,6 +1,6 @@
 # @use-cases-plugin/core
 
-Core domain library for **Use Cases Plugin (UCM)** — a repo-local, agent-facing
+Core domain library for **Use Cases Plugin** — a repo-local, agent-facing
 assurance system for keeping product claims, code spans, demonstrations,
 evidence, and release decisions aligned.
 

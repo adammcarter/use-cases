@@ -61,13 +61,13 @@ const promptDefinitions: PromptDefinition[] = [
     build: (args) => {
       const repo = repoOf(args);
       return {
-        description: "Step-by-step adoption of Use-Case Matrix in a repository.",
+        description: "Step-by-step adoption of the use-case matrix in a repository.",
         messages: [
           userMessage(
             [
-              "Goal: adopt Use-Case Matrix (UCM) in this repository so every shippable behaviour is a matrix row that can be bound to code and proven fresh in CI.",
+              "Goal: adopt Use Cases Plugin in this repository so every shippable behaviour is a matrix row that can be bound to code and proven fresh in CI.",
               "",
-              "There is no `ucp init` command — a workspace is adopted by authoring two things by hand:",
+              `Fastest start: \`ucp init --repo ${repo}\` scaffolds the workspace (a use-cases-plugin.yml config + a use-cases/ directory with one example row). To adopt by hand instead — e.g. onto an existing repo — author the same two things:`,
               `1. A workspace config \`use-cases-plugin.yml\` at the repo root (declares data_root, use_cases_dir, component_id, and optional verifiers/release_gate).`,
               "2. A `use-cases/` directory of use-case YAML files, one row per behaviour.",
               "",

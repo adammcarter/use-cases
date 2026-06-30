@@ -154,7 +154,7 @@ when asked for explicitly.
 ## What provenance does (and does not) prove
 
 npm provenance attests **where and how the package tarball was built** (this
-repo, this workflow, this commit). It is independent of UCM's own
+repo, this workflow, this commit). It is independent of the tool's own
 proof/evidence ledger: npm provenance proves package build origin, **not**
 row-level use-case freshness. Keep the two mental models separate.
 

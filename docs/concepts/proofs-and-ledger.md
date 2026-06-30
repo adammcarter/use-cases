@@ -36,11 +36,19 @@ code:
    itself**, and signs. It runs *no* scripts, so it is the only place the signing
    key is in scope, and an agent cannot feed it a forged "pass."
 
-Because `prove` re-derives the hashes rather than trusting the input, and signs
-with a key nobody else holds, **local users cannot manufacture FRESH**. The
+Because `prove` re-derives the hashes rather than trusting the input, a passing
+proof cannot be forged from a forged "pass." But freshness is only ever as
+trustworthy as **the key the verifier trusts**: `scan` proves "this proof was
+signed by the key you chose to trust," not "by CI." So **local users cannot
+manufacture FRESH _only when_** the public key (or keyring) is **committed to the
+repo where the agent cannot swap it**, and the private signing key lives **only**
+in a CI secret. Hand `scan` a `--public-key` the agent supplies — or let it
+generate its own keypair — and an actor with shell access can sign and verify its
+own `FRESH`. See the [threat model](../security.md#threat-model--what-holds-on-its-own-and-what-needs-setup)
+for the full boundary. The
 [GitHub Actions reference workflow](../../.github/workflows/use-cases.yml) wires
-this up: `verify` (keyless) → `prove` (signs on the release branch) → persist the
-ledger back to the repo.
+the trusted setup up: `verify` (keyless) → `prove` (signs on the release branch
+with the CI-only key) → persist the ledger back to the repo.
 
 ## The tamper-evident ledger
 
@@ -49,14 +57,19 @@ It is:
 
 - **Append-only** — events are never edited or deleted; corrections are new
   events.
-- **A hash chain** — entries are linked so any retroactive edit is detectable.
+- **A hash chain** — entries are linked so a retroactive edit is detectable **when
+  the ledger is validated against a trusted prior state**. Run
+  `validate-ledger --base-ref <protected-ref>` so the chain is diffed against a
+  branch the agent cannot force-push; without that anchor a local actor can rewrite
+  the whole file and re-chain it consistently, so "tamper-evident" means *evident
+  to a checker that holds an external reference point*, not self-enforcing.
 - **Fail-closed** — verification only ever *adds* trust. An entry whose signature
   cannot be verified (unknown key, revoked key, bad signature, out-of-window key)
   is an integrity failure, never a silent pass.
 
-`ucp validate-ledger` checks this discipline — append-only structure, schema
-conformance, signatures, and internal hash consistency — and is run as a blocking
-CI gate.
+`ucp validate-ledger` checks this discipline — append-only structure (against
+`--base-ref`), schema conformance, signatures, and internal hash consistency —
+and is run as a blocking CI gate.
 
 ## The keyring: rotation & revocation
 
@@ -64,7 +77,7 @@ There are two ways to tell verifying commands which public key(s) to trust:
 
 | Flag | Trust model |
 |---|---|
-| `--public-key <file.pem>` | A single key, trusted unconditionally. |
+| `--public-key <file.pem>` | A single key, trusted unconditionally — only as safe as the file the agent is pointed at; commit it where the agent cannot swap it. |
 | `--keyring <file.json>` | A registry of keys, each with a `status` (`active`/`revoked`) and a validity window. Opt-in; wins over `--public-key` when both are present. |
 
 Both are accepted by `scan`, `verify`, `prove`, and `validate-ledger`. A key

@@ -47,7 +47,7 @@ describe("P15 MCP resources + prompts surface", () => {
     expect(capabilities).toHaveProperty("prompts");
   });
 
-  test("resources/list returns the expected UCM state URIs with metadata", () => {
+  test("resources/list returns the expected workspace-state URIs with metadata", () => {
     const response = handleMcpMessage({ jsonrpc: "2.0", id: 1, method: "resources/list", params: {} });
     const resources = (response?.result as { resources: Array<{ uri: string; name: string; description: string; mimeType: string }> }).resources;
     const uris = resources.map((entry) => entry.uri);

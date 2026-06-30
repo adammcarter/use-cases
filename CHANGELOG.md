@@ -57,7 +57,7 @@ release. At a high level:
 
 ### Changed
 
-- Renamed the project to **Use Cases Plugin (UCM)**, published under the
+- Renamed the project to **Use Cases Plugin**, published under the
   `@use-cases-plugin/{core,cli,mcp}` scope with the `ucp` CLI (alias
   `use-cases-plugin`) and `ucp-mcp` MCP server.
 
