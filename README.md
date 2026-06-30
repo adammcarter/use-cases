@@ -63,22 +63,29 @@ Typical workflows: **continuous** (keep the matrix live as you build), **backfil
 # Install the CLI (and MCP server) into your project
 npm i -D @use-cases-plugin/cli @use-cases-plugin/mcp
 
-# Scaffold a workspace
+# Scaffold a workspace (creates use-cases/ + config with one example behaviour)
 npx ucp init
 
-# See everything ucp can do (human-readable; add --json for machine output)
+# Explore — output is human-readable by default; add --json to ANY command for
+# the machine-readable result envelope.
 npx ucp --help
+npx ucp matrix validate --repo .            # is the matrix clean?
+npx ucp matrix list --repo .                # what behaviours exist?  (lists example.feature.happy_path)
 
-# The core loop
-npx ucp matrix validate --repo .                       # is the matrix clean?
-npx ucp matrix list --repo .                            # what behaviours exist?
-npx ucp bind --row checkout.apply_coupon \              # tie a row to code
-  --file src/checkout.ts --mode explicit --start-line 40 --end-line 58
-npx ucp plan showcase --repo . --max-items 3            # pick a demo
-npx ucp showcase start --repo . --adhoc --select checkout.apply_coupon
+# Bind a behaviour to the code that satisfies it — point --file at your own code.
+npx ucp bind --row example.feature.happy_path \
+  --file src/feature.ts --mode explicit --start-line 1 --end-line 20
+
+# Pick a few high-value behaviours to demo
+npx ucp plan showcase --repo . --max-items 3
 ```
 
-New here? Start with the **[getting-started tutorial](docs/getting-started.md)** and the **[documentation index](docs/README.md)**.
+Everything except `bind` runs as-is against the freshly scaffolded workspace;
+`bind` ties the example row to *your* code, so point `--file` at a real source
+file. From there, wire your test command as the row's verifier and let trusted CI
+mint the first `FRESH` proof (see **[security & proofs](docs/security.md)**).
+
+New here? Start with the **[documentation index](docs/README.md)**.
 
 ---
 
