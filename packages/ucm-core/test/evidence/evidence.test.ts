@@ -140,6 +140,39 @@ describe("P3 evidence replay", () => {
       expect.objectContaining({ code: "evidence_supersession_cycle" })
     );
   });
+
+  test("a foreign JSONL line does not crash and valid events still load", () => {
+    const workspaceRoot = fixtureWorkspace("evidence-basic");
+    const context = resolveWorkspaceContext({ workspaceRoot });
+    const ledger = join(
+      workspaceRoot,
+      "evidence/by-id/01/01900000-0000-7000-8000-000000000001.jsonl"
+    );
+    mkdirSync(dirname(ledger), { recursive: true });
+    writeFileSync(
+      ledger,
+      [
+        JSON.stringify(recordedEvent()),
+        // A stray non-event line (e.g. a verify --out results file) must be skipped, not crash.
+        JSON.stringify({ verify: "results", rows: [{ id: "r1", outcome: "pass" }] }),
+        "null"
+      ].join("\n") + "\n"
+    );
+
+    const snapshot = replayEvidence({ context });
+
+    expect(snapshot.aggregates.map((item) => item.evidenceId)).toEqual([
+      "01900000-0000-7000-8000-000000000001"
+    ]);
+    expect(snapshot.aggregates[0].status).toBe("active");
+    expect(snapshot.counts.events_loaded).toBe(1);
+    expect(snapshot.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "evidence_foreign_event",
+        source_path: "evidence/by-id/01/01900000-0000-7000-8000-000000000001.jsonl:2"
+      })
+    );
+  });
 });
 
 describe("P3 evidence append and linkage", () => {

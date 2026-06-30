@@ -49,7 +49,8 @@ describe("P4 CLI contract", () => {
     const payload = JSON.parse(result.stdout);
     expect(payload).toMatchObject({
       command: "matrix.validate",
-      ok: true,
+      // Error-severity diagnostics force the envelope ok to false.
+      ok: false,
       complete: false,
       data: {
         valid: false,
@@ -72,7 +73,9 @@ describe("P4 CLI contract", () => {
     expect(tolerant.status).toBe(0);
     expect(JSON.parse(tolerant.stdout)).toMatchObject({
       command: "matrix.list",
-      ok: true,
+      // The process is tolerant (exit 0), but error-severity diagnostics still
+      // force the envelope ok to false.
+      ok: false,
       complete: false
     });
 

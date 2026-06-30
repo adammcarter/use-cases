@@ -1,5 +1,5 @@
 import { generateKeyPairSync, type KeyObject } from "node:crypto";
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, existsSync, rmSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, statSync, writeFileSync, existsSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
@@ -291,6 +291,32 @@ describe("bind command", () => {
     const ws = makeWorkspace({ "Sources/Checkout/CouponService.swift": SWIFT_FUNC_SOURCE });
     bindSwiftFunc(ws);
     expect(existsSync(ws.evidencePath)).toBe(false);
+  });
+
+  test("preserves the executable bit when rewriting an executable source file", () => {
+    const HOOK_SOURCE = "#!/bin/sh\necho deploy\necho done\n";
+    const hookRel = "hooks/session-start";
+    const ws = makeWorkspace({ [hookRel]: HOOK_SOURCE });
+    const hookAbs = join(ws.productRoot, hookRel);
+    chmodSync(hookAbs, 0o755);
+
+    const result = runBindCommand({
+      context: ws.context,
+      productRoot: ws.productRoot,
+      bindingsPath: ws.bindingsPath,
+      rowId: ROW_ID,
+      file: hookRel,
+      mode: "explicit",
+      startLine: 2,
+      endLine: 3,
+      clock: makeClock(),
+      idFactory: makeId("01JBIND")
+    });
+
+    expect(result.exit_code).toBe(0);
+    const source = readFileSync(hookAbs, "utf8");
+    expect(source).toContain("#: @use-case: checkout.apply_coupon");
+    expect(statSync(hookAbs).mode & 0o111).not.toBe(0);
   });
 });
 

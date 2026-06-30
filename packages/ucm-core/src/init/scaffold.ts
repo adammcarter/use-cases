@@ -162,7 +162,7 @@ function renderConfig(componentId: string, verifier: VerifierPlan): string {
     "showcase_runs_dir: showcase-runs",
     "default_workflow_mode: continuous",
     "# Verifiers map a row's required_verifiers id to a real command. `default` is",
-    "# used by any row that does not name its own verifier. See docs/concepts/verifiers.md.",
+    "# used by any row that does not name its own verifier. See docs/cli.md.",
     "verifiers:",
     `  default: ${DEFAULT_VERIFIER_ID}`,
     `  ${DEFAULT_VERIFIER_ID}:`,
@@ -227,10 +227,10 @@ export function nextSteps(): string[] {
   return [
     "Edit use-cases/example.yml — replace the example row with a real use case.",
     "Run `ucp matrix validate --repo . --json` to confirm the matrix is clean.",
-    "Bind the implementing code with `ucp bind` (see docs/getting-started.md).",
-    "Wire the `acceptance` verifier in use-cases-plugin.yml to your real test command (docs/concepts/verifiers.md).",
-    "Generate an ed25519 keypair — commit the PUBLIC key, keep the PRIVATE key in a CI secret only (docs/security/key-management.md).",
-    "Add the GitHub Actions reference workflow (.github/workflows/use-cases.yml) so CI mints FRESH proofs (docs/getting-started.md step 8)."
+    "Bind the implementing code with `ucp bind` — code-marker grammar in docs/markers-adoption.md.",
+    "Wire the `acceptance` verifier in use-cases-plugin.yml to your real test command (docs/cli.md).",
+    "Generate an ed25519 keypair — commit the PUBLIC key, keep the PRIVATE key in a CI secret only (docs/security.md).",
+    "Let trusted CI mint FRESH proofs with `ucp prove` (docs/cli.md, docs/security.md)."
   ];
 }
 

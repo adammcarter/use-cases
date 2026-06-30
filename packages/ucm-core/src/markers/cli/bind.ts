@@ -199,7 +199,9 @@ export function runBindCommand(options: BindCommandOptions): BindCommandResult {
   // 7. Transactional commit: write source first (if edited), THEN append the
   // registry event (spec 8.1 transactional rule).
   if (!options.registerExisting) {
-    fs.writeText(absFile, nextContents);
+    // Preserve the source file's existing permission bits: rewriting a bound
+    // shell script / hook must not drop its executable bit (100755 -> 100644).
+    fs.writeText(absFile, nextContents, { preserveMode: true });
   }
   const event = {
     schema: BINDING_REGISTRY_SCHEMA_ID,
