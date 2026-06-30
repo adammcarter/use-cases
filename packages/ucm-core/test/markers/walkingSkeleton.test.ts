@@ -151,7 +151,7 @@ describe("walking skeleton (spec section 13)", () => {
     expect(driftRow.status).toBe("SUSPECT");
     expect(reasonCodes(driftRow)).toContain("CODE_SPAN_CHANGED");
     expect(driftRow.policy_block).toBe(false);
-    expect(driftRow.required_action).toBe(`use-cases prove --row ${ROW_ID}`);
+    expect(driftRow.required_action).toBe(`ucp prove --row ${ROW_ID}`);
     // Feature mode does not block a SUSPECT row.
     expect(afterDrift.exit_code).toBe(0);
 

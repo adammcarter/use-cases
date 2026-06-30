@@ -696,9 +696,9 @@ export function deriveFreshness(input: DeriveFreshnessInput): FreshnessStatus {
 
     let requiredAction: string | null = null;
     if (status === "SUSPECT" || status === "UNPROVEN") {
-      requiredAction = `use-cases prove --row ${rowId}`;
+      requiredAction = `ucp prove --row ${rowId}`;
     } else if (status === "INVALID") {
-      requiredAction = "use-cases scan (resolve binding integrity errors)";
+      requiredAction = "ucp scan (resolve binding integrity errors)";
     }
 
     const rowOut: FreshnessRowOut = {
