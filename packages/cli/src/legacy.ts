@@ -76,7 +76,10 @@ const {
 
 const SUPPORTED_HOSTS: HostName[] = ["claude", "codex", "copilot", "opencode"];
 
-async function loadUcmCore(): Promise<UcmCoreModule> {
+// Exported so the registry's runtime module reaches core through the same
+// bundled-fallback + friendly-missing-build path (a static import in a command
+// module would bypass the diagnostics.contracts.missing_build_hint handler).
+export async function loadUcmCore(): Promise<UcmCoreModule> {
   try {
     return await import("@use-cases-plugin/core");
   } catch (error) {
