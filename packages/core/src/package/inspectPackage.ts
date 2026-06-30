@@ -263,14 +263,11 @@ function packageManifestReferences(root: string): PackageManifestReference[] {
     if (!existsSync(manifestPath)) {
       continue;
     }
-    const manifest = readJson(manifestPath) as { mcpServers?: string };
+    const manifest = readJson(manifestPath) as {
+      mcpServers?: string | Record<string, { args?: string[] }>;
+    };
     if (manifest.mcpServers) {
-      const target = resolvePackagedReference(root, from, manifest.mcpServers);
-      references.push({
-        from,
-        target,
-        status: target && existsSync(join(root, target)) ? "resolved" : "missing"
-      });
+      references.push(...manifestMcpReferences(root, from, manifest.mcpServers));
     }
   }
   const mcpPath = join(root, ".mcp.json");
@@ -285,6 +282,33 @@ function packageManifestReferences(root: string): PackageManifestReference[] {
     });
   }
   return references;
+}
+
+function manifestMcpReferences(
+  root: string,
+  from: string,
+  value: string | Record<string, { args?: string[] }>
+): PackageManifestReference[] {
+  if (typeof value === "string") {
+    const target = resolvePackagedReference(root, from, value);
+    return [{
+      from,
+      target,
+      status: target && existsSync(join(root, target)) ? "resolved" : "missing"
+    }];
+  }
+  return Object.values(value).flatMap((server) => {
+    const arg = server.args?.[0];
+    if (!arg || !arg.startsWith(".")) {
+      return [];
+    }
+    const target = resolvePackagedReference(root, from, arg);
+    return [{
+      from,
+      target,
+      status: target && existsSync(join(root, target)) ? "resolved" as const : "missing" as const
+    }];
+  });
 }
 
 function resolvePackagedReference(root: string, from: string, value: string): string {
@@ -439,4 +463,3 @@ function requireCommandSuccess(result: ReturnType<typeof spawnSync>, command: st
     ].join("\n"));
   }
 }
-
