@@ -630,7 +630,7 @@ function showcaseStart(args: JsonObject): CliResult<unknown> {
       actorType: actorArg(args),
       hostSurface: hostSurfaceArg(args),
       idempotencyKey: stringArg(args, "idempotency_key") ?? `mcp:start-plan:${plan.plan_content_hash}`,
-      recordedAt: stringArg(args, "recorded_at") ?? "2026-06-25T12:00:00.000Z"
+      recordedAt: stringArg(args, "recorded_at") ?? new Date().toISOString()
     }), context);
   }
   const selected = stringArg(args, "select");
@@ -647,8 +647,8 @@ function showcaseStart(args: JsonObject): CliResult<unknown> {
       maxItems: 1,
       hostSurface: hostSurfaceArg(args),
       requestedUseCaseIds: [selected],
-      generatedAt: stringArg(args, "generated_at") ?? "2026-06-25T12:00:00.000Z",
-      freshnessEvaluatedAt: stringArg(args, "generated_at") ?? "2026-06-25T12:00:00.000Z"
+      generatedAt: stringArg(args, "generated_at") ?? new Date().toISOString(),
+      freshnessEvaluatedAt: stringArg(args, "generated_at") ?? new Date().toISOString()
     }
   });
   if (!planResult.plan || !planResult.plan.selected_items.some((item) => item.use_case_id === selected)) {
@@ -661,7 +661,7 @@ function showcaseStart(args: JsonObject): CliResult<unknown> {
     actorType: actorArg(args),
     hostSurface: hostSurfaceArg(args),
     idempotencyKey: stringArg(args, "idempotency_key") ?? `mcp:start:${selected}`,
-    recordedAt: stringArg(args, "recorded_at") ?? "2026-06-25T12:00:00.000Z"
+    recordedAt: stringArg(args, "recorded_at") ?? new Date().toISOString()
   }), context);
 }
 
@@ -697,7 +697,7 @@ function showcaseObservation(args: JsonObject): CliResult<unknown> {
     actorType: actorArg(args),
     hostSurface: hostSurfaceArg(args),
     idempotencyKey: stringArg(args, "idempotency_key") ?? `mcp:observation:${runId}:${planItemId}:${text}`,
-    recordedAt: stringArg(args, "recorded_at") ?? "2026-06-25T12:01:00.000Z"
+    recordedAt: stringArg(args, "recorded_at") ?? new Date().toISOString()
   }), context);
 }
 
@@ -728,7 +728,7 @@ function showcaseVerdict(args: JsonObject): CliResult<unknown> {
     actorType: actorArg(args),
     hostSurface: hostSurfaceArg(args),
     idempotencyKey: stringArg(args, "idempotency_key") ?? `mcp:verdict:${runId}:${planItemId}:${verdict}`,
-    recordedAt: stringArg(args, "recorded_at") ?? "2026-06-25T12:02:00.000Z"
+    recordedAt: stringArg(args, "recorded_at") ?? new Date().toISOString()
   }), context);
 }
 
@@ -753,7 +753,7 @@ function showcaseDecide(args: JsonObject): CliResult<unknown> {
     actorType: actorArg(args),
     hostSurface: hostSurfaceArg(args),
     idempotencyKey: stringArg(args, "idempotency_key") ?? `mcp:decision:${runId}:${verdictEventId}:${decision}`,
-    recordedAt: stringArg(args, "recorded_at") ?? "2026-06-25T12:02:30.000Z"
+    recordedAt: stringArg(args, "recorded_at") ?? new Date().toISOString()
   }), context);
 }
 
@@ -770,7 +770,7 @@ function showcaseFinish(args: JsonObject): CliResult<unknown> {
     actorType: "agent",
     hostSurface: hostSurfaceArg(args),
     idempotencyKey: stringArg(args, "idempotency_key") ?? `mcp:finish:${runId}`,
-    recordedAt: stringArg(args, "recorded_at") ?? "2026-06-25T12:03:00.000Z"
+    recordedAt: stringArg(args, "recorded_at") ?? new Date().toISOString()
   }), context);
 }
 

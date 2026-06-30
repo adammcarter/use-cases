@@ -3,8 +3,8 @@ import { join, sep } from "node:path";
 import type { ResolvedWorkspaceContext } from "../roots.js";
 import { parseYamlToJson, type Diagnostic } from "../schema/index.js";
 import type { SkillAssetSummary, SkillAssetValidationResult, SkillCommandReference } from "./types.js";
+import { CANONICAL_SKILLS } from "./canonicalSkills.js";
 
-const CANONICAL_SKILLS = ["use-cases-plugin", "showcase", "walkthrough", "migration"] as const;
 const BOOTSTRAP_SECTIONS = [
   "When to apply",
   "When not to apply",
