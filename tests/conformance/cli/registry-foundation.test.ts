@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { parseFlags } from "../../../packages/cli/src/args/parse.js";
 import { matchCommand } from "../../../packages/cli/src/command/dispatch.js";
+import { allCommands } from "../../../packages/cli/src/command/registry.js";
 import type { CliCommand, FlagSpec } from "../../../packages/cli/src/command/types.js";
 
 // The registry foundation must reproduce the legacy arg helpers EXACTLY, so a
@@ -62,5 +63,25 @@ describe("matchCommand resolves the longest path prefix", () => {
   test("no match returns null (caller falls through to legacy)", () => {
     expect(matchCommand(commands, ["showcase", "start"])).toBeNull();
     expect(matchCommand([], ["matrix", "validate"])).toBeNull();
+  });
+});
+
+describe("the registry owns every migrated command (legacy is builtins-only)", () => {
+  // Phase 10 deleted the migrated handlers from legacy.ts. This guards the
+  // invariant that makes that safe: every registered command resolves through the
+  // registry, so a migrated command can never fall through to the legacy
+  // builtins-only fallback (which would now answer with unknown-command).
+  test("every registered command path resolves to itself via matchCommand", () => {
+    for (const command of allCommands) {
+      const matched = matchCommand(allCommands, [...command.path]);
+      expect(matched, `command ${command.command} must resolve via the registry`).toBe(command);
+    }
+  });
+
+  test("the registry covers the canonical command groups", () => {
+    const ids = new Set(allCommands.map((entry) => entry.command));
+    for (const id of ["matrix.validate", "showcase.approve", "markers.prove", "evidence.record", "host.doctor"]) {
+      expect(ids).toContain(id);
+    }
   });
 });
