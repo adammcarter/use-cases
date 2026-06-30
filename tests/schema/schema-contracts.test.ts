@@ -3,7 +3,9 @@ import { join, resolve } from "node:path";
 import { describe, expect, test } from "vitest";
 import {
   PUBLIC_SCHEMA_IDS,
+  type Diagnostic,
   computeSemanticHash,
+  createCliResult,
   parseYamlToJson,
   validateBySchemaId,
   validateFixtureWorkspace,
@@ -173,5 +175,67 @@ describe("P1 history and replay contracts", () => {
     expect(spaced.ok).toBe(true);
     expect(computeSemanticHash(compact.value)).toBe(computeSemanticHash(spaced.value));
     expect(computeSemanticHash(compact.value)).toMatch(/^sha256:[0-9a-f]{64}$/);
+  });
+});
+
+describe("P2 CLI envelope ok reflects error diagnostics", () => {
+  const errorDiagnostic: Diagnostic = {
+    code: "schema.minItems",
+    severity: "error",
+    message: "must NOT have fewer than 1 items",
+    source_path: "use-cases/empty-outcomes.yml",
+    json_pointer: "/use_cases/0/observable_outcomes",
+    entity_id: null,
+    related_ids: []
+  };
+
+  test("forces ok:false when any diagnostic is error severity, even if caller passed ok:true", () => {
+    const result = createCliResult(
+      "matrix.validate",
+      {},
+      { ok: true, diagnostics: [errorDiagnostic] }
+    );
+
+    expect(result.ok).toBe(false);
+  });
+
+  test("preserves the caller-provided ok when no diagnostic is error severity", () => {
+    const warningDiagnostic: Diagnostic = { ...errorDiagnostic, severity: "warning" };
+    const result = createCliResult(
+      "matrix.list",
+      {},
+      { ok: true, diagnostics: [warningDiagnostic] }
+    );
+
+    expect(result.ok).toBe(true);
+  });
+});
+
+describe("P2 enum diagnostics list allowed values", () => {
+  test("an invalid value_tier message names the allowed enum values", () => {
+    const result = validateBySchemaId(
+      "https://use-cases-plugin.dev/schemas/v1/use-case-file.schema.json",
+      {
+        schema_version: 1,
+        use_cases: [
+          {
+            id: "a.b",
+            title: "T",
+            lifecycle: "active",
+            value_tier: "nope",
+            journey_role: "primary",
+            usage_frequency: "daily",
+            observable_outcomes: ["x"],
+            approval_policy: { required: false }
+          }
+        ]
+      }
+    );
+
+    const enumDiagnostic = result.diagnostics.find(
+      (diagnostic) => diagnostic.code === "enum.invalid_value"
+    );
+
+    expect(enumDiagnostic?.message).toContain("allowed: critical, core, supporting, long_tail");
   });
 });

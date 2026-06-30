@@ -376,7 +376,7 @@ function normalizeHeader(value: string): string {
   const key = slug(value);
   if (["id", "case", "test", "row", "key"].includes(key)) return "id";
   if (["feature", "area", "component", "module"].includes(key)) return "feature";
-  if (["scenario", "behavior", "use-case", "case"].includes(key)) return "scenario";
+  if (["scenario", "behavior", "behaviour", "use-case", "case"].includes(key)) return "scenario";
   if (["steps", "action", "when", "procedure"].includes(key)) return "steps";
   if (["expected", "then", "result", "outcome"].includes(key)) return "expected";
   if (["status", "pass-fail", "state"].includes(key)) return "status";

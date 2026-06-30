@@ -196,7 +196,9 @@ describe("ucp init", () => {
     const repo = freshRepo("human");
     const init = runCli(["init", "--repo", repo]);
     expect(init.status, init.stderr).toBe(0);
-    expect(init.stdout).toMatch(/getting-started/i);
+    // Onboarding steps must cite a shipped doc (never the unshipped getting-started).
+    expect(init.stdout).toMatch(/docs\/(cli|markers-adoption|security)\.md/i);
+    expect(init.stdout).not.toMatch(/getting-started/i);
     expect(init.stdout.toLowerCase()).toContain("next steps");
     // Still scaffolded a valid workspace.
     expect(runCli(["matrix", "validate", "--repo", repo, "--json"]).status).toBe(0);

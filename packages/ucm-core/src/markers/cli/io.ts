@@ -6,11 +6,13 @@
 // against a throwaway tmp dir (or substitute their own seam). Keeping this narrow
 // means the command cores never import node:fs directly.
 import {
+  chmodSync,
   existsSync,
   mkdirSync,
   readFileSync,
   readdirSync,
   renameSync,
+  statSync,
   writeFileSync
 } from "node:fs";
 import { dirname } from "node:path";
@@ -22,11 +24,19 @@ export interface MarkerDirEntry {
   isSymlink: boolean;
 }
 
+export interface MarkerWriteOptions {
+  // Carry the destination file's existing permission bits across the atomic
+  // replace. Without this the temp+rename swap leaves the file at the umask
+  // default (e.g. 0o644), silently dropping an executable bit on bound shell
+  // scripts/hooks. A no-op when the destination does not yet exist.
+  preserveMode?: boolean;
+}
+
 export interface MarkerFs {
   // Read UTF-8 text, or null when the path does not exist.
   readText(path: string): string | null;
   // Write UTF-8 text, creating parent directories. Atomic (temp + rename).
-  writeText(path: string, text: string): void;
+  writeText(path: string, text: string, options?: MarkerWriteOptions): void;
   exists(path: string): boolean;
   listDir(path: string): MarkerDirEntry[];
 }
@@ -42,10 +52,23 @@ export const nodeMarkerFs: MarkerFs = {
       throw error;
     }
   },
-  writeText(path: string, text: string): void {
+  writeText(path: string, text: string, options?: MarkerWriteOptions): void {
     mkdirSync(dirname(path), { recursive: true });
+    let preservedMode: number | undefined;
+    if (options?.preserveMode) {
+      try {
+        preservedMode = statSync(path).mode;
+      } catch (error) {
+        if ((error as { code?: string }).code !== "ENOENT") {
+          throw error;
+        }
+      }
+    }
     const tempPath = `${path}.tmp-${process.pid}-${Date.now()}`;
     writeFileSync(tempPath, text);
+    if (preservedMode !== undefined) {
+      chmodSync(tempPath, preservedMode);
+    }
     renameSync(tempPath, path);
   },
   exists(path: string): boolean {

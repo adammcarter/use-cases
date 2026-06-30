@@ -177,7 +177,8 @@ describe("P11 product lifecycle examples", () => {
     expect(validate.status).toBe(1);
     expect(validate.payload).toMatchObject({
       command: "matrix.validate",
-      ok: true,
+      // Error-severity diagnostics force the envelope ok to false.
+      ok: false,
       complete: false,
       data: {
         complete: false,

@@ -289,14 +289,19 @@ export function createCliResult<T>(
   const workspaceRoot = options.workspaceRoot ?? process.cwd();
   const dataRoot = options.dataRoot ?? workspaceRoot;
   const componentId = options.componentId ?? DEFAULT_COMPONENT_ID;
+  const diagnostics = options.diagnostics ?? [];
+  // An error-severity diagnostic always means the command did not succeed, so
+  // the envelope's ok must be false regardless of the caller-provided value.
+  const hasError = diagnostics.some((item) => item.severity === "error");
+  const ok = hasError ? false : (options.ok ?? true);
   return {
     schema_version: 1,
     protocol_version: 1,
     command,
-    ok: options.ok ?? true,
+    ok,
     complete: options.complete ?? true,
     data,
-    diagnostics: options.diagnostics ?? [],
+    diagnostics,
     context: {
       workspace_root: workspaceRoot,
       data_root: dataRoot,
@@ -879,11 +884,23 @@ function mapAjvErrors(errors: ErrorObject[], sourcePath: string | null): Diagnos
         : null;
     return diagnostic(
       diagnosticCode(error, missingProperty),
-      error.message ?? "Schema validation failed.",
+      enumMessage(error),
       sourcePath,
       error.instancePath || null
     );
   });
+}
+
+function enumMessage(error: ErrorObject): string {
+  const base = error.message ?? "Schema validation failed.";
+  if (error.keyword !== "enum" || !isRecord(error.params)) {
+    return base;
+  }
+  const allowedValues = error.params.allowedValues;
+  if (!Array.isArray(allowedValues) || allowedValues.length === 0) {
+    return base;
+  }
+  return `${base} (allowed: ${allowedValues.join(", ")})`;
 }
 
 function diagnosticCode(error: ErrorObject, missingProperty: string | null): string {

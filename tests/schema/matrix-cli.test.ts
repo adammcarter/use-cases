@@ -82,7 +82,9 @@ describe("P2 matrix CLI", () => {
     const nonStrictPayload = JSON.parse(nonStrict.stdout);
     expect(nonStrictPayload).toMatchObject({
       command: "matrix.validate",
-      ok: true,
+      // An error-severity diagnostic (here a parse_error) forces the envelope
+      // ok to false even outside strict mode.
+      ok: false,
       complete: false,
       data: {
         valid: false,
@@ -111,7 +113,7 @@ describe("P2 matrix CLI", () => {
     expect(strict.stderr).toBe("");
     expect(JSON.parse(strict.stdout)).toMatchObject({
       command: "matrix.validate",
-      ok: true,
+      ok: false,
       complete: false
     });
   });

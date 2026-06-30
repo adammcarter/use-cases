@@ -11,43 +11,41 @@ Ships as `@use-cases-plugin/cli` (binary `ucp`) plus an MCP server
 
 ## Start here
 
-- **[Getting started](./getting-started.md)** — the zero-to-first-FRESH tutorial
-  for a new repo: install, author a row, bind code, declare a verifier, and let CI
-  mint the proof.
+- **[CLI reference](./cli.md)** — every command and its flags. `ucp init`
+  scaffolds a workspace that validates out of the box; `ucp bind` links a row to
+  code; `ucp prove` (in trusted CI) mints the FRESH proof.
+- **[Activation](./activation.md)** — when to use the plugin continuously during
+  planning/implementation versus as a backfill, walkthrough, or live showcase.
 
-## Tutorials
+## Adopting the matrix
 
-- **[Adopt the matrix in a pure-Python repo](./tutorials/python-pytest.md)** —
-  proof that adoption is **not** JS-only: a tiny Python project reaches a signed
-  **FRESH** row with `pytest` as the verifier and **no pnpm/vitest** anywhere.
-  Runnable project at [`examples/python-pytest/`](../examples/python-pytest).
-
-## Concepts
-
-Read these in order for the full mental model:
-
-1. [The use-case matrix](./concepts/matrix.md) — the living acceptance spec.
-2. [Bindings, markers & freshness states](./concepts/bindings.md) — linking rows
-   to code, and what FRESH / SUSPECT / UNPROVEN / UNBOUND / INVALID mean.
-3. [Verifiers](./concepts/verifiers.md) — the config-driven command-verifier
-   model, presets, the `{slug}` convention, and the verification context hash.
-4. [Proofs & the ledger](./concepts/proofs-and-ledger.md) — signed proof events,
-   the tamper-evident hash chain, the keyring, and CI as the authority.
-5. [Evidence vs proof](./concepts/evidence.md) — observation versus the signed
-   trust gate.
+- **[Code markers & adoption log](./markers-adoption.md)** — the in-code marker
+  grammar (`//: @use-case: <slug>` … `//: @use-case: end <slug>`), the explicit
+  and swift-func bind modes, the per-extension comment prefix, and a real
+  dogfooded binding.
+- **[Acceptance matrix](./acceptance.md)** — how this repo dogfoods its own
+  use-case matrix through `use-cases/`.
+- **[TEST-MATRIX migration](./migration.md)** — importing an existing
+  `TEST-MATRIX.md` into the matrix (behaviour coverage is preserved; proof is
+  not).
+- Runnable examples live under [`examples/`](../examples) — including
+  [`examples/python-pytest`](../examples/python-pytest), a pure-Python project
+  that reaches a signed **FRESH** row with `pytest` and no pnpm/vitest.
 
 ## Reference
 
-- [CLI reference](./cli.md) — every command and its flags.
+- [CLI reference](./cli.md) — every command and its flags, including the verifier
+  configuration model.
 - [MCP contract](./mcp.md) — the MCP tools, modes, and safety boundaries.
-- [Stability & versioning policy](./reference/stability.md) — what is a v1
-  contract and how versions move.
-- [Error-code registry](./reference/error-codes.md) — the stable `UCP_*` codes.
 - [Data model](./data-model.md) — the persisted file shapes.
+- [Host support](./hosts.md) — Claude, Codex, Copilot, and OpenCode as
+  first-class hosts.
+- [Showcases](./showcase.md) — live runs in front of a reviewer.
+- [Architecture decision records](./adr) — the design decisions behind the
+  contracts.
 
-## Security
+## Security & release
 
-- [Key management](./security/key-management.md) — generating keys, the keyring,
-  rotation, and revocation.
-- [CI hardening](./security/ci-hardening.md) — the CI-neutral authority contract
-  and the opt-in release-gate authority requirement.
+- [Security and trust](./security.md) — keys, signing, the keyring, CI as the
+  proof authority, and the safety boundaries on generated output.
+- [Release checklist](./release.md) — the production release gate.

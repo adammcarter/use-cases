@@ -101,13 +101,23 @@ function readLedgerFile(path: string, relPath: string): {
       diagnostics.push(diagnostic("evidence_parse_error", "Duplicate JSON keys are not allowed.", `${relPath}:${lineNumber}`));
       continue;
     }
+    let value: unknown;
     try {
-      const value = JSON.parse(line) as EvidenceEvent;
-      events.push(value);
+      value = JSON.parse(line);
     } catch (error) {
       unknownScopeDamage = true;
       diagnostics.push(diagnostic("evidence_parse_error", error instanceof Error ? error.message : String(error), `${relPath}:${lineNumber}`));
+      continue;
     }
+    if (!isEvidenceEventShape(value)) {
+      // Valid JSON but not an evidence event (e.g. a stray verify --out results
+      // file dropped into the evidence dir). Skip it with a diagnostic instead of
+      // letting a missing event_id/aggregate_id crash replay downstream.
+      unknownScopeDamage = true;
+      diagnostics.push(diagnostic("evidence_foreign_event", "Line is valid JSON but is not an evidence event and was skipped.", `${relPath}:${lineNumber}`));
+      continue;
+    }
+    events.push(value);
   }
 
   return {
@@ -123,6 +133,19 @@ function readLedgerFile(path: string, relPath: string): {
   };
 }
 //: @use-case: end evidence.ledger.damaged_ledger_replay
+
+function isEvidenceEventShape(value: unknown): value is EvidenceEvent {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    return false;
+  }
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate.event_type === "string" &&
+    typeof candidate.event_id === "string" &&
+    typeof candidate.aggregate_id === "string" &&
+    typeof candidate.sequence === "number"
+  );
+}
 
 function hasDuplicateJsonKeys(source: string): boolean {
   const stack: Array<Set<string>> = [];
