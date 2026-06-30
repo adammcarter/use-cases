@@ -2,8 +2,9 @@ import { createHash, randomBytes } from "node:crypto";
 import { closeSync, existsSync, mkdirSync, openSync, readFileSync, rmSync, writeSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fsyncBestEffortForTemp } from "../durableWrite.js";
+import { canonicalJson } from "../markers/canonicalJson.js";
 import { redactSecrets } from "../redact.js";
-import { PresentationSkillsError } from "../errors.js";
+import { UseCasesPluginError } from "../errors.js";
 import type { ResolvedWorkspaceContext } from "../roots.js";
 import type { EvidenceAppendResultData, EvidenceEvent, EvidenceKind, EvidenceResult, EvidenceTarget } from "./types.js";
 import { evidenceRelativePath, evidenceRoot } from "./jsonlLedger.js";
@@ -50,7 +51,7 @@ export function appendEvidenceVoidEvent(options: VoidEvidenceEventOptions): Appe
 function appendUnderLock(options: AppendEvidenceEventOptions): AppendEvidenceEventResult {
   const snapshot = replayEvidence({ context: options.context });
   if (!snapshot.complete) {
-    throw new PresentationSkillsError("Refusing to append to damaged evidence history.", "evidence_ledger_damaged");
+    throw new UseCasesPluginError("Refusing to append to damaged evidence history.", "evidence_ledger_damaged");
   }
   const intentDigest = digestIntent(options);
   const existing = snapshot.events.find((event) => event.idempotency_key === options.idempotencyKey);
@@ -66,7 +67,7 @@ function appendUnderLock(options: AppendEvidenceEventOptions): AppendEvidenceEve
         ledgerPath
       };
     }
-    throw new PresentationSkillsError("Idempotency key was reused with different intent.", "evidence_idempotency_conflict");
+    throw new UseCasesPluginError("Idempotency key was reused with different intent.", "evidence_idempotency_conflict");
   }
 
   const eventId = uuidv7();
@@ -95,15 +96,15 @@ function appendUnderLock(options: AppendEvidenceEventOptions): AppendEvidenceEve
 function voidUnderLock(options: VoidEvidenceEventOptions): AppendEvidenceEventResult {
   const snapshot = replayEvidence({ context: options.context });
   if (!snapshot.complete) {
-    throw new PresentationSkillsError("Refusing to append to damaged evidence history.", "evidence_ledger_damaged");
+    throw new UseCasesPluginError("Refusing to append to damaged evidence history.", "evidence_ledger_damaged");
   }
   const aggregate = snapshot.aggregates.find((item) => item.evidenceId === options.evidenceId);
   if (!aggregate || aggregate.status !== "active") {
-    throw new PresentationSkillsError("Evidence aggregate is not active.", "evidence_invalid_transition");
+    throw new UseCasesPluginError("Evidence aggregate is not active.", "evidence_invalid_transition");
   }
   const currentHead = aggregate.eventIds.at(-1);
   if (currentHead !== options.expectedHeadEventId) {
-    throw new PresentationSkillsError("Expected head event does not match current head.", "evidence_expected_head_mismatch");
+    throw new UseCasesPluginError("Expected head event does not match current head.", "evidence_expected_head_mismatch");
   }
   const intentDigest = digestIntent({
     context: options.context,
@@ -131,7 +132,7 @@ function voidUnderLock(options: VoidEvidenceEventOptions): AppendEvidenceEventRe
         ledgerPath
       };
     }
-    throw new PresentationSkillsError("Idempotency key was reused with different intent.", "evidence_idempotency_conflict");
+    throw new UseCasesPluginError("Idempotency key was reused with different intent.", "evidence_idempotency_conflict");
   }
 
   const eventId = uuidv7();
@@ -216,7 +217,7 @@ function withEvidenceAppendLock<T>(context: ResolvedWorkspaceContext, work: () =
       break;
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "EEXIST" || Date.now() > deadline) {
-        throw new PresentationSkillsError("Timed out acquiring evidence append lock.", "evidence_lock_timeout");
+        throw new UseCasesPluginError("Timed out acquiring evidence append lock.", "evidence_lock_timeout");
       }
       sleep(25);
     }
@@ -255,15 +256,3 @@ function sleep(milliseconds: number): void {
   Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, milliseconds);
 }
 
-function canonicalJson(value: unknown): string {
-  if (value === null || typeof value !== "object") {
-    return JSON.stringify(value);
-  }
-  if (Array.isArray(value)) {
-    return `[${value.map((item) => canonicalJson(item)).join(",")}]`;
-  }
-  const entries = Object.entries(value as Record<string, unknown>)
-    .filter(([, item]) => item !== undefined)
-    .sort(([left], [right]) => left.localeCompare(right));
-  return `{${entries.map(([key, item]) => `${JSON.stringify(key)}:${canonicalJson(item)}`).join(",")}}`;
-}

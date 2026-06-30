@@ -1,9 +1,13 @@
 import { existsSync, lstatSync, readdirSync, readFileSync, realpathSync } from "node:fs";
 import { extname, isAbsolute, join, relative, sep } from "node:path";
 import { TextDecoder } from "node:util";
-import type { Diagnostic } from "../schema/index.js";
+import { diagnostic, type Diagnostic } from "../schema/index.js";
 import type { ResolvedWorkspaceContext } from "../roots.js";
 import type { EvidenceEvent, EvidenceLedgerResult } from "./types.js";
+
+// Re-exported for backwards compatibility: callers (and the evidence barrel)
+// historically imported `diagnostic` from this module.
+export { diagnostic };
 
 export type ReadEvidenceLedgerResult = {
   ledgers: EvidenceLedgerResult[];
@@ -187,14 +191,3 @@ function hasDuplicateJsonKeys(source: string): boolean {
   return false;
 }
 
-export function diagnostic(code: string, message: string, sourcePath: string | null, entityId: string | null = null): Diagnostic {
-  return {
-    code,
-    severity: "error",
-    message,
-    source_path: sourcePath,
-    json_pointer: null,
-    entity_id: entityId,
-    related_ids: []
-  };
-}

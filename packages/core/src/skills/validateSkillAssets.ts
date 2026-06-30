@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { join, sep } from "node:path";
+import { join } from "node:path";
 import type { ResolvedWorkspaceContext } from "../roots.js";
-import { parseYamlToJson, type Diagnostic } from "../schema/index.js";
+import { diagnostic, parseYamlToJson, type Diagnostic } from "../schema/index.js";
 import type { SkillAssetSummary, SkillAssetValidationResult, SkillCommandReference } from "./types.js";
 import { CANONICAL_SKILLS } from "./canonicalSkills.js";
 
@@ -216,14 +216,3 @@ function checkForbiddenPatterns(source: string, sourcePath: string, diagnostics:
   }
 }
 
-function diagnostic(code: string, message: string, sourcePath: string, entityId: string | null = null): Diagnostic {
-  return {
-    code,
-    severity: "error",
-    message,
-    source_path: sourcePath.split(sep).join("/"),
-    json_pointer: null,
-    entity_id: entityId,
-    related_ids: []
-  };
-}

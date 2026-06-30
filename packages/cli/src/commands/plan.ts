@@ -1,5 +1,4 @@
-import type { CliCommand, CommandOutput } from "../command/types.js";
-import { numberAfter, valueAfter, valuesAfter } from "../args/parse.js";
+import type { CliCommand, CommandOutput, ParsedFlags } from "../command/types.js";
 import {
   containedPathOrError,
   createCliResult,
@@ -17,7 +16,7 @@ import { repoFlag, dataRootFlag, componentFlag, jsonFlag, workspaceFlags } from 
 // Shared port of the legacy `runPlan(argv, mode)` — builds the same request, calls
 // the same selector, and surfaces matrix+evidence diagnostics in the envelope
 // regardless of outcome. Returns envelope + exit code instead of writing stdout.
-function planOutput(argv: string[], mode: "showcase" | "walkthrough"): CommandOutput {
+function planOutput(argv: string[], flags: ParsedFlags, mode: "showcase" | "walkthrough"): CommandOutput {
   const context = resolveContextOrError(argv, `plan.${mode}`);
   if (context.kind === "error") {
     return { envelope: context.envelope, exitCode: context.exitCode };
@@ -26,13 +25,13 @@ function planOutput(argv: string[], mode: "showcase" | "walkthrough"): CommandOu
   const matrix = loadUseCaseMatrix({ context: ctx });
   const evidence = replayEvidence({ context: ctx });
   const request = {
-    audience: valueAfter(argv, "--audience") ?? "reviewer",
-    timeboxSeconds: numberAfter(argv, "--timebox") ?? (mode === "showcase" ? 600 : 1800),
-    maxItems: numberAfter(argv, "--max-items"),
-    hostSurface: (valueAfter(argv, "--host") ?? "unknown") as Parameters<typeof selectShowcasePlan>[0]["request"]["hostSurface"],
-    changedPaths: valuesAfter(argv, "--changed-path"),
-    generatedAt: valueAfter(argv, "--generated-at"),
-    strict: argv.includes("--strict")
+    audience: (flags.audience as string | undefined) ?? "reviewer",
+    timeboxSeconds: (flags.timebox as number | undefined) ?? (mode === "showcase" ? 600 : 1800),
+    maxItems: flags.maxItems as number | undefined,
+    hostSurface: ((flags.host as string | undefined) ?? "unknown") as Parameters<typeof selectShowcasePlan>[0]["request"]["hostSurface"],
+    changedPaths: flags.changedPath as string[] | undefined,
+    generatedAt: flags.generatedAt as string | undefined,
+    strict: flags.strict as boolean
   };
   const result =
     mode === "showcase"
@@ -72,7 +71,7 @@ export const planShowcaseCommand: CliCommand = {
   command: "plan.showcase",
   summary: "Select a showcase presentation plan.",
   flags: [...workspaceFlags, ...planRequestFlags],
-  handler: ({ argv }) => planOutput(argv, "showcase")
+  handler: ({ argv, flags }) => planOutput(argv, flags, "showcase")
 };
 
 export const planWalkthroughCommand: CliCommand = {
@@ -80,7 +79,7 @@ export const planWalkthroughCommand: CliCommand = {
   command: "plan.walkthrough",
   summary: "Select a walkthrough presentation plan.",
   flags: [...workspaceFlags, ...planRequestFlags],
-  handler: ({ argv }) => planOutput(argv, "walkthrough")
+  handler: ({ argv, flags }) => planOutput(argv, flags, "walkthrough")
 };
 
 export const planCardsCommand: CliCommand = {
@@ -94,13 +93,13 @@ export const planCardsCommand: CliCommand = {
     { key: "planFile", name: "--plan-file", kind: "string", required: true, valueName: "<path>", summary: "Saved presentation plan file (inside the workspace)." },
     jsonFlag
   ],
-  handler: ({ argv }) => {
+  handler: ({ argv, flags }) => {
     const context = resolveContextOrError(argv, "plan.cards");
     if (context.kind === "error") {
       return { envelope: context.envelope, exitCode: context.exitCode };
     }
     const ctx = context.context;
-    const planFile = valueAfter(argv, "--plan-file");
+    const planFile = flags.planFile as string | undefined;
     if (!planFile) {
       return {
         envelope: errorEnvelope("plan.cards", "cli_invalid_arguments", "Missing --plan-file."),

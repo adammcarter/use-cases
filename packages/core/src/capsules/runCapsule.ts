@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, realpathSync } from "node:fs";
 import { isAbsolute, relative, resolve } from "node:path";
-import type { Diagnostic } from "../schema/index.js";
+import { diagnostic, type Diagnostic } from "../schema/index.js";
 import { redactSecrets } from "../redact.js";
 import {
   appendShowcaseAction,
@@ -386,17 +386,6 @@ function blocked(
   };
 }
 
-function diagnostic(code: string, message: string, sourcePath: string | null, entityId: string | null = null): Diagnostic {
-  return {
-    code,
-    severity: "error",
-    message,
-    source_path: sourcePath,
-    json_pointer: null,
-    entity_id: entityId,
-    related_ids: []
-  };
-}
 
 function stepKey(step: { itemIndex: number; stepIndex: number }): string {
   return `${step.itemIndex}:${step.stepIndex}`;

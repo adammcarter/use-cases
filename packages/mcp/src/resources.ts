@@ -13,7 +13,7 @@ import type { ResolvedWorkspaceContext } from "@use-cases-plugin/core";
 type UcmCoreModule = typeof import("@use-cases-plugin/core");
 
 const {
-  PresentationSkillsError,
+  UseCasesPluginError,
   createCliResult,
   getPublicSchemas,
   loadUseCaseMatrix,
@@ -199,7 +199,7 @@ function resolveResourceContext(
   try {
     workspaceRoot = resolveContainedPath(allowedRepoRoot(), repoValue, "repo escapes the allowed workspace root boundary.");
   } catch (error) {
-    if (error instanceof PresentationSkillsError && error.code === "path.escape") {
+    if (error instanceof UseCasesPluginError && error.code === "path.escape") {
       return { error: { ok: false, code: INVALID_PARAMS, message: `UCP_PATH_ESCAPE: ${error.message}` } };
     }
     throw error;

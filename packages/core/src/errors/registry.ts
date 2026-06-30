@@ -2,7 +2,7 @@
 //
 // This module is the single source of truth for the public error codes that are
 // part of the v1 contract (see `docs/reference/stability.md`). It does NOT
-// replace the existing internal enum families or the ~21 `PresentationSkillsError`
+// replace the existing internal enum families or the ~21 `UseCasesPluginError`
 // string-literal codes; instead it gives each of them a stable public `UCP_*`
 // code and a mapping helper, so diagnostics can be annotated with a stable code
 // without renaming every internal call site at once.
@@ -499,7 +499,7 @@ export function mapEnumCode(family: UcmErrorFamily, code: string): UcmErrorCode 
 }
 
 /**
- * Map a legacy `PresentationSkillsError` string-literal code to its stable
+ * Map a legacy `UseCasesPluginError` string-literal code to its stable
  * `UCP_*` public code. Returns `undefined` for unmapped/unknown codes.
  */
 export const LEGACY_STRING_CODE_MAP: Readonly<Record<string, UcmErrorCode>> = Object.freeze({

@@ -1,5 +1,4 @@
 import type { CliCommand, CommandOutput } from "../command/types.js";
-import { numberAfter, valueAfter } from "../args/parse.js";
 import {
   appendShowcaseApproval,
   appendShowcaseFailureDecision,
@@ -89,13 +88,13 @@ export const showcaseStartCommand: CliCommand = {
     { key: "idempotencyKey", name: "--idempotency-key", kind: "string", valueName: "<key>", summary: "Idempotency key (defaults to a derived cli: key)." },
     { key: "recordedAt", name: "--recorded-at", kind: "string", valueName: "<iso>", summary: "Recorded-at timestamp for the start event." }
   ],
-  handler: ({ argv }) => {
+  handler: ({ argv, flags }) => {
     const context = resolveContextOrError(argv, "showcase.start");
     if (context.kind === "error") {
       return { envelope: context.envelope, exitCode: context.exitCode };
     }
     const contextResult = context.context;
-    const planFile = valueAfter(argv, "--plan-file");
+    const planFile = flags.planFile as string | undefined;
     if (planFile) {
       const contained = containedPathOrError("showcase.start", contextResult.workspace_root, planFile);
       if (contained.kind === "error") {
@@ -110,16 +109,16 @@ export const showcaseStartCommand: CliCommand = {
           controlMode: "agent_led",
           actorType: "agent",
           hostSurface: "codex.cli",
-          idempotencyKey: valueAfter(argv, "--idempotency-key") ?? `cli:start-plan:${plan.plan_content_hash}`,
-          recordedAt: valueAfter(argv, "--recorded-at") ?? "2026-06-25T12:00:00.000Z"
+          idempotencyKey: (flags.idempotencyKey as string | undefined) ?? `cli:start-plan:${plan.plan_content_hash}`,
+          recordedAt: (flags.recordedAt as string | undefined) ?? "2026-06-25T12:00:00.000Z"
         });
         return showcaseResultOutput("showcase.start", result, contextResult, 0);
       } catch (error) {
         return showcaseCaughtError("showcase.start", error);
       }
     }
-    const selected = valueAfter(argv, "--select");
-    if (!argv.includes("--adhoc") || !selected) {
+    const selected = flags.select as string | undefined;
+    if (!(flags.adhoc as boolean) || !selected) {
       return {
         envelope: errorEnvelope("showcase.start", "showcase.plan_required", "Only --adhoc --select is supported in P6."),
         exitCode: 2
@@ -132,13 +131,13 @@ export const showcaseStartCommand: CliCommand = {
       matrix,
       evidence,
       request: {
-        audience: valueAfter(argv, "--audience") ?? "reviewer",
-        timeboxSeconds: numberAfter(argv, "--timebox") ?? 600,
+        audience: (flags.audience as string | undefined) ?? "reviewer",
+        timeboxSeconds: (flags.timebox as number | undefined) ?? 600,
         maxItems: 1,
         hostSurface: "codex.cli",
         requestedUseCaseIds: [selected],
-        generatedAt: valueAfter(argv, "--generated-at") ?? "2026-06-25T12:00:00.000Z",
-        freshnessEvaluatedAt: valueAfter(argv, "--generated-at") ?? "2026-06-25T12:00:00.000Z"
+        generatedAt: (flags.generatedAt as string | undefined) ?? "2026-06-25T12:00:00.000Z",
+        freshnessEvaluatedAt: (flags.generatedAt as string | undefined) ?? "2026-06-25T12:00:00.000Z"
       }
     });
     if (!planResult.plan || !planResult.plan.selected_items.some((item) => item.use_case_id === selected)) {
@@ -154,8 +153,8 @@ export const showcaseStartCommand: CliCommand = {
         controlMode: "agent_led",
         actorType: "agent",
         hostSurface: "codex.cli",
-        idempotencyKey: valueAfter(argv, "--idempotency-key") ?? `cli:start:${selected}:${Date.now()}`,
-        recordedAt: valueAfter(argv, "--recorded-at") ?? "2026-06-25T12:00:00.000Z"
+        idempotencyKey: (flags.idempotencyKey as string | undefined) ?? `cli:start:${selected}:${Date.now()}`,
+        recordedAt: (flags.recordedAt as string | undefined) ?? "2026-06-25T12:00:00.000Z"
       });
       return showcaseResultOutput("showcase.start", result, contextResult, 0);
     } catch (error) {
@@ -176,15 +175,15 @@ export const showcaseRecordObservationCommand: CliCommand = {
     { key: "idempotencyKey", name: "--idempotency-key", kind: "string", valueName: "<key>", summary: "Idempotency key (defaults to a derived cli: key)." },
     { key: "recordedAt", name: "--recorded-at", kind: "string", valueName: "<iso>", summary: "Recorded-at timestamp for the observation event." }
   ],
-  handler: ({ argv }) => {
+  handler: ({ argv, flags }) => {
     const context = resolveContextOrError(argv, "showcase.record-observation");
     if (context.kind === "error") {
       return { envelope: context.envelope, exitCode: context.exitCode };
     }
     const contextResult = context.context;
-    const runId = valueAfter(argv, "--run");
-    const planItemId = valueAfter(argv, "--item");
-    const text = valueAfter(argv, "--text");
+    const runId = flags.run as string | undefined;
+    const planItemId = flags.item as string | undefined;
+    const text = flags.text as string | undefined;
     if (!runId || !planItemId || !text) {
       return {
         envelope: errorEnvelope("showcase.record-observation", "cli_invalid_arguments", "Missing --run, --item, or --text."),
@@ -205,8 +204,8 @@ export const showcaseRecordObservationCommand: CliCommand = {
         text,
         actorType: "agent",
         hostSurface: "codex.cli",
-        idempotencyKey: valueAfter(argv, "--idempotency-key") ?? `cli:observation:${runId}:${planItemId}:${text}`,
-        recordedAt: valueAfter(argv, "--recorded-at") ?? "2026-06-25T12:01:00.000Z"
+        idempotencyKey: (flags.idempotencyKey as string | undefined) ?? `cli:observation:${runId}:${planItemId}:${text}`,
+        recordedAt: (flags.recordedAt as string | undefined) ?? "2026-06-25T12:01:00.000Z"
       });
       return showcaseResultOutput("showcase.record-observation", result, contextResult, 0);
     } catch (error) {
@@ -228,15 +227,15 @@ export const showcaseRecordVerdictCommand: CliCommand = {
     { key: "idempotencyKey", name: "--idempotency-key", kind: "string", valueName: "<key>", summary: "Idempotency key (defaults to a derived cli: key)." },
     { key: "recordedAt", name: "--recorded-at", kind: "string", valueName: "<iso>", summary: "Recorded-at timestamp for the verdict event." }
   ],
-  handler: ({ argv }) => {
+  handler: ({ argv, flags }) => {
     const context = resolveContextOrError(argv, "showcase.record-verdict");
     if (context.kind === "error") {
       return { envelope: context.envelope, exitCode: context.exitCode };
     }
     const contextResult = context.context;
-    const runId = valueAfter(argv, "--run");
-    const planItemId = valueAfter(argv, "--item");
-    const verdict = valueAfter(argv, "--verdict");
+    const runId = flags.run as string | undefined;
+    const planItemId = flags.item as string | undefined;
+    const verdict = flags.verdict as string | undefined;
     if (!runId || !planItemId || !verdict) {
       return {
         envelope: errorEnvelope("showcase.record-verdict", "cli_invalid_arguments", "Missing --run, --item, or --verdict."),
@@ -264,10 +263,10 @@ export const showcaseRecordVerdictCommand: CliCommand = {
         planItemId,
         verdict: verdict as Parameters<typeof appendShowcaseVerdict>[0]["verdict"],
         observationEventIds: [item.latest_observation_event_id],
-        actorType: (valueAfter(argv, "--actor") ?? "agent") as Parameters<typeof appendShowcaseVerdict>[0]["actorType"],
+        actorType: ((flags.actor as string | undefined) ?? "agent") as Parameters<typeof appendShowcaseVerdict>[0]["actorType"],
         hostSurface: "codex.cli",
-        idempotencyKey: valueAfter(argv, "--idempotency-key") ?? `cli:verdict:${runId}:${planItemId}:${verdict}`,
-        recordedAt: valueAfter(argv, "--recorded-at") ?? "2026-06-25T12:02:00.000Z"
+        idempotencyKey: (flags.idempotencyKey as string | undefined) ?? `cli:verdict:${runId}:${planItemId}:${verdict}`,
+        recordedAt: (flags.recordedAt as string | undefined) ?? "2026-06-25T12:02:00.000Z"
       });
       return showcaseResultOutput("showcase.record-verdict", result, contextResult, 0);
     } catch (error) {
@@ -290,16 +289,16 @@ export const showcaseDecideCommand: CliCommand = {
     { key: "idempotencyKey", name: "--idempotency-key", kind: "string", valueName: "<key>", summary: "Idempotency key (defaults to a derived cli: key)." },
     { key: "recordedAt", name: "--recorded-at", kind: "string", valueName: "<iso>", summary: "Recorded-at timestamp for the decision event." }
   ],
-  handler: ({ argv }) => {
+  handler: ({ argv, flags }) => {
     const context = resolveContextOrError(argv, "showcase.decide");
     if (context.kind === "error") {
       return { envelope: context.envelope, exitCode: context.exitCode };
     }
     const contextResult = context.context;
-    const runId = valueAfter(argv, "--run");
-    const verdictEventId = valueAfter(argv, "--verdict-event");
-    const decision = valueAfter(argv, "--decision");
-    const reason = valueAfter(argv, "--reason");
+    const runId = flags.run as string | undefined;
+    const verdictEventId = flags.verdictEvent as string | undefined;
+    const decision = flags.decision as string | undefined;
+    const reason = flags.reason as string | undefined;
     if (!runId || !verdictEventId || !decision || !reason) {
       return {
         envelope: errorEnvelope("showcase.decide", "cli_invalid_arguments", "Missing --run, --verdict-event, --decision, or --reason."),
@@ -317,10 +316,10 @@ export const showcaseDecideCommand: CliCommand = {
         verdictEventId,
         decision: decision as Parameters<typeof appendShowcaseFailureDecision>[0]["decision"],
         reason,
-        actorType: (valueAfter(argv, "--actor") ?? "agent") as Parameters<typeof appendShowcaseFailureDecision>[0]["actorType"],
+        actorType: ((flags.actor as string | undefined) ?? "agent") as Parameters<typeof appendShowcaseFailureDecision>[0]["actorType"],
         hostSurface: "codex.cli",
-        idempotencyKey: valueAfter(argv, "--idempotency-key") ?? `cli:decision:${runId}:${verdictEventId}:${decision}`,
-        recordedAt: valueAfter(argv, "--recorded-at") ?? "2026-06-25T12:02:30.000Z"
+        idempotencyKey: (flags.idempotencyKey as string | undefined) ?? `cli:decision:${runId}:${verdictEventId}:${decision}`,
+        recordedAt: (flags.recordedAt as string | undefined) ?? "2026-06-25T12:02:30.000Z"
       });
       return showcaseResultOutput("showcase.decide", result, contextResult, 0);
     } catch (error) {
@@ -341,14 +340,14 @@ export const showcasePauseCommand: CliCommand = {
     { key: "idempotencyKey", name: "--idempotency-key", kind: "string", valueName: "<key>", summary: "Idempotency key (defaults to a derived cli: key)." },
     { key: "recordedAt", name: "--recorded-at", kind: "string", valueName: "<iso>", summary: "Recorded-at timestamp for the pause event." }
   ],
-  handler: ({ argv }) => {
+  handler: ({ argv, flags }) => {
     const context = resolveContextOrError(argv, "showcase.pause");
     if (context.kind === "error") {
       return { envelope: context.envelope, exitCode: context.exitCode };
     }
     const contextResult = context.context;
-    const runId = valueAfter(argv, "--run");
-    const reason = valueAfter(argv, "--reason") ?? "Paused by operator.";
+    const runId = flags.run as string | undefined;
+    const reason = (flags.reason as string | undefined) ?? "Paused by operator.";
     if (!runId) {
       return {
         envelope: errorEnvelope("showcase.pause", "cli_invalid_arguments", "Missing --run."),
@@ -364,10 +363,10 @@ export const showcasePauseCommand: CliCommand = {
         context: contextResult,
         runId,
         reason,
-        actorType: (valueAfter(argv, "--actor") ?? "agent") as Parameters<typeof pauseShowcaseRun>[0]["actorType"],
+        actorType: ((flags.actor as string | undefined) ?? "agent") as Parameters<typeof pauseShowcaseRun>[0]["actorType"],
         hostSurface: "codex.cli",
-        idempotencyKey: valueAfter(argv, "--idempotency-key") ?? `cli:pause:${runId}:${reason}`,
-        recordedAt: valueAfter(argv, "--recorded-at") ?? "2026-06-25T12:02:45.000Z"
+        idempotencyKey: (flags.idempotencyKey as string | undefined) ?? `cli:pause:${runId}:${reason}`,
+        recordedAt: (flags.recordedAt as string | undefined) ?? "2026-06-25T12:02:45.000Z"
       });
       return showcaseResultOutput("showcase.pause", result, contextResult, 0);
     } catch (error) {
@@ -388,14 +387,14 @@ export const showcaseResumeCommand: CliCommand = {
     { key: "idempotencyKey", name: "--idempotency-key", kind: "string", valueName: "<key>", summary: "Idempotency key (defaults to a derived cli: key)." },
     { key: "recordedAt", name: "--recorded-at", kind: "string", valueName: "<iso>", summary: "Recorded-at timestamp for the resume event." }
   ],
-  handler: ({ argv }) => {
+  handler: ({ argv, flags }) => {
     const context = resolveContextOrError(argv, "showcase.resume");
     if (context.kind === "error") {
       return { envelope: context.envelope, exitCode: context.exitCode };
     }
     const contextResult = context.context;
-    const runId = valueAfter(argv, "--run");
-    const reason = valueAfter(argv, "--reason") ?? "Resumed by operator.";
+    const runId = flags.run as string | undefined;
+    const reason = (flags.reason as string | undefined) ?? "Resumed by operator.";
     if (!runId) {
       return {
         envelope: errorEnvelope("showcase.resume", "cli_invalid_arguments", "Missing --run."),
@@ -411,10 +410,10 @@ export const showcaseResumeCommand: CliCommand = {
         context: contextResult,
         runId,
         reason,
-        actorType: (valueAfter(argv, "--actor") ?? "agent") as Parameters<typeof resumeShowcaseRun>[0]["actorType"],
+        actorType: ((flags.actor as string | undefined) ?? "agent") as Parameters<typeof resumeShowcaseRun>[0]["actorType"],
         hostSurface: "codex.cli",
-        idempotencyKey: valueAfter(argv, "--idempotency-key") ?? `cli:resume:${runId}:${reason}`,
-        recordedAt: valueAfter(argv, "--recorded-at") ?? "2026-06-25T12:02:50.000Z"
+        idempotencyKey: (flags.idempotencyKey as string | undefined) ?? `cli:resume:${runId}:${reason}`,
+        recordedAt: (flags.recordedAt as string | undefined) ?? "2026-06-25T12:02:50.000Z"
       });
       return showcaseResultOutput("showcase.resume", result, contextResult, 0);
     } catch (error) {
@@ -433,13 +432,13 @@ export const showcaseFinishCommand: CliCommand = {
     { key: "idempotencyKey", name: "--idempotency-key", kind: "string", valueName: "<key>", summary: "Idempotency key (defaults to a derived cli: key)." },
     { key: "recordedAt", name: "--recorded-at", kind: "string", valueName: "<iso>", summary: "Recorded-at timestamp for the finish event." }
   ],
-  handler: ({ argv }) => {
+  handler: ({ argv, flags }) => {
     const context = resolveContextOrError(argv, "showcase.finish");
     if (context.kind === "error") {
       return { envelope: context.envelope, exitCode: context.exitCode };
     }
     const contextResult = context.context;
-    const runId = valueAfter(argv, "--run");
+    const runId = flags.run as string | undefined;
     if (!runId) {
       return {
         envelope: errorEnvelope("showcase.finish", "cli_invalid_arguments", "Missing --run."),
@@ -456,8 +455,8 @@ export const showcaseFinishCommand: CliCommand = {
         runId,
         actorType: "agent",
         hostSurface: "codex.cli",
-        idempotencyKey: valueAfter(argv, "--idempotency-key") ?? `cli:finish:${runId}`,
-        recordedAt: valueAfter(argv, "--recorded-at") ?? "2026-06-25T12:03:00.000Z"
+        idempotencyKey: (flags.idempotencyKey as string | undefined) ?? `cli:finish:${runId}`,
+        recordedAt: (flags.recordedAt as string | undefined) ?? "2026-06-25T12:03:00.000Z"
       });
       return showcaseResultOutput("showcase.finish", result, contextResult, result.status.run_outcome === "passed" ? 0 : 1);
     } catch (error) {
@@ -474,13 +473,13 @@ export const showcaseStatusCommand: CliCommand = {
     ...workspaceFlags,
     { key: "run", name: "--run", kind: "string", required: true, valueName: "<id>", summary: "Showcase run id." }
   ],
-  handler: ({ argv }) => {
+  handler: ({ argv, flags }) => {
     const context = resolveContextOrError(argv, "showcase.status");
     if (context.kind === "error") {
       return { envelope: context.envelope, exitCode: context.exitCode };
     }
     const contextResult = context.context;
-    const runId = valueAfter(argv, "--run");
+    const runId = flags.run as string | undefined;
     if (!runId) {
       return {
         envelope: errorEnvelope("showcase.status", "cli_invalid_arguments", "Missing --run."),
@@ -517,14 +516,14 @@ export const showcaseApproveCommand: CliCommand = {
     { key: "idempotencyKey", name: "--idempotency-key", kind: "string", valueName: "<key>", summary: "Idempotency key (defaults to a derived cli: key)." },
     { key: "recordedAt", name: "--recorded-at", kind: "string", valueName: "<iso>", summary: "Recorded-at timestamp for the approval event." }
   ],
-  handler: ({ argv }) => {
+  handler: ({ argv, flags }) => {
     const context = resolveContextOrError(argv, "showcase.approve");
     if (context.kind === "error") {
       return { envelope: context.envelope, exitCode: context.exitCode };
     }
     const contextResult = context.context;
-    const runId = valueAfter(argv, "--run");
-    const statement = valueAfter(argv, "--statement");
+    const runId = flags.run as string | undefined;
+    const statement = flags.statement as string | undefined;
     if (!runId || !statement) {
       return {
         envelope: errorEnvelope("showcase.approve", "cli_invalid_arguments", "Missing --run or --statement."),
@@ -540,11 +539,11 @@ export const showcaseApproveCommand: CliCommand = {
         context: contextResult,
         runId,
         decision: "approved",
-        actorType: (valueAfter(argv, "--actor") ?? "agent") as Parameters<typeof appendShowcaseApproval>[0]["actorType"],
+        actorType: ((flags.actor as string | undefined) ?? "agent") as Parameters<typeof appendShowcaseApproval>[0]["actorType"],
         hostSurface: "codex.cli",
         statement,
-        idempotencyKey: valueAfter(argv, "--idempotency-key") ?? `cli:approve:${runId}:${statement}`,
-        recordedAt: valueAfter(argv, "--recorded-at") ?? "2026-06-25T12:04:00.000Z",
+        idempotencyKey: (flags.idempotencyKey as string | undefined) ?? `cli:approve:${runId}:${statement}`,
+        recordedAt: (flags.recordedAt as string | undefined) ?? "2026-06-25T12:04:00.000Z",
         // SECURITY: the approval authority is HARDCODED to untrusted_automation —
         // an agent driving the CLI cannot mint trusted user sign-off. Ported
         // verbatim from the legacy runShowcaseApprove; do not parameterise.
@@ -569,14 +568,14 @@ export const showcaseRejectCommand: CliCommand = {
     { key: "idempotencyKey", name: "--idempotency-key", kind: "string", valueName: "<key>", summary: "Idempotency key (defaults to a derived cli: key)." },
     { key: "recordedAt", name: "--recorded-at", kind: "string", valueName: "<iso>", summary: "Recorded-at timestamp for the rejection event." }
   ],
-  handler: ({ argv }) => {
+  handler: ({ argv, flags }) => {
     const context = resolveContextOrError(argv, "showcase.reject");
     if (context.kind === "error") {
       return { envelope: context.envelope, exitCode: context.exitCode };
     }
     const contextResult = context.context;
-    const runId = valueAfter(argv, "--run");
-    const statement = valueAfter(argv, "--statement");
+    const runId = flags.run as string | undefined;
+    const statement = flags.statement as string | undefined;
     if (!runId || !statement) {
       return {
         envelope: errorEnvelope("showcase.reject", "cli_invalid_arguments", "Missing --run or --statement."),
@@ -591,11 +590,11 @@ export const showcaseRejectCommand: CliCommand = {
       const result = rejectShowcaseApproval({
         context: contextResult,
         runId,
-        actorType: (valueAfter(argv, "--actor") ?? "user") as Parameters<typeof rejectShowcaseApproval>[0]["actorType"],
+        actorType: ((flags.actor as string | undefined) ?? "user") as Parameters<typeof rejectShowcaseApproval>[0]["actorType"],
         hostSurface: "codex.cli",
         statement,
-        idempotencyKey: valueAfter(argv, "--idempotency-key") ?? `cli:reject:${runId}:${statement}`,
-        recordedAt: valueAfter(argv, "--recorded-at") ?? "2026-06-25T12:04:30.000Z",
+        idempotencyKey: (flags.idempotencyKey as string | undefined) ?? `cli:reject:${runId}:${statement}`,
+        recordedAt: (flags.recordedAt as string | undefined) ?? "2026-06-25T12:04:30.000Z",
         // SECURITY: the rejection authority is HARDCODED to untrusted_automation —
         // an agent driving the CLI cannot mint trusted user sign-off. Ported
         // verbatim from the legacy runShowcaseReject; do not parameterise.
@@ -622,16 +621,16 @@ export const showcaseCorrectCommand: CliCommand = {
     { key: "idempotencyKey", name: "--idempotency-key", kind: "string", valueName: "<key>", summary: "Idempotency key (defaults to a derived cli: key)." },
     { key: "recordedAt", name: "--recorded-at", kind: "string", valueName: "<iso>", summary: "Recorded-at timestamp for the correction event." }
   ],
-  handler: ({ argv }) => {
+  handler: ({ argv, flags }) => {
     const context = resolveContextOrError(argv, "showcase.correct");
     if (context.kind === "error") {
       return { envelope: context.envelope, exitCode: context.exitCode };
     }
     const contextResult = context.context;
-    const runId = valueAfter(argv, "--run");
-    const targetEventId = valueAfter(argv, "--target-event");
-    const correctedVerdict = valueAfter(argv, "--verdict");
-    const reason = valueAfter(argv, "--reason");
+    const runId = flags.run as string | undefined;
+    const targetEventId = flags.targetEvent as string | undefined;
+    const correctedVerdict = flags.verdict as string | undefined;
+    const reason = flags.reason as string | undefined;
     if (!runId || !targetEventId || !correctedVerdict || !reason) {
       return {
         envelope: errorEnvelope("showcase.correct", "cli_invalid_arguments", "Missing --run, --target-event, --verdict, or --reason."),
@@ -649,10 +648,10 @@ export const showcaseCorrectCommand: CliCommand = {
         targetEventId,
         correctedVerdict: correctedVerdict as Parameters<typeof correctShowcaseVerdict>[0]["correctedVerdict"],
         reason,
-        actorType: (valueAfter(argv, "--actor") ?? "agent") as Parameters<typeof correctShowcaseVerdict>[0]["actorType"],
+        actorType: ((flags.actor as string | undefined) ?? "agent") as Parameters<typeof correctShowcaseVerdict>[0]["actorType"],
         hostSurface: "codex.cli",
-        idempotencyKey: valueAfter(argv, "--idempotency-key") ?? `cli:correct:${runId}:${targetEventId}:${correctedVerdict}`,
-        recordedAt: valueAfter(argv, "--recorded-at") ?? "2026-06-25T12:04:45.000Z"
+        idempotencyKey: (flags.idempotencyKey as string | undefined) ?? `cli:correct:${runId}:${targetEventId}:${correctedVerdict}`,
+        recordedAt: (flags.recordedAt as string | undefined) ?? "2026-06-25T12:04:45.000Z"
       });
       return showcaseResultOutput("showcase.correct", result, contextResult, 0);
     } catch (error) {

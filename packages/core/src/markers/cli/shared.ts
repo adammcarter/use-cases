@@ -128,7 +128,7 @@ export function collectSourceInputs(productRoot: string, options: CollectSourceO
   return inputs;
 }
 
-function toPosix(path: string): string {
+export function toPosix(path: string): string {
   return path.split("\\").join("/");
 }
 

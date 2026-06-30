@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { PresentationSkillsError } from "./errors.js";
+import { UseCasesPluginError } from "./errors.js";
 import {
   parseYamlToJson,
   validateBySchemaId,
@@ -103,7 +103,7 @@ export function resolveWorkspaceContext(
   const config = existsSync(configPath) ? readWorkspaceConfig(configPath, workspaceRoot) : null;
 
   if (options.component && config?.value.component_id && options.component !== config.value.component_id) {
-    throw new PresentationSkillsError(
+    throw new UseCasesPluginError(
       `Unknown component '${options.component}'. Declared component is '${config.value.component_id}'.`,
       "component.unknown"
     );
@@ -141,7 +141,7 @@ function readWorkspaceConfig(
   const source = readFileSync(configPath, "utf8");
   const parsed = parseYamlToJson(source, "use-cases-plugin.yml");
   if (!parsed.ok) {
-    throw new PresentationSkillsError("Unable to parse use-cases-plugin.yml.", "workspace_config.parse_error");
+    throw new UseCasesPluginError("Unable to parse use-cases-plugin.yml.", "workspace_config.parse_error");
   }
   const validation = validateBySchemaId(
     "https://use-cases-plugin.dev/schemas/v1/workspace-config.schema.json",
@@ -149,10 +149,10 @@ function readWorkspaceConfig(
     "use-cases-plugin.yml"
   );
   if (!validation.ok) {
-    throw new PresentationSkillsError("Invalid use-cases-plugin.yml.", "workspace_config.schema_error");
+    throw new UseCasesPluginError("Invalid use-cases-plugin.yml.", "workspace_config.schema_error");
   }
   if (!isRecord(parsed.value)) {
-    throw new PresentationSkillsError("Invalid use-cases-plugin.yml.", "workspace_config.schema_error");
+    throw new UseCasesPluginError("Invalid use-cases-plugin.yml.", "workspace_config.schema_error");
   }
 
   const config = parsed.value as WorkspaceConfig;
@@ -226,7 +226,7 @@ function realpathIfExists(path: string): string {
 
 function ensureRelativeSafe(value: string): void {
   if (isAbsolute(value) || value.split(/[\\/]/).includes("..")) {
-    throw new PresentationSkillsError(`Unsafe relative path '${value}'.`, "path.escape");
+    throw new UseCasesPluginError(`Unsafe relative path '${value}'.`, "path.escape");
   }
 }
 
@@ -251,7 +251,7 @@ export function isValidId(value: unknown): value is string {
  */
 export function assertValidId(value: unknown, paramName: string): asserts value is string {
   if (!isValidId(value)) {
-    throw new PresentationSkillsError(
+    throw new UseCasesPluginError(
       `Invalid ${paramName} '${String(value)}': must be a canonical id (lowercase, no path separators, no '..').`,
       "path.invalid_id"
     );
@@ -263,7 +263,7 @@ function ensureContained(root: string, child: string, message: string): void {
   if (relativePath === "" || (!relativePath.startsWith("..") && !isAbsolute(relativePath))) {
     return;
   }
-  throw new PresentationSkillsError(message, "path.escape");
+  throw new UseCasesPluginError(message, "path.escape");
 }
 
 // Resolve the deepest existing ancestor of `target` to its realpath, then recombine
@@ -305,7 +305,7 @@ export function isPathContained(root: string, target: string): boolean {
 /**
  * SECURITY: bound a user-supplied file path to `root`, symlink-safe. Returns the
  * resolved absolute path, or throws a stable `path.escape` (public UCP_PATH_ESCAPE)
- * PresentationSkillsError when the path — after resolving symlinks on its existing
+ * UseCasesPluginError when the path — after resolving symlinks on its existing
  * prefix — escapes `root`. Use at every boundary where an attacker-
  * controlled path (`--plan-file`, a host projection target, ...) becomes a
  * filesystem read or write, BEFORE the path is opened.
@@ -317,7 +317,7 @@ export function resolveContainedPath(
 ): string {
   const resolved = isAbsolute(candidate) ? resolve(candidate) : resolve(root, candidate);
   if (!isPathContained(root, resolved)) {
-    throw new PresentationSkillsError(message, "path.escape");
+    throw new UseCasesPluginError(message, "path.escape");
   }
   return resolved;
 }

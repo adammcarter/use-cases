@@ -1,6 +1,6 @@
 import { existsSync, lstatSync, readdirSync, realpathSync } from "node:fs";
 import { extname, isAbsolute, join, relative, sep } from "node:path";
-import type { Diagnostic } from "../schema/index.js";
+import { diagnostic, type Diagnostic } from "../schema/index.js";
 import type { ResolvedWorkspaceContext } from "../roots.js";
 import { buildMatrixSnapshot } from "./integrity.js";
 import type { LoadedUseCase, MatrixFileResult, MatrixSnapshot } from "./types.js";
@@ -102,14 +102,3 @@ function isContained(root: string, child: string): boolean {
   return relativePath === "" || (!relativePath.startsWith("..") && !isAbsolute(relativePath));
 }
 
-function diagnostic(code: string, message: string, sourcePath: string): Diagnostic {
-  return {
-    code,
-    severity: "error",
-    message,
-    source_path: sourcePath,
-    json_pointer: null,
-    entity_id: null,
-    related_ids: []
-  };
-}

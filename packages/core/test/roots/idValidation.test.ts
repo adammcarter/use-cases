@@ -8,7 +8,7 @@ import {
   assertValidId,
   isValidId
 } from "../../src/roots.js";
-import { PresentationSkillsError } from "../../src/errors.js";
+import { UseCasesPluginError } from "../../src/errors.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, "../../../..");
@@ -54,7 +54,7 @@ describe("canonical id validation", () => {
       "run."
     ]) {
       expect(isValidId(value), value).toBe(false);
-      expect(() => assertValidId(value, "--run"), value).toThrow(PresentationSkillsError);
+      expect(() => assertValidId(value, "--run"), value).toThrow(UseCasesPluginError);
     }
   });
 
@@ -63,8 +63,8 @@ describe("canonical id validation", () => {
       assertValidId("../../../etc/passwd", "--run");
       throw new Error("expected assertValidId to throw");
     } catch (error) {
-      expect(error).toBeInstanceOf(PresentationSkillsError);
-      expect((error as PresentationSkillsError).code).toBe("path.invalid_id");
+      expect(error).toBeInstanceOf(UseCasesPluginError);
+      expect((error as UseCasesPluginError).code).toBe("path.invalid_id");
       expect((error as Error).message).toContain("--run");
     }
   });

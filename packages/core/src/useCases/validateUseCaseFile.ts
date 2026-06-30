@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { TextDecoder } from "node:util";
 import {
   computeSemanticHash,
+  diagnostic,
   parseYamlToJson,
   validateBySchemaId,
   type Diagnostic
@@ -126,18 +127,6 @@ function failedFile(
     file: { path: sourcePath, status, file_hash: fileHash },
     candidates: [],
     diagnostics: [diagnostic(status, message, sourcePath)]
-  };
-}
-
-function diagnostic(code: string, message: string, sourcePath: string): Diagnostic {
-  return {
-    code,
-    severity: "error",
-    message,
-    source_path: sourcePath,
-    json_pointer: null,
-    entity_id: null,
-    related_ids: []
   };
 }
 

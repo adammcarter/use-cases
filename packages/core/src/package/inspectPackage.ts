@@ -1,8 +1,8 @@
 import { spawnSync } from "node:child_process";
 import { accessSync, constants, existsSync, mkdtempSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
-import type { Diagnostic } from "../schema/index.js";
+import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { diagnostic, type Diagnostic } from "../schema/index.js";
 
 export type PackageInspectionTarget =
   | { kind: "workspace"; path: string; build?: boolean }
@@ -440,14 +440,3 @@ function requireCommandSuccess(result: ReturnType<typeof spawnSync>, command: st
   }
 }
 
-function diagnostic(code: string, message: string, sourcePath: string): Diagnostic {
-  return {
-    code,
-    severity: "error",
-    message,
-    source_path: sourcePath.split(sep).join("/"),
-    json_pointer: null,
-    entity_id: null,
-    related_ids: []
-  };
-}

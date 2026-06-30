@@ -1,5 +1,4 @@
 import type { CliCommand, CommandOutput } from "../command/types.js";
-import { numberAfter, valueAfter } from "../args/parse.js";
 import {
   createCliResult,
   errorEnvelope,
@@ -114,12 +113,12 @@ export const capsulePlanCommand: CliCommand = {
   command: "capsule.plan",
   summary: "Plan a demo capsule.",
   flags: [...workspaceFlags, capsuleFlag],
-  handler: ({ argv }) => {
+  handler: ({ argv, flags }) => {
     const context = resolveContextOrError(argv, "capsule.plan");
     if (context.kind === "error") {
       return { envelope: context.envelope, exitCode: context.exitCode };
     }
-    const capsuleId = valueAfter(argv, "--capsule");
+    const capsuleId = flags.capsule as string | undefined;
     if (!capsuleId) {
       return {
         envelope: errorEnvelope("capsule.plan", "cli_invalid_arguments", "Missing --capsule."),
@@ -154,12 +153,12 @@ export const capsuleRunCommand: CliCommand = {
     { key: "recordedAt", name: "--recorded-at", kind: "string", valueName: "<timestamp>", summary: "Override the recorded-at timestamp." },
     { key: "commandTimeoutMs", name: "--command-timeout-ms", kind: "integer", valueName: "<ms>", summary: "Per-command execution timeout in milliseconds." }
   ],
-  handler: ({ argv }) => {
+  handler: ({ argv, flags }) => {
     const context = resolveContextOrError(argv, "capsule.run");
     if (context.kind === "error") {
       return { envelope: context.envelope, exitCode: context.exitCode };
     }
-    const capsuleId = valueAfter(argv, "--capsule");
+    const capsuleId = flags.capsule as string | undefined;
     if (!capsuleId) {
       return {
         envelope: errorEnvelope("capsule.run", "cli_invalid_arguments", "Missing --capsule."),
@@ -170,12 +169,12 @@ export const capsuleRunCommand: CliCommand = {
       const result = runDemoCapsule({
         context: context.context,
         capsuleId,
-        executeCommands: argv.includes("--execute-commands"),
+        executeCommands: flags.executeCommands as boolean,
         actorType: "agent",
         hostSurface: "codex.cli",
-        idempotencyKey: valueAfter(argv, "--idempotency-key") ?? undefined,
-        recordedAt: valueAfter(argv, "--recorded-at") ?? undefined,
-        commandTimeoutMs: numberAfter(argv, "--command-timeout-ms") ?? undefined
+        idempotencyKey: (flags.idempotencyKey as string | undefined) ?? undefined,
+        recordedAt: (flags.recordedAt as string | undefined) ?? undefined,
+        commandTimeoutMs: (flags.commandTimeoutMs as number | undefined) ?? undefined
       });
       return capsuleRunOutput(result, context.context);
     } catch (error) {
