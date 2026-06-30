@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { runBuiltinCli, isMissingCoreModule, MISSING_BUILD_MESSAGE } from "./builtins.js";
+import { runBuiltinCli } from "./builtins.js";
+import { isMissingCoreModule, MISSING_BUILD_MESSAGE } from "./coreLoader.js";
 import { allCommands } from "./command/registry.js";
 import { matchCommand, runRegistryCommand } from "./command/dispatch.js";
 

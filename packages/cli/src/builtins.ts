@@ -1,59 +1,17 @@
 // Builtin CLI behaviour that stays OUTSIDE the declarative command registry:
 // version, the `--help` usage catalog, `init` scaffolding, and `schema`
-// introspection — plus the core loader. These either emit bespoke (non-envelope)
-// output or hold CI-signed `@use-case` markers, so they live here as a small,
-// marker-stable module. `runBuiltinCli` is the builtins-only fallback the registry
-// dispatcher (index.ts) delegates to when no registry command matches.
+// introspection. These emit bespoke (non-envelope) output or hold a CI-signed
+// `@use-case` marker (cli_self_documents, in the help machinery), so they live
+// here as a small, marker-stable module. `runBuiltinCli` is the builtins-only
+// fallback the registry dispatcher (index.ts) delegates to when no registry
+// command matches. The core loader lives in ./coreLoader.ts.
 import { resolve } from "node:path";
+import { loadUcmCore } from "./coreLoader.js";
+import { valueAfter } from "./args/parse.js";
 import { renderEnvelope } from "./render.js";
-
-type UcmCoreModule = typeof import("@use-cases-plugin/core");
 
 const { PUBLIC_SCHEMA_IDS, createCliResult, getVersionInfo, validateFixtureWorkspace, scaffoldWorkspace, isInitTemplate } =
   await loadUcmCore();
-
-// Exported so the registry's runtime module reaches core through the same
-// bundled-fallback + friendly-missing-build path (a static import in a command
-// module would bypass the diagnostics.contracts.missing_build_hint handler).
-export async function loadUcmCore(): Promise<UcmCoreModule> {
-  try {
-    return await import("@use-cases-plugin/core");
-  } catch (error) {
-    if (!isMissingCorePackage(error)) {
-      throw error;
-    }
-    const bundledCoreSpecifier = "../../core/dist/index.js";
-    try {
-      return await import(bundledCoreSpecifier) as UcmCoreModule;
-    } catch (fallbackError) {
-      // The package alias AND the bundled dist both failed to resolve: the
-      // compiled core/dist has not been built yet. Surface an actionable hint
-      // instead of letting a raw ERR_MODULE_NOT_FOUND stack reach the user.
-//: @use-case: diagnostics.contracts.missing_build_hint
-      if (isMissingCoreModule(fallbackError)) {
-        process.stderr.write(`${MISSING_BUILD_MESSAGE}\n`);
-        process.exit(2);
-      }
-//: @use-case: end diagnostics.contracts.missing_build_hint
-      throw fallbackError;
-    }
-  }
-}
-
-export const MISSING_BUILD_MESSAGE =
-  "ucp: the compiled core is missing. Run `pnpm build` from the repository root before using the CLI.";
-
-function isMissingCorePackage(error: unknown): boolean {
-  return isMissingCoreModule(error) && error instanceof Error && error.message.includes("@use-cases-plugin/core");
-}
-
-export function isMissingCoreModule(error: unknown): boolean {
-  return (
-    error instanceof Error &&
-    "code" in error &&
-    (error as { code?: unknown }).code === "ERR_MODULE_NOT_FOUND"
-  );
-}
 
 // Output mode for the whole process. Every command builds the SAME normative
 // envelope; `rendered()` is the single choke-point that decides whether the
@@ -613,16 +571,6 @@ function writeError(command: string, code: string, message: string, exitCode = 2
 }
 
 
-
-
-
-function valueAfter(argv: string[], flag: string): string | undefined {
-  const index = argv.indexOf(flag);
-  if (index === -1) {
-    return undefined;
-  }
-  return argv[index + 1];
-}
 
 
 
