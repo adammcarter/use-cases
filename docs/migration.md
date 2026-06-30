@@ -1,10 +1,30 @@
-# TEST-MATRIX Migration
+# Migration
 
-Migration preserves intended behavior coverage. It does not preserve proof.
+Bring an **existing, hand-rolled** record of intended behaviour into the
+use-case matrix — whatever form it's in. People already track this somewhere: a
+markdown table or checklist, a CSV, a spreadsheet export, a `TEST-MATRIX.md`,
+release notes, a QA sign-off sheet, a wiki dump.
 
-Old `PASS`, `FAIL`, `DONE`, evidence links, screenshots, and sign-off text are imported only as review context. They do not create evidence JSONL, showcase runs, approvals, host support, or verified status.
+**The invariant, for every format:** migration preserves intended-behaviour
+*coverage*, never *proof*. Old `PASS` / `FAIL` / `DONE` marks, evidence links,
+screenshots, and sign-off text come across only as **review context** — they do
+not create evidence JSONL, showcase runs, approvals, host support, or verified
+status. Migrated rows land as **drafts** with zero proof; freshness is earned
+later by binding + verifying, never inherited.
 
-## Recommended Flow
+## Two paths
+
+- **Any format → the `migration` skill (general path).** A fixed parser can't
+  understand every hand-rolled layout, so the agent does the mapping: it reads
+  your file, infers its structure, and writes one reviewable **draft** use case
+  per item via `ucp matrix upsert`, carrying the original text + provenance. Just
+  ask your agent to "migrate" / "bring in" / "import" your file and the bundled
+  `migration` skill activates. See `.agents/skills/migration/SKILL.md`.
+- **A standard `TEST-MATRIX.md` → `ucp migrate test-matrix` (fast path).** For the
+  one canonical markdown-table format there's a deterministic importer that
+  already enforces the no-laundering invariant. Use it when your source fits.
+
+## TEST-MATRIX fast path
 
 Run a dry-run first:
 

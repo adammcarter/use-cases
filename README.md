@@ -38,8 +38,8 @@ Append-only, content-addressed history of what was actually observed. It grades 
 ### 🎬 Live showcases with un-fakeable sign-off
 Perform a behaviour live — observe, verdict, finish — recorded as an event-sourced run. An agent can drive the whole show **but is structurally barred from approving it as the user**: user sign-off requires a trusted confirmation path the agent can't command. "Approved by a human" finally means it.
 
-### ♻️ Painless migration
-Point the importer at a legacy `TEST-MATRIX.md` and it backfills draft use cases — while explicitly refusing to turn old `PASS` marks into evidence. Review the drafts, activate the keepers.
+### ♻️ Bring what you already have
+You already track behaviour *somewhere* — a markdown table, a checklist, a CSV, a spreadsheet export, a `TEST-MATRIX.md`, a QA sign-off sheet. The bundled **`migration` skill** lets the agent read **any** of those formats and map each item into a reviewable draft use case, preserving the original text and provenance — while explicitly refusing to turn old `PASS` marks into evidence. (For a standard `TEST-MATRIX.md` there's also a deterministic `ucp migrate test-matrix` fast path.) Review the drafts, activate the keepers.
 
 ### 🔌 Works inside your agent
 Ships for **Claude Code, Codex, Copilot, and OpenCode** as a CLI (`ucp`) and an MCP server, with the same JSON contract on both. On install it auto-injects a trusted bootstrap at session start, so the agent knows how to use it without being told.

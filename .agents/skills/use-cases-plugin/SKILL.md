@@ -18,6 +18,7 @@ Generated plans, walkthroughs, capsules, and runbooks are prepared material only
 
 ## Defer To
 
+- `migration` when the user wants to bring an existing hand-rolled acceptance doc (a markdown table, checklist, CSV, spreadsheet export, TEST-MATRIX, or QA sheet) INTO the matrix.
 - `showcase` when the user asks for a live demo, sign-off flow, or user-visible acceptance run.
 - `walkthrough` when the user asks for a broad explanation, caveats, or evidence review.
 - Ordinary repo work when the user asks a trivial one-off question, opts out, or no workspace/repo context exists.

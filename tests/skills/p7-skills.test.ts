@@ -6,7 +6,7 @@ import { parseYamlToJson } from "../../packages/ucm-core/src/schema/index.js";
 
 const repoRoot = resolve(import.meta.dirname, "../..");
 const skillRoot = join(repoRoot, ".agents", "skills");
-const canonicalSkillNames = ["use-cases-plugin", "showcase", "walkthrough"];
+const canonicalSkillNames = ["use-cases-plugin", "showcase", "walkthrough", "migration"];
 const knownCliCommands = new Set([
   "capsule list",
   "capsule plan",
