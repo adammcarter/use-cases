@@ -10,6 +10,7 @@ import {
   runScanCommand,
   runVerifyCommand,
   singleKeyResolver,
+  type PublicKeyResolver,
   type VerifySpawnRunner
 } from "../../src/markers/index.js";
 
@@ -350,6 +351,48 @@ describe("verify command", () => {
     const embeddedContextHash: string = event.verification.context_hash;
     expect(embeddedContextHash).toMatch(/^sha256:[0-9a-f]{64}$/);
     expect(embeddedContextHash).toBe(recordHash);
+  });
+
+  test("a signed proof whose key does not resolve surfaces the real integrity detail + a --public-key hint", () => {
+    const ws = makeWorkspace();
+    bind(ws, ROW_A, "Sources/Checkout/CouponService.swift");
+
+    // Land one signed proof so the evidence ledger is non-empty and carries a
+    // real ed25519 signature.
+    const minted = runVerifyCommand({ ...verifyBase(ws), rowId: ROW_A, spawnRunner: passSpawn });
+    const proof = runProveCommand({
+      context: ws.context,
+      productRoot: ws.productRoot,
+      bindingsPath: ws.bindingsPath,
+      evidencePath: ws.evidencePath,
+      publicKeyResolver: resolver,
+      rowId: ROW_A,
+      trustedCi: true,
+      verificationResults: minted.results,
+      signingKey: { privateKey: PRIVATE_KEY, keyId: KEY_ID },
+      generatedAt: GENERATED_AT,
+      idFactory: makeId("01JPROVE")
+    });
+    expect(proof.proof_events_appended).toBe(1);
+
+    // Re-run verify with a resolver that knows NO keys — exactly what happens when
+    // the caller forgets `--public-key`. The ledger fails signature validation.
+    const emptyResolver: PublicKeyResolver = () => undefined;
+    const result = runVerifyCommand({
+      ...verifyBase(ws),
+      publicKeyResolver: emptyResolver,
+      all: true,
+      spawnRunner: passSpawn
+    });
+
+    expect(result.exit_code).toBe(4);
+    const codes = result.errors.map((error) => error.code);
+    // The stable top-level code is still emitted...
+    expect(codes).toContain("LEDGER_INVALID");
+    // ...but the ACTUAL cause is no longer swallowed.
+    expect(codes).toContain("UNKNOWN_KEY_ID");
+    // ...and a targeted remediation hint points the caller at --public-key.
+    expect(result.errors.some((error) => /--public-key/.test(error.message))).toBe(true);
   });
 
   test("writes one JSONL record per targeted row to --out", () => {

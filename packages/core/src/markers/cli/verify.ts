@@ -163,9 +163,40 @@ export function runVerifyCommand(options: VerifyCommandOptions): VerifyCommandRe
   });
 
   if (prepared.registryErrors.length > 0 || prepared.evidenceErrors.length > 0) {
+    // Surface the ACTUAL integrity failures instead of only the opaque top-level
+    // code — the most common one is a signed proof whose key the caller did not
+    // supply, which reads as UNKNOWN_KEY_ID / SIGNATURE_MISSING. Without this the
+    // user sees "LEDGER_INVALID" with no clue that `--public-key` is the fix.
+    const detail = [
+      ...prepared.registryErrors.map((error) => ({
+        code: error.code,
+        message: error.line == null ? error.message : `line ${error.line}: ${error.message}`
+      })),
+      ...prepared.evidenceErrors.map((error) => ({
+        code: error.code,
+        message: error.line == null ? error.message : `line ${error.line}: ${error.message}`
+      }))
+    ];
+    const keyResolutionFailed = prepared.evidenceErrors.some(
+      (error) => error.code === "UNKNOWN_KEY_ID" || error.code === "SIGNATURE_MISSING"
+    );
+    const hint = keyResolutionFailed
+      ? [
+          {
+            code: "HINT",
+            message:
+              "a signed proof could not be verified — pass the trusted public key with " +
+              "`--public-key <path>` (or `--keyring <path>`); without it signed proofs cannot be checked."
+          }
+        ]
+      : [];
     return fail({
       exit_code: 4,
-      errors: [{ code: "LEDGER_INVALID", message: "registry or evidence ledger failed validation" }]
+      errors: [
+        { code: "LEDGER_INVALID", message: "registry or evidence ledger failed validation" },
+        ...detail,
+        ...hint
+      ]
     });
   }
 
