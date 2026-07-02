@@ -18,6 +18,6 @@ items:
 permissions:
   command_execution: false
 extensions:
-  use-cases-plugin.dev/runner:
-    command: ucp capsule run --repo examples/basic-product --capsule capsule.basic.product_search --json
+  use-case-matrix.dev/runner:
+    command: ucm capsule run --repo examples/basic-product --capsule capsule.basic.product_search --json
     command_steps: none

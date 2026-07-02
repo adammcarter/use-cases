@@ -2,7 +2,7 @@
 
 > **Historical planning document.** This roadmap captures the *proposed* design as
 > it was being built. Some command names and flags here are illustrative
-> proposals and do **not** all match the shipped CLI — run `ucp --help` for the
+> proposals and do **not** all match the shipped CLI — run `ucm --help` for the
 > authoritative command surface, and see [docs/cli.md](../cli.md). Kept for
 > provenance, not as a current reference.
 
@@ -11,7 +11,7 @@
 > corners cut. Designed with deep-reasoning review (Albus/ChatGPT Pro). This file
 > is the source of truth for v1 scope, contracts, and sequencing.
 
-**Name:** Use Cases Plugin (UCM) · npm scope `@use-cases-plugin/{core,cli,mcp}` · CLI `ucp` (alias `use-cases-plugin`) · MCP `ucp-mcp`.
+**Name:** Use Cases Plugin (UCM) · npm scope `@use-case-matrix/{core,cli,mcp}` · CLI `ucm` (alias `use-case-matrix`) · MCP `ucm-mcp`.
 
 Phases (tracked as tasks): 0 Rename+contracts · 1 Schema/API · 2 Trust-core · 3 Lifecycle surfaces · 4 CLI+MCP · 5 Dogfood+examples+docs · 6 Supply-chain+release.
 
@@ -23,10 +23,10 @@ The owner’s correction changes the release shape from “trust-core public v1 
 
 My recommendation is:
 
-**Ship as “Use Cases Plugin” / “UCM”, not “use-cases-plugin”.**  
-Use package scope **`@use-cases-plugin/*`**, primary CLI binary **`ucp`**, MCP package **`@use-cases-plugin/mcp`**, and treat every surface as a versioned public contract.
+**Ship as “Use Cases Plugin” / “UCM”, not “use-case-matrix”.**  
+Use package scope **`@use-case-matrix/*`**, primary CLI binary **`ucm`**, MCP package **`@use-case-matrix/mcp`**, and treat every surface as a versioned public contract.
 
-A v1 is only credible when a new repo can install from packed tarballs, run `ucp init`, bind at least one row, run a configured verifier that is not pnpm/vitest-specific, produce a signed proof, see `FRESH`, run the release gate, run showcase/evidence/capsule/plan/host workflows, and drive the same surface through MCP.
+A v1 is only credible when a new repo can install from packed tarballs, run `ucm init`, bind at least one row, run a configured verifier that is not pnpm/vitest-specific, produce a signed proof, see `FRESH`, run the release gate, run showcase/evidence/capsule/plan/host workflows, and drive the same surface through MCP.
 
 ---
 
@@ -74,10 +74,10 @@ The system has four layers:
 
 ## Canonical repo layout
 
-Use one predictable root directory. I would use `.ucp/` rather than scattering files.
+Use one predictable root directory. I would use `.ucm/` rather than scattering files.
 
 ```text
-.ucp/
+.ucm/
   matrix.yaml
   config.yaml
   bindings.jsonl
@@ -106,7 +106,7 @@ Every CLI JSON response and MCP structured result should use the same envelope:
 
 ```json
 {
-  "schemaVersion": "ucp/v1",
+  "schemaVersion": "ucm/v1",
   "ucmVersion": "1.0.0",
   "command": "freshness",
   "ok": true,
@@ -129,13 +129,13 @@ Use stable machine-readable codes everywhere:
 
 ```json
 {
-  "code": "UCP_BINDING_MARKER_DUPLICATE",
+  "code": "UCM_BINDING_MARKER_DUPLICATE",
   "message": "Two markers declare the same binding id.",
   "severity": "error",
   "surface": "binding",
   "path": "src/foo.ts",
   "rowId": "row.checkout.happy-path",
-  "docs": "errors/UCP_BINDING_MARKER_DUPLICATE"
+  "docs": "errors/UCM_BINDING_MARKER_DUPLICATE"
 }
 ```
 
@@ -151,17 +151,17 @@ Use:
 
 **Product name:** `Use Cases Plugin`  
 **Short name:** `UCM`  
-**NPM scope:** `@use-cases-plugin`  
-**CLI primary binary:** `ucp`  
-**CLI long binary alias:** `use-cases-plugin`  
-**MCP server binary:** `ucp-mcp`  
-**Long MCP alias:** `use-cases-plugin-mcp`
+**NPM scope:** `@use-case-matrix`  
+**CLI primary binary:** `ucm`  
+**CLI long binary alias:** `use-case-matrix`  
+**MCP server binary:** `ucm-mcp`  
+**Long MCP alias:** `use-case-matrix-mcp`
 
-Do **not** call it `use-cases-plugin`.
+Do **not** call it `use-case-matrix`.
 
 ## Why this is the right call
 
-`use-cases-plugin` is weaker for public adoption because:
+`use-case-matrix` is weaker for public adoption because:
 
 - It sounds like an extension to some unnamed host.
 - “Plugin” undersells the trust engine and release gate.
@@ -181,33 +181,33 @@ Do **not** call it `use-cases-plugin`.
 Use:
 
 ```text
-@use-cases-plugin/core
-@use-cases-plugin/cli
-@use-cases-plugin/mcp
+@use-case-matrix/core
+@use-case-matrix/cli
+@use-case-matrix/mcp
 ```
 
 Keep package count low for v1. Do not split showcase/evidence/host into separate packages yet unless consumers truly need direct imports. Internal modules can remain separate inside `core`.
 
 ## Exact binaries
 
-`@use-cases-plugin/cli`:
+`@use-case-matrix/cli`:
 
 ```json
 {
   "bin": {
-    "ucp": "./dist/bin/ucp.js",
-    "use-cases-plugin": "./dist/bin/ucp.js"
+    "ucm": "./dist/bin/ucm.js",
+    "use-case-matrix": "./dist/bin/ucm.js"
   }
 }
 ```
 
-`@use-cases-plugin/mcp`:
+`@use-case-matrix/mcp`:
 
 ```json
 {
   "bin": {
-    "ucp-mcp": "./dist/bin/ucp-mcp.js",
-    "use-cases-plugin-mcp": "./dist/bin/ucp-mcp.js"
+    "ucm-mcp": "./dist/bin/ucm-mcp.js",
+    "use-case-matrix-mcp": "./dist/bin/ucm-mcp.js"
   }
 }
 ```
@@ -217,22 +217,22 @@ Keep package count low for v1. Do not split showcase/evidence/host into separate
 Use:
 
 ```text
-.ucp/config.yaml
-.ucp/matrix.yaml
+.ucm/config.yaml
+.ucm/matrix.yaml
 ```
 
 Also accept, but do not prefer:
 
 ```text
-ucp.config.yaml
-ucp.config.json
+ucm.config.yaml
+ucm.config.json
 ```
 
 Schema IDs should be stable. Example:
 
 ```json
 {
-  "$id": "https://use-cases-plugin.dev/schemas/v1/matrix.schema.json",
+  "$id": "https://use-case-matrix.dev/schemas/v1/matrix.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema"
 }
 ```
@@ -243,15 +243,15 @@ If the domain is not ready, publish schemas from the package and docs site first
 
 1. **Create a rename branch before public docs are written.**
 2. **Rename package names and imports in one mechanical PR.**
-   - `@presentation-skills/core` → `@use-cases-plugin/core`
-   - `@presentation-skills/cli` → `@use-cases-plugin/cli`
-   - `@presentation-skills/mcp` → `@use-cases-plugin/mcp`
+   - `@presentation-skills/core` → `@use-case-matrix/core`
+   - `@presentation-skills/cli` → `@use-case-matrix/cli`
+   - `@presentation-skills/mcp` → `@use-case-matrix/mcp`
 3. **Rename internal docs, generated help, examples, schema `$id`s, MCP names, CLI help, and fixtures in the same PR.**
 4. **Keep internal folder names boring:**
    - `packages/core`
    - `packages/cli`
    - `packages/mcp`
-5. **Run a codemod check in CI** that fails if `presentation-skills`, `use-cases-plugin`, or old package names appear outside a migration note.
+5. **Run a codemod check in CI** that fails if `presentation-skills`, `use-case-matrix`, or old package names appear outside a migration note.
 6. **Pack before publish:**
    - `pnpm -r build`
    - `pnpm -r test`
@@ -273,7 +273,7 @@ The matrix is the canonical list of product claims/use cases.
 Minimum row schema:
 
 ```yaml
-schemaVersion: ucp/matrix/v1
+schemaVersion: ucm/matrix/v1
 rows:
   - id: trust.fresh-row
     title: Freshness is only granted by a valid signed proof
@@ -370,9 +370,9 @@ Examples:
 Matrix is v1-stable when a clean repo can run:
 
 ```bash
-ucp init
-ucp matrix check --json
-ucp matrix normalize --check
+ucm init
+ucm matrix check --json
+ucm matrix normalize --check
 ```
 
 …and get deterministic, schema-valid output without TypeScript, pnpm, or vitest being present.
@@ -418,7 +418,7 @@ Binding record schema:
 
 ```json
 {
-  "schemaVersion": "ucp/binding/v1",
+  "schemaVersion": "ucm/binding/v1",
   "rowId": "trust.fresh-row",
   "bindingId": "trust-fresh-impl",
   "role": "impl",
@@ -482,8 +482,8 @@ Must reject or warn on:
 A non-JS fixture can add markers, run:
 
 ```bash
-ucp bind scan
-ucp bind check --json
+ucm bind scan
+ucm bind check --json
 ```
 
 …and get stable bindings with no pnpm/vitest assumptions.
@@ -508,7 +508,7 @@ Proof entry schema:
 
 ```json
 {
-  "schemaVersion": "ucp/proof/v1",
+  "schemaVersion": "ucm/proof/v1",
   "entryIndex": 42,
   "previousEntryHash": "sha256:...",
   "entryHash": "sha256:...",
@@ -626,7 +626,7 @@ authority:
 For unknown CI, allow:
 
 ```bash
-ucp prove --authority-file ./authority.json
+ucm prove --authority-file ./authority.json
 ```
 
 …but let release policy reject low-assurance authorities.
@@ -720,7 +720,7 @@ Freshness result schema:
   "freshness": "FRESH",
   "reasons": [
     {
-      "code": "UCP_FRESH_VALID_PROOF",
+      "code": "UCM_FRESH_VALID_PROOF",
       "proofEntryHash": "sha256:..."
     }
   ],
@@ -768,7 +768,7 @@ Must handle:
 
 ### Definition of done
 
-`ucp freshness --json` gives deterministic per-row status with stable reason codes, and every reason points to an actionable fix.
+`ucm freshness --json` gives deterministic per-row status with stable reason codes, and every reason points to an actionable fix.
 
 ---
 
@@ -797,9 +797,9 @@ releaseGate:
 CLI:
 
 ```bash
-ucp gate
-ucp gate --json
-ucp gate --changed-since origin/main
+ucm gate
+ucm gate --json
+ucm gate --changed-since origin/main
 ```
 
 Exit codes:
@@ -860,7 +860,7 @@ Showcase is a live, agent-driven demo run system. It must produce durable, inspe
 Showcase spec:
 
 ```yaml
-schemaVersion: ucp/showcase-spec/v1
+schemaVersion: ucm/showcase-spec/v1
 id: cli.first-fresh
 title: First FRESH row from a clean repo
 rows:
@@ -879,7 +879,7 @@ steps:
   - goal: Verify and prove
 checkpoints:
   - type: command
-    argv: ["ucp", "freshness", "--json"]
+    argv: ["ucm", "freshness", "--json"]
     expect:
       jsonPath: "$.data.rows[0].freshness"
       equals: "FRESH"
@@ -898,7 +898,7 @@ Showcase run result:
 
 ```json
 {
-  "schemaVersion": "ucp/showcase-run/v1",
+  "schemaVersion": "ucm/showcase-run/v1",
   "runId": "showcase_20260628_abc",
   "specId": "cli.first-fresh",
   "status": "passed",
@@ -906,7 +906,7 @@ Showcase run result:
   "artifacts": [
     {
       "kind": "transcript",
-      "path": ".ucp/showcase/runs/.../transcript.md",
+      "path": ".ucm/showcase/runs/.../transcript.md",
       "sha256": "..."
     }
   ]
@@ -977,8 +977,8 @@ For public v1, the **surface** must support agent-driven runs, but the **test su
 A user can run:
 
 ```bash
-ucp showcase run cli.first-fresh --json
-ucp showcase status --json
+ucm showcase run cli.first-fresh --json
+ucm showcase status --json
 ```
 
 …and get a durable run artifact linked to rows and evidence, with deterministic status and no repo-specific assumptions.
@@ -1002,7 +1002,7 @@ Capsule schema:
 
 ```json
 {
-  "schemaVersion": "ucp/capsule/v1",
+  "schemaVersion": "ucm/capsule/v1",
   "id": "release-review",
   "scope": {
     "rows": ["trust.fresh-row"],
@@ -1061,7 +1061,7 @@ Plan is the structured work plan surface: showcase plans, walkthroughs, and card
 Plan schema:
 
 ```yaml
-schemaVersion: ucp/plan/v1
+schemaVersion: ucm/plan/v1
 id: public-v1-hardening
 title: Public v1 hardening plan
 scope:
@@ -1130,7 +1130,7 @@ Host applicability answers:
 Host profile schema:
 
 ```yaml
-schemaVersion: ucp/host-profile/v1
+schemaVersion: ucm/host-profile/v1
 id: generic-mcp-stdio
 title: Generic local MCP stdio host
 capabilities:
@@ -1155,7 +1155,7 @@ Applicability result:
 
 ```json
 {
-  "schemaVersion": "ucp/host-applicability/v1",
+  "schemaVersion": "ucm/host-applicability/v1",
   "hostId": "generic-mcp-stdio",
   "rowId": "showcase.cli-demo",
   "status": "applicable",
@@ -1211,8 +1211,8 @@ Host-specific profiles for Claude Code, Cursor, VS Code, etc. can exist as versi
 A non-JS repo can run:
 
 ```bash
-ucp host check generic-cli --json
-ucp host check generic-mcp-stdio --json
+ucm host check generic-cli --json
+ucm host check generic-mcp-stdio --json
 ```
 
 …and get actionable applicability results for matrix rows, showcase specs, capsule generation, and plan workflows.
@@ -1228,16 +1228,16 @@ Evidence records durable claims and artifacts that support rows, showcases, rele
 Commands:
 
 ```bash
-ucp evidence record
-ucp evidence status
-ucp evidence void
+ucm evidence record
+ucm evidence status
+ucm evidence void
 ```
 
 Evidence event schema:
 
 ```json
 {
-  "schemaVersion": "ucp/evidence-event/v1",
+  "schemaVersion": "ucm/evidence-event/v1",
   "eventId": "ev_abc123",
   "eventType": "record",
   "evidenceId": "evi_showcase_cli_first_fresh",
@@ -1247,11 +1247,11 @@ Evidence event schema:
   },
   "artifact": {
     "kind": "transcript",
-    "path": ".ucp/showcase/runs/.../transcript.md",
+    "path": ".ucm/showcase/runs/.../transcript.md",
     "sha256": "..."
   },
   "producer": {
-    "type": "ucp-showcase",
+    "type": "ucm-showcase",
     "version": "1.0.0"
   },
   "createdAt": "2026-06-28T12:00:00.000Z"
@@ -1262,7 +1262,7 @@ Void event schema:
 
 ```json
 {
-  "schemaVersion": "ucp/evidence-event/v1",
+  "schemaVersion": "ucm/evidence-event/v1",
   "eventType": "void",
   "evidenceId": "evi_showcase_cli_first_fresh",
   "reason": "Transcript contained unredacted secret-like test token",
@@ -1336,44 +1336,44 @@ A user can record, inspect, and void evidence without deleting history, and rele
 Full v1 CLI command tree:
 
 ```text
-ucp init
-ucp doctor
-ucp validate
-ucp schema list
-ucp schema print <name>
+ucm init
+ucm doctor
+ucm validate
+ucm schema list
+ucm schema print <name>
 
-ucp matrix check
-ucp matrix normalize
-ucp matrix list
+ucm matrix check
+ucm matrix normalize
+ucm matrix list
 
-ucp bind scan
-ucp bind check
-ucp bind add
-ucp bind remove
+ucm bind scan
+ucm bind check
+ucm bind add
+ucm bind remove
 
-ucp verify
-ucp prove
-ucp freshness
-ucp status
-ucp gate
+ucm verify
+ucm prove
+ucm freshness
+ucm status
+ucm gate
 
-ucp showcase list
-ucp showcase run
-ucp showcase status
+ucm showcase list
+ucm showcase run
+ucm showcase status
 
-ucp capsule generate
-ucp capsule check
+ucm capsule generate
+ucm capsule check
 
-ucp plan generate
-ucp plan check
-ucp plan status
+ucm plan generate
+ucm plan check
+ucm plan status
 
-ucp host list
-ucp host check
+ucm host list
+ucm host check
 
-ucp evidence record
-ucp evidence status
-ucp evidence void
+ucm evidence record
+ucm evidence status
+ucm evidence void
 ```
 
 Global flags:
@@ -1444,14 +1444,14 @@ Target current stable MCP spec line: `2025-11-25`.
 Package:
 
 ```text
-@use-cases-plugin/mcp
+@use-case-matrix/mcp
 ```
 
 Binaries:
 
 ```text
-ucp-mcp
-use-cases-plugin-mcp
+ucm-mcp
+use-case-matrix-mcp
 ```
 
 ### Tools
@@ -1501,29 +1501,29 @@ ucm_schema_get
 ### Resources
 
 ```text
-ucp://matrix
-ucp://config
-ucp://bindings
-ucp://freshness
-ucp://gate
-ucp://ledger
-ucp://evidence
-ucp://showcase/runs
-ucp://capsules
-ucp://plans
-ucp://host/profiles
-ucp://schemas/<name>
+ucm://matrix
+ucm://config
+ucm://bindings
+ucm://freshness
+ucm://gate
+ucm://ledger
+ucm://evidence
+ucm://showcase/runs
+ucm://capsules
+ucm://plans
+ucm://host/profiles
+ucm://schemas/<name>
 ```
 
 ### Prompts
 
 ```text
-ucp/adopt-repo
-ucp/bind-row
-ucp/recover-suspect-row
-ucp/release-review
-ucp/write-showcase
-ucp/record-evidence
+ucm/adopt-repo
+ucm/bind-row
+ucm/recover-suspect-row
+ucm/release-review
+ucm/write-showcase
+ucm/record-evidence
 ```
 
 ### Security bar
@@ -1645,7 +1645,7 @@ Rules:
 
 ## 4.2 TypeScript API stability
 
-Public exports from `@use-cases-plugin/core` must be deliberate.
+Public exports from `@use-case-matrix/core` must be deliberate.
 
 Recommended public API groups:
 
@@ -1757,11 +1757,11 @@ Public v1 needs a real key lifecycle.
 Commands:
 
 ```bash
-ucp key generate
-ucp key inspect
-ucp key export-public
-ucp key rotate
-ucp key revoke
+ucm key generate
+ucm key inspect
+ucm key export-public
+ucm key rotate
+ucm key revoke
 ```
 
 If you do not want these as public CLI commands, at least ship documented scripts and stable keyring schema.
@@ -1769,7 +1769,7 @@ If you do not want these as public CLI commands, at least ship documented script
 Keyring schema:
 
 ```yaml
-schemaVersion: ucp/keyring/v1
+schemaVersion: ucm/keyring/v1
 keys:
   - keyId: release-2026-q3
     algorithm: ed25519
@@ -1797,20 +1797,20 @@ Recommended GitHub Actions structure:
 PR:
   validate
   test
-  ucp verify
-  ucp gate --allow-unproven? no key
+  ucm verify
+  ucm gate --allow-unproven? no key
 
 main after merge:
   validate
   test
-  ucp verify
-  ucp prove
+  ucm verify
+  ucm prove
   commit/open PR with ledger update
 
 release tag:
   validate
   test
-  ucp gate
+  ucm gate
   pack
   attest
   publish
@@ -1863,13 +1863,13 @@ Public v1 minimum:
 - ledger verification command:
 
 ```bash
-ucp ledger verify --json
+ucm ledger verify --json
 ```
 
 - ledger doctor command:
 
 ```bash
-ucp doctor --ledger
+ucm doctor --ledger
 ```
 
 Do not let the product imply impossible guarantees. The honest claim is:
@@ -1883,25 +1883,25 @@ This is a release-critical surface.
 Target path:
 
 ```bash
-npm install -D @use-cases-plugin/cli
-npx ucp init
-npx ucp matrix check
-npx ucp bind scan
-npx ucp verify
-npx ucp prove --local-test-key
-npx ucp freshness
+npm install -D @use-case-matrix/cli
+npx ucm init
+npx ucm matrix check
+npx ucm bind scan
+npx ucm verify
+npx ucm prove --local-test-key
+npx ucm freshness
 ```
 
 For real CI:
 
 ```bash
-ucp key generate
-ucp key export-public
+ucm key generate
+ucm key export-public
 # store private key in CI secret
-ucp init ci github-actions
+ucm init ci github-actions
 ```
 
-`ucp init` should detect, but not assume:
+`ucm init` should detect, but not assume:
 
 - npm.
 - pnpm.
@@ -2035,9 +2035,9 @@ Public compatibility policy:
 Publish all three packages together for v1:
 
 ```text
-@use-cases-plugin/core@1.0.0
-@use-cases-plugin/cli@1.0.0
-@use-cases-plugin/mcp@1.0.0
+@use-case-matrix/core@1.0.0
+@use-case-matrix/cli@1.0.0
+@use-case-matrix/mcp@1.0.0
 ```
 
 ---
@@ -2198,7 +2198,7 @@ Deliverables:
 Acceptance:
 
 ```bash
-rg "presentation-skills|use-cases-plugin" .
+rg "presentation-skills|use-case-matrix" .
 ```
 
 Only migration docs may match.
@@ -2244,7 +2244,7 @@ Acceptance:
 
 Deliverables:
 
-- `UCP_*` error code registry.
+- `UCM_*` error code registry.
 - diagnostics formatter.
 - JSON diagnostics.
 - docs page generated from registry.
@@ -2451,7 +2451,7 @@ Acceptance:
 - mutating tools can be disabled.
 - `prove` disabled by default.
 - no arbitrary shell tool.
-- package can launch via `npx @use-cases-plugin/mcp`.
+- package can launch via `npx @use-case-matrix/mcp`.
 
 ---
 
@@ -2478,7 +2478,7 @@ Acceptance:
 - every CLI command has at least one required row.
 - every MCP tool/resource/prompt group has required rows.
 - every lifecycle surface has showcase/evidence/docs rows.
-- `ucp gate` passes only after proof ledger is current.
+- `ucm gate` passes only after proof ledger is current.
 
 ### Workstream Q: Examples
 
@@ -2561,10 +2561,10 @@ Acceptance:
 ## Product contracts
 
 - [ ] Product name is `Use Cases Plugin`.
-- [ ] NPM scope is `@use-cases-plugin`.
+- [ ] NPM scope is `@use-case-matrix`.
 - [ ] Packages are `core`, `cli`, `mcp`.
-- [ ] CLI binary `ucp` works.
-- [ ] MCP binary `ucp-mcp` works.
+- [ ] CLI binary `ucm` works.
+- [ ] MCP binary `ucm-mcp` works.
 - [ ] All public schemas are versioned.
 - [ ] All public JSON outputs validate.
 - [ ] All public error codes documented.
@@ -2666,9 +2666,9 @@ Acceptance:
 - [ ] No P0/P1 bugs open.
 - [ ] Public `1.0.0` published for all packages together.
 - [ ] Post-publish smoke:
-  - [ ] `npx ucp --help`
-  - [ ] `npx ucp init`
-  - [ ] `npx ucp-mcp` launches
+  - [ ] `npx ucm --help`
+  - [ ] `npx ucm init`
+  - [ ] `npx ucm-mcp` launches
   - [ ] docs links valid
   - [ ] provenance/attestation visible
   - [ ] MCP metadata valid

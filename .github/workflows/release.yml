@@ -1,6 +1,6 @@
 name: release
 
-# Publishes @use-cases-plugin/{core,cli,mcp} to npm with provenance using npm
+# Publishes @use-case-matrix/{core,cli,mcp} to npm with provenance using npm
 # Trusted Publishing (OIDC). No NPM_TOKEN secret is used or required: npm mints a
 # short-lived, workflow-scoped credential from the `id-token` OIDC token. See
 # docs/release/publishing.md for the one-time owner setup on npmjs.com.
@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     # Trusted Publishing is tokenless but still repo-scoped: only run from the
     # canonical repository, never a fork.
-    if: github.repository == 'adammcarter/use-cases-plugin'
+    if: github.repository == 'adammcarter/use-case-matrix'
     steps:
       - uses: actions/checkout@v4
 

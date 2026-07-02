@@ -1,6 +1,6 @@
 export type JsonObject = Record<string, unknown>;
 
-// Closed value-domains mirrored from @use-cases-plugin/core so the advertised MCP
+// Closed value-domains mirrored from @use-case-matrix/core so the advertised MCP
 // schemas document exactly what each parameter accepts. These are advisory: the
 // server does not validate inbound args against the schema (handlers self-validate
 // and still forward every undeclared field to the CLI), so declaring them only
@@ -45,7 +45,7 @@ const timeoutProp = {
 };
 const allowWriteProp = {
   type: "boolean",
-  description: "Must be true for any ledger mutation. Write tools also require the server to run in write mode (UCP_MCP_WRITE=1)."
+  description: "Must be true for any ledger mutation. Write tools also require the server to run in write mode (UCM_MCP_WRITE=1)."
 };
 const actorTypeProp = {
   type: "string",
@@ -163,7 +163,7 @@ export const planInputSchema = workspaceSchema({
 
 export const capsuleRunInputSchema = workspaceSchema({
   capsule: { type: "string", description: "Demo capsule id to run." },
-  execute_commands: { type: "boolean", description: "Execute capsule commands (requires UCP_MCP_COMMAND_EXECUTION=1)." },
+  execute_commands: { type: "boolean", description: "Execute capsule commands (requires UCM_MCP_COMMAND_EXECUTION=1)." },
   command_timeout_ms: { type: "integer", minimum: 0, description: "Per-command execution timeout in milliseconds." },
   actor_type: actorTypeProp,
   host_surface: hostSurfaceProp,

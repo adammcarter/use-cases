@@ -4,13 +4,13 @@
 // the SAME structured JSON. Resources NEVER mutate, run verifiers, or mint
 // proofs. A repo-scoped resource resolves its workspace from a `?repo=` query
 // segment on the URI, or the server's configured default
-// (UCP_MCP_REPO). The repo is bound, symlink-safe, to an allowed
+// (UCM_MCP_REPO). The repo is bound, symlink-safe, to an allowed
 // root (the configured default, else the server cwd); a traversal path is
 // rejected before any disk read. Schema resources need no repo.
 import { join, resolve } from "node:path";
-import type { ResolvedWorkspaceContext } from "@use-cases-plugin/core";
+import type { ResolvedWorkspaceContext } from "@use-case-matrix/core";
 
-type UcmCoreModule = typeof import("@use-cases-plugin/core");
+type UcmCoreModule = typeof import("@use-case-matrix/core");
 
 const {
   UseCasesPluginError,
@@ -31,7 +31,7 @@ const {
 
 async function loadUcmCore(): Promise<UcmCoreModule> {
   try {
-    return await import("@use-cases-plugin/core");
+    return await import("@use-case-matrix/core");
   } catch (error) {
     if (!isMissingCorePackage(error)) {
       throw error;
@@ -42,7 +42,7 @@ async function loadUcmCore(): Promise<UcmCoreModule> {
 }
 
 function isMissingCorePackage(error: unknown): boolean {
-  return error instanceof Error && "code" in error && error.code === "ERR_MODULE_NOT_FOUND" && error.message.includes("@use-cases-plugin/core");
+  return error instanceof Error && "code" in error && error.code === "ERR_MODULE_NOT_FOUND" && error.message.includes("@use-case-matrix/core");
 }
 
 const JSON_MIME = "application/json";
@@ -61,49 +61,49 @@ export type McpResourceDescriptor = {
 
 export const mcpResources: McpResourceDescriptor[] = [
   {
-    uri: "ucp://matrix",
+    uri: "ucm://matrix",
     name: "Use-case matrix",
-    description: "Matrix validation result plus the full list of use cases (read-only). Add ?repo=<path> or configure UCP_MCP_REPO.",
+    description: "Matrix validation result plus the full list of use cases (read-only). Add ?repo=<path> or configure UCM_MCP_REPO.",
     mimeType: JSON_MIME
   },
   {
-    uri: "ucp://matrix/status",
+    uri: "ucm://matrix/status",
     name: "Matrix + evidence status",
     description: "Combined matrix validation and evidence assurance status (read-only).",
     mimeType: JSON_MIME
   },
   {
-    uri: "ucp://freshness",
+    uri: "ucm://freshness",
     name: "Marker freshness status",
-    description: "Read-only freshness scan (marker bindings vs proofs) — the same status `ucp scan` emits. Never runs verifiers.",
+    description: "Read-only freshness scan (marker bindings vs proofs) — the same status `ucm scan` emits. Never runs verifiers.",
     mimeType: JSON_MIME
   },
   {
-    uri: "ucp://bindings",
+    uri: "ucm://bindings",
     name: "Marker binding registry",
     description: "The materialized append-only binding registry (row id -> binding slugs), read-only.",
     mimeType: JSON_MIME
   },
   {
-    uri: "ucp://ledger",
+    uri: "ucm://ledger",
     name: "Proof ledger validation",
     description: "Read-only validate-ledger summary: evidence/registry integrity, append-only discipline, and hash-chain status.",
     mimeType: JSON_MIME
   },
   {
-    uri: "ucp://evidence",
+    uri: "ucm://evidence",
     name: "Evidence assurance status",
     description: "Replayed evidence assurance status for the matrix (read-only).",
     mimeType: JSON_MIME
   },
   {
-    uri: "ucp://schemas",
+    uri: "ucm://schemas",
     name: "Public schema index",
-    description: "Index of public Use Cases Plugin JSON schemas. Read an individual schema at ucp://schemas/{name} (e.g. ucp://schemas/common.schema.json). No repo required.",
+    description: "Index of public Use Cases Plugin JSON schemas. Read an individual schema at ucm://schemas/{name} (e.g. ucm://schemas/common.schema.json). No repo required.",
     mimeType: JSON_MIME
   },
   {
-    uri: "ucp://config",
+    uri: "ucm://config",
     name: "Resolved workspace config",
     description: "Resolved workspace roots and config provenance for a repo (read-only).",
     mimeType: JSON_MIME
@@ -173,7 +173,7 @@ function parseUcmUri(uri: string): ParsedUri | null {
   } catch {
     return null;
   }
-  if (url.protocol !== "ucp:") {
+  if (url.protocol !== "ucm:") {
     return null;
   }
   const host = url.hostname;
@@ -191,7 +191,7 @@ function resolveResourceContext(
       error: {
         ok: false,
         code: INVALID_PARAMS,
-        message: "This resource requires a repo: add ?repo=<path> to the URI or set UCP_MCP_REPO."
+        message: "This resource requires a repo: add ?repo=<path> to the URI or set UCM_MCP_REPO."
       }
     };
   }
@@ -200,7 +200,7 @@ function resolveResourceContext(
     workspaceRoot = resolveContainedPath(allowedRepoRoot(), repoValue, "repo escapes the allowed workspace root boundary.");
   } catch (error) {
     if (error instanceof UseCasesPluginError && error.code === "path.escape") {
-      return { error: { ok: false, code: INVALID_PARAMS, message: `UCP_PATH_ESCAPE: ${error.message}` } };
+      return { error: { ok: false, code: INVALID_PARAMS, message: `UCM_PATH_ESCAPE: ${error.message}` } };
     }
     throw error;
   }
@@ -208,12 +208,12 @@ function resolveResourceContext(
 }
 
 function allowedRepoRoot(): string {
-  const configured = process.env.UCP_MCP_REPO;
+  const configured = process.env.UCM_MCP_REPO;
   return configured && configured.length > 0 ? resolve(configured) : process.cwd();
 }
 
 function defaultRepo(): string | null {
-  const configured = process.env.UCP_MCP_REPO;
+  const configured = process.env.UCM_MCP_REPO;
   return configured && configured.length > 0 ? configured : null;
 }
 
@@ -226,7 +226,7 @@ function markerPaths(context: ResolvedWorkspaceContext) {
 }
 
 // No proof-signing key is configured for read-only views, mirroring the CLI
-// default (`ucp scan` / `ucp validate-ledger` without --public-key).
+// default (`ucm scan` / `ucm validate-ledger` without --public-key).
 function noKeyResolver(): undefined {
   return undefined;
 }
@@ -393,7 +393,7 @@ function schemasIndex() {
     schemas: getPublicSchemas().map(({ id }) => ({
       id,
       name: id.split("/").pop() ?? id,
-      uri: `ucp://schemas/${id.split("/").pop() ?? id}`
+      uri: `ucm://schemas/${id.split("/").pop() ?? id}`
     }))
   };
 }

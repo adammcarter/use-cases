@@ -7,10 +7,10 @@ vitest** anywhere in the project: the verifier is `pytest`.
 
 The complete, runnable project lives at
 [`examples/python-pytest/`](../../examples/python-pytest), and it is exercised
-end-to-end (from the published `ucp` tarball, running real `pytest`) by
+end-to-end (from the published `ucm` tarball, running real `pytest`) by
 [`tests/release/example-python-pytest.test.ts`](../../tests/release/example-python-pytest.test.ts).
 
-> The only Node you install is the `ucp` CLI itself (the trust engine). The code
+> The only Node you install is the `ucm` CLI itself (the trust engine). The code
 > under test, the acceptance test, and the verifier are 100% Python.
 
 ---
@@ -19,7 +19,7 @@ end-to-end (from the published `ucp` tarball, running real `pytest`) by
 
 ```
 examples/python-pytest/
-├─ use-cases-plugin.yml                       # workspace config: acceptance → python.pytest preset
+├─ use-case-matrix.yml                       # workspace config: acceptance → python.pytest preset
 ├─ pytest.ini                                     # importlib mode + pythonpath=src
 ├─ src/coupon.py                                  # implementation, wrapped in a marker block
 ├─ tests/use_cases/
@@ -27,7 +27,7 @@ examples/python-pytest/
 └─ use-cases/checkout.yml                         # the matrix row
 ```
 
-### The workspace config (`use-cases-plugin.yml`)
+### The workspace config (`use-case-matrix.yml`)
 
 The `acceptance` verifier resolves to the **`python.pytest` preset** — the same
 config-driven verifier model JS repos use, just pointed at pytest:
@@ -94,7 +94,7 @@ are the exact commands the release test runs.
 ### 0. Install the CLI and generate a scratch signing key
 
 ```bash
-npm install @use-cases-plugin/cli          # provides the `ucp` binary
+npm install @use-case-matrix/cli          # provides the `ucm` binary
 # A throwaway ed25519 keypair. In production the PRIVATE key lives ONLY in CI.
 node -e 'const c=require("crypto"),f=require("fs");const k=c.generateKeyPairSync("ed25519");
 f.writeFileSync("public-key.pem",k.publicKey.export({type:"spki",format:"pem"}));
@@ -104,7 +104,7 @@ f.writeFileSync("private-key.pem",k.privateKey.export({type:"pkcs8",format:"pem"
 ### 1. Validate the matrix
 
 ```bash
-ucp matrix validate --repo . --json     # ok: true
+ucm matrix validate --repo . --json     # ok: true
 ```
 
 ### 2. Register the binding
@@ -113,7 +113,7 @@ The marker already lives in `src/coupon.py`, so register it without editing
 source:
 
 ```bash
-ucp bind --repo . \
+ucm bind --repo . \
   --row example.checkout.apply_coupon \
   --file src/coupon.py \
   --mode explicit --register-existing --json
@@ -122,7 +122,7 @@ ucp bind --repo . \
 ### 3. Scan — the row is UNPROVEN
 
 ```bash
-ucp scan --repo . --public-key public-key.pem --json
+ucm scan --repo . --public-key public-key.pem --json
 # example.checkout.apply_coupon → UNPROVEN  (bound, but no signed proof yet)
 ```
 
@@ -133,7 +133,7 @@ ucp scan --repo . --public-key public-key.pem --json
 signing key** and writes an unsigned results ledger:
 
 ```bash
-ucp verify --repo . --all --out verification-results.jsonl \
+ucm verify --repo . --all --out verification-results.jsonl \
   --public-key public-key.pem --json
 # results[0].status: "pass", verifier_id: "acceptance", exit_code: 0
 ```
@@ -145,10 +145,10 @@ ed25519-signed proof. Locally you can use the scratch key; in production the key
 is a CI secret:
 
 ```bash
-UCP_SIGNING_KEY="$(cat private-key.pem)" \
-ucp prove --repo . --all --trusted-ci --append \
+UCM_SIGNING_KEY="$(cat private-key.pem)" \
+ucm prove --repo . --all --trusted-ci --append \
   --verification-results verification-results.jsonl \
-  --signing-key-env UCP_SIGNING_KEY \
+  --signing-key-env UCM_SIGNING_KEY \
   --public-key public-key.pem --json
 # rows[0].status: "signed", proof_events_appended: 1
 ```
@@ -156,7 +156,7 @@ ucp prove --repo . --all --trusted-ci --append \
 ### 6. Scan again — the row is FRESH
 
 ```bash
-ucp scan --repo . --public-key public-key.pem --json
+ucm scan --repo . --public-key public-key.pem --json
 # summary: { fresh: 1, ... }   example.checkout.apply_coupon → FRESH
 ```
 
@@ -168,7 +168,7 @@ Break the production code so the genuine acceptance test fails, then re-verify:
 
 ```bash
 # drop the discount in src/coupon.py, then:
-ucp verify --repo . --all --out verification-results.jsonl --public-key public-key.pem --json
+ucm verify --repo . --all --out verification-results.jsonl --public-key public-key.pem --json
 # results[0].status: "fail", exit_code != 0
 ```
 
@@ -178,11 +178,11 @@ guarantee the JS path gives, delivered by a pure-Python toolchain.
 
 | Stage | Command | Row state |
 |---|---|---|
-| Authored | `ucp matrix validate` | (tracked) |
-| Bound | `ucp bind … --register-existing` | UNPROVEN |
-| Verified (keyless, real pytest) | `ucp verify --out …` | UNPROVEN (results only) |
-| Proved (trusted, signed) | `ucp prove --trusted-ci …` | **FRESH** |
-| Production code broken | `ucp verify` → `ucp prove` | refused → not FRESH |
+| Authored | `ucm matrix validate` | (tracked) |
+| Bound | `ucm bind … --register-existing` | UNPROVEN |
+| Verified (keyless, real pytest) | `ucm verify --out …` | UNPROVEN (results only) |
+| Proved (trusted, signed) | `ucm prove --trusted-ci …` | **FRESH** |
+| Production code broken | `ucm verify` → `ucm prove` | refused → not FRESH |
 
 See [verifiers](../concepts/verifiers.md) for the full preset model and
 [getting started](../getting-started.md) for the JS path and the CI workflow.

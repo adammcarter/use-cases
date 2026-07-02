@@ -6,14 +6,14 @@ row **FRESH** only when trusted CI has signed proof that the current code,
 binding, and verifier context still match. Stale claims become visible instead of
 silently trusted.
 
-Ships as `@use-cases-plugin/cli` (binary `ucp`) plus an MCP server
-`@use-cases-plugin/mcp` (binary `ucp-mcp`).
+Ships as `@use-case-matrix/cli` (binary `ucm`) plus an MCP server
+`@use-case-matrix/mcp` (binary `ucm-mcp`).
 
 ## Start here
 
-- **[CLI reference](./cli.md)** — every command and its flags. `ucp init`
-  scaffolds a workspace that validates out of the box; `ucp bind` links a row to
-  code; `ucp prove` (in trusted CI) mints the FRESH proof.
+- **[CLI reference](./cli.md)** — every command and its flags. `ucm init`
+  scaffolds a workspace that validates out of the box; `ucm bind` links a row to
+  code; `ucm prove` (in trusted CI) mints the FRESH proof.
 - **[Activation](./activation.md)** — when to use the plugin continuously during
   planning/implementation versus as a backfill, walkthrough, or live showcase.
 

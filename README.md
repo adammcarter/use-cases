@@ -27,7 +27,7 @@ Use Cases Plugin replaces all of that with one append-only, content-addressed so
 ## What you get
 
 ### 🧬 A living use-case matrix
-Behaviours, not just tests. Each row captures intent, scenarios, value tier, and observable outcomes in readable YAML the agent keeps current during planning and implementation. Query it (`ucp matrix list`), validate it, and see coverage by value and journey role at a glance.
+Behaviours, not just tests. Each row captures intent, scenarios, value tier, and observable outcomes in readable YAML the agent keeps current during planning and implementation. Query it (`ucm matrix list`), validate it, and see coverage by value and journey role at a glance.
 
 ### 🔐 Cryptographic freshness (the headline)
 Bind a row to the exact code that satisfies it with a one-line marker. Trusted CI runs the verifier and signs an Ed25519 proof — only then does the row read `FRESH`. **Change the bound code and the row automatically becomes `SUSPECT`** (the signed proof no longer matches the code span). No human can fake `FRESH`; the signing key lives only in CI. Freshness is math, not a checkbox.
@@ -39,10 +39,10 @@ Append-only, content-addressed history of what was actually observed. It grades 
 Perform a behaviour live — observe, verdict, finish — recorded as an event-sourced run. An agent can drive the whole show **but is structurally barred from approving it as the user**: user sign-off requires a trusted confirmation path the agent can't command. "Approved by a human" finally means it.
 
 ### ♻️ Bring what you already have
-You already track behaviour *somewhere* — a markdown table, a checklist, a CSV, a spreadsheet export, a `TEST-MATRIX.md`, a QA sign-off sheet. The bundled **`migration` skill** lets the agent read **any** of those formats and map each item into a reviewable draft use case, preserving the original text and provenance — while explicitly refusing to turn old `PASS` marks into evidence. (For a standard `TEST-MATRIX.md` there's also a deterministic `ucp migrate test-matrix` fast path.) Review the drafts, activate the keepers.
+You already track behaviour *somewhere* — a markdown table, a checklist, a CSV, a spreadsheet export, a `TEST-MATRIX.md`, a QA sign-off sheet. The bundled **`migration` skill** lets the agent read **any** of those formats and map each item into a reviewable draft use case, preserving the original text and provenance — while explicitly refusing to turn old `PASS` marks into evidence. (For a standard `TEST-MATRIX.md` there's also a deterministic `ucm migrate test-matrix` fast path.) Review the drafts, activate the keepers.
 
 ### 🔌 Works inside your agent
-Ships for **Claude Code, Codex, Copilot, and OpenCode** as a CLI (`ucp`) and an MCP server, with the same JSON contract on both. On install it auto-injects a trusted bootstrap at session start, so the agent knows how to use it without being told.
+Ships for **Claude Code, Codex, Copilot, and OpenCode** as a CLI (`ucm`) and an MCP server, with the same JSON contract on both. On install it auto-injects a trusted bootstrap at session start, so the agent knows how to use it without being told.
 
 ---
 
@@ -61,23 +61,23 @@ Typical workflows: **continuous** (keep the matrix live as you build), **backfil
 
 ```bash
 # Install the CLI (and MCP server) into your project
-npm i -D @use-cases-plugin/cli @use-cases-plugin/mcp
+npm i -D @use-case-matrix/cli @use-case-matrix/mcp
 
 # Scaffold a workspace (creates use-cases/ + config with one example behaviour)
-npx ucp init
+npx ucm init
 
 # Explore — output is human-readable by default; add --json to ANY command for
 # the machine-readable result envelope.
-npx ucp --help
-npx ucp matrix validate --repo .            # is the matrix clean?
-npx ucp matrix list --repo .                # what behaviours exist?  (lists example.feature.happy_path)
+npx ucm --help
+npx ucm matrix validate --repo .            # is the matrix clean?
+npx ucm matrix list --repo .                # what behaviours exist?  (lists example.feature.happy_path)
 
 # Bind a behaviour to the code that satisfies it — point --file at your own code.
-npx ucp bind --row example.feature.happy_path \
+npx ucm bind --row example.feature.happy_path \
   --file src/feature.ts --mode explicit --start-line 1 --end-line 20
 
 # Pick a few high-value behaviours to demo
-npx ucp plan showcase --repo . --max-items 3
+npx ucm plan showcase --repo . --max-items 3
 ```
 
 Everything except `bind` runs as-is against the freshly scaffolded workspace;
@@ -99,7 +99,7 @@ For the technically curious — the high-level shape:
 - **Built-in CI + precommit.** `.github/workflows/use-cases.yml` runs `validate-ledger` and `scan`, and (on release) `verify → prove → release-gate` so required rows must be `FRESH` to ship. An optional local precommit hook gives fast, non-authoritative feedback. Publishing uses npm Trusted Publishing (OIDC) with build provenance — no tokens.
 - **Append-only everywhere.** The matrix, the binding registry, the evidence ledger, and showcase runs are all event-sourced and content-addressed: status is *derived* from history, never asserted.
 
-Packages: **`@use-cases-plugin/cli`** (binary `ucp`), **`@use-cases-plugin/mcp`** (binary `ucp-mcp`), **`@use-cases-plugin/core`**.
+Packages: **`@use-case-matrix/cli`** (binary `ucm`), **`@use-case-matrix/mcp`** (binary `ucm-mcp`), **`@use-case-matrix/core`**.
 
 Deeper reading: [CLI reference](docs/cli.md) · [data model](docs/data-model.md) · [code markers & freshness](docs/markers-adoption.md) · [evidence & security](docs/security.md) · [showcase runs](docs/showcase.md) · [hosts & activation](docs/hosts.md) · [MCP](docs/mcp.md) · [migration](docs/migration.md).
 

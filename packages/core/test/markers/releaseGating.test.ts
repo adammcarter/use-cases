@@ -81,10 +81,10 @@ afterEach(() => {
 });
 
 function makeWorkspace(rowFlag: boolean | null): ReturnType<typeof resolveWorkspaceContext> {
-  const root = mkdtempSync(join(tmpdir(), "ucp-relgate-"));
+  const root = mkdtempSync(join(tmpdir(), "ucm-relgate-"));
   tmpDirs.push(root);
   for (const [rel, body] of [
-    ["use-cases-plugin.yml", CONFIG_YAML],
+    ["use-case-matrix.yml", CONFIG_YAML],
     ["use-cases/checkout.yml", rowYaml(rowFlag)]
   ] as const) {
     const full = join(root, rel);
@@ -167,10 +167,10 @@ describe("release-mode gating via required_for_release", () => {
 
 describe("release-gate authority requirement is read from workspace config", () => {
   function workspaceWith(configBody: string): ReturnType<typeof resolveWorkspaceContext> {
-    const root = mkdtempSync(join(tmpdir(), "ucp-relgate-cfg-"));
+    const root = mkdtempSync(join(tmpdir(), "ucm-relgate-cfg-"));
     tmpDirs.push(root);
     for (const [rel, body] of [
-      ["use-cases-plugin.yml", configBody],
+      ["use-case-matrix.yml", configBody],
       ["use-cases/checkout.yml", rowYaml(true)]
     ] as const) {
       const full = join(root, rel);

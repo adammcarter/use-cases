@@ -13,7 +13,7 @@ import {
   runScanCommand,
   type FreshnessRowOut
 } from "../../src/markers/index.js";
-import { UCP_VERSION } from "../../src/version.js";
+import { UCM_VERSION } from "../../src/version.js";
 import {
   ALLOW_UNSAFE_ENV,
   cleanupWorkspaces,
@@ -126,13 +126,13 @@ describe("walking skeleton (spec section 13)", () => {
     expect(JSON.parse(registryLines[0]).binding_slug).toBe(ROW_ID);
     // A bind that is not handed an explicit producer version stamps the real
     // product version into created_by, not a stale hard-coded default.
-    expect(JSON.parse(registryLines[0]).created_by.version).toBe(UCP_VERSION);
+    expect(JSON.parse(registryLines[0]).created_by.version).toBe(UCM_VERSION);
 
     const afterBind = scan(ws);
     expect(afterBind.exit_code).toBe(0);
     expect(rowOf(afterBind, ROW_ID).status).toBe("UNPROVEN");
     // The freshness status envelope reports the real product version.
-    expect(afterBind.status.tool.version).toBe(UCP_VERSION);
+    expect(afterBind.status.tool.version).toBe(UCM_VERSION);
 
     // (c) prove (trusted, pass) -> one signed proof appended; scan -> FRESH.
     const proveResult = prove(ws);
@@ -145,7 +145,7 @@ describe("walking skeleton (spec section 13)", () => {
     expect(proofEvent.verification.result).toBe("pass");
     // A prove that is not handed an explicit producer version stamps the real
     // product version into the signed event, not a stale hard-coded default.
-    expect(proofEvent.producer.version).toBe(UCP_VERSION);
+    expect(proofEvent.producer.version).toBe(UCM_VERSION);
 
     const afterProve = scan(ws);
     expect(rowOf(afterProve, ROW_ID).status).toBe("FRESH");
@@ -160,7 +160,7 @@ describe("walking skeleton (spec section 13)", () => {
     expect(driftRow.status).toBe("SUSPECT");
     expect(reasonCodes(driftRow)).toContain("CODE_SPAN_CHANGED");
     expect(driftRow.policy_block).toBe(false);
-    expect(driftRow.required_action).toBe(`ucp prove --row ${ROW_ID}`);
+    expect(driftRow.required_action).toBe(`ucm prove --row ${ROW_ID}`);
     // Feature mode does not block a SUSPECT row.
     expect(afterDrift.exit_code).toBe(0);
 

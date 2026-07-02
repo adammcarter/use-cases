@@ -67,7 +67,7 @@ It is:
   cannot be verified (unknown key, revoked key, bad signature, out-of-window key)
   is an integrity failure, never a silent pass.
 
-`ucp validate-ledger` checks this discipline — append-only structure (against
+`ucm validate-ledger` checks this discipline — append-only structure (against
 `--base-ref`), schema conformance, signatures, and internal hash consistency —
 and is run as a blocking CI gate.
 

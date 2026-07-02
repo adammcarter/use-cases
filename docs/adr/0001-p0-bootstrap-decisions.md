@@ -41,12 +41,12 @@ P0 turns that into a runnable TypeScript workspace.
 
 ### Package Names And Executables
 
-- Root package name: `use-cases-plugin`.
-- Core package name: `@use-cases-plugin/core`.
-- CLI package name: `@use-cases-plugin/cli`.
-- MCP package name: `@use-cases-plugin/mcp`.
-- CLI executable: `ucp`.
-- MCP executable: `ucp-mcp`.
+- Root package name: `use-case-matrix`.
+- Core package name: `@use-case-matrix/core`.
+- CLI package name: `@use-case-matrix/cli`.
+- MCP package name: `@use-case-matrix/mcp`.
+- CLI executable: `ucm`.
+- MCP executable: `ucm-mcp`.
 
 ### Installed-Plugin Launch Model
 

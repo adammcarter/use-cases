@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://use-cases-plugin.dev/schemas/v1/marker.schema.json",
+  "$id": "https://use-case-matrix.dev/schemas/v1/marker.schema.json",
   "title": "ucase-marker-v1",
   "description": "A single parsed in-code use-case marker (the `ucase-marker-v1` shape). Markers carry identity ONLY: a start (begin) or `end` marker for a slug at a physical source location. The slug grammar and the row/binding distinction follow the marker grammar (spec 1.2/1.3); the const ids mirror packages/core/src/markers/constants.ts.",
   "type": "object",

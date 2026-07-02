@@ -107,7 +107,7 @@ describe("P6 showcase CLI contract", () => {
     });
     expect(
       validateBySchemaId(
-        "https://use-cases-plugin.dev/schemas/v1/showcase-start-result.schema.json",
+        "https://use-case-matrix.dev/schemas/v1/showcase-start-result.schema.json",
         startPayload.data
       )
     ).toMatchObject({ ok: true, diagnostics: [] });
@@ -130,7 +130,7 @@ describe("P6 showcase CLI contract", () => {
     const observationPayload = JSON.parse(observation.stdout);
     expect(
       validateBySchemaId(
-        "https://use-cases-plugin.dev/schemas/v1/showcase-event-append-result.schema.json",
+        "https://use-case-matrix.dev/schemas/v1/showcase-event-append-result.schema.json",
         observationPayload.data
       )
     ).toMatchObject({ ok: true, diagnostics: [] });
@@ -540,7 +540,7 @@ describe("P6 showcase CLI contract", () => {
 });
 
 function fixtureWorkspace(name: string): string {
-  const workspaceRoot = mkdtempSync(join(tmpdir(), `use-cases-plugin-${name}-`));
+  const workspaceRoot = mkdtempSync(join(tmpdir(), `use-case-matrix-${name}-`));
   cpSync(join(repoRoot, "tests/fixtures/workspaces", name), workspaceRoot, { recursive: true });
   return workspaceRoot;
 }

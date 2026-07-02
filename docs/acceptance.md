@@ -1,6 +1,6 @@
 # Acceptance Matrix
 
-This repo dogfoods use-cases-plugin through `use-cases/`.
+This repo dogfoods use-case-matrix through `use-cases/`.
 
 The rows cover matrix loading and mutation, evidence recording, live showcase
 sign-off, command-backed demo capsules, generated-plan proof binding, host

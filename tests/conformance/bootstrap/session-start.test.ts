@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import { describe, expect, test } from "vitest";
 
 // The plugin ships a trusted session-start bootstrap and per-host delivery so an
-// installed agent receives bootstrap/use-cases-plugin.md at session start without
+// installed agent receives bootstrap/use-case-matrix.md at session start without
 // having to discover it by reading the repo. See critical-info-bootstrap.
 const repoRoot = resolve(import.meta.dirname, "../../..");
 const hookScript = resolve(repoRoot, "hooks/session-start");
@@ -22,7 +22,7 @@ describe("session-start bootstrap delivery", () => {
   test("the polyglot hook script is shipped and executable", () => {
     expect(existsSync(hookScript)).toBe(true);
     // The hooks.json command invokes the script directly, so the executable bit
-    // must survive (placing a marker via `ucp bind` once stripped it).
+    // must survive (placing a marker via `ucm bind` once stripped it).
     expect(statSync(hookScript).mode & 0o111).not.toBe(0);
   });
 
@@ -55,7 +55,7 @@ describe("session-start bootstrap delivery", () => {
     const result = runHook({ CLAUDE_PLUGIN_ROOT: repoRoot });
     const ctx = JSON.parse(result.stdout).hookSpecificOutput.additionalContext as string;
     expect(ctx).toContain("<EXTREMELY_IMPORTANT>");
-    const bootstrap = readFileSync(resolve(repoRoot, "bootstrap/use-cases-plugin.md"), "utf8");
+    const bootstrap = readFileSync(resolve(repoRoot, "bootstrap/use-case-matrix.md"), "utf8");
     // The full bootstrap tail must survive (no truncation).
     expect(ctx).toContain(bootstrap.trim().slice(-40));
   });
@@ -74,7 +74,7 @@ describe("session-start bootstrap delivery", () => {
   });
 
   test("OpenCode plugin injects the bootstrap on session.started", async () => {
-    const modPath = resolve(repoRoot, ".opencode/plugin/use-cases-plugin.js");
+    const modPath = resolve(repoRoot, ".opencode/plugin/use-case-matrix.js");
     expect(existsSync(modPath)).toBe(true);
     const mod = await import(modPath);
     const factory = mod.UseCasesPlugin ?? mod.default;

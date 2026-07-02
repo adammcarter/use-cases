@@ -29,7 +29,7 @@ import {
   type ProveCommandOptions
 } from "../../src/markers/index.js";
 
-const ALLOW_UNSAFE_ENV = "UCP_ALLOW_UNSAFE_VERIFICATION";
+const ALLOW_UNSAFE_ENV = "UCM_ALLOW_UNSAFE_VERIFICATION";
 
 const ROW_ID = "checkout.apply_coupon";
 // Proofs are minted with this created_at; the keyring windows are anchored around it.
@@ -159,12 +159,12 @@ function writeFile(root: string, relPath: string, contents: string): void {
 }
 
 function makeWorkspace(): Workspace {
-  const root = mkdtempSync(join(tmpdir(), "ucp-keyring-e2e-"));
+  const root = mkdtempSync(join(tmpdir(), "ucm-keyring-e2e-"));
   tempDirs.push(root);
-  writeFile(root, "use-cases-plugin.yml", CONFIG_YAML);
+  writeFile(root, "use-case-matrix.yml", CONFIG_YAML);
   writeFile(root, "use-cases/checkout.yml", USE_CASE_YAML);
   writeFile(root, "Sources/Checkout/CouponService.swift", SWIFT_FUNC_SOURCE);
-  const keyringDir = mkdtempSync(join(tmpdir(), "ucp-keyring-files-"));
+  const keyringDir = mkdtempSync(join(tmpdir(), "ucm-keyring-files-"));
   tempDirs.push(keyringDir);
   const context = resolveWorkspaceContext({ workspaceRoot: root });
   return {

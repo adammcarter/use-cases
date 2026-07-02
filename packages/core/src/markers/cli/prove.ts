@@ -15,12 +15,12 @@
 // when a sibling row fails, and the command then exits nonzero.
 //
 // The dangerous "assume verification passed" seam is `unsafeAssumeVerificationResult`
-// and is honoured ONLY when env UCP_ALLOW_UNSAFE_VERIFICATION=1 is set; otherwise
+// and is honoured ONLY when env UCM_ALLOW_UNSAFE_VERIFICATION=1 is set; otherwise
 // it is ignored, so it can never manufacture a green proof in normal operation.
 import type { ResolvedWorkspaceContext } from "../../roots.js";
 import type { CommentPrefixConfig } from "../commentPrefix.js";
 import { ROW_HASH_ID, SPAN_CANON_ID, BINDING_SET_HASH_ID } from "../constants.js";
-import { UCP_VERSION } from "../../version.js";
+import { UCM_VERSION } from "../../version.js";
 import { computeRowHash } from "../rowHash.js";
 import {
   computeApprovalPolicyHash,
@@ -54,7 +54,7 @@ import type { VerificationResultRecord } from "./verify.js";
 
 // The env var that must equal "1" for the dangerous unsafe-assume seam to be
 // honoured. Absent/any-other value -> the seam is silently ignored.
-export const ALLOW_UNSAFE_VERIFICATION_ENV = "UCP_ALLOW_UNSAFE_VERIFICATION";
+export const ALLOW_UNSAFE_VERIFICATION_ENV = "UCM_ALLOW_UNSAFE_VERIFICATION";
 
 export interface ProveSigningKey {
   privateKey: PemOrKeyObject;
@@ -89,7 +89,7 @@ export interface ProveCommandOptions {
   // the latest record per row, never re-runs the verifier.
   verificationResults?: VerificationResultRecord[];
   // DANGEROUS test seam: assume the row's verification passed. Honoured ONLY when
-  // env UCP_ALLOW_UNSAFE_VERIFICATION=1 is set; otherwise ignored.
+  // env UCM_ALLOW_UNSAFE_VERIFICATION=1 is set; otherwise ignored.
   unsafeAssumeVerificationResult?: "pass";
   signingKey?: ProveSigningKey;
   producer?: ProveProducerInfo;
@@ -374,7 +374,7 @@ function proveOneRow(args: ProveOneRowArgs): ProveRowResult {
       return rowResult(rowId, "failed", {
         ...hashes,
         reason: "NO_PASSING_RESULT",
-        message: `no verification result for row ${rowId}; run \`ucp verify --row ${rowId} --out <path>\` first`
+        message: `no verification result for row ${rowId}; run \`ucm verify --row ${rowId} --out <path>\` first`
       });
     }
     if (record.status === "blocked") {
@@ -535,7 +535,7 @@ function buildProofEvent(args: BuildProofArgs): Omit<ProofEvent, "signature"> {
     producer: {
       kind: TRUSTED_CI_PRODUCER_KIND,
       id: args.producer?.id ?? "ci/use-cases-prover",
-      version: args.producer?.version ?? UCP_VERSION,
+      version: args.producer?.version ?? UCM_VERSION,
       ci_run_id: args.producer?.ci_run_id ?? "local",
       repo: args.producer?.repo ?? "unknown/unknown",
       commit: args.producer?.commit ?? "0".repeat(40)

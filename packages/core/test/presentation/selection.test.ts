@@ -61,7 +61,7 @@ describe("P5 presentation plan selection", () => {
     });
     expect(
       validateBySchemaId(
-        "https://use-cases-plugin.dev/schemas/v1/presentation-plan-result.schema.json",
+        "https://use-case-matrix.dev/schemas/v1/presentation-plan-result.schema.json",
         result
       )
     ).toMatchObject({ ok: true, diagnostics: [] });
@@ -76,7 +76,7 @@ describe("P5 presentation plan selection", () => {
     });
     expect(
       validateBySchemaId(
-        "https://use-cases-plugin.dev/schemas/v1/presentation-plan.schema.json",
+        "https://use-case-matrix.dev/schemas/v1/presentation-plan.schema.json",
         result.plan
       )
     ).toMatchObject({ ok: true, diagnostics: [] });
@@ -291,7 +291,7 @@ describe("P5 presentation plan selection", () => {
 });
 
 function fixtureWorkspace(name: string): string {
-  const workspaceRoot = mkdtempSync(join(tmpdir(), `use-cases-plugin-${name}-`));
+  const workspaceRoot = mkdtempSync(join(tmpdir(), `use-case-matrix-${name}-`));
   cpSync(join(fixturesRoot, name), workspaceRoot, { recursive: true });
   return workspaceRoot;
 }

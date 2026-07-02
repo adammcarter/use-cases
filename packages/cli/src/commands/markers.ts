@@ -10,7 +10,7 @@
 import { readFileSync } from "node:fs";
 import { createPrivateKey, createPublicKey } from "node:crypto";
 import { join, resolve } from "node:path";
-import type { CiAuthority, VerificationResultRecord } from "@use-cases-plugin/core";
+import type { CiAuthority, VerificationResultRecord } from "@use-case-matrix/core";
 import type { CliCommand, CommandOutput, ParsedFlags } from "../command/types.js";
 import {
   createCliResult,
@@ -255,7 +255,7 @@ export const markersProveCommand: CliCommand = {
     { key: "append", name: "--append", kind: "boolean", summary: "Append minted proofs to the evidence ledger." },
     { key: "refresh", name: "--refresh", kind: "boolean", summary: "Re-mint proofs for rows whose context changed." },
     { key: "dryRun", name: "--dry-run", kind: "boolean", summary: "Preview without writing the evidence ledger." },
-    { key: "unsafeAssumeVerificationResult", name: "--unsafe-assume-verification-result", kind: "string", valueName: "<result>", summary: "DANGEROUS: assume the row's verification passed (honoured only with UCP_ALLOW_UNSAFE_VERIFICATION=1)." },
+    { key: "unsafeAssumeVerificationResult", name: "--unsafe-assume-verification-result", kind: "string", valueName: "<result>", summary: "DANGEROUS: assume the row's verification passed (honoured only with UCM_ALLOW_UNSAFE_VERIFICATION=1)." },
     ...trustedKeyFlags,
     { key: "generatedAt", name: "--generated-at", kind: "string", valueName: "<iso>", summary: "Override the generated-at timestamp." },
     { key: "baseRef", name: "--base-ref", kind: "string", valueName: "<ref>", summary: "Diff base for the append-only check." }
@@ -315,7 +315,7 @@ export const markersProveCommand: CliCommand = {
 
     // DANGEROUS seam (renamed from --verification-result): assume the row's
     // verification passed. The core honours it ONLY when env
-    // UCP_ALLOW_UNSAFE_VERIFICATION=1 is set; otherwise it is ignored.
+    // UCM_ALLOW_UNSAFE_VERIFICATION=1 is set; otherwise it is ignored.
     const unsafeAssume =
       (flags.unsafeAssumeVerificationResult as string | undefined) === "pass" ? ("pass" as const) : undefined;
 

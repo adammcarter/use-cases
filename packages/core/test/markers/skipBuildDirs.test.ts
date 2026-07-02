@@ -30,7 +30,7 @@ function write(root: string, rel: string, body: string): void {
 
 describe("collectSourceInputs skips build-output dirs", () => {
   test("a marker copied into dist/ is not scanned (no duplicate slug)", () => {
-    const root = mkdtempSync(join(tmpdir(), "ucp-skip-"));
+    const root = mkdtempSync(join(tmpdir(), "ucm-skip-"));
     dirs.push(root);
     write(root, "Sources/F.swift", SRC); // the real source marker
     write(root, "dist/F.js", SRC); // tsc-preserved copy in build output
@@ -49,7 +49,7 @@ describe("collectSourceInputs skips build-output dirs", () => {
   test("a marker inside .claude/worktrees (a repo COPY) is not scanned", () => {
     // Workflow isolation creates full repo copies under .claude/worktrees/; their
     // source markers would otherwise duplicate the real slug and poison the scan.
-    const root = mkdtempSync(join(tmpdir(), "ucp-skip-claude-"));
+    const root = mkdtempSync(join(tmpdir(), "ucm-skip-claude-"));
     dirs.push(root);
     write(root, "Sources/F.swift", SRC); // the real source marker
     write(root, ".claude/worktrees/wf-1/Sources/F.swift", SRC); // a leftover copy
@@ -66,7 +66,7 @@ describe("collectSourceInputs skips build-output dirs", () => {
     // them from the parent repo would read their rows as INVALID. They must be
     // skipped by default. Regression for the python-pytest example leaking
     // `example.checkout.apply_coupon` into the parent root scan.
-    const root = mkdtempSync(join(tmpdir(), "ucp-skip-examples-"));
+    const root = mkdtempSync(join(tmpdir(), "ucm-skip-examples-"));
     dirs.push(root);
     write(root, "packages/core/src/F.ts", SRC); // the parent's real marker
     write(root, "examples/python-pytest/src/coupon.py", SRC); // nested example marker

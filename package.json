@@ -1,11 +1,11 @@
 {
-  "name": "use-cases-plugin",
+  "name": "use-case-matrix",
   "version": "1.0.0",
   "private": false,
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/adammcarter/use-cases-plugin.git"
+    "url": "git+https://github.com/adammcarter/use-case-matrix.git"
   },
   "type": "module",
   "packageManager": "pnpm@11.9.0",
@@ -13,17 +13,17 @@
     "node": ">=22"
   },
   "bin": {
-    "ucp": "./packages/cli/dist/index.js",
-    "use-cases-plugin": "./packages/cli/dist/index.js",
-    "ucp-mcp": "./packages/mcp/dist/index.js",
-    "use-cases-plugin-mcp": "./packages/mcp/dist/index.js"
+    "ucm": "./packages/cli/dist/index.js",
+    "use-case-matrix": "./packages/cli/dist/index.js",
+    "ucm-mcp": "./packages/mcp/dist/index.js",
+    "use-case-matrix-mcp": "./packages/mcp/dist/index.js"
   },
   "files": [
     ".agents/skills",
     ".claude-plugin/plugin.json",
     ".codex-plugin/plugin.json",
     ".mcp.json",
-    ".opencode/plugin/use-cases-plugin.js",
+    ".opencode/plugin/use-case-matrix.js",
     "hooks",
     "README.md",
     "CHANGELOG.md",
@@ -49,7 +49,7 @@
     "packages/mcp/dist",
     "packages/mcp/package.json",
     "plugin.json",
-    "use-cases-plugin.yml",
+    "use-case-matrix.yml",
     "schemas/v1",
     "use-cases"
   ],

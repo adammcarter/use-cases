@@ -30,7 +30,7 @@ function requireSuccess(result: ReturnType<typeof run>) {
 describe("P3 evidence CLI", () => {
   test("records evidence and derives evidence status through schema-backed JSON", () => {
     requireSuccess(run("corepack", ["pnpm", "build"]));
-    const workspaceRoot = mkdtempSync(join(tmpdir(), "use-cases-plugin-evidence-cli-"));
+    const workspaceRoot = mkdtempSync(join(tmpdir(), "use-case-matrix-evidence-cli-"));
     cpSync(join(repoRoot, "tests/fixtures/workspaces/evidence-basic"), workspaceRoot, {
       recursive: true
     });
@@ -62,7 +62,7 @@ describe("P3 evidence CLI", () => {
     });
     expect(
       validateBySchemaId(
-        "https://use-cases-plugin.dev/schemas/v1/evidence-append-result.schema.json",
+        "https://use-case-matrix.dev/schemas/v1/evidence-append-result.schema.json",
         recordPayload.data
       )
     ).toMatchObject({ ok: true, diagnostics: [] });
@@ -93,7 +93,7 @@ describe("P3 evidence CLI", () => {
     });
     expect(
       validateBySchemaId(
-        "https://use-cases-plugin.dev/schemas/v1/evidence-status-result.schema.json",
+        "https://use-case-matrix.dev/schemas/v1/evidence-status-result.schema.json",
         statusPayload.data
       )
     ).toMatchObject({ ok: true, diagnostics: [] });

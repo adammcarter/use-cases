@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://use-cases-plugin.dev/schemas/v1/keyring.schema.json",
+  "$id": "https://use-case-matrix.dev/schemas/v1/keyring.schema.json",
   "title": "ucase-public-key-registry-v1",
   "description": "The public-key registry (keyring) for verifying trusted-CI proof-event signatures. Documents the intended key-management shape: a keyId resolves to an ed25519 public key with a validity window and a status. v1 trusts a single active key (see proofSignature.ts verifyEvent + singleKeyResolver in markers/cli/shared.ts); this keyring generalises that to a registry of keys.",
   "type": "object",

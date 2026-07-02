@@ -7,13 +7,13 @@ import { callMcpTool, mcpTools } from "./tools.js";
 import { listMcpResources, readMcpResource } from "./resources.js";
 import { getMcpPrompt, mcpPrompts } from "./prompts.js";
 
-type UcmCoreModule = typeof import("@use-cases-plugin/core");
+type UcmCoreModule = typeof import("@use-case-matrix/core");
 
 const { getVersionInfo } = await loadUcmCore();
 
 async function loadUcmCore(): Promise<UcmCoreModule> {
   try {
-    return await import("@use-cases-plugin/core");
+    return await import("@use-case-matrix/core");
   } catch (error) {
     if (!isMissingCorePackage(error)) {
       throw error;
@@ -24,7 +24,7 @@ async function loadUcmCore(): Promise<UcmCoreModule> {
 }
 
 function isMissingCorePackage(error: unknown): boolean {
-  return error instanceof Error && "code" in error && error.code === "ERR_MODULE_NOT_FOUND" && error.message.includes("@use-cases-plugin/core");
+  return error instanceof Error && "code" in error && error.code === "ERR_MODULE_NOT_FOUND" && error.message.includes("@use-case-matrix/core");
 }
 
 type JsonRpcRequest = {

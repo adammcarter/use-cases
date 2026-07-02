@@ -69,7 +69,7 @@ describe("P7 canonical skills and activation bootstrap", () => {
   });
 
   test("bootstrap contains activation, non-activation, trust, lifecycle, command, and claim boundaries", () => {
-    const source = readFileSync(join(repoRoot, "bootstrap", "use-cases-plugin.md"), "utf8");
+    const source = readFileSync(join(repoRoot, "bootstrap", "use-case-matrix.md"), "utf8");
     for (const heading of [
       "When to apply",
       "When not to apply",
@@ -101,7 +101,7 @@ describe("P7 canonical skills and activation bootstrap", () => {
   test("activation docs include an ASCII skill-selection decision tree", () => {
     const source = readFileSync(join(repoRoot, "docs", "activation.md"), "utf8");
     expect(source).toContain("Decision Tree");
-    expect(source).toContain("-> use-cases-plugin");
+    expect(source).toContain("-> use-case-matrix");
     expect(source).toContain("-> showcase");
     expect(source).toContain("-> walkthrough");
     expect(source).toContain("-> do not activate");
@@ -141,7 +141,7 @@ function parseFrontmatter(source: string, path: string): { name: string; descrip
 
 function extractCliCommands(source: string): string[] {
   const commands: string[] = [];
-  for (const match of source.matchAll(/`(?:ucp|pnpm cli --)\s+([^`]+?)`/g)) {
+  for (const match of source.matchAll(/`(?:ucm|pnpm cli --)\s+([^`]+?)`/g)) {
     const tokens = match[1].trim().split(/\s+/);
     if (tokens.length >= 2) {
       commands.push(`${tokens[0]} ${tokens[1]}`);

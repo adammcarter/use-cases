@@ -6,17 +6,17 @@ import { createCliResult, errorEnvelope, resolveContextOrError } from "../runtim
 import { workspaceFlags } from "./common.js";
 
 // Local legacy helpers ported verbatim. readWorkflowMode/writeWorkflowMode read
-// and write the workspace's use-cases-plugin.yml; canonicalWorkflowMode validates
+// and write the workspace's use-case-matrix.yml; canonicalWorkflowMode validates
 // a requested mode token. Kept identical to the legacy versions so behaviour and
 // the on-disk format stay byte-for-byte the same.
 function readWorkflowMode(workspaceRoot: string): string {
-  const configPath = join(workspaceRoot, "use-cases-plugin.yml");
+  const configPath = join(workspaceRoot, "use-case-matrix.yml");
   const source = readFileSync(configPath, "utf8");
   return source.match(/^default_workflow_mode:\s*([a-z_]+)/m)?.[1] ?? "continuous";
 }
 
 function writeWorkflowMode(workspaceRoot: string, mode: string): void {
-  const configPath = join(workspaceRoot, "use-cases-plugin.yml");
+  const configPath = join(workspaceRoot, "use-case-matrix.yml");
   const source = readFileSync(configPath, "utf8");
   const next = source.match(/^default_workflow_mode:/m)
     ? source.replace(/^default_workflow_mode:\s*[a-z_]+/m, `default_workflow_mode: ${mode}`)

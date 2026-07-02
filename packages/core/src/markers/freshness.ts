@@ -19,7 +19,7 @@ import { computeBindingSetHash } from "./bindingSetHash.js";
 import { reconcileRegistryWithScan, type RowReconciliation } from "./reconcile.js";
 import { splitSlug } from "./markerLine.js";
 import { SPAN_CANON_ID, STATUS_SCHEMA_ID } from "./constants.js";
-import { PRODUCT_NAME, UCP_VERSION } from "../version.js";
+import { PRODUCT_NAME, UCM_VERSION } from "../version.js";
 import { PROOF_PASS_RESULT, type ProofEvent } from "./evidenceLedger.js";
 import type { CiAuthority } from "./ciAuthority.js";
 import type { MaterializedRegistry } from "./registry.js";
@@ -179,7 +179,7 @@ export interface FreshnessStatus {
   rows: FreshnessRowOut[];
 }
 
-const DEFAULT_TOOL = { name: PRODUCT_NAME, version: UCP_VERSION };
+const DEFAULT_TOOL = { name: PRODUCT_NAME, version: UCM_VERSION };
 
 function rowIdOfSlug(slug: string | undefined): string | undefined {
   if (slug === undefined) {
@@ -697,9 +697,9 @@ export function deriveFreshness(input: DeriveFreshnessInput): FreshnessStatus {
 
     let requiredAction: string | null = null;
     if (status === "SUSPECT" || status === "UNPROVEN") {
-      requiredAction = `ucp prove --row ${rowId}`;
+      requiredAction = `ucm prove --row ${rowId}`;
     } else if (status === "INVALID") {
-      requiredAction = "ucp scan (resolve binding integrity errors)";
+      requiredAction = "ucm scan (resolve binding integrity errors)";
     }
 
     const rowOut: FreshnessRowOut = {

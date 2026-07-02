@@ -385,7 +385,7 @@ Each line is one JSON object:
   "event_id": "01JABCDEF00000000000000000",
   "created_at": "2026-06-28T12:00:00Z",
   "created_by": {
-    "tool": "use-cases-plugin",
+    "tool": "use-case-matrix",
     "command": "bind",
     "version": "0.1.0"
   },
@@ -693,7 +693,7 @@ event.bindings.items[0].span_sha256 != current scanned span sha256
   "schema": "ucase-freshness-status-v1",
   "generated_at": "2026-06-28T12:10:00Z",
   "tool": {
-    "name": "use-cases-plugin",
+    "name": "use-case-matrix",
     "version": "0.1.0"
   },
   "product_root": "/workspace/product",

@@ -1,12 +1,12 @@
 {
-  "name": "use-cases-plugin",
+  "name": "use-case-matrix",
   "version": "1.0.0",
   "description": "Use-case, evidence, and live showcase infrastructure for agent work.",
   "author": {
     "name": "Use Cases Plugin"
   },
   "mcpServers": {
-    "use-cases-plugin": {
+    "use-case-matrix": {
       "command": "node",
       "args": ["./packages/mcp/dist/index.js"]
     }

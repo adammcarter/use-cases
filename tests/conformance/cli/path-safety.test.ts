@@ -7,7 +7,7 @@ import { beforeAll, describe, expect, test } from "vitest";
 // SECURITY (path traversal): user-supplied showcase --run / --item ids flow into
 // data_root/showcase-runs/<id>/events.jsonl and into ledger lookups. A traversal
 // id (../../../etc/passwd), an absolute id, or one containing '/'/'\\'/'..' must be
-// rejected with the stable UCP_INVALID_ID envelope (exit 2) and must NOT cause any
+// rejected with the stable UCM_INVALID_ID envelope (exit 2) and must NOT cause any
 // filesystem read/write outside the workspace.
 
 const repoRoot = resolve(import.meta.dirname, "../../..");
@@ -25,7 +25,7 @@ function runCli(args: string[]) {
 }
 
 function fixtureWorkspace(name: string): string {
-  const workspaceRoot = mkdtempSync(join(tmpdir(), `use-cases-plugin-pathsafety-${name}-`));
+  const workspaceRoot = mkdtempSync(join(tmpdir(), `use-case-matrix-pathsafety-${name}-`));
   cpSync(join(repoRoot, "tests/fixtures/workspaces", name), workspaceRoot, { recursive: true });
   return workspaceRoot;
 }
@@ -48,7 +48,7 @@ describe("P-sec showcase CLI rejects unsafe run/item ids", () => {
   });
 
   test.each(MALICIOUS_RUN_IDS)(
-    "showcase status rejects --run '%s' with UCP_INVALID_ID and exit 2",
+    "showcase status rejects --run '%s' with UCM_INVALID_ID and exit 2",
     (runId) => {
       const workspaceRoot = fixtureWorkspace("evidence-basic");
       const result = runCli(["showcase", "status", "--repo", workspaceRoot, "--run", runId, "--json"]);
@@ -56,7 +56,7 @@ describe("P-sec showcase CLI rejects unsafe run/item ids", () => {
       expect(JSON.parse(result.stdout)).toMatchObject({
         command: "showcase.status",
         ok: false,
-        diagnostics: [expect.objectContaining({ code: "UCP_INVALID_ID" })]
+        diagnostics: [expect.objectContaining({ code: "UCM_INVALID_ID" })]
       });
     }
   );
@@ -82,12 +82,12 @@ describe("P-sec showcase CLI rejects unsafe run/item ids", () => {
     expect(JSON.parse(result.stdout)).toMatchObject({
       command: "showcase.record-observation",
       ok: false,
-      diagnostics: [expect.objectContaining({ code: "UCP_INVALID_ID" })]
+      diagnostics: [expect.objectContaining({ code: "UCM_INVALID_ID" })]
     });
     expect(existsSync(escapeMarker)).toBe(false);
   });
 
-  test("showcase record-observation rejects a traversal --item with UCP_INVALID_ID", () => {
+  test("showcase record-observation rejects a traversal --item with UCM_INVALID_ID", () => {
     const workspaceRoot = fixtureWorkspace("evidence-basic");
     const start = runCli([
       "showcase",
@@ -118,7 +118,7 @@ describe("P-sec showcase CLI rejects unsafe run/item ids", () => {
     expect(JSON.parse(result.stdout)).toMatchObject({
       command: "showcase.record-observation",
       ok: false,
-      diagnostics: [expect.objectContaining({ code: "UCP_INVALID_ID" })]
+      diagnostics: [expect.objectContaining({ code: "UCM_INVALID_ID" })]
     });
   });
 
@@ -155,7 +155,7 @@ function isValidLike(value: string): boolean {
 // SECURITY (path traversal): user-supplied --plan-file flows into resolve(workspace_root,
 // path) and is then read from disk. A traversal value ('../../etc/passwd'), an absolute
 // path outside the workspace, or an in-workspace symlink that points outside must be
-// rejected with the stable UCP_PATH_ESCAPE envelope (exit 4) and must read NOTHING
+// rejected with the stable UCM_PATH_ESCAPE envelope (exit 4) and must read NOTHING
 // outside the workspace. A legitimate in-workspace plan file must still work.
 describe("P-sec CLI bounds --plan-file to the workspace", () => {
   beforeAll(() => {
@@ -184,20 +184,20 @@ describe("P-sec CLI bounds --plan-file to the workspace", () => {
   }
 
   function outsidePlanFile(plan: unknown): string {
-    const outsideDir = mkdtempSync(join(tmpdir(), "use-cases-plugin-pathsafety-outside-"));
+    const outsideDir = mkdtempSync(join(tmpdir(), "use-case-matrix-pathsafety-outside-"));
     const outsidePlan = join(outsideDir, "plan.json");
     writeFileSync(outsidePlan, `${JSON.stringify(plan, null, 2)}\n`);
     return outsidePlan;
   }
 
-  test("plan cards rejects a traversal --plan-file with UCP_PATH_ESCAPE (exit 4)", () => {
+  test("plan cards rejects a traversal --plan-file with UCM_PATH_ESCAPE (exit 4)", () => {
     const workspaceRoot = fixtureWorkspace("evidence-basic");
     const result = runCli(["plan", "cards", "--repo", workspaceRoot, "--plan-file", "../../etc/passwd", "--json"]);
     expect(result.status).toBe(4);
     expect(JSON.parse(result.stdout)).toMatchObject({
       command: "plan.cards",
       ok: false,
-      diagnostics: [expect.objectContaining({ code: "UCP_PATH_ESCAPE" })]
+      diagnostics: [expect.objectContaining({ code: "UCM_PATH_ESCAPE" })]
     });
   });
 
@@ -211,7 +211,7 @@ describe("P-sec CLI bounds --plan-file to the workspace", () => {
     expect(JSON.parse(result.stdout)).toMatchObject({
       command: "plan.cards",
       ok: false,
-      diagnostics: [expect.objectContaining({ code: "UCP_PATH_ESCAPE" })]
+      diagnostics: [expect.objectContaining({ code: "UCM_PATH_ESCAPE" })]
     });
   });
 
@@ -234,18 +234,18 @@ describe("P-sec CLI bounds --plan-file to the workspace", () => {
     expect(JSON.parse(result.stdout)).toMatchObject({
       command: "plan.cards",
       ok: false,
-      diagnostics: [expect.objectContaining({ code: "UCP_PATH_ESCAPE" })]
+      diagnostics: [expect.objectContaining({ code: "UCM_PATH_ESCAPE" })]
     });
   });
 
-  test("showcase start rejects a traversal --plan-file with UCP_PATH_ESCAPE (exit 4)", () => {
+  test("showcase start rejects a traversal --plan-file with UCM_PATH_ESCAPE (exit 4)", () => {
     const workspaceRoot = fixtureWorkspace("evidence-basic");
     const result = runCli(["showcase", "start", "--repo", workspaceRoot, "--plan-file", "../escape.json", "--json"]);
     expect(result.status).toBe(4);
     expect(JSON.parse(result.stdout)).toMatchObject({
       command: "showcase.start",
       ok: false,
-      diagnostics: [expect.objectContaining({ code: "UCP_PATH_ESCAPE" })]
+      diagnostics: [expect.objectContaining({ code: "UCM_PATH_ESCAPE" })]
     });
   });
 

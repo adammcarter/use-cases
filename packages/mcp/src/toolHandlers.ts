@@ -9,10 +9,10 @@ import type {
   ShowcaseAppendResult,
   ShowcaseVerdict,
   UseCaseQuery
-} from "@use-cases-plugin/core";
+} from "@use-case-matrix/core";
 import type { JsonObject } from "./toolSchemas.js";
 
-type UcmCoreModule = typeof import("@use-cases-plugin/core");
+type UcmCoreModule = typeof import("@use-case-matrix/core");
 
 const {
   appendEvidenceEvent,
@@ -46,7 +46,7 @@ const {
 
 async function loadUcmCore(): Promise<UcmCoreModule> {
   try {
-    return await import("@use-cases-plugin/core");
+    return await import("@use-case-matrix/core");
   } catch (error) {
     if (!isMissingCorePackage(error)) {
       throw error;
@@ -57,7 +57,7 @@ async function loadUcmCore(): Promise<UcmCoreModule> {
 }
 
 function isMissingCorePackage(error: unknown): boolean {
-  return error instanceof Error && "code" in error && error.code === "ERR_MODULE_NOT_FOUND" && error.message.includes("@use-cases-plugin/core");
+  return error instanceof Error && "code" in error && error.code === "ERR_MODULE_NOT_FOUND" && error.message.includes("@use-case-matrix/core");
 }
 
 const hostSurfaceDefault = "codex.cli" as HostSurface;
@@ -454,7 +454,7 @@ export function showcaseRequestApproval(args: JsonObject): CliResult<unknown> {
     finish_event_id: finish?.event_id ?? null,
     known_gaps: status.known_gaps,
     suggested_cli_command: [
-      "ucp",
+      "ucm",
       "showcase",
       "approve",
       "--run",
@@ -551,20 +551,20 @@ export function errorEnvelope(command: string, code: string, message: string): C
 
 // SECURITY: reject a user-supplied id that is not a canonical id before it can
 // become a filesystem path segment or a ledger lookup key. Returns the stable
-// UCP_INVALID_ID envelope on failure, or null when the value is safe.
+// UCM_INVALID_ID envelope on failure, or null when the value is safe.
 function rejectUnsafeId(command: string, paramName: string, value: string): CliResult<unknown> | null {
   return isValidId(value)
     ? null
     : errorEnvelope(
         command,
-        "UCP_INVALID_ID",
+        "UCM_INVALID_ID",
         `Invalid ${paramName} '${value}': must be a canonical id (lowercase, no path separators, no '..').`
       );
 }
 
 // SECURITY: bound a user-supplied file path (e.g. plan_file) to the workspace,
 // symlink-safe, BEFORE it is read from disk. Returns the safe absolute path, or the
-// stable UCP_PATH_ESCAPE envelope on escape.
+// stable UCM_PATH_ESCAPE envelope on escape.
 function containedFilePath(
   command: string,
   workspaceRoot: string,
@@ -574,7 +574,7 @@ function containedFilePath(
     return { path: resolveContainedPath(workspaceRoot, candidate) };
   } catch (error) {
     if (error instanceof Error && "code" in error && (error as { code?: unknown }).code === "path.escape") {
-      return { envelope: errorEnvelope(command, "UCP_PATH_ESCAPE", error.message) };
+      return { envelope: errorEnvelope(command, "UCM_PATH_ESCAPE", error.message) };
     }
     throw error;
   }
@@ -587,11 +587,11 @@ export function isTrustedUserClaim(args: JsonObject): boolean {
 }
 
 export function mcpServerWriteModeEnabled(): boolean {
-  return process.env.UCP_MCP_WRITE === "1";
+  return process.env.UCM_MCP_WRITE === "1";
 }
 
 export function mcpServerCommandExecutionEnabled(): boolean {
-  return process.env.UCP_MCP_COMMAND_EXECUTION === "1";
+  return process.env.UCM_MCP_COMMAND_EXECUTION === "1";
 }
 
 function actorArg(args: JsonObject): Exclude<ShowcaseActorType, "user"> {

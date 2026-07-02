@@ -24,8 +24,8 @@ interface PackageSpec {
 
 const packages: PackageSpec[] = [
   {
-    filter: "@use-cases-plugin/core",
-    tarball: "use-cases-plugin-core-1.0.0.tgz",
+    filter: "@use-case-matrix/core",
+    tarball: "use-case-matrix-core-1.0.0.tgz",
     requiredIncludes: [
       "dist/index.js",
       "dist/index.d.ts",
@@ -36,8 +36,8 @@ const packages: PackageSpec[] = [
     ]
   },
   {
-    filter: "@use-cases-plugin/cli",
-    tarball: "use-cases-plugin-cli-1.0.0.tgz",
+    filter: "@use-case-matrix/cli",
+    tarball: "use-case-matrix-cli-1.0.0.tgz",
     requiredIncludes: [
       "dist/index.js",
       "dist/index.d.ts",
@@ -47,8 +47,8 @@ const packages: PackageSpec[] = [
     ]
   },
   {
-    filter: "@use-cases-plugin/mcp",
-    tarball: "use-cases-plugin-mcp-1.0.0.tgz",
+    filter: "@use-case-matrix/mcp",
+    tarball: "use-case-matrix-mcp-1.0.0.tgz",
     requiredIncludes: [
       "dist/index.js",
       "dist/index.d.ts",
@@ -86,7 +86,7 @@ let packDir: string;
 
 beforeAll(() => {
   requireSuccess(run("corepack", ["pnpm", "build"]));
-  packDir = mkdtempSync(join(stableTmpRoot(), "use-cases-plugin-pack-contents-"));
+  packDir = mkdtempSync(join(stableTmpRoot(), "use-case-matrix-pack-contents-"));
 }, 120_000);
 
 describe("release pack contents", () => {

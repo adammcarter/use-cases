@@ -1,5 +1,5 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://use-cases-plugin.dev/schemas/v1/showcase-finish-result.schema.json",
+  "$id": "https://use-case-matrix.dev/schemas/v1/showcase-finish-result.schema.json",
   "$ref": "showcase-event-append-result.schema.json"
 }

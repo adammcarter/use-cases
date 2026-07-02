@@ -1,15 +1,15 @@
-// Core loader for the CLI. Reaches @use-cases-plugin/core through a bundled-dist
+// Core loader for the CLI. Reaches @use-case-matrix/core through a bundled-dist
 // fallback so a not-yet-built core surfaces a friendly hint instead of a raw
 // ERR_MODULE_NOT_FOUND. BOTH the builtins dispatcher and the registry runtime
-// load core through here — a static `import … from "@use-cases-plugin/core"` in a
+// load core through here — a static `import … from "@use-case-matrix/core"` in a
 // command module would bypass the diagnostics.contracts.missing_build_hint handler
 // below. Owning the loader here (rather than in builtins.ts) keeps the dependency
 // graph honest: runtime → coreLoader and builtins → coreLoader, not runtime →
 // builtins.
-type UcmCoreModule = typeof import("@use-cases-plugin/core");
+type UcmCoreModule = typeof import("@use-case-matrix/core");
 
 export const MISSING_BUILD_MESSAGE =
-  "ucp: the compiled core is missing. Run `pnpm build` from the repository root before using the CLI.";
+  "ucm: the compiled core is missing. Run `pnpm build` from the repository root before using the CLI.";
 
 export function isMissingCoreModule(error: unknown): boolean {
   return (
@@ -18,12 +18,12 @@ export function isMissingCoreModule(error: unknown): boolean {
 }
 
 function isMissingCorePackage(error: unknown): boolean {
-  return isMissingCoreModule(error) && error instanceof Error && error.message.includes("@use-cases-plugin/core");
+  return isMissingCoreModule(error) && error instanceof Error && error.message.includes("@use-case-matrix/core");
 }
 
 export async function loadUcmCore(): Promise<UcmCoreModule> {
   try {
-    return await import("@use-cases-plugin/core");
+    return await import("@use-case-matrix/core");
   } catch (error) {
     if (!isMissingCorePackage(error)) {
       throw error;

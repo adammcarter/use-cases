@@ -20,7 +20,7 @@ use_cases:
       - kind: file
         path: docs/activation.md
       - kind: file
-        path: bootstrap/use-cases-plugin.md
+        path: bootstrap/use-case-matrix.md
     actor: agent
     intent: Keep behavior rows, proof, and showcase readiness connected during normal work.
     preconditions:
@@ -108,7 +108,7 @@ use_cases:
       - agent-boundary
     source_refs:
       - kind: file
-        path: .agents/skills/use-cases-plugin/SKILL.md
+        path: .agents/skills/use-case-matrix/SKILL.md
       - kind: file
         path: docs/activation.md
     actor: agent
@@ -198,7 +198,7 @@ use_cases:
       - scope-control
     source_refs:
       - kind: file
-        path: .agents/skills/use-cases-plugin/SKILL.md
+        path: .agents/skills/use-case-matrix/SKILL.md
       - kind: file
         path: docs/activation.md
     actor: agent

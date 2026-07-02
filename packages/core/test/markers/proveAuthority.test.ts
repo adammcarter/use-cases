@@ -123,9 +123,9 @@ function writeFile(root: string, relPath: string, contents: string): void {
 }
 
 function makeWorkspace(): Workspace {
-  const root = mkdtempSync(join(tmpdir(), "ucp-prove-authority-"));
+  const root = mkdtempSync(join(tmpdir(), "ucm-prove-authority-"));
   tempDirs.push(root);
-  writeFile(root, "use-cases-plugin.yml", CONFIG_YAML);
+  writeFile(root, "use-case-matrix.yml", CONFIG_YAML);
   writeFile(root, "use-cases/checkout.yml", USE_CASE_YAML);
   writeFile(root, "Sources/Checkout/CouponService.swift", SWIFT_A);
   const context = resolveWorkspaceContext({ workspaceRoot: root });
@@ -264,7 +264,7 @@ describe("prove embeds the CI-neutral authority (signed)", () => {
     // Detected authority (auto-detect path) — schema-valid by construction.
     const authority = detectCiAuthority({
       GITHUB_ACTIONS: "true",
-      GITHUB_REPOSITORY: "use-cases-plugin/use-cases-plugin",
+      GITHUB_REPOSITORY: "use-case-matrix/use-case-matrix",
       GITHUB_REF: "refs/heads/main",
       GITHUB_SHA: "0123456789abcdef0123456789abcdef01234567",
       GITHUB_RUN_ID: "1234567890",
