@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
-# SessionStart hook for the use-cases-plugin.
+# SessionStart hook for the use-case-matrix.
 #
-# Emits the trusted bootstrap (bootstrap/use-cases-plugin.md) as session-start
+# Emits the trusted bootstrap (bootstrap/use-case-matrix.md) as session-start
 # context so an installed agent receives it without having to discover it by
 # reading the repo. One script serves three hosts; the JSON shape is chosen from
 # the host's env (see critical-info-bootstrap / delivery-shapes):
 #   - Claude Code (CLAUDE_PLUGIN_ROOT, not Copilot) -> hookSpecificOutput.additionalContext
 #   - Copilot CLI  (COPILOT_CLI)                    -> top-level additionalContext
 #   - Codex / other                                 -> hookSpecificOutput.additionalContext
-# OpenCode uses a native plugin instead (.opencode/plugin/use-cases-plugin.js).
+# OpenCode uses a native plugin instead (.opencode/plugin/use-case-matrix.js).
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-bootstrap_content=$(cat "${PLUGIN_ROOT}/bootstrap/use-cases-plugin.md" 2>&1 || echo "Error reading use-cases-plugin bootstrap")
+bootstrap_content=$(cat "${PLUGIN_ROOT}/bootstrap/use-case-matrix.md" 2>&1 || echo "Error reading use-case-matrix bootstrap")
 
 # Single C-level pass per replacement; far faster than a char loop.
 escape_for_json() {

@@ -61,13 +61,13 @@ export type PackageInspectionResult = {
 };
 
 const REQUIRED_PACKAGE_PATHS = [
-  ".agents/skills/use-cases-plugin/SKILL.md",
+  ".agents/skills/use-case-matrix/SKILL.md",
   ".agents/skills/showcase/SKILL.md",
   ".agents/skills/walkthrough/SKILL.md",
   ".codex-plugin/plugin.json",
   ".claude-plugin/plugin.json",
   ".mcp.json",
-  "bootstrap/use-cases-plugin.md",
+  "bootstrap/use-case-matrix.md",
   "docs/release.md",
   "docs/security.md",
   "hosts/codex.yml",
@@ -227,7 +227,7 @@ function prepareInspectionTarget(target: PackageInspectionTarget): {
       env: { ...process.env, COREPACK_ENABLE_DOWNLOAD_PROMPT: "0" }
     }), "corepack pnpm build");
   }
-  const packDir = mkdtempSync(join(tmpdir(), "use-cases-plugin-doctor-pack-"));
+  const packDir = mkdtempSync(join(tmpdir(), "use-case-matrix-doctor-pack-"));
   const pack = spawnSync("corepack", ["pnpm", "pack", "--json", "--pack-destination", packDir], {
     cwd: workspace,
     encoding: "utf8",
@@ -246,7 +246,7 @@ function listPackageEntries(root: string, options: { skipNodeModules: boolean })
 }
 
 function extractTarball(tarball: string): string {
-  const extractDir = mkdtempSync(join(tmpdir(), "use-cases-plugin-doctor-extract-"));
+  const extractDir = mkdtempSync(join(tmpdir(), "use-case-matrix-doctor-extract-"));
   const result = spawnSync("tar", ["-xzf", tarball, "-C", extractDir], { encoding: "utf8" });
   requireCommandSuccess(result, `tar -xzf ${tarball}`);
   const packageRoot = join(extractDir, "package");
@@ -273,7 +273,7 @@ function packageManifestReferences(root: string): PackageManifestReference[] {
   const mcpPath = join(root, ".mcp.json");
   if (existsSync(mcpPath)) {
     const mcp = readJson(mcpPath) as { mcpServers?: Record<string, { args?: string[] }> };
-    const server = mcp.mcpServers?.["use-cases-plugin"];
+    const server = mcp.mcpServers?.["use-case-matrix"];
     const target = resolvePackagedReference(root, ".mcp.json", server?.args?.[0] ?? "");
     references.push({
       from: ".mcp.json",

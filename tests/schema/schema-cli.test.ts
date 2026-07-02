@@ -47,7 +47,7 @@ describe("P1 schema CLI", () => {
       complete: true,
       diagnostics: [],
       context: {
-        component_id: "use-cases-plugin"
+        component_id: "use-case-matrix"
       }
     });
     expect(payload.data.schemas).toHaveLength(PUBLIC_SCHEMA_IDS.length);

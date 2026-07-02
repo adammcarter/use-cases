@@ -132,7 +132,7 @@ function callTool(name: string, args: Record<string, unknown>) {
 }
 
 function fixtureWorkspace(name: string): string {
-  const workspaceRoot = mkdtempSync(join(tmpdir(), `use-cases-plugin-mcp-${name}-`));
+  const workspaceRoot = mkdtempSync(join(tmpdir(), `use-case-matrix-mcp-${name}-`));
   cpSync(join(repoRoot, "tests/fixtures/workspaces", name), workspaceRoot, { recursive: true });
   return workspaceRoot;
 }
@@ -150,15 +150,15 @@ function plannedUseCase(id: string): Record<string, unknown> {
 }
 
 function withMcpWriteMode<T>(fn: () => T): T {
-  const previous = process.env.UCP_MCP_WRITE;
-  process.env.UCP_MCP_WRITE = "1";
+  const previous = process.env.UCM_MCP_WRITE;
+  process.env.UCM_MCP_WRITE = "1";
   try {
     return fn();
   } finally {
     if (previous === undefined) {
-      delete process.env.UCP_MCP_WRITE;
+      delete process.env.UCM_MCP_WRITE;
     } else {
-      process.env.UCP_MCP_WRITE = previous;
+      process.env.UCM_MCP_WRITE = previous;
     }
   }
 }

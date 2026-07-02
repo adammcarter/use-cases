@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node
 import { dirname, isAbsolute, join, relative } from "node:path";
 import { isPathContained, type ResolvedWorkspaceContext } from "../roots.js";
 import { computeSemanticHash, diagnostic, type Diagnostic } from "../schema/index.js";
-import { UCP_VERSION } from "../version.js";
+import { UCM_VERSION } from "../version.js";
 import { deriveHostConformance, runExecutableSmoke } from "./conformanceStatus.js";
 import { CANONICAL_SKILLS } from "../skills/canonicalSkills.js";
 import type {
@@ -14,8 +14,8 @@ import type {
   HostProjectionResult
 } from "./types.js";
 
-const MANAGED_MARKER = "use-cases-plugin:managed";
-const MANIFEST_PATH = ".use-cases-plugin-projection.json";
+const MANAGED_MARKER = "use-case-matrix:managed";
+const MANIFEST_PATH = ".use-case-matrix-projection.json";
 const GENERATED_AT = "1970-01-01T00:00:00.000Z";
 
 export function projectHostFiles(options: {
@@ -210,7 +210,7 @@ function renderManifest(
       surface: profile.surface,
       profile_id: profile.profile_id,
       profile_version: profile.profile_version,
-      plugin_version: UCP_VERSION,
+      plugin_version: UCM_VERSION,
       source_skill_hashes: sourceSkillHashes,
       managed_marker: MANAGED_MARKER,
       created_at: GENERATED_AT,

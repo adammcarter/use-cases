@@ -35,9 +35,9 @@ In CI, load the **private** PEM into an environment variable and point `prove`
 at it; tag the proof with the matching key id:
 
 ```sh
-export UCP_CI_SIGNING_KEY="$(cat ci-signing-key.pem)"
-ucp prove --all --trusted-ci \
-  --signing-key-env UCP_CI_SIGNING_KEY \
+export UCM_CI_SIGNING_KEY="$(cat ci-signing-key.pem)"
+ucm prove --all --trusted-ci \
+  --signing-key-env UCM_CI_SIGNING_KEY \
   --key-id ci-key-1
 ```
 
@@ -48,7 +48,7 @@ irrelevant under the single `--public-key` path, which ignores it).
 
 A keyring is a JSON file conforming to
 [`schemas/v1/keyring.schema.json`](../../schemas/v1/keyring.schema.json)
-(`$id: https://use-cases-plugin.dev/schemas/v1/keyring.schema.json`). It is a
+(`$id: https://use-case-matrix.dev/schemas/v1/keyring.schema.json`). It is a
 list of keys; each carries a stable id, the PEM public key, a validity window,
 and a status:
 
@@ -87,8 +87,8 @@ window closes or the key is revoked, the proof no longer verifies.
 Pass it to any verifying command:
 
 ```sh
-ucp scan --keyring keyring.json
-ucp validate-ledger --keyring keyring.json
+ucm scan --keyring keyring.json
+ucm validate-ledger --keyring keyring.json
 ```
 
 ## Rotation

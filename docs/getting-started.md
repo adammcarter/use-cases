@@ -14,7 +14,7 @@ still match."
 > machine. This is the whole point of the trust model: an agent on a developer
 > box cannot manufacture a green check.
 
-Every command shown here is a real `ucp` command. Concepts are linked to the
+Every command shown here is a real `ucm` command. Concepts are linked to the
 [concept docs](./README.md); the deeper trust mechanics live under
 [`docs/concepts/`](./concepts/matrix.md).
 
@@ -23,21 +23,21 @@ Every command shown here is a real `ucp` command. Concepts are linked to the
 ## 1. Install the CLI
 
 ```bash
-pnpm add -D @use-cases-plugin/cli
+pnpm add -D @use-case-matrix/cli
 ```
 
-This puts the `ucp` binary on your project's path (via `pnpm exec ucp …` or a
+This puts the `ucm` binary on your project's path (via `pnpm exec ucm …` or a
 `package.json` script). The companion MCP server ships separately as
-`@use-cases-plugin/mcp` (binary `ucp-mcp`) if you want agents to drive the same
+`@use-case-matrix/mcp` (binary `ucm-mcp`) if you want agents to drive the same
 commands — see [the MCP contract](./mcp.md).
 
-## 2. Scaffold the workspace with `ucp init`
+## 2. Scaffold the workspace with `ucm init`
 
 One command takes a brand-new repo from nothing to a bindable, verifiable
 matrix — a workspace config plus an example row that already validates:
 
 ```bash
-ucp init --repo . --template js-vitest
+ucm init --repo . --template js-vitest
 ```
 
 - `--template` wires the default verifier: `generic` (a clearly-TODO placeholder
@@ -46,11 +46,11 @@ ucp init --repo . --template js-vitest
 - `--component <id>` sets the component id (otherwise it is derived from the
   repo directory name).
 - `--force` overwrites an existing workspace; without it, `init` refuses rather
-  than clobber a `use-cases-plugin.yml` that already exists.
+  than clobber a `use-case-matrix.yml` that already exists.
 - `--json` emits the standard result envelope; omit it for a human summary that
   prints these next steps.
 
-It writes `use-cases-plugin.yml` and `use-cases/example.yml`. It never
+It writes `use-case-matrix.yml` and `use-cases/example.yml`. It never
 generates or writes a private key, and it does not create the GitHub workflow —
 those steps are below. The generated config looks like:
 
@@ -131,7 +131,7 @@ there is nothing to prove.)
 Validate the matrix:
 
 ```bash
-ucp matrix validate --repo . --json
+ucm matrix validate --repo . --json
 ```
 
 `ok: true` / `complete: true` means the matrix is structurally clean.
@@ -154,13 +154,13 @@ export function applyDiscount(total: number, percent: number): number {
 The grammar is `<comment>: @use-case: <slug>` … `<comment>: @use-case: end
 <slug>`. See [bindings & markers](./concepts/bindings.md).
 
-## 5. Register the binding with `ucp bind`
+## 5. Register the binding with `ucm bind`
 
 `bind` registers the marker in the append-only binding registry, but only after
 the edited file scans clean:
 
 ```bash
-ucp bind \
+ucm bind \
   --repo . \
   --row billing.core.apply_discount \
   --file src/billing/discount.ts \
@@ -183,10 +183,10 @@ The registry defaults to `.use-cases/bindings.jsonl` under your `data_root`
 
 The row's `required_verifiers: [acceptance]` is resolved **from config** — there
 is no hard-coded test runner. Point the `acceptance` id at a real command using a
-**preset** in `use-cases-plugin.yml`:
+**preset** in `use-case-matrix.yml`:
 
 ```yaml
-# use-cases-plugin.yml (add this)
+# use-case-matrix.yml (add this)
 verifiers:
   default: acceptance
   acceptance:
@@ -226,10 +226,10 @@ The available presets are `command.generic`, `js.vitest`, `js.npm-test`,
 Now write the acceptance test the preset names (e.g.
 `tests/use-cases/billing.core.apply_discount.test.ts`) and make it pass locally.
 
-## 7. See the status locally with `ucp scan`
+## 7. See the status locally with `ucm scan`
 
 ```bash
-ucp scan --repo . --product-root . --policy-mode feature --json
+ucm scan --repo . --product-root . --policy-mode feature --json
 ```
 
 At this point the row is **UNPROVEN**: it is bound to current code, but no signed
@@ -246,7 +246,7 @@ FRESH happens in a trusted CI pipeline, in two stages:
    so a PR can prove its tests *ran and passed* without minting trust:
 
    ```bash
-   ucp verify --repo . --product-root . --all \
+   ucm verify --repo . --product-root . --all \
      --out .use-cases/verification-results.jsonl --json
    ```
 
@@ -256,9 +256,9 @@ FRESH happens in a trusted CI pipeline, in two stages:
    the **only** place signing happens:
 
    ```bash
-   ucp prove --repo . --product-root . --all --trusted-ci --append \
+   ucm prove --repo . --product-root . --all --trusted-ci --append \
      --verification-results .use-cases/verification-results.jsonl \
-     --signing-key-env UCP_CI_SIGNING_KEY --key-id ci-key-1 \
+     --signing-key-env UCM_CI_SIGNING_KEY --key-id ci-key-1 \
      --public-key .use-cases/trusted-ci-public-key.pem --json
    ```
 
@@ -273,7 +273,7 @@ Don't hand-roll this. Use the **GitHub Actions reference workflow** at
 [`.github/workflows/use-cases.yml`](../.github/workflows/use-cases.yml): it runs
 `validate-ledger` + `scan` on every push/PR, selects release mode on
 `main` / `release/**`, and runs the optional `verify` → `prove` → persist job that
-mints proofs from the `UCP_CI_SIGNING_KEY` secret. Generate the keypair following
+mints proofs from the `UCM_CI_SIGNING_KEY` secret. Generate the keypair following
 [key management](./security/key-management.md); the CI provenance/authority model
 is in [CI hardening](./security/ci-hardening.md).
 
@@ -283,11 +283,11 @@ is in [CI hardening](./security/ci-hardening.md).
 
 | Stage | Command | Row state |
 |---|---|---|
-| Authored | `ucp matrix validate` | (tracked) |
-| Bound | `ucp bind …` | UNBOUND → UNPROVEN |
-| Verified in CI (PR, keyless) | `ucp verify --out …` | UNPROVEN (results only) |
-| Proved in CI (trusted branch) | `ucp prove --trusted-ci …` | **FRESH** |
-| Code/test later weakened | `ucp scan` | SUSPECT |
+| Authored | `ucm matrix validate` | (tracked) |
+| Bound | `ucm bind …` | UNBOUND → UNPROVEN |
+| Verified in CI (PR, keyless) | `ucm verify --out …` | UNPROVEN (results only) |
+| Proved in CI (trusted branch) | `ucm prove --trusted-ci …` | **FRESH** |
+| Code/test later weakened | `ucm scan` | SUSPECT |
 
 When you later change the implementation or weaken the test, the embedded hashes
 no longer match and the row drops to **SUSPECT** — the stale claim becomes

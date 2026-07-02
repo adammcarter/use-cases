@@ -167,7 +167,7 @@ export const evidenceVoidCommand: CliCommand = {
       return {
         envelope: errorEnvelope(
           "evidence.void",
-          "UCP_INVALID_ID",
+          "UCM_INVALID_ID",
           `Invalid --evidence '${evidenceId}': must be a canonical id (lowercase, no path separators, no '..').`
         ),
         exitCode: 2

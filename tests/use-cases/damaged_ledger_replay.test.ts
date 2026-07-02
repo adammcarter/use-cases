@@ -30,7 +30,7 @@ afterEach(() => {
 });
 
 function freshWorkspace(): string {
-  const dir = mkdtempSync(join(tmpdir(), "ucp-damaged-replay-"));
+  const dir = mkdtempSync(join(tmpdir(), "ucm-damaged-replay-"));
   cpSync(join(fixturesRoot, "evidence-basic"), dir, { recursive: true });
   tempDirs.push(dir);
   return dir;

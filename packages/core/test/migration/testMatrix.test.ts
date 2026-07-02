@@ -7,7 +7,7 @@ import { migrateTestMatrix } from "../../src/migration/index.js";
 import { UseCasesPluginError } from "../../src/errors.js";
 import type { ResolvedWorkspaceContext } from "../../src/roots.js";
 
-const repoRoot = "/tmp/ucp-migrate-fixture-root";
+const repoRoot = "/tmp/ucm-migrate-fixture-root";
 
 function contextStub(): ResolvedWorkspaceContext {
   // migrateTestMatrix only reads workspace_root/data_root before the unsafe-path
@@ -19,7 +19,7 @@ function contextStub(): ResolvedWorkspaceContext {
 }
 
 function workspaceWith(source: string): ResolvedWorkspaceContext {
-  const root = mkdtempSync(join(tmpdir(), "ucp-migrate-"));
+  const root = mkdtempSync(join(tmpdir(), "ucm-migrate-"));
   writeFileSync(join(root, "TEST-MATRIX.md"), source);
   return { workspace_root: root, data_root: root } as unknown as ResolvedWorkspaceContext;
 }

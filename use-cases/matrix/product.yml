@@ -29,7 +29,7 @@ use_cases:
         kind: steps
         steps:
           - Run matrix list.
-          - Confirm product-level use-cases-plugin rows exist alongside primitive support rows.
+          - Confirm product-level use-case-matrix rows exist alongside primitive support rows.
           - Confirm each row has value, journey, usage, and scenario data.
     observable_outcomes:
       - Product behavior can be selected by row ID without reading implementation code.

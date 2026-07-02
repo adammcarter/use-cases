@@ -541,7 +541,7 @@ describe("P6 showcase run replay", () => {
 });
 
 function fixtureWorkspace(name: string): string {
-  const workspaceRoot = mkdtempSync(join(tmpdir(), `use-cases-plugin-${name}-`));
+  const workspaceRoot = mkdtempSync(join(tmpdir(), `use-case-matrix-${name}-`));
   cpSync(join(fixturesRoot, name), workspaceRoot, { recursive: true });
   return workspaceRoot;
 }

@@ -117,9 +117,9 @@ describe("P2 use-case matrix loader", () => {
   });
 
   test("rejects symlinks under use-cases while loading valid siblings", () => {
-    const workspaceRoot = mkdtempSync(join(tmpdir(), "use-cases-plugin-p2-"));
+    const workspaceRoot = mkdtempSync(join(tmpdir(), "use-case-matrix-p2-"));
     const useCasesRoot = join(workspaceRoot, "use-cases");
-    const outsideRoot = mkdtempSync(join(tmpdir(), "use-cases-plugin-outside-"));
+    const outsideRoot = mkdtempSync(join(tmpdir(), "use-case-matrix-outside-"));
     mkdirSync(useCasesRoot, { recursive: true });
     writeFileSync(join(useCasesRoot, "valid.yml"), validUseCaseYaml("auth.login.valid"));
     writeFileSync(join(outsideRoot, "escape.yml"), validUseCaseYaml("auth.login.escape"));

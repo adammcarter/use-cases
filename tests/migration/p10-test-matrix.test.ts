@@ -49,7 +49,7 @@ describe("P10 TEST-MATRIX migration", () => {
       }
     });
     expect(
-      validateBySchemaId("https://use-cases-plugin.dev/schemas/v1/migration-test-matrix-result.schema.json", envelope.data)
+      validateBySchemaId("https://use-case-matrix.dev/schemas/v1/migration-test-matrix-result.schema.json", envelope.data)
     ).toMatchObject({ ok: true });
     expect(JSON.stringify(envelope)).not.toMatch(/evidence_recorded|approval_recorded|verified_with_evidence/);
     expect(existsSync(join(fixture, "use-cases", "_migrated"))).toBe(false);
@@ -109,7 +109,7 @@ describe("P10 TEST-MATRIX migration", () => {
     expect(envelope.data.summary.files_written).toBe(1);
     const migrated = join(fixture, "use-cases", "_migrated", "auth.yml");
     expect(readFileSync(migrated, "utf8")).toContain("Draft intended behavior only");
-    expect(existsSync(join(fixture, "use-cases", "_migrated", ".use-cases-plugin-migration.json"))).toBe(true);
+    expect(existsSync(join(fixture, "use-cases", "_migrated", ".use-case-matrix-migration.json"))).toBe(true);
     expect(existsSync(join(fixture, "evidence"))).toBe(false);
     expect(existsSync(join(fixture, "showcase-runs"))).toBe(false);
 
@@ -163,7 +163,7 @@ function runCli(args: string[]) {
 }
 
 function fixtureWorkspace(): string {
-  const workspaceRoot = mkdtempSync(join(tmpdir(), "use-cases-plugin-migration-"));
+  const workspaceRoot = mkdtempSync(join(tmpdir(), "use-case-matrix-migration-"));
   cpSync(join(repoRoot, "tests/fixtures/workspaces/test-matrix-source"), workspaceRoot, { recursive: true });
   return workspaceRoot;
 }

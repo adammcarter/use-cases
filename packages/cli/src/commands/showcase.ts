@@ -59,14 +59,14 @@ function showcaseCaughtError(command: string, error: unknown): CommandOutput {
 // SECURITY: reject a user-supplied id that is not a canonical id BEFORE it can
 // become a filesystem path segment (e.g. showcase-runs/<runId>/events.jsonl) or a
 // ledger lookup key. Mirrors the legacy rejectUnsafeId/invalidIdExit: returns the
-// stable UCP_INVALID_ID / exit-2 envelope, or null when the value is safe.
+// stable UCM_INVALID_ID / exit-2 envelope, or null when the value is safe.
 function rejectUnsafeId(command: string, paramName: string, value: string): CommandOutput | null {
   return isValidId(value)
     ? null
     : {
         envelope: errorEnvelope(
           command,
-          "UCP_INVALID_ID",
+          "UCM_INVALID_ID",
           `Invalid ${paramName} '${value}': must be a canonical id (lowercase, no path separators, no '..').`
         ),
         exitCode: 2

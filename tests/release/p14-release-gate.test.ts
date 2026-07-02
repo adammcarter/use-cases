@@ -58,8 +58,8 @@ describe("P14 production release gate", () => {
     expect(rootPlugin.version).toBe(rootManifest.version);
     expect(codexPlugin.version).toBe(rootManifest.version);
     expect(claudePlugin.version).toBe(rootManifest.version);
-    expect(versionSource).toContain('UCP_VERSION = "1.0.0"');
-    expect(hostProjection).toContain("plugin_version: UCP_VERSION");
+    expect(versionSource).toContain('UCM_VERSION = "1.0.0"');
+    expect(hostProjection).toContain("plugin_version: UCM_VERSION");
     expect(changelog).toContain("## 1.0.0");
   });
 });

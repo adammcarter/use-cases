@@ -4,7 +4,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const packDir = mkdtempSync(join(tmpdir(), "use-cases-plugin-release-pack-"));
+const packDir = mkdtempSync(join(tmpdir(), "use-case-matrix-release-pack-"));
 
 const steps = [
   ["corepack pnpm install --frozen-lockfile", "corepack", ["pnpm", "install", "--frozen-lockfile"]],

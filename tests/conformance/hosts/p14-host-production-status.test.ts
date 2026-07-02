@@ -6,10 +6,10 @@ import { beforeAll, describe, expect, test } from "vitest";
 
 const repoRoot = resolve(import.meta.dirname, "../../..");
 const hostTargets = {
-  claude: ".claude/use-cases-plugin.md",
-  codex: ".codex/use-cases-plugin.md",
-  copilot: ".github/copilot/use-cases-plugin.md",
-  opencode: ".opencode/use-cases-plugin.md"
+  claude: ".claude/use-case-matrix.md",
+  codex: ".codex/use-case-matrix.md",
+  copilot: ".github/copilot/use-case-matrix.md",
+  opencode: ".opencode/use-case-matrix.md"
 } as const;
 
 beforeAll(() => {
@@ -39,7 +39,7 @@ describe("P14 host projection production status", () => {
         }
       });
     }
-    expect(existsSync(join(workspaceRoot, ".use-cases-plugin-projection.json"))).toBe(true);
+    expect(existsSync(join(workspaceRoot, ".use-case-matrix-projection.json"))).toBe(true);
     for (const target of Object.values(hostTargets)) {
       expect(existsSync(join(workspaceRoot, target))).toBe(true);
     }
@@ -82,7 +82,14 @@ describe("P14 host projection production status", () => {
         (row?.executable_smoke as { status: string }).status
       );
       if ((row?.executable_smoke as { status: string }).status === "not_run") {
-        expect((row?.executable_smoke as { reason: string }).reason).toMatch(/not found|unavailable/i);
+        // A not_run smoke is legitimately reached four ways (see conformanceStatus.ts):
+        // the executable is not found, it fails to spawn, it errors ("unavailable"),
+        // or it is present but does not answer within the smoke timeout. Accept all of
+        // them — pinning only "not found|unavailable" made this test flake on dev
+        // machines where `gh copilot` is installed but hangs on auth/network.
+        expect((row?.executable_smoke as { reason: string }).reason).toMatch(
+          /not found|unavailable|did not respond|failed to run/i
+        );
       }
     }
 
@@ -90,7 +97,7 @@ describe("P14 host projection production status", () => {
       const reverted = runCliJson(["host", "project", "--host", host, "--repo", workspaceRoot, "--revert", "--json"]);
       expect(reverted.status).toBe(0);
     }
-    expect(existsSync(join(workspaceRoot, ".use-cases-plugin-projection.json"))).toBe(false);
+    expect(existsSync(join(workspaceRoot, ".use-case-matrix-projection.json"))).toBe(false);
     for (const target of Object.values(hostTargets)) {
       expect(existsSync(join(workspaceRoot, target))).toBe(false);
     }
@@ -98,7 +105,7 @@ describe("P14 host projection production status", () => {
 });
 
 function fixtureWorkspace(): string {
-  const workspaceRoot = mkdtempSync(join(tmpdir(), "use-cases-plugin-hosts-p14-"));
+  const workspaceRoot = mkdtempSync(join(tmpdir(), "use-case-matrix-hosts-p14-"));
   cpSync(join(repoRoot, "examples", "host-projections"), workspaceRoot, { recursive: true, errorOnExist: false });
   return workspaceRoot;
 }

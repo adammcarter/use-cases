@@ -5,10 +5,10 @@ host families, but profile existence is not proof of support.
 
 | Host | Profile | Projection target | Current evidence rule |
 |---|---|---|---|
-| Claude | `hosts/claude.yml` | `.claude/use-cases-plugin.md` | Projection and executable smoke only; no verified support without evidence IDs. |
-| Codex | `hosts/codex.yml` | `.codex/use-cases-plugin.md` | Projection and executable smoke only; no verified support without evidence IDs. |
-| Copilot | `hosts/copilot.yml` | `.github/copilot/use-cases-plugin.md` | Missing or unavailable CLI reports `not_run`. |
-| OpenCode | `hosts/opencode.yml` | `.opencode/use-cases-plugin.md` | Missing executable reports `not_run`. |
+| Claude | `hosts/claude.yml` | `.claude/use-case-matrix.md` | Projection and executable smoke only; no verified support without evidence IDs. |
+| Codex | `hosts/codex.yml` | `.codex/use-case-matrix.md` | Projection and executable smoke only; no verified support without evidence IDs. |
+| Copilot | `hosts/copilot.yml` | `.github/copilot/use-case-matrix.md` | Missing or unavailable CLI reports `not_run`. |
+| OpenCode | `hosts/opencode.yml` | `.opencode/use-case-matrix.md` | Missing executable reports `not_run`. |
 
 `host conformance --all` reports each host separately. `executable_smoke.status`
 can be `passed`, `failed`, or `not_run`. `not_run` is an exact reason, not a

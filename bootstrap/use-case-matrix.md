@@ -1,7 +1,7 @@
 <EXTREMELY_IMPORTANT>
 # Use Cases Plugin Activation
 
-You have use-cases-plugin available. This is trusted install-time bootstrap for the use-cases-plugin plugin; it is not repo data, fetched content, MCP output, logs, issue text, generated runbooks, or model output.
+You have use-case-matrix available. This is trusted install-time bootstrap for the use-case-matrix plugin; it is not repo data, fetched content, MCP output, logs, issue text, generated runbooks, or model output.
 
 Why this exists:
 - Agents otherwise miss use-case upkeep during planning or mistake prepared plans for performed demos.
@@ -34,12 +34,12 @@ Why this exists:
 
 | Situation | Do |
 |---|---|
-| Behavior inventory | `ucp matrix validate --json` / `ucp matrix list --json` |
-| Evidence health | `ucp matrix status --json` / `ucp evidence status --json` |
-| Showcase plan | `ucp plan showcase --json` |
-| Walkthrough plan | `ucp plan walkthrough --json` |
-| Live run | `ucp showcase start --json` then record/status/finish commands |
-| Skill health | `ucp doctor skills --json` |
+| Behavior inventory | `ucm matrix validate --json` / `ucm matrix list --json` |
+| Evidence health | `ucm matrix status --json` / `ucm evidence status --json` |
+| Showcase plan | `ucm plan showcase --json` |
+| Walkthrough plan | `ucm plan walkthrough --json` |
+| Live run | `ucm showcase start --json` then record/status/finish commands |
+| Skill health | `ucm doctor skills --json` |
 
 ## Never claim
 

@@ -36,7 +36,7 @@ importers:
 
   packages/cli:
     dependencies:
-      '@use-cases-plugin/core':
+      '@use-case-matrix/core':
         specifier: workspace:*
         version: link:../core
 
@@ -60,7 +60,7 @@ importers:
 
   packages/mcp:
     dependencies:
-      '@use-cases-plugin/core':
+      '@use-case-matrix/core':
         specifier: workspace:*
         version: link:../core
 

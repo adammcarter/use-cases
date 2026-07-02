@@ -33,7 +33,7 @@ use_cases:
       - warning-backed not_run
       - or failed smoke semantics without claiming verified support.
     extensions:
-      use-cases-plugin.dev/status_fields:
+      use-case-matrix.dev/status_fields:
         required:
           - profile_available
           - projected

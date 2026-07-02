@@ -41,7 +41,7 @@ afterEach(() => {
 });
 
 function freshWorkspace(): string {
-  const dir = mkdtempSync(join(tmpdir(), "ucp-append-only-"));
+  const dir = mkdtempSync(join(tmpdir(), "ucm-append-only-"));
   cpSync(join(fixturesRoot, "evidence-basic"), dir, { recursive: true });
   tempDirs.push(dir);
   return dir;

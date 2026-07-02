@@ -11,7 +11,7 @@ import {
   type CommentPrefixConfig
 } from "../commentPrefix.js";
 import { BINDING_REGISTRY_SCHEMA_ID } from "../constants.js";
-import { UCP_VERSION } from "../../version.js";
+import { UCM_VERSION } from "../../version.js";
 import { isValidSlug } from "../markerLine.js";
 import { validateBindingsJsonl } from "../registry.js";
 import {
@@ -210,9 +210,9 @@ export function runBindCommand(options: BindCommandOptions): BindCommandResult {
     event_id: options.idFactory(),
     created_at: options.clock(),
     created_by: {
-      tool: "use-cases-plugin",
+      tool: "use-case-matrix",
       command: "bind",
-      version: options.version ?? UCP_VERSION
+      version: options.version ?? UCM_VERSION
     },
     row_id: options.rowId,
     binding_slug: bindingSlug,

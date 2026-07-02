@@ -1,6 +1,6 @@
 # Publishing to npm (Trusted Publishing + provenance)
 
-How `@use-cases-plugin/core`, `@use-cases-plugin/cli`, and `@use-cases-plugin/mcp`
+How `@use-case-matrix/core`, `@use-case-matrix/cli`, and `@use-case-matrix/mcp`
 are released to npm. All three packages are **published together at the same
 version** (see the [stability policy](../reference/stability.md)).
 
@@ -17,10 +17,10 @@ be reused.
 ## Owner one-time setup (human only — an agent cannot do this)
 
 These steps require a logged-in npm account with publish rights to the
-`@use-cases-plugin` scope and must be done **once** on npmjs.com / GitHub before
+`@use-case-matrix` scope and must be done **once** on npmjs.com / GitHub before
 the first publish. CI cannot bootstrap them.
 
-1. **Create the npm scope/org.** Create the `@use-cases-plugin` scope (an npm org
+1. **Create the npm scope/org.** Create the `@use-case-matrix` scope (an npm org
    or a user scope) on npmjs.com. Confirm the account that owns it has publish
    rights.
 
@@ -36,13 +36,13 @@ the first publish. CI cannot bootstrap them.
    package → **Settings → Trusted Publishing → Add a trusted publisher** and set:
    - **Publisher:** GitHub Actions
    - **Organization / user:** `adammcarter`
-   - **Repository:** `use-cases-plugin`
+   - **Repository:** `use-case-matrix`
    - **Workflow filename:** `release.yml`
    - **Environment:** leave blank (the workflow does not use a GitHub
      environment).
 
-   Do this for **all three** packages: `@use-cases-plugin/core`,
-   `@use-cases-plugin/cli`, `@use-cases-plugin/mcp`.
+   Do this for **all three** packages: `@use-case-matrix/core`,
+   `@use-case-matrix/cli`, `@use-case-matrix/mcp`.
 
 4. **Provenance / 2FA.** Provenance is generated automatically by Trusted
    Publishing — no extra npm setting is needed beyond the trusted-publisher link.
@@ -105,8 +105,8 @@ Everything below is normal repo work an agent or maintainer can do.
 7. **Post-publish smoke** (optional but recommended):
 
    ```bash
-   npx @use-cases-plugin/cli --version --json
-   npx -y @use-cases-plugin/mcp   # should start the stdio server
+   npx @use-case-matrix/cli --version --json
+   npx -y @use-case-matrix/mcp   # should start the stdio server
    ```
 
    Confirm the provenance badge appears on each package page on npmjs.com.
@@ -121,7 +121,7 @@ when asked for explicitly.
 
 1. **RC:** set the version to a prerelease and tag it. pnpm publishes prerelease
    versions under the `next` dist-tag automatically (a `1.0.0-rc.1` version is
-   not tagged `latest`), so `npm install @use-cases-plugin/cli` keeps resolving
+   not tagged `latest`), so `npm install @use-case-matrix/cli` keeps resolving
    the last stable release:
 
    ```bash
@@ -134,7 +134,7 @@ when asked for explicitly.
    Install and exercise the RC explicitly:
 
    ```bash
-   npm install @use-cases-plugin/cli@next       # or @1.0.0-rc.1
+   npm install @use-case-matrix/cli@next       # or @1.0.0-rc.1
    ```
 
 2. **More RCs if needed:** `1.0.0-rc.2`, … repeat.

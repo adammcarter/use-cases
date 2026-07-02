@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://use-cases-plugin.dev/schemas/v1/release-gate-result.schema.json",
+  "$id": "https://use-case-matrix.dev/schemas/v1/release-gate-result.schema.json",
   "title": "ucase-release-gate-result-v1",
   "description": "The decision emitted by the release gate: per-row required_for_release status, the pass/fail verdict, the set of blocked rows, and the policy mode. In release mode a required (required_for_release: true) row that is not FRESH sets policy_block and fails the gate (see deriveFreshness policy_block and releaseGating.test.ts).",
   "type": "object",

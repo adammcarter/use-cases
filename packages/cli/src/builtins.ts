@@ -18,7 +18,7 @@ const { PUBLIC_SCHEMA_IDS, createCliResult, getVersionInfo, validateFixtureWorks
 // Output mode for the whole process. Every command builds the SAME normative
 // envelope; `rendered()` is the single choke-point that decides whether the
 // caller sees the machine JSON (`--json`) or a human-readable view (the default).
-// This is what lets `ucp matrix list` work bare while `--json` stays byte-stable.
+// This is what lets `ucm matrix list` work bare while `--json` stays byte-stable.
 let outputJson = false;
 
 type CliEnvelope = ReturnType<typeof createCliResult>;
@@ -46,7 +46,7 @@ export function runBuiltinCli(argv: string[]): number {
     return 0;
   }
 
-  // Discoverability: `ucp`, `ucp --help`, `ucp -h`, and `ucp <command> --help`
+  // Discoverability: `ucm`, `ucm --help`, `ucm -h`, and `ucm <command> --help`
   // all print a usage envelope. Agents reliably reach for `--help` first, so a
   // bare or help-flagged invocation must answer with the command/flag catalog
   // rather than the cryptic command.unknown response.
@@ -124,7 +124,7 @@ function runHelp(argv: string[], options: { unknown?: boolean; json?: boolean } 
   const tokens = argv.filter((arg) => !arg.startsWith("-"));
   const commands = selectUsageEntries(tokens);
   const requested = tokens.length > 0 ? tokens.join(" ") : null;
-  const unknownMessage = `No recognized command for '${requested ?? "(none)"}'. See the commands listed below or run \`ucp --help\`.`;
+  const unknownMessage = `No recognized command for '${requested ?? "(none)"}'. See the commands listed below or run \`ucm --help\`.`;
 
   // Default to human-readable text; emit the JSON envelope only on --json. Agents
   // (and people) reach for `--help` first and expect prose, not a minified blob.
@@ -135,7 +135,7 @@ function runHelp(argv: string[], options: { unknown?: boolean; json?: boolean } 
 
   const data = {
     schema_version: 1,
-    usage: "ucp <command> [subcommand] [flags] --json",
+    usage: "ucm <command> [subcommand] [flags] --json",
     requested,
     commands
   };
@@ -174,8 +174,8 @@ function renderHelpText(
   if (options.unknown) {
     lines.push(`error: ${options.unknownMessage}`, "");
   }
-  lines.push("ucp — use-cases-plugin CLI", "");
-  lines.push("Usage: ucp <command> [subcommand] [flags] [--json]", "");
+  lines.push("ucm — use-case-matrix CLI", "");
+  lines.push("Usage: ucm <command> [subcommand] [flags] [--json]", "");
   const detailed = commands.length <= 3;
   const heading = options.requested ? `Commands matching '${options.requested}':` : "Commands:";
   lines.push(heading);
@@ -190,7 +190,7 @@ function renderHelpText(
   }
   lines.push("");
   if (!detailed) {
-    lines.push("Run `ucp <command> --help` for that command's flags.");
+    lines.push("Run `ucm <command> --help` for that command's flags.");
   }
   lines.push("Add --json to any command for the machine-readable result envelope.");
   return `${lines.join("\n")}\n`;
@@ -242,7 +242,7 @@ function runInit(argv: string[], wantsJson: boolean): number {
     ];
     process.stdout.write(`${lines.join("\n")}\n`);
   } else {
-    process.stderr.write(`${result.diagnostics[0]?.message ?? "ucp init failed."}\n`);
+    process.stderr.write(`${result.diagnostics[0]?.message ?? "ucm init failed."}\n`);
   }
 
   if (ok) {
@@ -316,13 +316,13 @@ function runInit(argv: string[], wantsJson: boolean): number {
 
 // SECURITY: reject a user-supplied id that is not a canonical id BEFORE it can
 // become a filesystem path segment (e.g. showcase-runs/<runId>/events.jsonl) or a
-// ledger lookup key. Returns the stable UCP_INVALID_ID / exit-2 invalid-arguments
+// ledger lookup key. Returns the stable UCM_INVALID_ID / exit-2 invalid-arguments
 // envelope. Returns null when the value is safe, so callers read it as a guard.
 
 
 // SECURITY: bound a user-supplied file path (e.g. --plan-file) to the workspace,
 // symlink-safe, BEFORE it is read from disk. Returns the safe absolute path, or an
-// { exitCode } carrying the stable UCP_PATH_ESCAPE / exit-4 envelope on escape.
+// { exitCode } carrying the stable UCM_PATH_ESCAPE / exit-4 envelope on escape.
 
 function writeError(command: string, code: string, message: string, exitCode = 2): number {
   process.stdout.write(

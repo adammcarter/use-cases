@@ -1,4 +1,4 @@
-import type { CliResult } from "@use-cases-plugin/core";
+import type { CliResult } from "@use-case-matrix/core";
 import {
   type JsonObject,
   cliEnvelopeSchema,
@@ -63,7 +63,7 @@ type ToolDefinition = McpToolDescriptor & {
 };
 
 const toolDefinitions: ToolDefinition[] = [
-  tool("doctor_roots", "doctor.roots", "Inspect resolved use-cases-plugin roots.", "read", toolInputBase, doctorRoots),
+  tool("doctor_roots", "doctor.roots", "Inspect resolved use-case-matrix roots.", "read", toolInputBase, doctorRoots),
   tool("matrix_validate", "matrix.validate", "Validate use-case matrix files.", "read", toolInputBase, matrixValidate),
   tool("matrix_list", "matrix.list", "List and filter use cases.", "read", matrixListInputSchema, matrixList),
   tool("matrix_status", "matrix.status", "Summarize matrix and evidence status.", "read", toolInputBase, matrixStatus),

@@ -5,7 +5,7 @@ end-to-end with the real CLI.
 
 ## Code markers
 
-A binding is anchored in the source by an in-code **marker comment**. `ucp bind`
+A binding is anchored in the source by an in-code **marker comment**. `ucm bind`
 writes them for you, but the grammar is small enough to read and hand-edit.
 
 ### Grammar
@@ -53,10 +53,10 @@ def checkout():
 | **swift-func** | a **lone** start marker, no end | inferred from the Swift function body | Swift only |
 
 - **explicit** brackets a precise span; the start and end slugs must match and
-  spans must not nest. This is the portable default (`ucp bind` explicit mode
+  spans must not nest. This is the portable default (`ucm bind` explicit mode
   takes `--start-line`/`--end-line`).
 - **swift-func** places a lone start marker immediately before a Swift `func`
-  declaration and infers the span from the function body (`ucp bind` swift-func
+  declaration and infers the span from the function body (`ucm bind` swift-func
   mode takes `--line`). Inferred ends are **only** supported for Swift func — a
   lone start marker in any other file fails closed and demands an explicit end.
 
@@ -94,7 +94,7 @@ in addition to `.git` / `node_modules` / `.use-cases`. Covered by
 
 ## Next adoption steps
 
-- Set up the real CI signing key (`UCP_CI_SIGNING_KEY` secret) so CI mints the
+- Set up the real CI signing key (`UCM_CI_SIGNING_KEY` secret) so CI mints the
   first trusted proof and this row goes FRESH on `main`.
 - Bind more rows to their implementing functions; track the bound/unbound ratio
   as the linkage-coverage metric.

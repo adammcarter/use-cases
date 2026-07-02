@@ -13,8 +13,8 @@ import {
   LEGACY_STRING_CODE_MAP,
   mapEnumCode,
   mapStringCode,
-  UCP_ERROR_CODES,
-  UCP_ERROR_REGISTRY,
+  UCM_ERROR_CODES,
+  UCM_ERROR_REGISTRY,
   type UcmErrorCode
 } from "../../src/errors/registry.js";
 import { renderErrorCodesMarkdown } from "../../src/errors/render.js";
@@ -34,11 +34,11 @@ const VALID_SEVERITIES = new Set(["error", "warning", "info"]);
 
 describe("Use Cases Plugin error-code registry", () => {
   it("has no duplicate codes and every entry is well-formed", () => {
-    const codes = Object.keys(UCP_ERROR_REGISTRY);
+    const codes = Object.keys(UCM_ERROR_REGISTRY);
     expect(new Set(codes).size).toBe(codes.length);
 
-    for (const [code, entry] of Object.entries(UCP_ERROR_REGISTRY)) {
-      expect(code, `${code} must start with UCP_`).toMatch(/^UCP_[A-Z0-9_]+$/);
+    for (const [code, entry] of Object.entries(UCM_ERROR_REGISTRY)) {
+      expect(code, `${code} must start with UCM_`).toMatch(/^UCM_[A-Z0-9_]+$/);
       expect(entry.message.length, `${code} message`).toBeGreaterThan(0);
       expect(VALID_SEVERITIES.has(entry.severity), `${code} severity`).toBe(true);
       expect(entry.surface.length, `${code} surface`).toBeGreaterThan(0);
@@ -46,14 +46,14 @@ describe("Use Cases Plugin error-code registry", () => {
     }
   });
 
-  it("exposes UCP_ERROR_CODES sorted and consistent with the registry", () => {
-    expect([...UCP_ERROR_CODES].sort()).toEqual(UCP_ERROR_CODES);
-    expect(new Set(UCP_ERROR_CODES)).toEqual(new Set(Object.keys(UCP_ERROR_REGISTRY)));
+  it("exposes UCM_ERROR_CODES sorted and consistent with the registry", () => {
+    expect([...UCM_ERROR_CODES].sort()).toEqual(UCM_ERROR_CODES);
+    expect(new Set(UCM_ERROR_CODES)).toEqual(new Set(Object.keys(UCM_ERROR_REGISTRY)));
   });
 
   describe("legacy enum mapping", () => {
     for (const [family, enumObject] of Object.entries(ENUM_FAMILIES)) {
-      it(`is exhaustive over ${family} and maps each value to exactly one valid UCP_* code`, () => {
+      it(`is exhaustive over ${family} and maps each value to exactly one valid UCM_* code`, () => {
         const enumValues = Object.values(enumObject);
         const familyMap = LEGACY_ENUM_CODE_MAP[family as keyof typeof LEGACY_ENUM_CODE_MAP] as Record<
           string,
@@ -65,7 +65,7 @@ describe("Use Cases Plugin error-code registry", () => {
           const mapped = familyMap[value];
           expect(mapped, `${family}.${value} must be mapped`).toBeDefined();
           // Maps to exactly one valid registry code.
-          expect(UCP_ERROR_REGISTRY[mapped]).toBeDefined();
+          expect(UCM_ERROR_REGISTRY[mapped]).toBeDefined();
           // The runtime helper agrees with the table.
           expect(mapEnumCode(family as never, value as never)).toBe(mapped);
         }
@@ -76,15 +76,15 @@ describe("Use Cases Plugin error-code registry", () => {
     }
 
     it("throws for an unknown enum code", () => {
-      expect(() => mapEnumCode("marker" as never, "NOPE" as never)).toThrow(/No UCP_\* code/);
+      expect(() => mapEnumCode("marker" as never, "NOPE" as never)).toThrow(/No UCM_\* code/);
     });
   });
 
   describe("legacy string-literal mapping", () => {
     it("maps every known string code to a valid registry code", () => {
-      for (const [legacy, ucp] of Object.entries(LEGACY_STRING_CODE_MAP)) {
-        expect(UCP_ERROR_REGISTRY[ucp], `${legacy} -> ${ucp}`).toBeDefined();
-        expect(mapStringCode(legacy)).toBe(ucp);
+      for (const [legacy, ucm] of Object.entries(LEGACY_STRING_CODE_MAP)) {
+        expect(UCM_ERROR_REGISTRY[ucm], `${legacy} -> ${ucm}`).toBeDefined();
+        expect(mapStringCode(legacy)).toBe(ucm);
       }
     });
 

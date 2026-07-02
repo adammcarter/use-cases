@@ -2,7 +2,7 @@
 // Internal (not part of the public export surface) — consumed by the doc-sync
 // test and `scripts/generate-error-codes.mjs`.
 
-import { UCP_ERROR_CODES, UCP_ERROR_REGISTRY, type UcmErrorSurface } from "./registry.js";
+import { UCM_ERROR_CODES, UCM_ERROR_REGISTRY, type UcmErrorSurface } from "./registry.js";
 
 const SURFACE_TITLES: Record<UcmErrorSurface, string> = {
   marker: "Marker grammar",
@@ -45,7 +45,7 @@ export function renderErrorCodesMarkdown(): string {
   lines.push("# Error Codes");
   lines.push("");
   lines.push(
-    "Stable `UCP_*` error codes are part of the [public API](./stability.md). Each"
+    "Stable `UCM_*` error codes are part of the [public API](./stability.md). Each"
   );
   lines.push(
     "code below is a versioned contract: a code is only removed or repurposed in a"
@@ -55,11 +55,11 @@ export function renderErrorCodesMarkdown(): string {
   );
   lines.push("the code in their `code` field.");
   lines.push("");
-  lines.push(`There are **${UCP_ERROR_CODES.length}** codes across **${SURFACE_ORDER.length}** surfaces.`);
+  lines.push(`There are **${UCM_ERROR_CODES.length}** codes across **${SURFACE_ORDER.length}** surfaces.`);
   lines.push("");
 
   for (const surface of SURFACE_ORDER) {
-    const codes = UCP_ERROR_CODES.filter((code) => UCP_ERROR_REGISTRY[code].surface === surface);
+    const codes = UCM_ERROR_CODES.filter((code) => UCM_ERROR_REGISTRY[code].surface === surface);
     if (codes.length === 0) {
       continue;
     }
@@ -68,7 +68,7 @@ export function renderErrorCodesMarkdown(): string {
     lines.push("| Code | Severity | Message |");
     lines.push("|---|---|---|");
     for (const code of codes) {
-      const item = UCP_ERROR_REGISTRY[code];
+      const item = UCM_ERROR_REGISTRY[code];
       lines.push(`| \`${code}\` | ${item.severity} | ${escapeCell(item.message)} |`);
     }
     lines.push("");

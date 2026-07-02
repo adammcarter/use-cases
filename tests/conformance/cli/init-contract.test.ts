@@ -1,9 +1,9 @@
-// `ucp init` contract test (public-v1 Phase 5 onboarding).
+// `ucm init` contract test (public-v1 Phase 5 onboarding).
 //
 // Proves the new scaffolding command takes a brand-new repo from nothing to a
 // bindable, verifiable Use Cases Plugin workspace in ONE command:
-//   1. `ucp init` writes a workspace config + an example matrix file, and the
-//      scaffolded workspace IMMEDIATELY passes `ucp matrix validate`.
+//   1. `ucm init` writes a workspace config + an example matrix file, and the
+//      scaffolded workspace IMMEDIATELY passes `ucm matrix validate`.
 //   2. Each --template (generic | js-vitest | python-pytest | go-test) writes the
 //      matching `verifiers.default`.
 //   3. The generated config + use-case file validate against their v1 schemas.
@@ -21,14 +21,14 @@ import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { parseYamlToJson, validateBySchemaId } from "../../../packages/core/src/schema/index.js";
 
 const repoRoot = resolve(import.meta.dirname, "../../..");
-const ENVELOPE_SCHEMA_ID = "https://use-cases-plugin.dev/schemas/v1/cli-result.schema.json";
-const WORKSPACE_CONFIG_SCHEMA_ID = "https://use-cases-plugin.dev/schemas/v1/workspace-config.schema.json";
-const USE_CASE_FILE_SCHEMA_ID = "https://use-cases-plugin.dev/schemas/v1/use-case-file.schema.json";
+const ENVELOPE_SCHEMA_ID = "https://use-case-matrix.dev/schemas/v1/cli-result.schema.json";
+const WORKSPACE_CONFIG_SCHEMA_ID = "https://use-case-matrix.dev/schemas/v1/workspace-config.schema.json";
+const USE_CASE_FILE_SCHEMA_ID = "https://use-case-matrix.dev/schemas/v1/use-case-file.schema.json";
 
 const tempDirs: string[] = [];
 
 function freshRepo(label: string): string {
-  const dir = mkdtempSync(join(tmpdir(), `ucp-init-${label}-`));
+  const dir = mkdtempSync(join(tmpdir(), `ucm-init-${label}-`));
   tempDirs.push(dir);
   return dir;
 }
@@ -49,8 +49,8 @@ function parseEnvelope(stdout: string): { command: string; ok: boolean; complete
 }
 
 function readConfig(repoDir: string): Record<string, unknown> {
-  const source = readFileSync(join(repoDir, "use-cases-plugin.yml"), "utf8");
-  const parsed = parseYamlToJson(source, "use-cases-plugin.yml");
+  const source = readFileSync(join(repoDir, "use-case-matrix.yml"), "utf8");
+  const parsed = parseYamlToJson(source, "use-case-matrix.yml");
   expect(parsed.ok, `config did not parse: ${JSON.stringify(parsed)}`).toBe(true);
   return parsed.value as Record<string, unknown>;
 }
@@ -76,7 +76,7 @@ afterAll(() => {
   }
 });
 
-describe("ucp init", () => {
+describe("ucm init", () => {
   test("scaffolds a workspace that immediately passes matrix validate", () => {
     const repo = freshRepo("validate");
     const init = runCli(["init", "--repo", repo, "--json"]);
@@ -86,7 +86,7 @@ describe("ucp init", () => {
     expect(payload.ok).toBe(true);
     expect(payload.data).toMatchObject({ status: "created", template: "generic" });
     const created = payload.data.created_files as string[];
-    expect(created).toContain("use-cases-plugin.yml");
+    expect(created).toContain("use-case-matrix.yml");
     expect(created.some((p) => p.startsWith("use-cases/"))).toBe(true);
     expect((payload.data.next_steps as string[]).length).toBeGreaterThan(0);
 
@@ -171,7 +171,7 @@ describe("ucp init", () => {
   test("refuses an existing workspace without --force (stable error, non-zero, no clobber)", () => {
     const repo = freshRepo("refuse");
     expect(runCli(["init", "--repo", repo, "--component", "first-component", "--json"]).status).toBe(0);
-    const firstConfig = readFileSync(join(repo, "use-cases-plugin.yml"), "utf8");
+    const firstConfig = readFileSync(join(repo, "use-case-matrix.yml"), "utf8");
 
     const second = runCli(["init", "--repo", repo, "--component", "second-component", "--json"]);
     expect(second.status).not.toBe(0);
@@ -179,7 +179,7 @@ describe("ucp init", () => {
     expect(payload).toMatchObject({ command: "init", ok: false, complete: false });
     expect(payload.diagnostics[0].code).toBe("init.workspace_exists");
     // Existing config is untouched.
-    expect(readFileSync(join(repo, "use-cases-plugin.yml"), "utf8")).toBe(firstConfig);
+    expect(readFileSync(join(repo, "use-case-matrix.yml"), "utf8")).toBe(firstConfig);
   });
 
   test("--force overwrites an existing workspace", () => {

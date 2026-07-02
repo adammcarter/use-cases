@@ -187,7 +187,7 @@ describe("loadKeyring + keyringPublicKeyResolverFromFile (file loading)", () => 
   let dir: string;
 
   beforeAll(() => {
-    dir = mkdtempSync(join(tmpdir(), "ucp-keyring-"));
+    dir = mkdtempSync(join(tmpdir(), "ucm-keyring-"));
   });
 
   afterAll(() => {

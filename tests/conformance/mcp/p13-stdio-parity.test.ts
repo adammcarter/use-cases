@@ -112,7 +112,7 @@ async function startMcpServer() {
     stdio: ["pipe", "pipe", "pipe"],
     env: {
       ...process.env,
-      UCP_MCP_WRITE: "1"
+      UCM_MCP_WRITE: "1"
     }
   });
   const lines: string[] = [];
@@ -174,7 +174,7 @@ async function runPnpm(args: string[]) {
 }
 
 function fixtureWorkspace(name: string): string {
-  const workspaceRoot = mkdtempSync(join(tmpdir(), `use-cases-plugin-mcp-stdio-${name}-`));
+  const workspaceRoot = mkdtempSync(join(tmpdir(), `use-case-matrix-mcp-stdio-${name}-`));
   cpSync(join(repoRoot, "tests/fixtures/workspaces", name), workspaceRoot, { recursive: true });
   return workspaceRoot;
 }

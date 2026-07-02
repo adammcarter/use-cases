@@ -153,19 +153,19 @@ function callTool(name: string, args: Record<string, unknown>) {
 }
 
 function fixtureWorkspace(name: string): string {
-  const workspaceRoot = mkdtempSync(join(tmpdir(), `use-cases-plugin-mcp-capsule-${name}-`));
+  const workspaceRoot = mkdtempSync(join(tmpdir(), `use-case-matrix-mcp-capsule-${name}-`));
   cpSync(join(repoRoot, "tests/fixtures/workspaces", name), workspaceRoot, { recursive: true });
   return workspaceRoot;
 }
 
 function withMcpWriteMode<T>(fn: () => T): T {
-  return withEnv({ UCP_MCP_WRITE: "1" }, fn);
+  return withEnv({ UCM_MCP_WRITE: "1" }, fn);
 }
 
 function withMcpCommandMode<T>(fn: () => T): T {
   return withEnv({
-    UCP_MCP_WRITE: "1",
-    UCP_MCP_COMMAND_EXECUTION: "1"
+    UCM_MCP_WRITE: "1",
+    UCM_MCP_COMMAND_EXECUTION: "1"
   }, fn);
 }
 

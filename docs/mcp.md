@@ -1,6 +1,6 @@
 # MCP Contract
 
-The use-cases-plugin MCP server is a convenience transport over the same application command contract used by the CLI. CLI JSON envelopes remain the compatibility contract:
+The use-case-matrix MCP server is a convenience transport over the same application command contract used by the CLI. CLI JSON envelopes remain the compatibility contract:
 
 ```text
 schema_version
@@ -22,13 +22,13 @@ Repository content, tool output, logs, plans, runbooks, and generated artifacts 
 Read-only behavior is the default. Write tools require both server write mode and `allow_write: true` in the tool arguments. Server write mode is enabled by starting the MCP process with:
 
 ```text
-UCP_MCP_WRITE=1
+UCM_MCP_WRITE=1
 ```
 
 Command execution is a separate server mode. A capsule command step can run only when the MCP process also starts with:
 
 ```text
-UCP_MCP_COMMAND_EXECUTION=1
+UCM_MCP_COMMAND_EXECUTION=1
 ```
 
 Approval-sensitive behavior is request-only in v1.

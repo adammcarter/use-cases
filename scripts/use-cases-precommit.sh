@@ -26,17 +26,17 @@
 # so running it repeatedly has no side effects.
 #
 # Overridable via environment:
-#   UCP_CLI_JS       path to the built CLI entry (default: packages/cli/dist/index.js)
-#   UCP_BASE_REF     git ref the ledger must stay append-only against (default: HEAD)
-#   UCP_PUBLIC_KEY   trusted-CI public key PEM (default: .use-cases/trusted-ci-public-key.pem)
-#   UCP_PRODUCT_ROOT product root to scan (default: repo root)
+#   UCM_CLI_JS       path to the built CLI entry (default: packages/cli/dist/index.js)
+#   UCM_BASE_REF     git ref the ledger must stay append-only against (default: HEAD)
+#   UCM_PUBLIC_KEY   trusted-CI public key PEM (default: .use-cases/trusted-ci-public-key.pem)
+#   UCM_PRODUCT_ROOT product root to scan (default: repo root)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CLI_JS="${UCP_CLI_JS:-$ROOT/packages/cli/dist/index.js}"
-BASE_REF="${UCP_BASE_REF:-HEAD}"
-PUBLIC_KEY="${UCP_PUBLIC_KEY:-$ROOT/.use-cases/trusted-ci-public-key.pem}"
-PRODUCT_ROOT="${UCP_PRODUCT_ROOT:-$ROOT}"
+CLI_JS="${UCM_CLI_JS:-$ROOT/packages/cli/dist/index.js}"
+BASE_REF="${UCM_BASE_REF:-HEAD}"
+PUBLIC_KEY="${UCM_PUBLIC_KEY:-$ROOT/.use-cases/trusted-ci-public-key.pem}"
+PRODUCT_ROOT="${UCM_PRODUCT_ROOT:-$ROOT}"
 
 if [ ! -f "$CLI_JS" ]; then
   echo "use-cases precommit: CLI not built at $CLI_JS (run 'pnpm build')." >&2

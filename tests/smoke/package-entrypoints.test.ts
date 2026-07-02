@@ -31,7 +31,7 @@ function childEnv(): NodeJS.ProcessEnv {
 }
 
 function npmCacheDir(): string {
-  return mkdtempSync(join(stableCacheRoot(), "use-cases-plugin-npm-cache-"));
+  return mkdtempSync(join(stableCacheRoot(), "use-case-matrix-npm-cache-"));
 }
 
 function stableCacheRoot(): string {
@@ -59,7 +59,7 @@ describe("P0 package entrypoints", () => {
     );
 
     expect(core.getVersionInfo()).toEqual({
-      name: "use-cases-plugin",
+      name: "use-case-matrix",
       version: "1.0.0"
     });
   });
@@ -81,7 +81,7 @@ describe("P0 package entrypoints", () => {
       protocol_version: 1,
       complete: true,
       data: {
-        name: "use-cases-plugin",
+        name: "use-case-matrix",
         version: "1.0.0"
       },
       diagnostics: []
@@ -91,11 +91,11 @@ describe("P0 package entrypoints", () => {
   test("packed packages install into a clean consumer and expose imports and bins", () => {
     requireSuccess(run("corepack", ["pnpm", "build"]));
 
-    const packDir = mkdtempSync(join(tmpdir(), "use-cases-plugin-pack-"));
+    const packDir = mkdtempSync(join(tmpdir(), "use-case-matrix-pack-"));
     for (const filter of [
-      "@use-cases-plugin/core",
-      "@use-cases-plugin/cli",
-      "@use-cases-plugin/mcp"
+      "@use-case-matrix/core",
+      "@use-case-matrix/cli",
+      "@use-case-matrix/mcp"
     ]) {
       requireSuccess(
         run("corepack", [
@@ -109,36 +109,36 @@ describe("P0 package entrypoints", () => {
       );
     }
 
-    const consumer = mkdtempSync(join(tmpdir(), "use-cases-plugin-consumer-"));
+    const consumer = mkdtempSync(join(tmpdir(), "use-case-matrix-consumer-"));
     writeFileSync(
       join(consumer, "package.json"),
       JSON.stringify({ type: "module", dependencies: {} }, null, 2)
     );
 
     const tarballs = [
-      "use-cases-plugin-core-1.0.0.tgz",
-      "use-cases-plugin-cli-1.0.0.tgz",
-      "use-cases-plugin-mcp-1.0.0.tgz"
+      "use-case-matrix-core-1.0.0.tgz",
+      "use-case-matrix-cli-1.0.0.tgz",
+      "use-case-matrix-mcp-1.0.0.tgz"
     ].map((name) => join(packDir, name));
     requireSuccess(run("npm", ["install", "--cache", npmCacheDir(), "--no-audit", "--no-fund", ...tarballs], consumer));
 
     writeFileSync(
       join(consumer, "check.mjs"),
       [
-        "import { getVersionInfo } from '@use-cases-plugin/core';",
+        "import { getVersionInfo } from '@use-case-matrix/core';",
         "const info = getVersionInfo();",
-        "if (info.name !== 'use-cases-plugin' || info.version !== '1.0.0') throw new Error('bad version export');"
+        "if (info.name !== 'use-case-matrix' || info.version !== '1.0.0') throw new Error('bad version export');"
       ].join("\n")
     );
     requireSuccess(run("node", ["check.mjs"], consumer));
 
     const binDir = join(consumer, "node_modules/.bin");
-    const cli = run(join(binDir, "ucp"), ["--version", "--json"], consumer);
+    const cli = run(join(binDir, "ucm"), ["--version", "--json"], consumer);
     requireSuccess(cli);
     expect(JSON.parse(cli.stdout).data.version).toBe("1.0.0");
 
     const mcp = runWithInput(
-      join(binDir, "ucp-mcp"),
+      join(binDir, "ucm-mcp"),
       [],
       [
         JSON.stringify({
@@ -170,7 +170,7 @@ describe("P0 package entrypoints", () => {
       expect.objectContaining({
         id: 1,
         result: expect.objectContaining({
-          serverInfo: { name: "use-cases-plugin", version: "1.0.0" }
+          serverInfo: { name: "use-case-matrix", version: "1.0.0" }
         })
       }),
       expect.objectContaining({
@@ -206,7 +206,7 @@ describe("P0 staged plugin", () => {
   test("distributable manifest paths resolve inside a staged plugin root", () => {
     requireSuccess(run("corepack", ["pnpm", "build"]));
 
-    const staged = mkdtempSync(join(tmpdir(), "use-cases-plugin-plugin-"));
+    const staged = mkdtempSync(join(tmpdir(), "use-case-matrix-plugin-"));
     mkdirSync(join(staged, ".codex-plugin"), { recursive: true });
     mkdirSync(join(staged, ".claude-plugin"), { recursive: true });
     mkdirSync(join(staged, "packages/mcp/dist"), { recursive: true });
@@ -234,14 +234,14 @@ describe("P0 staged plugin", () => {
     const claudeManifest = JSON.parse(
       readFileSync(join(staged, ".claude-plugin/plugin.json"), "utf8")
     );
-    const claudeServer = claudeManifest.mcpServers["use-cases-plugin"];
+    const claudeServer = claudeManifest.mcpServers["use-case-matrix"];
     expect(claudeServer.command).toBe("node");
     expect(resolve(staged, claudeServer.args[0])).toBe(
       join(staged, "packages/mcp/dist/index.js")
     );
 
     const mcpConfig = JSON.parse(readFileSync(join(staged, ".mcp.json"), "utf8"));
-    const server = mcpConfig.mcpServers["use-cases-plugin"];
+    const server = mcpConfig.mcpServers["use-case-matrix"];
     expect(server.command).toBe("node");
     expect(resolve(staged, server.args[0])).toBe(
       join(staged, "packages/mcp/dist/index.js")

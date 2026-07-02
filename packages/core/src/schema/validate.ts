@@ -200,7 +200,7 @@ function collectUseCaseIds(
 }
 
 function schemaIdForFixturePath(relPath: string): string | undefined {
-  if (relPath === "use-cases-plugin.yml") {
+  if (relPath === "use-case-matrix.yml") {
     return schemaIdForName("workspace-config.schema.json");
   }
   if (relPath.startsWith("workflow-modes/") || basename(relPath) === "valid-sibling.yml") {

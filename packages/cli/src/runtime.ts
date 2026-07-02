@@ -103,7 +103,7 @@ export function containedPathOrError(command: string, workspaceRoot: string, can
     return { kind: "ok", path: resolveContainedPath(workspaceRoot, candidate) };
   } catch (error) {
     if (error instanceof Error && "code" in error && (error as { code?: unknown }).code === "path.escape") {
-      return { kind: "error", envelope: errorEnvelope(command, "UCP_PATH_ESCAPE", error.message), exitCode: 4 };
+      return { kind: "error", envelope: errorEnvelope(command, "UCM_PATH_ESCAPE", error.message), exitCode: 4 };
     }
     throw error;
   }

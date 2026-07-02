@@ -165,7 +165,7 @@ use_cases:
       - kind: file
         path: docs/activation.md
       - kind: file
-        path: bootstrap/use-cases-plugin.md
+        path: bootstrap/use-case-matrix.md
       - kind: file
         path: packages/core/src/skills/validateSkillAssets.ts
     actor: script
@@ -315,9 +315,9 @@ use_cases:
       - kind: file
         path: hooks/hooks-codex.json
       - kind: file
-        path: .opencode/plugin/use-cases-plugin.js
+        path: .opencode/plugin/use-case-matrix.js
       - kind: file
-        path: bootstrap/use-cases-plugin.md
+        path: bootstrap/use-case-matrix.md
     actor: agent
     intent: Deliver the trusted bootstrap into an installed agent's context at session start through each host's real mechanism, so the plugin activates without the agent having to discover it by reading the repo.
     preconditions:

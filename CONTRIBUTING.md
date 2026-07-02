@@ -30,9 +30,9 @@ corepack pnpm cli -- matrix validate --repo . --json   # run the built CLI
 
 | Path | Package | What it is |
 |---|---|---|
-| `packages/core` | `@use-cases-plugin/core` | Core domain library: matrix, bindings, verify/prove, freshness, ledger, evidence, showcase, capsule, plan, host. The schemas live under `schemas/v1`. |
-| `packages/cli` | `@use-cases-plugin/cli` | The `ucp` CLI (alias `use-cases-plugin`). Thin command layer over core; owns the `--json` envelopes and exit codes. |
-| `packages/mcp` | `@use-cases-plugin/mcp` | The `ucp-mcp` MCP server. Wraps the same envelopes for agents over local stdio. |
+| `packages/core` | `@use-case-matrix/core` | Core domain library: matrix, bindings, verify/prove, freshness, ledger, evidence, showcase, capsule, plan, host. The schemas live under `schemas/v1`. |
+| `packages/cli` | `@use-case-matrix/cli` | The `ucm` CLI (alias `use-case-matrix`). Thin command layer over core; owns the `--json` envelopes and exit codes. |
+| `packages/mcp` | `@use-case-matrix/mcp` | The `ucm-mcp` MCP server. Wraps the same envelopes for agents over local stdio. |
 | `docs/` | — | Reference, security, and release docs. `docs/reference/stability.md` is the SemVer contract. |
 | `tests/` | — | Cross-package and acceptance tests. |
 
@@ -57,7 +57,7 @@ MCP.
   config, and schema-example edits do not need a failing test first.
 - **Respect the public contract.** CLI command/flag names, `--json` output
   shapes, exit codes, MCP tool names + schemas, persisted file formats, and the
-  documented `@use-cases-plugin/core` exports are versioned per
+  documented `@use-case-matrix/core` exports are versioned per
   [`docs/reference/stability.md`](docs/reference/stability.md). If your change is
   additive it's a **minor**; if it removes/renames/repurposes a contract or
   changes an output shape it's a **major** — call that out in the PR.

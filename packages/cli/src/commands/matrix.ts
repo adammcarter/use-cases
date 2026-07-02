@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import type { UseCaseQuery } from "@use-cases-plugin/core";
+import type { UseCaseQuery } from "@use-case-matrix/core";
 import type { CliCommand, CommandOutput } from "../command/types.js";
 import {
   createCliResult,
