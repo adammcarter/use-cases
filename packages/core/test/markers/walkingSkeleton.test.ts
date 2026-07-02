@@ -13,6 +13,7 @@ import {
   runScanCommand,
   type FreshnessRowOut
 } from "../../src/markers/index.js";
+import { UCP_VERSION } from "../../src/version.js";
 import {
   ALLOW_UNSAFE_ENV,
   cleanupWorkspaces,
@@ -123,10 +124,15 @@ describe("walking skeleton (spec section 13)", () => {
     const registryLines = readFileSync(ws.bindingsPath, "utf8").trim().split("\n");
     expect(registryLines).toHaveLength(1);
     expect(JSON.parse(registryLines[0]).binding_slug).toBe(ROW_ID);
+    // A bind that is not handed an explicit producer version stamps the real
+    // product version into created_by, not a stale hard-coded default.
+    expect(JSON.parse(registryLines[0]).created_by.version).toBe(UCP_VERSION);
 
     const afterBind = scan(ws);
     expect(afterBind.exit_code).toBe(0);
     expect(rowOf(afterBind, ROW_ID).status).toBe("UNPROVEN");
+    // The freshness status envelope reports the real product version.
+    expect(afterBind.status.tool.version).toBe(UCP_VERSION);
 
     // (c) prove (trusted, pass) -> one signed proof appended; scan -> FRESH.
     const proveResult = prove(ws);
@@ -137,6 +143,9 @@ describe("walking skeleton (spec section 13)", () => {
     const proofEvent = JSON.parse(evidenceLines[0]);
     expect(proofEvent.producer.kind).toBe("trusted-ci-prover");
     expect(proofEvent.verification.result).toBe("pass");
+    // A prove that is not handed an explicit producer version stamps the real
+    // product version into the signed event, not a stale hard-coded default.
+    expect(proofEvent.producer.version).toBe(UCP_VERSION);
 
     const afterProve = scan(ws);
     expect(rowOf(afterProve, ROW_ID).status).toBe("FRESH");
