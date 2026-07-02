@@ -20,6 +20,7 @@
 import type { ResolvedWorkspaceContext } from "../../roots.js";
 import type { CommentPrefixConfig } from "../commentPrefix.js";
 import { ROW_HASH_ID, SPAN_CANON_ID, BINDING_SET_HASH_ID } from "../constants.js";
+import { UCP_VERSION } from "../../version.js";
 import { computeRowHash } from "../rowHash.js";
 import {
   computeApprovalPolicyHash,
@@ -534,7 +535,7 @@ function buildProofEvent(args: BuildProofArgs): Omit<ProofEvent, "signature"> {
     producer: {
       kind: TRUSTED_CI_PRODUCER_KIND,
       id: args.producer?.id ?? "ci/use-cases-prover",
-      version: args.producer?.version ?? "0.1.0",
+      version: args.producer?.version ?? UCP_VERSION,
       ci_run_id: args.producer?.ci_run_id ?? "local",
       repo: args.producer?.repo ?? "unknown/unknown",
       commit: args.producer?.commit ?? "0".repeat(40)

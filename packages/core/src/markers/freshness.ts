@@ -19,6 +19,7 @@ import { computeBindingSetHash } from "./bindingSetHash.js";
 import { reconcileRegistryWithScan, type RowReconciliation } from "./reconcile.js";
 import { splitSlug } from "./markerLine.js";
 import { SPAN_CANON_ID, STATUS_SCHEMA_ID } from "./constants.js";
+import { PRODUCT_NAME, UCP_VERSION } from "../version.js";
 import { PROOF_PASS_RESULT, type ProofEvent } from "./evidenceLedger.js";
 import type { CiAuthority } from "./ciAuthority.js";
 import type { MaterializedRegistry } from "./registry.js";
@@ -178,7 +179,7 @@ export interface FreshnessStatus {
   rows: FreshnessRowOut[];
 }
 
-const DEFAULT_TOOL = { name: "use-cases-plugin", version: "0.1.0" };
+const DEFAULT_TOOL = { name: PRODUCT_NAME, version: UCP_VERSION };
 
 function rowIdOfSlug(slug: string | undefined): string | undefined {
   if (slug === undefined) {
