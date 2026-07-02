@@ -1,4 +1,28 @@
-import type { Diagnostic } from "./index.js";
+// Diagnostic types + the canonical factory. This is the leaf of the schema
+// module: nothing here imports a sibling, so everything else can depend on it.
+
+export type Diagnostic = {
+  code: string;
+  severity: "info" | "warning" | "error";
+  message: string;
+  source_path: string | null;
+  json_pointer: string | null;
+  source_span?: {
+    start: { line: number; column: number };
+    end: { line: number; column: number };
+  };
+  entity_id: string | null;
+  related_ids: string[];
+};
+
+export type ValidationResult = {
+  ok: boolean;
+  diagnostics: Diagnostic[];
+};
+
+export function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
 
 // Canonical factory for {@link Diagnostic} objects.
 //
@@ -9,7 +33,7 @@ import type { Diagnostic } from "./index.js";
 //
 // The two outliers are adapted at their call sites via object spread:
 //   - hosts/conformanceStatus needs a non-error severity ("warning")
-//   - schema/index needs a json_pointer
+//   - schema/validate + registry need a json_pointer / extra fields
 // Both override the relevant field on top of the object this returns.
 export function diagnostic(
   code: string,
