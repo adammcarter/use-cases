@@ -21,9 +21,9 @@ import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { parseYamlToJson, validateBySchemaId } from "../../../packages/core/src/schema/index.js";
 
 const repoRoot = resolve(import.meta.dirname, "../../..");
-const ENVELOPE_SCHEMA_ID = "https://use-case-matrix.dev/schemas/v1/cli-result.schema.json";
-const WORKSPACE_CONFIG_SCHEMA_ID = "https://use-case-matrix.dev/schemas/v1/workspace-config.schema.json";
-const USE_CASE_FILE_SCHEMA_ID = "https://use-case-matrix.dev/schemas/v1/use-case-file.schema.json";
+const ENVELOPE_SCHEMA_ID = "https://use-cases.dev/schemas/v1/cli-result.schema.json";
+const WORKSPACE_CONFIG_SCHEMA_ID = "https://use-cases.dev/schemas/v1/workspace-config.schema.json";
+const USE_CASE_FILE_SCHEMA_ID = "https://use-cases.dev/schemas/v1/use-case-file.schema.json";
 
 const tempDirs: string[] = [];
 

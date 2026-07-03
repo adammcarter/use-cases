@@ -8,7 +8,7 @@ This package ships the schemas, types, and engine used by the `cli` and `mcp`
 workspaces. All three are **internal** and ship bundled inside the
 [`use-case-matrix`](https://www.npmjs.com/package/use-case-matrix) package rather
 than published separately. The bundled JSON Schemas (under `dist/schemas/v1/`)
-use the stable `https://use-case-matrix.dev/schemas/v1/...` `$id` namespace.
+use the stable `https://use-cases.dev/schemas/v1/...` `$id` namespace.
 
 ## Install
 

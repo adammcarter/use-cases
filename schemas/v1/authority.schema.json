@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://use-case-matrix.dev/schemas/v1/authority.schema.json",
+  "$id": "https://use-cases.dev/schemas/v1/authority.schema.json",
   "title": "ucase-authority-v1",
   "description": "CI-neutral provenance authority for a proof event. The trust model is CI-NEUTRAL: GitHub Actions is only the reference provider. This record captures WHO/WHERE produced a proof in a provider-agnostic shape (type + provider + best-effort repository/ref/commit/run_id/actor/event), auto-detected from CI env vars (see markers/ciAuthority.ts detectCiAuthority) or supplied explicitly via `prove --authority-file`. It is OPTIONAL on a proof event and ADDITIVE: it does not affect freshness (FRESH matches row/binding/context hashes, not provenance). When present it is built INTO the event before signing, so the signature covers it. `protected_ref` is a tri-state: true/false when the provider exposes an explicit protected-branch signal, and null when unknown.",
   "type": "object",

@@ -62,7 +62,7 @@ describe("P2 matrix CLI", () => {
     });
     expect(
       validateBySchemaId(
-        "https://use-case-matrix.dev/schemas/v1/matrix-validation-result.schema.json",
+        "https://use-cases.dev/schemas/v1/matrix-validation-result.schema.json",
         payload.data
       )
     ).toMatchObject({ ok: true, diagnostics: [] });
@@ -151,7 +151,7 @@ describe("P2 matrix CLI", () => {
     });
     expect(
       validateBySchemaId(
-        "https://use-case-matrix.dev/schemas/v1/matrix-list-result.schema.json",
+        "https://use-cases.dev/schemas/v1/matrix-list-result.schema.json",
         payload.data
       )
     ).toMatchObject({ ok: true, diagnostics: [] });

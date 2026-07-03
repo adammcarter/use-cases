@@ -97,7 +97,7 @@ describe("P13 installable root package artifact", () => {
       ok: true,
       data: {
         schemas: expect.arrayContaining([
-          expect.objectContaining({ id: "https://use-case-matrix.dev/schemas/v1/use-case-file.schema.json" })
+          expect.objectContaining({ id: "https://use-cases.dev/schemas/v1/use-case-file.schema.json" })
         ])
       }
     });

@@ -34,8 +34,8 @@ import { validateBySchemaId } from "../../../packages/core/src/schema/index.js";
 const repoRoot = resolve(import.meta.dirname, "../../..");
 const fixturesRoot = join(repoRoot, "tests/fixtures/workspaces");
 
-const ENVELOPE_SCHEMA_ID = "https://use-case-matrix.dev/schemas/v1/cli-result.schema.json";
-const schemaId = (name: string) => `https://use-case-matrix.dev/schemas/v1/${name}.schema.json`;
+const ENVELOPE_SCHEMA_ID = "https://use-cases.dev/schemas/v1/cli-result.schema.json";
+const schemaId = (name: string) => `https://use-cases.dev/schemas/v1/${name}.schema.json`;
 
 const tempDirs: string[] = [];
 

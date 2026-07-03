@@ -169,7 +169,7 @@ function readWorkspaceConfig(
     throw new UseCasesPluginError("Unable to parse use-cases.yml.", "workspace_config.parse_error");
   }
   const validation = validateBySchemaId(
-    "https://use-case-matrix.dev/schemas/v1/workspace-config.schema.json",
+    "https://use-cases.dev/schemas/v1/workspace-config.schema.json",
     parsed.value,
     "use-cases.yml"
   );

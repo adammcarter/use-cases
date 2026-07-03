@@ -107,7 +107,7 @@ describe("P6 showcase CLI contract", () => {
     });
     expect(
       validateBySchemaId(
-        "https://use-case-matrix.dev/schemas/v1/showcase-start-result.schema.json",
+        "https://use-cases.dev/schemas/v1/showcase-start-result.schema.json",
         startPayload.data
       )
     ).toMatchObject({ ok: true, diagnostics: [] });
@@ -130,7 +130,7 @@ describe("P6 showcase CLI contract", () => {
     const observationPayload = JSON.parse(observation.stdout);
     expect(
       validateBySchemaId(
-        "https://use-case-matrix.dev/schemas/v1/showcase-event-append-result.schema.json",
+        "https://use-cases.dev/schemas/v1/showcase-event-append-result.schema.json",
         observationPayload.data
       )
     ).toMatchObject({ ok: true, diagnostics: [] });

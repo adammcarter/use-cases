@@ -57,7 +57,7 @@ irrelevant under the single `--public-key` path, which ignores it).
 
 A keyring is a JSON file conforming to
 [`schemas/v1/keyring.schema.json`](../../schemas/v1/keyring.schema.json)
-(`$id: https://use-case-matrix.dev/schemas/v1/keyring.schema.json`). It is a
+(`$id: https://use-cases.dev/schemas/v1/keyring.schema.json`). It is a
 list of keys; each carries a stable id, the PEM public key, a validity window,
 and a status:
 

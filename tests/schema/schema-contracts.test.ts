@@ -16,35 +16,35 @@ const repoRoot = resolve(import.meta.dirname, "../..");
 const fixturesRoot = join(repoRoot, "tests/fixtures/workspaces");
 
 const expectedSchemaIds = [
-  "https://use-case-matrix.dev/schemas/v1/common.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/cli-result.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/use-case-file.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/evidence-event.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/demo-capsule.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/presentation-plan.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/presentation-plan-result.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/showcase-event.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/showcase-run-status-result.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/showcase-start-result.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/showcase-event-append-result.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/showcase-finish-result.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/showcase-approval-result.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/host-profile.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/host-status-result.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/workspace-config.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/workflow-mode.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/matrix-validation-result.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/matrix-list-result.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/matrix-mutation-result.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/evidence-append-result.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/evidence-status-result.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/migration-test-matrix-result.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/marker.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/release-gate-result.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/ledger.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/keyring.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/authority.schema.json",
-  "https://use-case-matrix.dev/schemas/v1/mcp-tool-results.schema.json"
+  "https://use-cases.dev/schemas/v1/common.schema.json",
+  "https://use-cases.dev/schemas/v1/cli-result.schema.json",
+  "https://use-cases.dev/schemas/v1/use-case-file.schema.json",
+  "https://use-cases.dev/schemas/v1/evidence-event.schema.json",
+  "https://use-cases.dev/schemas/v1/demo-capsule.schema.json",
+  "https://use-cases.dev/schemas/v1/presentation-plan.schema.json",
+  "https://use-cases.dev/schemas/v1/presentation-plan-result.schema.json",
+  "https://use-cases.dev/schemas/v1/showcase-event.schema.json",
+  "https://use-cases.dev/schemas/v1/showcase-run-status-result.schema.json",
+  "https://use-cases.dev/schemas/v1/showcase-start-result.schema.json",
+  "https://use-cases.dev/schemas/v1/showcase-event-append-result.schema.json",
+  "https://use-cases.dev/schemas/v1/showcase-finish-result.schema.json",
+  "https://use-cases.dev/schemas/v1/showcase-approval-result.schema.json",
+  "https://use-cases.dev/schemas/v1/host-profile.schema.json",
+  "https://use-cases.dev/schemas/v1/host-status-result.schema.json",
+  "https://use-cases.dev/schemas/v1/workspace-config.schema.json",
+  "https://use-cases.dev/schemas/v1/workflow-mode.schema.json",
+  "https://use-cases.dev/schemas/v1/matrix-validation-result.schema.json",
+  "https://use-cases.dev/schemas/v1/matrix-list-result.schema.json",
+  "https://use-cases.dev/schemas/v1/matrix-mutation-result.schema.json",
+  "https://use-cases.dev/schemas/v1/evidence-append-result.schema.json",
+  "https://use-cases.dev/schemas/v1/evidence-status-result.schema.json",
+  "https://use-cases.dev/schemas/v1/migration-test-matrix-result.schema.json",
+  "https://use-cases.dev/schemas/v1/marker.schema.json",
+  "https://use-cases.dev/schemas/v1/release-gate-result.schema.json",
+  "https://use-cases.dev/schemas/v1/ledger.schema.json",
+  "https://use-cases.dev/schemas/v1/keyring.schema.json",
+  "https://use-cases.dev/schemas/v1/authority.schema.json",
+  "https://use-cases.dev/schemas/v1/mcp-tool-results.schema.json"
 ];
 
 describe("P1 schema registry", () => {
@@ -59,7 +59,7 @@ describe("P1 schema registry", () => {
 
   test("rejects missing schema_version and unknown properties outside extensions", () => {
     const result = validateBySchemaId(
-      "https://use-case-matrix.dev/schemas/v1/workflow-mode.schema.json",
+      "https://use-cases.dev/schemas/v1/workflow-mode.schema.json",
       {
         mode: "continuous",
         unexpected: true
@@ -214,7 +214,7 @@ describe("P2 CLI envelope ok reflects error diagnostics", () => {
 describe("P2 enum diagnostics list allowed values", () => {
   test("an invalid value_tier message names the allowed enum values", () => {
     const result = validateBySchemaId(
-      "https://use-case-matrix.dev/schemas/v1/use-case-file.schema.json",
+      "https://use-cases.dev/schemas/v1/use-case-file.schema.json",
       {
         schema_version: 1,
         use_cases: [

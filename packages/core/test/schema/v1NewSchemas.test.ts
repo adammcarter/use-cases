@@ -54,7 +54,7 @@ const NEW_SCHEMAS = [
   "mcp-tool-results.schema.json"
 ] as const;
 
-const ID_BASE = "https://use-case-matrix.dev/schemas/v1/";
+const ID_BASE = "https://use-cases.dev/schemas/v1/";
 
 describe("v1 new schemas (5 gaps closed)", () => {
   const registry = buildRegistry();
