@@ -223,6 +223,8 @@ export const markersScanCommand: CliCommand = {
     ...workspaceFlags,
     ...markerPathFlags,
     { key: "policyMode", name: "--policy-mode", kind: "string", valueName: "<mode>", summary: "feature | release | custom." },
+    { key: "gate", name: "--gate", kind: "boolean", summary: "Exit 1 when a required row is below the bar (release => FRESH, else >= VERIFIED_LOCAL). Off by default." },
+    { key: "results", name: "--results", kind: "string", valueName: "<path>", summary: "Override the unsigned verify-results ledger feeding the keyless tier (default <data-root>/.use-cases/verification-results.jsonl)." },
     ...trustedKeyFlags,
     { key: "generatedAt", name: "--generated-at", kind: "string", valueName: "<iso>", summary: "Override the generated-at timestamp." },
     { key: "baseRef", name: "--base-ref", kind: "string", valueName: "<ref>", summary: "Diff base for the append-only check." },
@@ -239,6 +241,7 @@ export const markersScanCommand: CliCommand = {
     const policyMode = ["feature", "release", "custom"].includes(policyModeRaw)
       ? (policyModeRaw as "feature" | "release" | "custom")
       : "feature";
+    const resultsRaw = flags.results as string | undefined;
     const result = runScanCommand({
       context: ctx,
       productRoot: paths.productRoot,
@@ -248,7 +251,9 @@ export const markersScanCommand: CliCommand = {
       publicKeyResolver: markerPublicKeyResolver(flags),
       generatedAt: (flags.generatedAt as string | undefined) ?? new Date().toISOString(),
       baseRef: flags.baseRef as string | undefined,
-      repoCwd: ctx.workspace_root
+      repoCwd: ctx.workspace_root,
+      resultsPath: resultsRaw ? resolve(process.cwd(), resultsRaw) : undefined,
+      gate: flags.gate as boolean
     });
     // CI mode prints the inferred spans to stderr (a human/log side-channel, NOT
     // the result envelope) before the dispatcher renders stdout. The dispatcher
@@ -439,7 +444,13 @@ export const markersVerifyCommand: CliCommand = {
       };
     }
     const paths = markerPaths(flags, ctx);
+    // Default the unsigned results ledger to the SAME path `scan` auto-discovers
+    // (<data-root>/.use-cases/verification-results.jsonl), so `verify` then `scan`
+    // closes the keyless daily loop with ZERO flags. An explicit --out still wins.
     const outRaw = flags.out as string | undefined;
+    const outPath = outRaw
+      ? resolve(process.cwd(), outRaw)
+      : join(ctx.data_root, ".use-cases", "verification-results.jsonl");
     const result = runVerifyCommand({
       context: ctx,
       productRoot: paths.productRoot,
@@ -448,7 +459,7 @@ export const markersVerifyCommand: CliCommand = {
       publicKeyResolver: markerPublicKeyResolver(flags),
       all,
       rowId,
-      outPath: outRaw ? resolve(process.cwd(), outRaw) : undefined,
+      outPath,
       generatedAt: (flags.generatedAt as string | undefined) ?? new Date().toISOString(),
       baseRef: flags.baseRef as string | undefined,
       repoCwd: ctx.workspace_root
