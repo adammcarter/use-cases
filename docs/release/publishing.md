@@ -1,8 +1,12 @@
 # Publishing to npm (Trusted Publishing + provenance)
 
-How `@use-case-matrix/core`, `@use-case-matrix/cli`, and `@use-case-matrix/mcp`
-are released to npm. All three packages are **published together at the same
-version** (see the [stability policy](../reference/stability.md)).
+How the **`use-case-matrix`** package is released to npm. This is a single,
+self-contained package: the `ucm` and `ucm-mcp` binaries plus the plugin bundle
+(skills, hooks, bootstrap, docs, schemas) ship together in one tarball. The
+`packages/core`, `packages/cli`, and `packages/mcp` workspaces are **private**
+and are bundled inside this package — they are **not** published separately. The
+CLI resolves the bundled core through a relative fallback (`coreLoader.ts`), so
+the published package runs standalone with no scoped dependencies.
 
 Releases are **tokenless**: the
 [`release` workflow](../../.github/workflows/release.yml) uses
@@ -16,47 +20,70 @@ be reused.
 
 ## Owner one-time setup (human only — an agent cannot do this)
 
-These steps require a logged-in npm account with publish rights to the
-`@use-case-matrix` scope and must be done **once** on npmjs.com / GitHub before
-the first publish. CI cannot bootstrap them.
+These steps require a logged-in npm account and must be done **once** on
+npmjs.com / GitHub before the first publish. CI cannot bootstrap them.
 
-1. **Create the npm scope/org.** Create the `@use-case-matrix` scope (an npm org
-   or a user scope) on npmjs.com. Confirm the account that owns it has publish
-   rights.
+1. **Make sure the name `use-case-matrix` is free — and not an npm _org_.** On
+   npm, org names and unscoped package names share one namespace: if an
+   organization named `use-case-matrix` exists, you **cannot** publish a package
+   of the same name. If you created such an org, delete it first (npmjs.com →
+   your org → **Settings → Delete organization**; an org with no published
+   packages can be deleted directly). Then `use-case-matrix` is available to
+   publish as a package.
 
-2. **Create each package as public, or let the first publish create it.**
-   Trusted Publishing can create a brand-new package on first publish, but the
-   trusted-publisher link (next step) is configured **per package**, so each of
-   the three package names must exist (or be created in the same flow). The
-   packages are scoped, so they must be published with **public** access — this
-   repo already sets `"publishConfig": { "access": "public", "provenance": true }`
-   in every package manifest.
+2. **Do the first publish manually (token-based).** npm Trusted Publishing
+   **cannot create a brand-new package** — a trusted publisher can only be added
+   to a package that already exists on the registry. So the very first publish
+   must go out with an ordinary credential (a local `npm login`, or a short-lived
+   automation token). From the repo root:
 
-3. **Configure the Trusted Publisher on each package.** On npmjs.com, open each
-   package → **Settings → Trusted Publishing → Add a trusted publisher** and set:
+   ```bash
+   npm login                 # your npm account
+   corepack pnpm -s build    # builds the workspace; the root packs the dist
+   npm publish --access public
+   ```
+
+   Only `use-case-matrix` publishes — the three workspace packages are private
+   and are skipped. This local publish carries **no provenance** (provenance
+   needs the OIDC/CI context), so it arrives on the next release from CI. If you
+   want provenance on the headline `1.0.0`, publish a throwaway prerelease here
+   (`1.0.0-rc.0`, see the RC flow below) and cut the real `1.0.0` from CI once
+   step 3 is in place. Delete any temporary token afterward.
+
+3. **Configure the Trusted Publisher on the package** (now that it exists). On
+   npmjs.com, open the `use-case-matrix` package → **Settings → Trusted
+   Publishing → Add a trusted publisher** and set:
    - **Publisher:** GitHub Actions
    - **Organization / user:** `adammcarter`
    - **Repository:** `use-case-matrix`
    - **Workflow filename:** `release.yml`
    - **Environment:** leave blank (the workflow does not use a GitHub
      environment).
+   - **Allowed actions:** tick **npm publish** — trusted publishers created after
+     2026-05-20 must select at least one allowed action (older ones defaulted to
+     publish-only).
 
-   Do this for **all three** packages: `@use-case-matrix/core`,
-   `@use-case-matrix/cli`, `@use-case-matrix/mcp`.
+   Fields are **case-sensitive** and are **not** validated on save — a typo
+   surfaces only as a failed publish.
 
 4. **Provenance / 2FA.** Provenance is generated automatically by Trusted
    Publishing — no extra npm setting is needed beyond the trusted-publisher link.
-   If the account/org enforces 2FA "for write" actions, confirm the org's
-   publishing-access setting permits **automation/OIDC** publishes (Trusted
-   Publishing satisfies the 2FA requirement without an automation token).
+   If the account enforces 2FA "for write" actions, confirm the publishing-access
+   setting permits **automation/OIDC** publishes (Trusted Publishing satisfies
+   the 2FA requirement without an automation token).
 
 5. **Version floors required by Trusted Publishing.** The publishing runner needs
    **npm `>= 11.5.1`** and **Node `>= 22.14.0`**. The release workflow pins Node
-   22 (whose bundled npm meets the floor). Self-hosted runners are **not**
-   supported by npm Trusted Publishing — keep the job on GitHub-hosted runners.
+   24 and upgrades npm to latest, which clears both floors. The publish step uses
+   the **npm CLI**, not `pnpm publish` — pnpm 11 has an open OIDC regression
+   ([pnpm/pnpm#11513](https://github.com/pnpm/pnpm/issues/11513)) that 404s on
+   trusted publish. Self-hosted runners are **not** supported by npm Trusted
+   Publishing — keep the job on GitHub-hosted runners.
 
-> After this is configured, no human action is needed per release beyond pushing
-> the tag (below). There is no token to rotate.
+> After the first manual publish and the trusted-publisher link are in place, no
+> human action is needed per release beyond pushing the tag (below). There is no
+> long-lived token to rotate — revoke the temporary first-publish token once the
+> OIDC path is proven.
 
 ---
 
@@ -71,16 +98,19 @@ Everything below is normal repo work an agent or maintainer can do.
    node scripts/release-gate.mjs
    ```
 
-2. **Set the version on all three packages** (and the root) to the target
-   version. They must match. For example, for `1.0.0`:
+2. **Set the version** to the target. The `use-case-matrix` package version is
+   the source of truth, but the version-parity test also checks the workspace
+   package manifests, the plugin manifests, and `packages/core/src/version.ts` —
+   bump them together. The quickest way for the manifests:
 
    ```bash
    # from the repo root
    npm version 1.0.0 --no-git-tag-version --workspaces --include-workspace-root
    ```
 
-   (Or edit each `packages/ucm-*/package.json` + root `package.json` by hand.)
-   Do **not** change package names.
+   Then update `packages/core/src/version.ts` (`UCM_VERSION`) and the
+   `plugin.json` / `.claude-plugin/plugin.json` / `.codex-plugin/plugin.json`
+   versions to match. Do **not** change package names.
 
 3. **Update the changelog.** Add the release section to `CHANGELOG.md`.
 
@@ -98,18 +128,18 @@ Everything below is normal repo work an agent or maintainer can do.
    git push origin main --tags
    ```
 
-6. **The workflow does the rest:** install → build → test → `pnpm -r publish`
-   with `--provenance`. Watch the `release` workflow run. On success, all three
-   packages are live with provenance.
+6. **The workflow does the rest:** install → build → test → `npm publish` with
+   `--provenance`. Watch the `release` workflow run. On success, `use-case-matrix`
+   is live with provenance.
 
 7. **Post-publish smoke** (optional but recommended):
 
    ```bash
-   npx @use-case-matrix/cli --version --json
-   npx -y @use-case-matrix/mcp   # should start the stdio server
+   npx use-case-matrix --version --json           # runs the ucm CLI
+   npx -p use-case-matrix use-case-matrix-mcp      # should start the stdio server
    ```
 
-   Confirm the provenance badge appears on each package page on npmjs.com.
+   Confirm the provenance badge appears on the package page on npmjs.com.
 
 ---
 
@@ -119,13 +149,13 @@ Publish a release candidate first, dogfood it from npm, then promote to stable.
 npm dist-tags keep `latest` pointing at the stable line while RCs install only
 when asked for explicitly.
 
-1. **RC:** set the version to a prerelease and tag it. pnpm publishes prerelease
-   versions under the `next` dist-tag automatically (a `1.0.0-rc.1` version is
-   not tagged `latest`), so `npm install @use-case-matrix/cli` keeps resolving
-   the last stable release:
+1. **RC:** set the version to a prerelease and tag it. A prerelease version
+   (`1.0.0-rc.1`) is not tagged `latest`, so `npm install use-case-matrix` keeps
+   resolving the last stable release:
 
    ```bash
    npm version 1.0.0-rc.1 --no-git-tag-version --workspaces --include-workspace-root
+   # bump version.ts + plugin manifests to match, then:
    git commit -am "release: v1.0.0-rc.1"
    git tag v1.0.0-rc.1
    git push origin main --tags
@@ -134,7 +164,7 @@ when asked for explicitly.
    Install and exercise the RC explicitly:
 
    ```bash
-   npm install @use-case-matrix/cli@next       # or @1.0.0-rc.1
+   npm install -g use-case-matrix@next       # or @1.0.0-rc.1
    ```
 
 2. **More RCs if needed:** `1.0.0-rc.2`, … repeat.
@@ -144,6 +174,7 @@ when asked for explicitly.
 
    ```bash
    npm version 1.0.0 --no-git-tag-version --workspaces --include-workspace-root
+   # bump version.ts + plugin manifests to match, then:
    git commit -am "release: v1.0.0"
    git tag v1.0.0
    git push origin main --tags
@@ -160,5 +191,5 @@ row-level use-case freshness. Keep the two mental models separate.
 
 The tarball contents themselves are guarded by
 [`tests/release/pack-contents.test.ts`](../../tests/release/pack-contents.test.ts),
-which runs in the release workflow's `test` step and fails the publish if any
+which runs in the release workflow's `test` step and fails the publish if the
 package would ship source, tests, build config, local state, or secrets.

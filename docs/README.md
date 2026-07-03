@@ -6,8 +6,8 @@ row **FRESH** only when trusted CI has signed proof that the current code,
 binding, and verifier context still match. Stale claims become visible instead of
 silently trusted.
 
-Ships as `@use-case-matrix/cli` (binary `ucm`) plus an MCP server
-`@use-case-matrix/mcp` (binary `ucm-mcp`).
+Ships as a single package, `use-case-matrix`, providing the `ucm` CLI and the
+`ucm-mcp` MCP server.
 
 ## Start here
 

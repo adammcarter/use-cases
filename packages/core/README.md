@@ -1,19 +1,21 @@
 # @use-case-matrix/core
 
-Core domain library for **Use Cases Plugin** — a repo-local, agent-facing
+Core domain library for **use-case-matrix** — a repo-local, agent-facing
 assurance system for keeping product claims, code spans, demonstrations,
 evidence, and release decisions aligned.
 
-This package ships the schemas, types, and engine used by the
-[`@use-case-matrix/cli`](https://www.npmjs.com/package/@use-case-matrix/cli) and
-[`@use-case-matrix/mcp`](https://www.npmjs.com/package/@use-case-matrix/mcp)
-packages. The bundled JSON Schemas (under `dist/schemas/v1/`) are published with
-the stable `https://use-case-matrix.dev/schemas/v1/...` `$id` namespace.
+This package ships the schemas, types, and engine used by the `cli` and `mcp`
+workspaces. All three are **internal** and ship bundled inside the
+[`use-case-matrix`](https://www.npmjs.com/package/use-case-matrix) package rather
+than published separately. The bundled JSON Schemas (under `dist/schemas/v1/`)
+use the stable `https://use-case-matrix.dev/schemas/v1/...` `$id` namespace.
 
 ## Install
 
+Internal — not published separately. Install the umbrella package:
+
 ```bash
-npm install @use-case-matrix/core
+npm i -g use-case-matrix
 ```
 
 ## Usage

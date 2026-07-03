@@ -94,7 +94,7 @@ are the exact commands the release test runs.
 ### 0. Install the CLI and generate a scratch signing key
 
 ```bash
-npm install @use-case-matrix/cli          # provides the `ucm` binary
+npm i -g use-case-matrix                  # provides the `ucm` binary
 # A throwaway ed25519 keypair. In production the PRIVATE key lives ONLY in CI.
 node -e 'const c=require("crypto"),f=require("fs");const k=c.generateKeyPairSync("ed25519");
 f.writeFileSync("public-key.pem",k.publicKey.export({type:"spki",format:"pem"}));
