@@ -1,6 +1,6 @@
-# Contributing to Use Cases Plugin
+# Contributing to Use Case Matrix
 
-Thanks for helping improve Use Cases Plugin. This guide covers local setup,
+Thanks for helping improve Use Case Matrix. This guide covers local setup,
 the repo layout, the trust model you should keep in mind, and what we expect on
 a pull request.
 
@@ -10,7 +10,7 @@ never a public issue.
 
 ## Development setup
 
-Use Cases Plugin is a pnpm-managed TypeScript monorepo. You need Node (active LTS) and
+Use Case Matrix is a pnpm-managed TypeScript monorepo. You need Node (active LTS) and
 Corepack (bundled with Node) to pin pnpm.
 
 ```bash
@@ -61,7 +61,7 @@ MCP.
   [`docs/reference/stability.md`](docs/reference/stability.md). If your change is
   additive it's a **minor**; if it removes/renames/repurposes a contract or
   changes an output shape it's a **major** — call that out in the PR.
-- **Keep it generic.** Use Cases Plugin is language/CI-neutral. Don't bake in a hidden
+- **Keep it generic.** Use Case Matrix is language/CI-neutral. Don't bake in a hidden
   dependency on pnpm/vitest or GitHub Actions; `pnpm`/`vitest` is one verifier
   preset, not an assumption.
 

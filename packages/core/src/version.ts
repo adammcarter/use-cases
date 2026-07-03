@@ -1,5 +1,5 @@
 // The public PRODUCT identity (shown by `--version`, MCP serverInfo, npm package).
-// Renamed to Use Cases Plugin for public v1.
+// Renamed to Use Case Matrix for public v1.
 export const PRODUCT_NAME = "use-case-matrix";
 export const UCM_VERSION = "1.0.1";
 
