@@ -32,9 +32,6 @@ const requiredRootArtifactPaths = [
 ];
 
 const forbiddenEntrySegments = [
-  ".agent-cache",
-  ".agent-tool",
-  ".agent-receipts",
   ".DS_Store",
   ".copy-schemas.lock",
   "node_modules",

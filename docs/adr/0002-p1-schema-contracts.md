@@ -5,7 +5,7 @@ Status: Accepted for P1
 
 ## Context
 
-an external reasoning model reviewed the P1 schema plan before implementation and found that the
+An external reasoning model reviewed the P1 schema plan before implementation and found that the
 original phase was directionally right but underspecified. In particular, P2
 would otherwise have to invent the CLI envelope, YAML parse profile, approval
 authority, event ordering rules, workspace identity, host verification result

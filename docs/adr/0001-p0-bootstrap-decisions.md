@@ -5,7 +5,7 @@ Status: Accepted for P0
 
 ## Context
 
-an external reasoning model reviewed the P0/P1 kickoff and flagged one blocker before scaffolding:
+An external reasoning model reviewed the P0/P1 kickoff and flagged one blocker before scaffolding:
 the installed-plugin launch model must be explicit before package manifests,
 CLI entrypoints, and MCP startup tests are written.
 

@@ -11,7 +11,7 @@ test-matrix habit. This phase must load intended behavior from sharded YAML,
 preserve source provenance, and tolerate damaged files without claiming full
 sign-off.
 
-an external reasoning model reviewed the P2 plan before implementation and identified contract gaps
+An external reasoning model reviewed the P2 plan before implementation and identified contract gaps
 that would cause P3 evidence-ledger rework if left implicit.
 
 ## Decision

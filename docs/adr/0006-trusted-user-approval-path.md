@@ -120,6 +120,6 @@ Never claim "a terminal prompt proves a human approved."
 
 ## Provenance
 
-Design reviewed with an external reasoning model (an external reasoning model / GPT-Pro). This ADR is
+Design reviewed with an external reasoning model. This ADR is
 the spec for `roadmap.deferred.trusted_host_confirmation_path`; the row stays
 `lifecycle: planned` until the verifier + an issuer ship.

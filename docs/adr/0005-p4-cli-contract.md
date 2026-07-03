@@ -10,7 +10,7 @@ P4 makes the CLI the normative public contract that later MCP tools will reuse.
 P2 and P3 already expose schema-backed JSON envelopes, so P4 must refine the
 existing contract without introducing a second envelope shape.
 
-an external reasoning model reviewed P4 before implementation and found that the plan conflated
+An external reasoning model reviewed P4 before implementation and found that the plan conflated
 command execution success, domain validity, input completeness, and process
 exit status.
 

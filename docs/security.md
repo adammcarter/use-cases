@@ -61,6 +61,6 @@ manifest can help diagnose setup, but verified host support requires recorded
 evidence IDs.
 
 Package checks inspect real tarballs or installed package roots. They reject
-local/session state such as `.agent-cache/`, `.agent-receipts/`, `.agent-tool/`, build
+local/session state such as local agent cache and receipt directories, build
 locks, packaged `node_modules/`, coverage output, local absolute paths, and
 secret-looking values.

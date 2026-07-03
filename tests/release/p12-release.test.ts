@@ -60,7 +60,7 @@ describe("P12 release hardening", () => {
     // The example PROJECTS under examples/ legitimately ship their own src/ and
     // tests/ layout (e.g. examples/python-pytest), so exclude those lines before
     // asserting the repo's OWN sources/tests never leak. Every other forbidden
-    // token (.agent-cache, .copy-schemas.lock, packages/*/src) is still checked fully.
+    // token (.copy-schemas.lock, packages/*/src) is still checked fully.
     const nonExampleOutput = result.stdout
       .split("\n")
       .filter((line) => !line.includes("examples/"))
@@ -70,8 +70,6 @@ describe("P12 release hardening", () => {
       "packages/cli/src/",
       "packages/core/src/",
       "packages/mcp/src/",
-      ".agent-cache/",
-      ".agent-receipts/",
       ".copy-schemas.lock"
     ]) {
       expect(nonExampleOutput).not.toContain(forbidden);

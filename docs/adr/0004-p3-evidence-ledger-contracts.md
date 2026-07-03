@@ -10,7 +10,7 @@ P3 records observed proof as append-only JSONL and derives current evidence
 state mechanically. Evidence must not become approval, verification-policy
 satisfaction, or final sign-off.
 
-an external reasoning model reviewed P3 before implementation and identified fail-open risks in loose
+An external reasoning model reviewed P3 before implementation and identified fail-open risks in loose
 replay ordering, damaged-line handling, and idempotency scope.
 
 ## Decision

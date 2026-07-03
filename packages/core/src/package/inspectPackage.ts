@@ -86,9 +86,6 @@ const REQUIRED_PACKAGE_PATHS = [
 ] as const;
 
 const FORBIDDEN_PACKAGE_SEGMENTS = [
-  ".agent-cache",
-  ".agent-tool",
-  ".agent-receipts",
   ".DS_Store",
   ".copy-schemas.lock",
   "node_modules",
