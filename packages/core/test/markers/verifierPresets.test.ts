@@ -21,17 +21,28 @@ describe("verifier presets", () => {
     );
   });
 
-  test("js.vitest carries the former hardcoded pnpm/vitest convention with {slug} substituted", () => {
+  test("js.vitest runs the locally-installed vitest without a global pnpm, {slug} substituted", () => {
     const res = expandPreset("js.vitest", SLUG);
     expect(res).toEqual({
       status: "resolved",
       preset: "js.vitest",
       expansion: {
         kind: "script",
-        command: ["pnpm", "-s", "vitest", "run", `tests/use-cases/${SLUG}.test.ts`],
+        command: ["npx", "--no-install", "vitest", "run", `tests/use-cases/${SLUG}.test.ts`],
         inputs: [`tests/use-cases/${SLUG}.test.ts`]
       }
     });
+  });
+
+  test("js.vitest command shape does not hard-depend on a global pnpm", () => {
+    const res = expandPreset("js.vitest", SLUG);
+    expect(res.status).toBe("resolved");
+    if (res.status === "resolved") {
+      // The launcher must resolve a locally-installed vitest so npm-only
+      // machines (no global pnpm) do not fail at spawn.
+      expect(res.expansion.command[0]).not.toBe("pnpm");
+      expect(res.expansion.command).not.toContain("pnpm");
+    }
   });
 
   test("js.npm-test expands to npm test with no inputs", () => {

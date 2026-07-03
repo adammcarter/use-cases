@@ -41,7 +41,12 @@ export type PresetExpansion =
 const PRESET_TEMPLATES: Record<VerifierPresetId, { command: string[]; inputs: string[] }> = {
   "command.generic": { command: [], inputs: [] },
   "js.vitest": {
-    command: ["pnpm", "-s", "vitest", "run", "tests/use-cases/{slug}.test.ts"],
+    // Resolve the locally-installed vitest via `npx --no-install` so an
+    // npm-only machine with no global pnpm still verifies. pnpm installs
+    // vitest into node_modules/.bin, which npx resolves too, so pnpm users
+    // are unaffected. `--no-install` forbids any network fetch — if vitest
+    // is not installed locally, the command fails fast rather than hanging.
+    command: ["npx", "--no-install", "vitest", "run", "tests/use-cases/{slug}.test.ts"],
     inputs: ["tests/use-cases/{slug}.test.ts"]
   },
   "js.npm-test": { command: ["npm", "test"], inputs: [] },

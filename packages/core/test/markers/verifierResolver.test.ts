@@ -52,7 +52,8 @@ describe("resolveRowVerifiers", () => {
         acceptance: { preset: "js.vitest" }
       })
     });
-    // js.vitest IS the former hardcoded default convention — now config-driven.
+    // js.vitest IS the former hardcoded default convention — now config-driven
+    // and portable (resolves a locally-installed vitest, no global pnpm needed).
     expect(res).toEqual([
       {
         verifier_id: "acceptance",
@@ -60,7 +61,7 @@ describe("resolveRowVerifiers", () => {
         source: "policy",
         kind: "script",
         evidence_kind: "test_result",
-        command: ["pnpm", "-s", "vitest", "run", `tests/use-cases/${SLUG}.test.ts`],
+        command: ["npx", "--no-install", "vitest", "run", `tests/use-cases/${SLUG}.test.ts`],
         inputs: [`tests/use-cases/${SLUG}.test.ts`]
       }
     ]);
