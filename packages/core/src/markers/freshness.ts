@@ -28,6 +28,29 @@ import type { CurrentBindingRecord, MarkerError, ScanResult } from "./scanner.js
 export type RowStatus = "FRESH" | "SUSPECT" | "UNPROVEN" | "UNBOUND" | "INVALID";
 export type PolicyMode = "feature" | "release" | "custom";
 
+// Keyless, unsigned local-verification tier (0.1.0). Reported IN PARALLEL with
+// the signed `status`, never in place of it. Derived from the UNSIGNED
+// verification-results ledger (what `verify --out` writes), so it needs no keys:
+//   VERIFIED_LOCAL   bound row with a passing unsigned result whose context +
+//                    binding set still match the current code/test — the keyless
+//                    analogue of FRESH.
+//   STALE_LOCAL      a result exists but its context/binding set no longer match,
+//                    or the recorded result was a failure — the analogue of SUSPECT.
+//   UNVERIFIED_LOCAL bound row with no local result yet.
+//   null             UNBOUND / INVALID (nothing to locally verify).
+export type LocalStatus = "VERIFIED_LOCAL" | "STALE_LOCAL" | "UNVERIFIED_LOCAL";
+
+// One row's UNSIGNED verification result, distilled from the results ledger
+// (`ucase-verification-result-v1`). `context_hash` mirrors the record's
+// `verification_context_hash` and `binding_set_hash` its `binding_set_hash`, so
+// `local_status` can apply the SAME context + hBind match FRESH uses — keylessly.
+export interface LocalVerificationResult {
+  row_id: string;
+  context_hash: string;
+  binding_set_hash: string;
+  passed: boolean;
+}
+
 // A loaded use-case row. `computeRowHash` hashes the whole object (Hrow), so any
 // semantic edit changes the row hash; the two policy sub-objects feed Hverify /
 // Happrove via the Phase 1 policy-hash helpers.
@@ -94,6 +117,11 @@ export interface DeriveFreshnessInput {
   // when the production spans are untouched. Omitted only by pure unit callers
   // that do not exercise the context binding; scan/prove always supply it.
   current_context_hashes?: ReadonlyMap<string, string>;
+  // OPTIONAL unsigned verification results (what `verify --out` writes), one per
+  // row. When supplied, `deriveFreshness` computes a parallel keyless
+  // `local_status` per row. Omitted => no `local_status` is emitted (existing
+  // callers are byte-identical). Never affects the signed `status`.
+  local_results?: ReadonlyArray<LocalVerificationResult>;
   // Injected so the core stays pure and deterministic (no Date.now).
   generated_at: string;
   product_root?: string;
@@ -156,6 +184,11 @@ export interface FreshnessRowOut {
   matching_proof_event: ProofRef | null;
   latest_trusted_proof_event: ProofRef | null;
   required_action: string | null;
+  // Keyless local-verification tier (0.1.0). Present only when the caller
+  // supplied `local_results`; null/absent for UNBOUND/INVALID rows. Additive:
+  // never changes the headline `status`.
+  local_status?: LocalStatus | null;
+  local_reason?: string | null;
 }
 
 export interface FreshnessSummary {
@@ -450,6 +483,54 @@ function evaluatePolicyBlock(
   return isInvalid;
 }
 
+// Keyless local tier for ONE bound row. `results` are the row's unsigned
+// verification results; `currentContextHash`/`hBind` are the row's freshly
+// recomputed values. A passing result whose context AND binding set both still
+// match => VERIFIED_LOCAL; a result that exists but no longer matches (or was a
+// failure) => STALE_LOCAL; no result => UNVERIFIED_LOCAL. Pure + side-effect free.
+function deriveLocalStatus(
+  results: LocalVerificationResult[],
+  currentContextHash: string | undefined,
+  hBind: string
+): { local_status: LocalStatus; local_reason: string | null } {
+  if (results.length === 0) {
+    return { local_status: "UNVERIFIED_LOCAL", local_reason: null };
+  }
+  const passing = results.some(
+    (result) =>
+      result.passed &&
+      result.binding_set_hash === hBind &&
+      (currentContextHash === undefined || result.context_hash === currentContextHash)
+  );
+  if (passing) {
+    return { local_status: "VERIFIED_LOCAL", local_reason: null };
+  }
+  // A result exists but none currently matches: explain the drift (analogue of
+  // SUSPECT). Prefer the most specific reason from the newest-considered result.
+  const anyFailure = results.some((result) => !result.passed);
+  const contextDrifted = results.some(
+    (result) =>
+      result.passed &&
+      currentContextHash !== undefined &&
+      result.context_hash !== currentContextHash
+  );
+  const bindingDrifted = results.some(
+    (result) => result.passed && result.binding_set_hash !== hBind
+  );
+  let reason: string;
+  if (contextDrifted) {
+    reason =
+      "the verifier or its declared inputs changed since the last local run; re-run `ucm verify`";
+  } else if (bindingDrifted) {
+    reason = "the bound code span changed since the last local run; re-run `ucm verify`";
+  } else if (anyFailure) {
+    reason = "the last local verification did not pass; fix the row and re-run `ucm verify`";
+  } else {
+    reason = "the last local verification no longer matches the current row; re-run `ucm verify`";
+  }
+  return { local_status: "STALE_LOCAL", local_reason: reason };
+}
+
 export function deriveFreshness(input: DeriveFreshnessInput): FreshnessStatus {
   const reconciliation = reconcileRegistryWithScan(input.registry, input.scan);
   const reconByRow = new Map<string, RowReconciliation>();
@@ -507,6 +588,16 @@ export function deriveFreshness(input: DeriveFreshnessInput): FreshnessStatus {
   }
   for (const [rowId, events] of evidenceByRow) {
     evidenceByRow.set(rowId, byNewest(events));
+  }
+
+  // Unsigned local verification results grouped by row (keyless tier). Only
+  // consulted when the caller supplied them; omission leaves local_status absent.
+  const localResultsProvided = input.local_results !== undefined;
+  const localResultsByRow = new Map<string, LocalVerificationResult[]>();
+  for (const result of input.local_results ?? []) {
+    const list = localResultsByRow.get(result.row_id) ?? [];
+    list.push(result);
+    localResultsByRow.set(result.row_id, list);
   }
 
   // Index the loaded rows; the row set is the union of loaded rows and any row
@@ -702,6 +793,29 @@ export function deriveFreshness(input: DeriveFreshnessInput): FreshnessStatus {
       requiredAction = "ucm scan (resolve binding integrity errors)";
     }
 
+    // Keyless local tier (0.1.0). Only emitted when the caller supplied
+    // `local_results`. Bound rows (a registered current binding, not INVALID/
+    // UNBOUND) get VERIFIED_LOCAL/STALE_LOCAL/UNVERIFIED_LOCAL; everything else
+    // reports null. Never influences the signed `status` above.
+    let localStatus: LocalStatus | null | undefined;
+    let localReason: string | null | undefined;
+    if (localResultsProvided) {
+      const bound =
+        status !== "INVALID" && status !== "UNBOUND" && currentRegistered.length > 0;
+      if (bound) {
+        const derived = deriveLocalStatus(
+          localResultsByRow.get(rowId) ?? [],
+          input.current_context_hashes?.get(rowId),
+          hBind
+        );
+        localStatus = derived.local_status;
+        localReason = derived.local_reason;
+      } else {
+        localStatus = null;
+        localReason = null;
+      }
+    }
+
     const rowOut: FreshnessRowOut = {
       row_id: rowId,
       ...(hashes ?? {}),
@@ -717,6 +831,11 @@ export function deriveFreshness(input: DeriveFreshnessInput): FreshnessStatus {
       latest_trusted_proof_event: latestProof ? proofRef(latestProof) : null,
       required_action: requiredAction
     };
+    // Emit the keyless local tier only when the caller opted in via local_results.
+    if (localStatus !== undefined) {
+      rowOut.local_status = localStatus;
+      rowOut.local_reason = localReason ?? null;
+    }
     // Only emit a binding-set hash when the row has registered current bindings.
     if (currentRegistered.length > 0) {
       rowOut.current_binding_set_hash = hBind;
