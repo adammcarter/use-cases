@@ -5,6 +5,17 @@ All notable changes to this project are documented here. The format is based on
 follows [Semantic Versioning](https://semver.org) (see docs/release.md). This is
 **pre-1.0 (beta) software**: anything MAY change before `1.0.0`.
 
+## 0.0.3 - 2026-07-03
+
+### Changed
+
+- **Release automation.** A single tag push now produces the whole release via
+  CI: `npm publish` with OIDC Trusted Publishing + provenance, the correct
+  dist-tag, and — new in this release — the **GitHub Release**, auto-created by
+  `softprops/action-gh-release` (no more manual `gh release create`). Pre-1.0
+  `0.0.x` releases publish to the `latest` dist-tag (only true prereleases →
+  `beta`), so `npm i use-case-matrix` always resolves the newest release.
+
 ## 0.0.2 - 2026-07-03
 
 Patch fixes surfaced by continued dogfooding of the 0.0.1 beta.

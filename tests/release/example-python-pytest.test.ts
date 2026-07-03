@@ -224,8 +224,8 @@ beforeAll(() => {
       `pack ${filter}`
     );
   }
-  coreTarball = join(packDir, "use-case-matrix-core-0.0.2.tgz");
-  cliTarball = join(packDir, "use-case-matrix-cli-0.0.2.tgz");
+  coreTarball = join(packDir, "use-case-matrix-core-0.0.3.tgz");
+  cliTarball = join(packDir, "use-case-matrix-cli-0.0.3.tgz");
 }, 180_000);
 
 afterAll(() => {

@@ -20,9 +20,10 @@ on:
     types: [published]
 
 permissions:
-  contents: read
+  # `write` so the workflow can auto-create the GitHub Release on tag.
+  contents: write
   # Required for npm Trusted Publishing (OIDC) AND for build provenance
-  # attestations. This is the only credential the publish step needs.
+  # attestations. This is the credential the publish step needs.
   id-token: write
 
 jobs:
@@ -79,3 +80,13 @@ jobs:
           npm publish --provenance --access public --tag "$TAG"
         env:
           NPM_CONFIG_PROVENANCE: "true"
+
+      # Auto-create the GitHub Release for the pushed tag (no more manual
+      # `gh release create`). Pre-1.0 (v0.*) and any hyphenated prerelease are
+      # flagged as a GitHub pre-release; stable >=1.0.0 as a full release. Notes
+      # are generated from the commits since the previous tag.
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          prerelease: ${{ startsWith(github.ref_name, 'v0.') || contains(github.ref_name, '-') }}
