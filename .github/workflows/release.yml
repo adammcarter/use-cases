@@ -48,7 +48,7 @@ jobs:
       # tests/release/example-python-pytest.test.ts runs the REAL verifier, so
       # pytest must be on PATH for `pnpm -s test`. Mirror ci.yml — without this
       # the release job's test gate fails (pytest missing) and never publishes.
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - run: python -m pip install --upgrade pytest

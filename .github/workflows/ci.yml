@@ -23,7 +23,7 @@ jobs:
       # pytest powers the pure-Python adoption example
       # (examples/python-pytest); tests/release/example-python-pytest.test.ts runs
       # the REAL verifier, so pytest must be on PATH for the suite.
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - run: python -m pip install --upgrade pytest
