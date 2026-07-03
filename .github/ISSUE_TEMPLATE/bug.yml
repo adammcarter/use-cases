@@ -1,5 +1,5 @@
 name: Bug report
-description: Report a defect in Use Case Matrix (ucm / ucm-mcp)
+description: Report a defect in Use Case Matrix (uc / uc-mcp)
 title: "[bug]: "
 labels: ["bug"]
 body:
@@ -14,8 +14,8 @@ body:
   - type: textarea
     id: version
     attributes:
-      label: ucm version
-      description: Output of `ucm --version --json`.
+      label: uc version
+      description: Output of `uc --version --json`.
       render: json
     validations:
       required: true
@@ -24,7 +24,7 @@ body:
     attributes:
       label: Failing command
       description: The exact command you ran (include `--json`).
-      placeholder: ucm matrix validate --repo . --json
+      placeholder: uc matrix validate --repo . --json
     validations:
       required: true
   - type: textarea
@@ -39,7 +39,7 @@ body:
     id: status-output
     attributes:
       label: Status / freshness output
-      description: Output of `ucm matrix status --json` (matrix integrity + evidence/freshness replay).
+      description: Output of `uc matrix status --json` (matrix integrity + evidence/freshness replay).
       render: json
     validations:
       required: true

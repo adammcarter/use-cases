@@ -150,7 +150,7 @@ export const WORKSPACE_NOT_FOUND_CODE = "workspace.not_found";
 // free. Returns the canonical diagnostic when the root is missing, else null.
 //
 // An existing-but-empty directory is still legitimate (the "not populated" case).
-// Deliberately NOT wired into the write/scaffold path (`ucm init`), which
+// Deliberately NOT wired into the write/scaffold path (`uc init`), which
 // legitimately targets a not-yet-existing root and has its own existence handling.
 // `workspaceRoot` MUST already be resolved to an absolute path by the caller.
 export function workspaceNotFoundDiagnostic(workspaceRoot: string): Diagnostic | null {

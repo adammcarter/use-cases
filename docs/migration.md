@@ -17,10 +17,10 @@ later by binding + verifying, never inherited.
 - **Any format → the `migration` skill (general path).** A fixed parser can't
   understand every hand-rolled layout, so the agent does the mapping: it reads
   your file, infers its structure, and writes one reviewable **draft** use case
-  per item via `ucm matrix upsert`, carrying the original text + provenance. Just
+  per item via `uc matrix upsert`, carrying the original text + provenance. Just
   ask your agent to "migrate" / "bring in" / "import" your file and the bundled
   `migration` skill activates. See `.agents/skills/migration/SKILL.md`.
-- **A standard `TEST-MATRIX.md` → `ucm migrate test-matrix` (fast path).** For the
+- **A standard `TEST-MATRIX.md` → `uc migrate test-matrix` (fast path).** For the
   one canonical markdown-table format there's a deterministic importer that
   already enforces the no-laundering invariant. Use it when your source fits.
 
@@ -29,7 +29,7 @@ later by binding + verifying, never inherited.
 Run a dry-run first:
 
 ```bash
-ucm migrate test-matrix \
+uc migrate test-matrix \
   --repo . \
   --source TEST-MATRIX.md \
   --out use-cases/_migrated \
@@ -50,7 +50,7 @@ would_write[]
 Then write draft use cases:
 
 ```bash
-ucm migrate test-matrix \
+uc migrate test-matrix \
   --repo . \
   --source TEST-MATRIX.md \
   --out use-cases/_migrated \

@@ -64,15 +64,15 @@ function pytestAvailable(): boolean {
 }
 
 function runUcm(
-  ucm: string,
+  uc: string,
   consumer: string,
   args: string[],
   env: Record<string, string> = {}
 ): { ok: boolean; data: Record<string, any>; raw: SpawnSyncReturns<string> } {
-  const result = run(ucm, args, consumer, env);
+  const result = run(uc, args, consumer, env);
   if (typeof result.stdout !== "string" || result.stdout.trim() === "") {
     throw new Error(
-      `ucm ${args.join(" ")} produced no JSON (status ${result.status}, stderr: ${result.stderr})`
+      `uc ${args.join(" ")} produced no JSON (status ${result.status}, stderr: ${result.stderr})`
     );
   }
   const payload = JSON.parse(result.stdout) as { ok: boolean; data: Record<string, any> };
@@ -81,7 +81,7 @@ function runUcm(
 
 interface Consumer {
   dir: string;
-  ucm: string;
+  uc: string;
   // The DEFAULT auto-discovered results path (<data_root>/.use-cases/…) so scan
   // picks it up with no --results flag — the zero-config keyless loop.
   defaultVrPath: string;
@@ -114,13 +114,13 @@ function installConsumer(): Consumer {
 
   return {
     dir,
-    ucm: join(dir, "node_modules/.bin/ucm"),
+    uc: join(dir, "node_modules/.bin/uc"),
     defaultVrPath: join(dir, ".use-cases", "verification-results.jsonl")
   };
 }
 
 function bind(c: Consumer) {
-  return runUcm(c.ucm, c.dir, [
+  return runUcm(c.uc, c.dir, [
     "bind",
     "--repo",
     c.dir,
@@ -138,7 +138,7 @@ function bind(c: Consumer) {
 // verify writes the UNSIGNED results ledger to the DEFAULT auto-discover path.
 // No signing key, no --public-key: this is the keyless path.
 function verify(c: Consumer) {
-  return runUcm(c.ucm, c.dir, [
+  return runUcm(c.uc, c.dir, [
     "verify",
     "--repo",
     c.dir,
@@ -151,7 +151,7 @@ function verify(c: Consumer) {
 
 // scan with NO key material at all — signed proofs are not part of this loop.
 function scan(c: Consumer) {
-  return runUcm(c.ucm, c.dir, ["scan", "--repo", c.dir, "--json"]);
+  return runUcm(c.uc, c.dir, ["scan", "--repo", c.dir, "--json"]);
 }
 
 function rowOf(scanData: Record<string, any>, rowId = ROW_ID) {

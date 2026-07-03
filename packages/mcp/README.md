@@ -14,7 +14,7 @@ ships bundled inside the
 npm i -g use-case-matrix
 ```
 
-That provides the `ucm-mcp` binary (and its `use-case-matrix-mcp` long-form alias).
+That provides the `uc-mcp` binary (and its `use-case-matrix-mcp` long-form alias).
 
 ## Usage
 

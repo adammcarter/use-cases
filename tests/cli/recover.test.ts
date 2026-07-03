@@ -1,4 +1,4 @@
-// `ucm recover` acceptance (0.1.0, Task 4): drive a drifted / unproven row back
+// `uc recover` acceptance (0.1.0, Task 4): drive a drifted / unproven row back
 // to green with ONE command. `recover` re-runs the row's verifier, writes the
 // UNSIGNED results ledger to the canonical auto-discover path, re-scans, and
 // reports the resulting local_status + status.
@@ -77,15 +77,15 @@ function pytestAvailable(): boolean {
 }
 
 function runUcm(
-  ucm: string,
+  uc: string,
   consumer: string,
   args: string[],
   env: Record<string, string> = {}
 ): { ok: boolean; data: Record<string, any>; raw: SpawnSyncReturns<string> } {
-  const result = run(ucm, args, consumer, env);
+  const result = run(uc, args, consumer, env);
   if (typeof result.stdout !== "string" || result.stdout.trim() === "") {
     throw new Error(
-      `ucm ${args.join(" ")} produced no JSON (status ${result.status}, stderr: ${result.stderr})`
+      `uc ${args.join(" ")} produced no JSON (status ${result.status}, stderr: ${result.stderr})`
     );
   }
   const payload = JSON.parse(result.stdout) as { ok: boolean; data: Record<string, any> };
@@ -94,7 +94,7 @@ function runUcm(
 
 interface Consumer {
   dir: string;
-  ucm: string;
+  uc: string;
   defaultVrPath: string;
 }
 
@@ -125,13 +125,13 @@ function installConsumer(): Consumer {
 
   return {
     dir,
-    ucm: join(dir, "node_modules/.bin/ucm"),
+    uc: join(dir, "node_modules/.bin/uc"),
     defaultVrPath: join(dir, ".use-cases", "verification-results.jsonl")
   };
 }
 
 function bind(c: Consumer) {
-  return runUcm(c.ucm, c.dir, [
+  return runUcm(c.uc, c.dir, [
     "bind",
     "--repo",
     c.dir,
@@ -147,7 +147,7 @@ function bind(c: Consumer) {
 }
 
 function verify(c: Consumer) {
-  return runUcm(c.ucm, c.dir, [
+  return runUcm(c.uc, c.dir, [
     "verify",
     "--repo",
     c.dir,
@@ -159,7 +159,7 @@ function verify(c: Consumer) {
 }
 
 function scan(c: Consumer) {
-  return runUcm(c.ucm, c.dir, ["scan", "--repo", c.dir, "--json"]);
+  return runUcm(c.uc, c.dir, ["scan", "--repo", c.dir, "--json"]);
 }
 
 function couponPath(c: Consumer): string {
@@ -236,7 +236,7 @@ afterAll(() => {
   }
 });
 
-describe("ucm recover: drive a drifted / unproven row back to green", () => {
+describe("uc recover: drive a drifted / unproven row back to green", () => {
   test("STALE_LOCAL -> recover --row -> VERIFIED_LOCAL (exit 0), no key", () => {
     const consumer = installConsumer();
     expect(bind(consumer).ok).toBe(true);
@@ -248,7 +248,7 @@ describe("ucm recover: drive a drifted / unproven row back to green", () => {
     expect(rowOf(scan(consumer).data).local_status).toBe("STALE_LOCAL");
 
     // recover re-verifies and re-establishes the keyless green light.
-    const recovered = runUcm(consumer.ucm, consumer.dir, [
+    const recovered = runUcm(consumer.uc, consumer.dir, [
       "recover",
       "--repo",
       consumer.dir,
@@ -273,7 +273,7 @@ describe("ucm recover: drive a drifted / unproven row back to green", () => {
     expect(bind(consumer).ok).toBe(true);
 
     const recovered = runUcm(
-      consumer.ucm,
+      consumer.uc,
       consumer.dir,
       [
         "recover",
@@ -306,7 +306,7 @@ describe("ucm recover: drive a drifted / unproven row back to green", () => {
     expect(bind(consumer).ok).toBe(true);
 
     const recovered = run(
-      consumer.ucm,
+      consumer.uc,
       [
         "recover",
         "--repo",
@@ -342,7 +342,7 @@ describe("ucm recover: drive a drifted / unproven row back to green", () => {
     breakImplementation(consumer);
 
     const recovered = run(
-      consumer.ucm,
+      consumer.uc,
       ["recover", "--repo", consumer.dir, "--row", ROW_ID, "--json"],
       consumer.dir
     );

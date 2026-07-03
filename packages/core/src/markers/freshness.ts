@@ -524,13 +524,13 @@ function deriveLocalStatus(
   let reason: string;
   if (contextDrifted) {
     reason =
-      "the verifier or its declared inputs changed since the last local run; re-run `ucm verify`";
+      "the verifier or its declared inputs changed since the last local run; re-run `uc verify`";
   } else if (bindingDrifted) {
-    reason = "the bound code span changed since the last local run; re-run `ucm verify`";
+    reason = "the bound code span changed since the last local run; re-run `uc verify`";
   } else if (anyFailure) {
-    reason = "the last local verification did not pass; fix the row and re-run `ucm verify`";
+    reason = "the last local verification did not pass; fix the row and re-run `uc verify`";
   } else {
-    reason = "the last local verification no longer matches the current row; re-run `ucm verify`";
+    reason = "the last local verification no longer matches the current row; re-run `uc verify`";
   }
   return { local_status: "STALE_LOCAL", local_reason: reason };
 }
@@ -792,9 +792,9 @@ export function deriveFreshness(input: DeriveFreshnessInput): FreshnessStatus {
 
     let requiredAction: string | null = null;
     if (status === "SUSPECT" || status === "UNPROVEN") {
-      requiredAction = `ucm prove --row ${rowId}`;
+      requiredAction = `uc prove --row ${rowId}`;
     } else if (status === "INVALID") {
-      requiredAction = "ucm scan (resolve binding integrity errors)";
+      requiredAction = "uc scan (resolve binding integrity errors)";
     }
 
     // Keyless local tier (0.1.0). Only emitted when the caller supplied

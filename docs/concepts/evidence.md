@@ -7,7 +7,7 @@ right is essential to understanding what "FRESH" does and does not mean.
 |---|---|---|
 | What it is | An **observation** — a record that something was seen or done | A **signed trust gate** — cryptographic certification |
 | Authority | None on its own | ed25519 signature from trusted CI |
-| Recorded by | `ucm evidence record` (agents, scripts, humans) | `ucm prove` in CI only |
+| Recorded by | `uc evidence record` (agents, scripts, humans) | `uc prove` in CI only |
 | Makes a row FRESH? | **No** | **Yes** |
 | Mutable? | Append-only; corrected via `evidence void` | Append-only, hash-chained, fail-closed |
 
@@ -20,14 +20,14 @@ it does not certify anything.
 
 ```bash
 # Append an observation (kind + result are free-form context):
-ucm evidence record --repo . --use-case billing.core.apply_discount \
+uc evidence record --repo . --use-case billing.core.apply_discount \
   --kind test_result --result pass --json
 
 # Replay the append-only evidence history:
-ucm evidence status --repo . --json
+uc evidence status --repo . --json
 
 # Correct an earlier event without deleting history:
-ucm evidence void --repo . --evidence <id> --expected-head <event> \
+uc evidence void --repo . --evidence <id> --expected-head <event> \
   --reason "superseded" --json
 ```
 
@@ -57,8 +57,8 @@ A row with lots of recorded evidence but no current signed proof is still
 **UNPROVEN** or **SUSPECT** — never FRESH. That is by design: evidence informs;
 proof certifies.
 
-> Related but distinct: **showcase runs** (`ucm showcase …`) and **capsules**
-> (`ucm capsule …`) record live demonstrations through their own ledger. Like
+> Related but distinct: **showcase runs** (`uc showcase …`) and **capsules**
+> (`uc capsule …`) record live demonstrations through their own ledger. Like
 > evidence, a static observation or a demo run is a *prompt for* a real
 > observation — it is not proof and does not by itself create a passing verdict.
 

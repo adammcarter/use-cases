@@ -19,5 +19,5 @@ permissions:
   command_execution: false
 extensions:
   use-case-matrix.dev/runner:
-    command: ucm capsule run --repo examples/basic-product --capsule capsule.basic.product_search --json
+    command: uc capsule run --repo examples/basic-product --capsule capsule.basic.product_search --json
     command_steps: none

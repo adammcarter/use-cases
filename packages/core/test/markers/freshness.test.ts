@@ -189,7 +189,7 @@ describe("deriveFreshness", () => {
     });
     const result = rowOf(status, row.row_id);
     expect(result.status).toBe("UNPROVEN");
-    expect(result.required_action).toBe("ucm prove --row checkout.apply_coupon");
+    expect(result.required_action).toBe("uc prove --row checkout.apply_coupon");
     expect(validateFreshnessStatus(status).ok).toBe(true);
   });
 

@@ -35,7 +35,7 @@ the deterministic importer first — it is faster and already enforces the trust
 boundary:
 
 ```
-ucm migrate test-matrix --repo . --source <path> --out use-cases/_migrated --dry-run --json
+uc migrate test-matrix --repo . --source <path> --out use-cases/_migrated --dry-run --json
 ```
 
 Inspect the dry-run report, then re-run with `--write`. It emits draft rows and
@@ -59,8 +59,8 @@ When the source is not a clean TEST-MATRIX table, map it by hand:
    the original row/line) in `source_refs` or an extension block, so the
    migration is traceable and reviewable.
 5. **Author through the tool, not by hand-editing YAML.** Write each row with
-   `ucm matrix upsert --repo . --file use-cases/<feature>.yml --use-case-file <row.json>`
-   (or `--use-case-json`). Then `ucm matrix validate --repo .` to confirm the
+   `uc matrix upsert --repo . --file use-cases/<feature>.yml --use-case-file <row.json>`
+   (or `--use-case-json`). Then `uc matrix validate --repo .` to confirm the
    matrix stays clean.
 6. **Hand back for review.** Tell the user the rows are drafts pending their
    review/activation. Do not activate them yourself.
@@ -82,4 +82,4 @@ When the source is not a clean TEST-MATRIX table, map it by hand:
 - Rows are `draft`/`planned`, with intent/scenarios carried from the source.
 - Provenance to the original source is recorded.
 - No legacy status was turned into evidence or approval.
-- `ucm matrix validate` is clean, and the user knows the rows await their review.
+- `uc matrix validate` is clean, and the user knows the rows await their review.

@@ -1,9 +1,9 @@
-// `ucm init` contract test (public-v1 Phase 5 onboarding).
+// `uc init` contract test (public-v1 Phase 5 onboarding).
 //
 // Proves the new scaffolding command takes a brand-new repo from nothing to a
 // bindable, verifiable Use Case Matrix workspace in ONE command:
-//   1. `ucm init` writes a workspace config + an example matrix file, and the
-//      scaffolded workspace IMMEDIATELY passes `ucm matrix validate`.
+//   1. `uc init` writes a workspace config + an example matrix file, and the
+//      scaffolded workspace IMMEDIATELY passes `uc matrix validate`.
 //   2. Each --template (generic | js-vitest | python-pytest | go-test) writes the
 //      matching `verifiers.default`.
 //   3. The generated config + use-case file validate against their v1 schemas.
@@ -76,7 +76,7 @@ afterAll(() => {
   }
 });
 
-describe("ucm init", () => {
+describe("uc init", () => {
   test("scaffolds a workspace that immediately passes matrix validate", () => {
     const repo = freshRepo("validate");
     const init = runCli(["init", "--repo", repo, "--json"]);

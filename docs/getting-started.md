@@ -14,7 +14,7 @@ still match."
 > machine. This is the whole point of the trust model: an agent on a developer
 > box cannot manufacture a green check.
 
-Every command shown here is a real `ucm` command. Concepts are linked to the
+Every command shown here is a real `uc` command. Concepts are linked to the
 [concept docs](./README.md); the deeper trust mechanics live under
 [`docs/concepts/`](./concepts/matrix.md).
 
@@ -26,17 +26,17 @@ Every command shown here is a real `ucm` command. Concepts are linked to the
 npm i -g use-case-matrix
 ```
 
-This puts the `ucm` binary on your PATH. The same package also ships the
-companion MCP server binary `ucm-mcp` if you want agents to drive the same
+This puts the `uc` binary on your PATH. The same package also ships the
+companion MCP server binary `uc-mcp` if you want agents to drive the same
 commands — see [the MCP contract](./mcp.md).
 
-## 2. Scaffold the workspace with `ucm init`
+## 2. Scaffold the workspace with `uc init`
 
 One command takes a brand-new repo from nothing to a bindable, verifiable
 matrix — a workspace config plus an example row that already validates:
 
 ```bash
-ucm init --repo . --template js-vitest
+uc init --repo . --template js-vitest
 ```
 
 - `--template` wires the default verifier: `generic` (a clearly-TODO placeholder
@@ -130,7 +130,7 @@ there is nothing to prove.)
 Validate the matrix:
 
 ```bash
-ucm matrix validate --repo . --json
+uc matrix validate --repo . --json
 ```
 
 `ok: true` / `complete: true` means the matrix is structurally clean.
@@ -153,13 +153,13 @@ export function applyDiscount(total: number, percent: number): number {
 The grammar is `<comment>: @use-case: <slug>` … `<comment>: @use-case: end
 <slug>`. See [bindings & markers](./concepts/bindings.md).
 
-## 5. Register the binding with `ucm bind`
+## 5. Register the binding with `uc bind`
 
 `bind` registers the marker in the append-only binding registry, but only after
 the edited file scans clean:
 
 ```bash
-ucm bind \
+uc bind \
   --repo . \
   --row billing.core.apply_discount \
   --file src/billing/discount.ts \
@@ -225,10 +225,10 @@ The available presets are `command.generic`, `js.vitest`, `js.npm-test`,
 Now write the acceptance test the preset names (e.g.
 `tests/use-cases/billing.core.apply_discount.test.ts`) and make it pass locally.
 
-## 7. See the status locally with `ucm scan`
+## 7. See the status locally with `uc scan`
 
 ```bash
-ucm scan --repo . --product-root . --policy-mode feature --json
+uc scan --repo . --product-root . --policy-mode feature --json
 ```
 
 At this point the row is **UNPROVEN**: it is bound to current code, but no signed
@@ -245,7 +245,7 @@ FRESH happens in a trusted CI pipeline, in two stages:
    so a PR can prove its tests *ran and passed* without minting trust:
 
    ```bash
-   ucm verify --repo . --product-root . --all \
+   uc verify --repo . --product-root . --all \
      --out .use-cases/verification-results.jsonl --json
    ```
 
@@ -255,7 +255,7 @@ FRESH happens in a trusted CI pipeline, in two stages:
    the **only** place signing happens:
 
    ```bash
-   ucm prove --repo . --product-root . --all --trusted-ci --append \
+   uc prove --repo . --product-root . --all --trusted-ci --append \
      --verification-results .use-cases/verification-results.jsonl \
      --signing-key-env UCM_CI_SIGNING_KEY --key-id ci-key-1 \
      --public-key .use-cases/trusted-ci-public-key.pem --json
@@ -282,11 +282,11 @@ is in [CI hardening](./security/ci-hardening.md).
 
 | Stage | Command | Row state |
 |---|---|---|
-| Authored | `ucm matrix validate` | (tracked) |
-| Bound | `ucm bind …` | UNBOUND → UNPROVEN |
-| Verified in CI (PR, keyless) | `ucm verify --out …` | UNPROVEN (results only) |
-| Proved in CI (trusted branch) | `ucm prove --trusted-ci …` | **FRESH** |
-| Code/test later weakened | `ucm scan` | SUSPECT |
+| Authored | `uc matrix validate` | (tracked) |
+| Bound | `uc bind …` | UNBOUND → UNPROVEN |
+| Verified in CI (PR, keyless) | `uc verify --out …` | UNPROVEN (results only) |
+| Proved in CI (trusted branch) | `uc prove --trusted-ci …` | **FRESH** |
+| Code/test later weakened | `uc scan` | SUSPECT |
 
 When you later change the implementation or weaken the test, the embedded hashes
 no longer match and the row drops to **SUSPECT** — the stale claim becomes

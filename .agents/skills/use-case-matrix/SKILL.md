@@ -20,16 +20,16 @@ Three commands, zero setup — no ed25519 keys, no CI:
 
 ```sh
 # 1. Bind a behaviour row to the code that implements it (explicit line span).
-ucm bind --repo <repo> --row <row-id> --file <path> \
+uc bind --repo <repo> --row <row-id> --file <path> \
   --mode explicit --start-line <n> --end-line <m>
 
 # 2. Run the row's verifier. With no --out this writes the UNSIGNED results
 #    ledger to <data-root>/.use-cases/verification-results.jsonl by default.
-ucm verify --repo <repo> --all        # or --row <row-id>
+uc verify --repo <repo> --all        # or --row <row-id>
 
 # 3. Scan freshness. scan auto-discovers that ledger — the row reports
 #    local_status: VERIFIED_LOCAL. No keys, no CI.
-ucm scan --repo <repo> --json
+uc scan --repo <repo> --json
 ```
 
 That `VERIFIED_LOCAL` is the everyday green light: **code + test currently agree,
@@ -60,7 +60,7 @@ When a row goes `STALE_LOCAL` / `UNVERIFIED_LOCAL` / `SUSPECT` / `UNPROVEN`, don
 hand-assemble the fix — `recover` re-verifies and reports the new state:
 
 ```sh
-ucm recover --repo <repo> --row <row-id>      # (or --all) -> back to VERIFIED_LOCAL
+uc recover --repo <repo> --row <row-id>      # (or --all) -> back to VERIFIED_LOCAL
 ```
 
 `recover` **never fakes green**: if the verifier genuinely fails it exits non-zero
@@ -74,10 +74,10 @@ the upgrade, not the daily path:
 
 ```sh
 # One-time, keys live OUTSIDE the repo; the private key is a CI secret.
-ucm keygen --out <dir-outside-repo> --ci github
+uc keygen --out <dir-outside-repo> --ci github
 
 # Re-prove a row to signed FRESH (recover can drive this too):
-ucm recover --repo <repo> --row <row-id> \
+uc recover --repo <repo> --row <row-id> \
   --signing-key-env UCM_CI_SIGNING_KEY --public-key <path>
 ```
 
@@ -86,12 +86,12 @@ intentionally absent from the MCP tool surface. Everyday agent work stays keyles
 
 ## Gating a release
 
-`ucm scan --gate` exits non-zero when a required row is below the bar (release =>
+`uc scan --gate` exits non-zero when a required row is below the bar (release =>
 `FRESH`, otherwise >= `VERIFIED_LOCAL`). Without `--gate`, `scan` always exits 0.
 
 ```sh
-ucm scan --repo <repo> --policy-mode release --gate    # CI release gate
-ucm scan --repo <repo> --gate                          # dev bar: VERIFIED_LOCAL
+uc scan --repo <repo> --policy-mode release --gate    # CI release gate
+uc scan --repo <repo> --gate                          # dev bar: VERIFIED_LOCAL
 ```
 
 ## Prefer This Skill
@@ -134,27 +134,27 @@ ucm scan --repo <repo> --gate                          # dev bar: VERIFIED_LOCAL
 
 ## Authoring & inventory commands
 
-- Scaffold a workspace: `ucm init --repo <repo>` (a `use-case-matrix.yml` config +
+- Scaffold a workspace: `uc init --repo <repo>` (a `use-case-matrix.yml` config +
   a `use-cases/` tree with one example row).
 - Add or update a use case:
-  `ucm matrix upsert --file <feature.yml> --use-case-json '{...}'` — `--file` is
+  `uc matrix upsert --file <feature.yml> --use-case-json '{...}'` — `--file` is
   the feature file the row lands in; `--use-case-json` is the payload (or
   `--use-case-file <payload.json>`). Minimal planned row:
 
   ```sh
-  ucm matrix upsert --file use-cases/my-feature.yml \
+  uc matrix upsert --file use-cases/my-feature.yml \
     --use-case-json '{"id":"my-feature.does-x","title":"Does X","lifecycle":"planned","value_tier":"core","journey_role":"golden","usage_frequency":"common"}'
   ```
 
   A `lifecycle: active` row must also carry `actor`, `intent`, `preconditions`,
   `trigger`, `scenarios`, `observable_outcomes`, `host_applicability`,
-  `verification_policy`, and `approval_policy`. Run `ucm matrix validate --json`
+  `verification_policy`, and `approval_policy`. Run `uc matrix validate --json`
   after upserting.
-- Validate inventory: `ucm matrix validate --json`
-- List or filter rows: `ucm matrix list --json`
-- Inspect matrix plus evidence health: `ucm matrix status --json`
-- Record safe evidence: `ucm evidence record --json`
-- Void mistaken evidence by appending history: `ucm evidence void --json`
+- Validate inventory: `uc matrix validate --json`
+- List or filter rows: `uc matrix list --json`
+- Inspect matrix plus evidence health: `uc matrix status --json`
+- Record safe evidence: `uc evidence record --json`
+- Void mistaken evidence by appending history: `uc evidence void --json`
 
 Stop and surface concrete diagnostics when validation is incomplete, YAML is
 damaged, a verifier genuinely fails, evidence may leak sensitive data, or the user

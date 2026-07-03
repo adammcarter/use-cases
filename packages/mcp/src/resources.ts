@@ -61,49 +61,49 @@ export type McpResourceDescriptor = {
 
 export const mcpResources: McpResourceDescriptor[] = [
   {
-    uri: "ucm://matrix",
+    uri: "uc://matrix",
     name: "Use-case matrix",
     description: "Matrix validation result plus the full list of use cases (read-only). Add ?repo=<path> or configure UCM_MCP_REPO.",
     mimeType: JSON_MIME
   },
   {
-    uri: "ucm://matrix/status",
+    uri: "uc://matrix/status",
     name: "Matrix + evidence status",
     description: "Combined matrix validation and evidence assurance status (read-only).",
     mimeType: JSON_MIME
   },
   {
-    uri: "ucm://freshness",
+    uri: "uc://freshness",
     name: "Marker freshness status",
-    description: "Read-only freshness scan (marker bindings vs proofs) — the same status `ucm scan` emits. Never runs verifiers.",
+    description: "Read-only freshness scan (marker bindings vs proofs) — the same status `uc scan` emits. Never runs verifiers.",
     mimeType: JSON_MIME
   },
   {
-    uri: "ucm://bindings",
+    uri: "uc://bindings",
     name: "Marker binding registry",
     description: "The materialized append-only binding registry (row id -> binding slugs), read-only.",
     mimeType: JSON_MIME
   },
   {
-    uri: "ucm://ledger",
+    uri: "uc://ledger",
     name: "Proof ledger validation",
     description: "Read-only validate-ledger summary: evidence/registry integrity, append-only discipline, and hash-chain status.",
     mimeType: JSON_MIME
   },
   {
-    uri: "ucm://evidence",
+    uri: "uc://evidence",
     name: "Evidence assurance status",
     description: "Replayed evidence assurance status for the matrix (read-only).",
     mimeType: JSON_MIME
   },
   {
-    uri: "ucm://schemas",
+    uri: "uc://schemas",
     name: "Public schema index",
-    description: "Index of public Use Case Matrix JSON schemas. Read an individual schema at ucm://schemas/{name} (e.g. ucm://schemas/common.schema.json). No repo required.",
+    description: "Index of public Use Case Matrix JSON schemas. Read an individual schema at uc://schemas/{name} (e.g. uc://schemas/common.schema.json). No repo required.",
     mimeType: JSON_MIME
   },
   {
-    uri: "ucm://config",
+    uri: "uc://config",
     name: "Resolved workspace config",
     description: "Resolved workspace roots and config provenance for a repo (read-only).",
     mimeType: JSON_MIME
@@ -173,7 +173,7 @@ function parseUcmUri(uri: string): ParsedUri | null {
   } catch {
     return null;
   }
-  if (url.protocol !== "ucm:") {
+  if (url.protocol !== "uc:") {
     return null;
   }
   const host = url.hostname;
@@ -226,7 +226,7 @@ function markerPaths(context: ResolvedWorkspaceContext) {
 }
 
 // No proof-signing key is configured for read-only views, mirroring the CLI
-// default (`ucm scan` / `ucm validate-ledger` without --public-key).
+// default (`uc scan` / `uc validate-ledger` without --public-key).
 function noKeyResolver(): undefined {
   return undefined;
 }
@@ -393,7 +393,7 @@ function schemasIndex() {
     schemas: getPublicSchemas().map(({ id }) => ({
       id,
       name: id.split("/").pop() ?? id,
-      uri: `ucm://schemas/${id.split("/").pop() ?? id}`
+      uri: `uc://schemas/${id.split("/").pop() ?? id}`
     }))
   };
 }

@@ -104,7 +104,7 @@ describe("P13 installable root package artifact", () => {
     expect(`${cli.stdout}\n${cli.stderr}`).not.toContain(repoRoot);
 
     const fixtureRoot = fixtureWorkspace("evidence-basic");
-    const installedBin = run(join(installed.consumer, "node_modules/.bin/ucm"), [
+    const installedBin = run(join(installed.consumer, "node_modules/.bin/uc"), [
       "matrix",
       "validate",
       "--repo",

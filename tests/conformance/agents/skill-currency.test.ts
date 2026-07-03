@@ -32,51 +32,51 @@ describe("agent enablement currency", () => {
     });
 
     test("teaches the bind -> verify -> scan core loop commands", () => {
-      expect(skill).toContain("ucm bind");
-      expect(skill).toContain("ucm verify");
-      expect(skill).toContain("ucm scan");
+      expect(skill).toContain("uc bind");
+      expect(skill).toContain("uc verify");
+      expect(skill).toContain("uc scan");
     });
 
     test("teaches recover as the one-command path back to green", () => {
-      expect(skill).toContain("ucm recover");
+      expect(skill).toContain("uc recover");
     });
 
     test("frames signing (keygen / prove) as the OPT-IN release upgrade, not the daily default", () => {
       expect(skill).toContain("FRESH");
       // keygen is named as the opt-in signed-tier setup.
-      expect(skill).toContain("ucm keygen");
+      expect(skill).toContain("uc keygen");
     });
   });
 
   describe("MCP playbooks expose the new commands", () => {
-    test("a recover playbook is registered and references ucm recover", () => {
+    test("a recover playbook is registered and references uc recover", () => {
       const names = mcpPrompts.map((prompt) => prompt.name);
-      expect(names).toContain("ucm/recover-suspect-row");
-      const text = promptText("ucm/recover-suspect-row", { row: "auth.login" });
-      expect(text).toContain("ucm recover");
+      expect(names).toContain("uc/recover-suspect-row");
+      const text = promptText("uc/recover-suspect-row", { row: "auth.login" });
+      expect(text).toContain("uc recover");
     });
 
     test("the recover playbook drives to VERIFIED_LOCAL keyless-first (signing = opt-in)", () => {
-      const text = promptText("ucm/recover-suspect-row", { row: "auth.login" });
+      const text = promptText("uc/recover-suspect-row", { row: "auth.login" });
       expect(text).toContain("VERIFIED_LOCAL");
       // The signed upgrade is the opt-in path, not the default.
       expect(text).toContain("--signing-key-env");
     });
 
     test("adopt-repo teaches the keyless loop before the signed CI tier", () => {
-      const text = promptText("ucm/adopt-repo", { repo: "/repo" });
-      expect(text).toContain("ucm verify");
+      const text = promptText("uc/adopt-repo", { repo: "/repo" });
+      expect(text).toContain("uc verify");
       expect(text).toContain("VERIFIED_LOCAL");
       const verifyAt = text.indexOf("VERIFIED_LOCAL");
-      const proveAt = text.indexOf("ucm prove");
+      const proveAt = text.indexOf("uc prove");
       // The keyless green is introduced before the CI-only prove step.
       expect(verifyAt).toBeGreaterThanOrEqual(0);
       expect(proveAt).toBeGreaterThan(verifyAt);
     });
 
     test("bind-row uses the real explicit-mode span flags (--start-line/--end-line)", () => {
-      const text = promptText("ucm/bind-row", { row: "auth.login", file: "src/x.ts" });
-      expect(text).toContain("ucm bind");
+      const text = promptText("uc/bind-row", { row: "auth.login", file: "src/x.ts" });
+      expect(text).toContain("uc bind");
       expect(text).toContain("--start-line");
       expect(text).toContain("--end-line");
       // The stale single-line flag must not creep back in for explicit mode.

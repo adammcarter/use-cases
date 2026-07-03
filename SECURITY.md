@@ -14,7 +14,7 @@ Report privately through GitHub's private security advisories:
 
 > https://github.com/adammcarter/use-case-matrix/security/advisories/new
 
-Please include the affected version (`ucm --version --json`), a description of
+Please include the affected version (`uc --version --json`), a description of
 the issue, reproduction steps, and the impact you observed. We will acknowledge
 the report, work with you on a fix, and coordinate disclosure. Public issues are
 for bugs and feature requests only.

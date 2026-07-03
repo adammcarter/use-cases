@@ -129,5 +129,5 @@ permissions:
   command_execution: false
 extensions:
   use-case-matrix.dev/runner:
-    command: ucm capsule run --repo . --capsule capsule.presentation_skills.feature_tour --idempotency-key self-matrix:feature-tour --json
+    command: uc capsule run --repo . --capsule capsule.presentation_skills.feature_tour --idempotency-key self-matrix:feature-tour --json
     command_steps: none

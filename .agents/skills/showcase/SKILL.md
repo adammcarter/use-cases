@@ -23,18 +23,18 @@ Generated plans, walkthroughs, capsules, and runbooks are prepared material only
 
 ## Plan Mode vs Run Mode
 
-- Plan mode prepares only. Use `ucm plan showcase --json` or `ucm capsule plan --json`.
-- Run mode records actual performed events. Use `ucm showcase start --json` only when the request clearly asks for a live run or the user agrees to perform one.
+- Plan mode prepares only. Use `uc plan showcase --json` or `uc capsule plan --json`.
+- Run mode records actual performed events. Use `uc showcase start --json` only when the request clearly asks for a live run or the user agrees to perform one.
 - A generated plan must not be described as a completed demo.
 
 ## Live Run Rules
 
-- Record observations before verdicts with `ucm showcase record-observation --json`.
-- Record verdicts with `ucm showcase record-verdict --json`.
-- When a verdict fails or blocks, record a decision with `ucm showcase decide --json` before finishing.
-- Pause or resume with `ucm showcase pause --json` and `ucm showcase resume --json`.
-- Correct mistaken entries with `ucm showcase correct --json`; do not edit JSONL history by hand.
-- Finish with `ucm showcase finish --json` and inspect state with `ucm showcase status --json`.
+- Record observations before verdicts with `uc showcase record-observation --json`.
+- Record verdicts with `uc showcase record-verdict --json`.
+- When a verdict fails or blocks, record a decision with `uc showcase decide --json` before finishing.
+- Pause or resume with `uc showcase pause --json` and `uc showcase resume --json`.
+- Correct mistaken entries with `uc showcase correct --json`; do not edit JSONL history by hand.
+- Finish with `uc showcase finish --json` and inspect state with `uc showcase status --json`.
 
 ## Presentation Formats
 
@@ -55,6 +55,6 @@ Render the fixed emoji + verb header for the chosen format so the user can scan 
 
 ## Approval Boundary
 
-Agents may record agent observations and agent verdicts when allowed. Agents must not claim user approval, user sign-off, or user verification. User approval requires the designated trusted confirmation path, such as `ucm showcase approve --json` with an explicit user actor in a context where the user actually confirms.
+Agents may record agent observations and agent verdicts when allowed. Agents must not claim user approval, user sign-off, or user verification. User approval requires the designated trusted confirmation path, such as `uc showcase approve --json` with an explicit user actor in a context where the user actually confirms.
 
 Do not say Claude, Codex, Copilot, or OpenCode support is verified unless host evidence exists. A canonical skill, host profile, or passing doctor check is not live host workflow evidence.

@@ -45,7 +45,7 @@ at it; tag the proof with the matching key id:
 
 ```sh
 export UCM_CI_SIGNING_KEY="$(cat ci-signing-key.pem)"
-ucm prove --all --trusted-ci \
+uc prove --all --trusted-ci \
   --signing-key-env UCM_CI_SIGNING_KEY \
   --key-id ci-key-1
 ```
@@ -96,8 +96,8 @@ window closes or the key is revoked, the proof no longer verifies.
 Pass it to any verifying command:
 
 ```sh
-ucm scan --keyring keyring.json
-ucm validate-ledger --keyring keyring.json
+uc scan --keyring keyring.json
+uc validate-ledger --keyring keyring.json
 ```
 
 ## Rotation

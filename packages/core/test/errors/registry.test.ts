@@ -82,9 +82,9 @@ describe("Use Case Matrix error-code registry", () => {
 
   describe("legacy string-literal mapping", () => {
     it("maps every known string code to a valid registry code", () => {
-      for (const [legacy, ucm] of Object.entries(LEGACY_STRING_CODE_MAP)) {
-        expect(UCM_ERROR_REGISTRY[ucm], `${legacy} -> ${ucm}`).toBeDefined();
-        expect(mapStringCode(legacy)).toBe(ucm);
+      for (const [legacy, uc] of Object.entries(LEGACY_STRING_CODE_MAP)) {
+        expect(UCM_ERROR_REGISTRY[uc], `${legacy} -> ${uc}`).toBeDefined();
+        expect(mapStringCode(legacy)).toBe(uc);
       }
     });
 

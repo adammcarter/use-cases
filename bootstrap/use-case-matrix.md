@@ -10,8 +10,8 @@ Why this exists:
 
 - Feature planning or behavior inventory work.
 - Implementation progress where use cases, variants, edge cases, or evidence should stay current.
-- The keyless daily loop: bind a behavior to code, verify it, and confirm `local_status: VERIFIED_LOCAL` (`ucm bind` → `ucm verify` → `ucm scan`) — no keys, no CI. Recover a drifted row with `ucm recover`.
-- Acceptance/evidence gathering, live demo/sign-off, or pre-merge proof. Signing to `FRESH` (`ucm keygen` + `ucm prove` in trusted CI) is the opt-in release/audit upgrade.
+- The keyless daily loop: bind a behavior to code, verify it, and confirm `local_status: VERIFIED_LOCAL` (`uc bind` → `uc verify` → `uc scan`) — no keys, no CI. Recover a drifted row with `uc recover`.
+- Acceptance/evidence gathering, live demo/sign-off, or pre-merge proof. Signing to `FRESH` (`uc keygen` + `uc prove` in trusted CI) is the opt-in release/audit upgrade.
 - Matrix migration/backfill from TEST-MATRIX-style lists.
 
 ## When not to apply
@@ -35,15 +35,15 @@ Why this exists:
 
 | Situation | Do |
 |---|---|
-| Keyless daily loop | `ucm bind …` → `ucm verify --all` → `ucm scan --json` (expect `local_status: VERIFIED_LOCAL`) |
-| Drifted row | `ucm recover --row <id>` (or `--all`) → back to `VERIFIED_LOCAL` |
-| Release gate | `ucm scan --policy-mode release --gate --json` (signed `FRESH`; keys via `ucm keygen`, minted by `ucm prove` in trusted CI) |
-| Behavior inventory | `ucm matrix validate --json` / `ucm matrix list --json` |
-| Evidence health | `ucm matrix status --json` / `ucm evidence status --json` |
-| Showcase plan | `ucm plan showcase --json` |
-| Walkthrough plan | `ucm plan walkthrough --json` |
-| Live run | `ucm showcase start --json` then record/status/finish commands |
-| Skill health | `ucm doctor skills --json` |
+| Keyless daily loop | `uc bind …` → `uc verify --all` → `uc scan --json` (expect `local_status: VERIFIED_LOCAL`) |
+| Drifted row | `uc recover --row <id>` (or `--all`) → back to `VERIFIED_LOCAL` |
+| Release gate | `uc scan --policy-mode release --gate --json` (signed `FRESH`; keys via `uc keygen`, minted by `uc prove` in trusted CI) |
+| Behavior inventory | `uc matrix validate --json` / `uc matrix list --json` |
+| Evidence health | `uc matrix status --json` / `uc evidence status --json` |
+| Showcase plan | `uc plan showcase --json` |
+| Walkthrough plan | `uc plan walkthrough --json` |
+| Live run | `uc showcase start --json` then record/status/finish commands |
+| Skill health | `uc doctor skills --json` |
 
 ## Never claim
 

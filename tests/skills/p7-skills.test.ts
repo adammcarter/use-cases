@@ -42,7 +42,7 @@ const knownCliCommands = new Set([
   "workflow set-mode"
 ]);
 // Flat, single-segment marker / keyless-tier commands. A reference like
-// `ucm bind --repo ...` carries a flag as its second token, so it is validated by
+// `uc bind --repo ...` carries a flag as its second token, so it is validated by
 // its bare command name (mirrors validateSkillAssets.KNOWN_FLAT_CLI_COMMANDS).
 const knownFlatCliCommands = new Set([
   "init",
@@ -155,7 +155,7 @@ function parseFrontmatter(source: string, path: string): { name: string; descrip
 
 function extractCliCommands(source: string): string[] {
   const commands: string[] = [];
-  for (const match of source.matchAll(/`(?:ucm|pnpm cli --)\s+([^`]+?)`/g)) {
+  for (const match of source.matchAll(/`(?:uc|pnpm cli --)\s+([^`]+?)`/g)) {
     const tokens = match[1].trim().split(/\s+/);
     if (tokens.length >= 2) {
       commands.push(`${tokens[0]} ${tokens[1]}`);

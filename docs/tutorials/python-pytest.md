@@ -7,10 +7,10 @@ vitest** anywhere in the project: the verifier is `pytest`.
 
 The complete, runnable project lives at
 [`examples/python-pytest/`](../../examples/python-pytest), and it is exercised
-end-to-end (from the published `ucm` tarball, running real `pytest`) by
+end-to-end (from the published `uc` tarball, running real `pytest`) by
 [`tests/release/example-python-pytest.test.ts`](../../tests/release/example-python-pytest.test.ts).
 
-> The only Node you install is the `ucm` CLI itself (the trust engine). The code
+> The only Node you install is the `uc` CLI itself (the trust engine). The code
 > under test, the acceptance test, and the verifier are 100% Python.
 
 ---
@@ -94,7 +94,7 @@ are the exact commands the release test runs.
 ### 0. Install the CLI and generate a scratch signing key
 
 ```bash
-npm i -g use-case-matrix                  # provides the `ucm` binary
+npm i -g use-case-matrix                  # provides the `uc` binary
 # A throwaway ed25519 keypair. In production the PRIVATE key lives ONLY in CI.
 node -e 'const c=require("crypto"),f=require("fs");const k=c.generateKeyPairSync("ed25519");
 f.writeFileSync("public-key.pem",k.publicKey.export({type:"spki",format:"pem"}));
@@ -104,7 +104,7 @@ f.writeFileSync("private-key.pem",k.privateKey.export({type:"pkcs8",format:"pem"
 ### 1. Validate the matrix
 
 ```bash
-ucm matrix validate --repo . --json     # ok: true
+uc matrix validate --repo . --json     # ok: true
 ```
 
 ### 2. Register the binding
@@ -113,7 +113,7 @@ The marker already lives in `src/coupon.py`, so register it without editing
 source:
 
 ```bash
-ucm bind --repo . \
+uc bind --repo . \
   --row example.checkout.apply_coupon \
   --file src/coupon.py \
   --mode explicit --register-existing --json
@@ -122,7 +122,7 @@ ucm bind --repo . \
 ### 3. Scan — the row is UNPROVEN
 
 ```bash
-ucm scan --repo . --public-key public-key.pem --json
+uc scan --repo . --public-key public-key.pem --json
 # example.checkout.apply_coupon → UNPROVEN  (bound, but no signed proof yet)
 ```
 
@@ -133,7 +133,7 @@ ucm scan --repo . --public-key public-key.pem --json
 signing key** and writes an unsigned results ledger:
 
 ```bash
-ucm verify --repo . --all --out verification-results.jsonl \
+uc verify --repo . --all --out verification-results.jsonl \
   --public-key public-key.pem --json
 # results[0].status: "pass", verifier_id: "acceptance", exit_code: 0
 ```
@@ -146,7 +146,7 @@ is a CI secret:
 
 ```bash
 UCM_SIGNING_KEY="$(cat private-key.pem)" \
-ucm prove --repo . --all --trusted-ci --append \
+uc prove --repo . --all --trusted-ci --append \
   --verification-results verification-results.jsonl \
   --signing-key-env UCM_SIGNING_KEY \
   --public-key public-key.pem --json
@@ -156,7 +156,7 @@ ucm prove --repo . --all --trusted-ci --append \
 ### 6. Scan again — the row is FRESH
 
 ```bash
-ucm scan --repo . --public-key public-key.pem --json
+uc scan --repo . --public-key public-key.pem --json
 # summary: { fresh: 1, ... }   example.checkout.apply_coupon → FRESH
 ```
 
@@ -168,7 +168,7 @@ Break the production code so the genuine acceptance test fails, then re-verify:
 
 ```bash
 # drop the discount in src/coupon.py, then:
-ucm verify --repo . --all --out verification-results.jsonl --public-key public-key.pem --json
+uc verify --repo . --all --out verification-results.jsonl --public-key public-key.pem --json
 # results[0].status: "fail", exit_code != 0
 ```
 
@@ -178,11 +178,11 @@ guarantee the JS path gives, delivered by a pure-Python toolchain.
 
 | Stage | Command | Row state |
 |---|---|---|
-| Authored | `ucm matrix validate` | (tracked) |
-| Bound | `ucm bind … --register-existing` | UNPROVEN |
-| Verified (keyless, real pytest) | `ucm verify --out …` | UNPROVEN (results only) |
-| Proved (trusted, signed) | `ucm prove --trusted-ci …` | **FRESH** |
-| Production code broken | `ucm verify` → `ucm prove` | refused → not FRESH |
+| Authored | `uc matrix validate` | (tracked) |
+| Bound | `uc bind … --register-existing` | UNPROVEN |
+| Verified (keyless, real pytest) | `uc verify --out …` | UNPROVEN (results only) |
+| Proved (trusted, signed) | `uc prove --trusted-ci …` | **FRESH** |
+| Production code broken | `uc verify` → `uc prove` | refused → not FRESH |
 
 See [verifiers](../concepts/verifiers.md) for the full preset model and
 [getting started](../getting-started.md) for the JS path and the CI workflow.

@@ -1,7 +1,7 @@
 # Publishing to npm (Trusted Publishing + provenance)
 
 How the **`use-case-matrix`** package is released to npm. This is a single,
-self-contained package: the `ucm` and `ucm-mcp` binaries plus the plugin bundle
+self-contained package: the `uc` and `uc-mcp` binaries plus the plugin bundle
 (skills, hooks, bootstrap, docs, schemas) ship together in one tarball. The
 `packages/core`, `packages/cli`, and `packages/mcp` workspaces are **private**
 and are bundled inside this package — they are **not** published separately. The
@@ -135,7 +135,7 @@ Everything below is normal repo work an agent or maintainer can do.
 7. **Post-publish smoke** (optional but recommended):
 
    ```bash
-   npx use-case-matrix --version --json           # runs the ucm CLI
+   npx use-case-matrix --version --json           # runs the uc CLI
    npx -p use-case-matrix use-case-matrix-mcp      # should start the stdio server
    ```
 

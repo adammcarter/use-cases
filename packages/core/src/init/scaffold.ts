@@ -1,10 +1,10 @@
-// `ucm init` — scaffold a minimal, WORKING Use Case Matrix workspace.
+// `uc init` — scaffold a minimal, WORKING Use Case Matrix workspace.
 //
 // Takes a brand-new repo from nothing to a bindable, verifiable matrix in one
 // command: a workspace config (`use-case-matrix.yml`) wired to a default
 // verifier matching the chosen template, plus a `use-cases/` dir holding one
 // example row that VALIDATES against the use-case-file schema. The scaffolded
-// workspace passes `ucm matrix validate` out of the box.
+// workspace passes `uc matrix validate` out of the box.
 //
 // SAFETY: never generates or writes any private key, never writes a GitHub
 // workflow file. If a `use-case-matrix.yml` already exists it REFUSES unless
@@ -206,11 +206,11 @@ function renderExampleUseCase(): string {
     "schema_version: 1",
     "# TODO: replace this example with a real use case for your project.",
     "# Each row describes one observable behaviour your product must keep working.",
-    "# Once you bind it to code (`ucm bind`) and CI proves it, the row reaches FRESH.",
+    "# Once you bind it to code (`uc bind`) and CI proves it, the row reaches FRESH.",
     "feature:",
     "  id: example.feature",
     "  name: Example feature",
-    "  summary: An example use case scaffolded by `ucm init` — replace it with your own.",
+    "  summary: An example use case scaffolded by `uc init` — replace it with your own.",
     "metadata:",
     "  owner: unassigned",
     "  lifecycle: active",
@@ -295,7 +295,7 @@ function renderJsVitestSource(): string {
 }
 
 // A plain vitest module at the path the `js.vitest` preset derives from the row
-// id (`tests/use-cases/<row-id>.test.ts`), so `ucm verify` runs it as-is.
+// id (`tests/use-cases/<row-id>.test.ts`), so `uc verify` runs it as-is.
 function renderJsVitestTest(): string {
   return [
     `// Acceptance test for the \`${EXAMPLE_ROW_ID}\` use-case row.`,
@@ -327,11 +327,11 @@ function renderJsVitestTest(): string {
 export function nextSteps(): string[] {
   return [
     "Edit use-cases/example.yml — replace the example row with a real use case.",
-    "Run `ucm matrix validate --repo . --json` to confirm the matrix is clean.",
-    "Bind the implementing code with `ucm bind` — code-marker grammar in docs/markers-adoption.md.",
+    "Run `uc matrix validate --repo . --json` to confirm the matrix is clean.",
+    "Bind the implementing code with `uc bind` — code-marker grammar in docs/markers-adoption.md.",
     "Wire the `acceptance` verifier in use-case-matrix.yml to your real test command (docs/cli.md).",
     "Generate an ed25519 keypair — commit the PUBLIC key, keep the PRIVATE key in a CI secret only (docs/security.md).",
-    "Let trusted CI mint FRESH proofs with `ucm prove` (docs/cli.md, docs/security.md)."
+    "Let trusted CI mint FRESH proofs with `uc prove` (docs/cli.md, docs/security.md)."
   ];
 }
 

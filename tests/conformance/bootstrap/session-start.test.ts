@@ -22,7 +22,7 @@ describe("session-start bootstrap delivery", () => {
   test("the polyglot hook script is shipped and executable", () => {
     expect(existsSync(hookScript)).toBe(true);
     // The hooks.json command invokes the script directly, so the executable bit
-    // must survive (placing a marker via `ucm bind` once stripped it).
+    // must survive (placing a marker via `uc bind` once stripped it).
     expect(statSync(hookScript).mode & 0o111).not.toBe(0);
   });
 

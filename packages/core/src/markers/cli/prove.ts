@@ -374,7 +374,7 @@ function proveOneRow(args: ProveOneRowArgs): ProveRowResult {
       return rowResult(rowId, "failed", {
         ...hashes,
         reason: "NO_PASSING_RESULT",
-        message: `no verification result for row ${rowId}; run \`ucm verify --row ${rowId} --out <path>\` first`
+        message: `no verification result for row ${rowId}; run \`uc verify --row ${rowId} --out <path>\` first`
       });
     }
     if (record.status === "blocked") {

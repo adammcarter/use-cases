@@ -5,7 +5,7 @@ All commands use JSON envelopes with `schema_version`, `protocol_version`,
 
 ## Onboarding
 
-- `ucm init [--repo <dir>] [--template generic|js-vitest|python-pytest|go-test] [--component <id>] [--force] [--json]`:
+- `uc init [--repo <dir>] [--template generic|js-vitest|python-pytest|go-test] [--component <id>] [--force] [--json]`:
   scaffold a minimal working workspace — a `use-case-matrix.yml` (with a
   `verifiers.default` matching the template) and a `use-cases/example.yml` whose
   one row already validates. The scaffolded workspace passes `matrix validate`
@@ -50,7 +50,7 @@ CI has signed proof that the current code, binding, and verifier still match. Th
 signing key must be a PKCS8 ed25519 PEM — see
 [key management](./security/key-management.md) for how to generate one.
 
-- `ucm bind --row <id> --file <path> --mode explicit --start-line <n> --end-line <n> [--repo <path>] [--json]`:
+- `uc bind --row <id> --file <path> --mode explicit --start-line <n> --end-line <n> [--repo <path>] [--json]`:
   bind a row to a code span. `--mode explicit` inserts `//: @use-case: <id>` …
   `//: @use-case: end <id>` markers around the span (the comment prefix is inferred
   per file type). Use `--register-existing` to register a span whose markers are
@@ -58,20 +58,20 @@ signing key must be a PKCS8 ed25519 PEM — see
   opening marker shifts the file's line numbers down by one, so a later `scan`
   reports the span one line below the `--start-line`/`--end-line` you passed —
   that is expected, not drift.
-- `ucm scan [--repo <path>] [--public-key <pem>] [--keyring <path>] [--json]`:
+- `uc scan [--repo <path>] [--public-key <pem>] [--keyring <path>] [--json]`:
   derive each row's freshness — `FRESH` / `SUSPECT` / `UNPROVEN` / `UNBOUND` /
   `INVALID` — from the current code, the binding registry, and the proof ledger.
   Without a trusted `--public-key` (or `--keyring`), signed proofs read `UNPROVEN`
   (the tool never trusts a signature it cannot verify).
-- `ucm verify [--row <id> | --all] --out <path> [--repo <path>] [--json]`: run each
+- `uc verify [--row <id> | --all] --out <path> [--repo <path>] [--json]`: run each
   bound row's verifier command and write an **unsigned** verification-results
   ledger (one JSONL record per row). This is the step that actually executes tests.
-- `ucm prove (--row <id> | --all) --verification-results <path> --trusted-ci --signing-key-env <ENV> [--key-id <id>] [--append] [--repo <path>] [--json]`:
+- `uc prove (--row <id> | --all) --verification-results <path> --trusted-ci --signing-key-env <ENV> [--key-id <id>] [--append] [--repo <path>] [--json]`:
   mint **signed** ed25519 proof events from the `verify` results. Signing is
   CI-only: the private key is read from the named environment variable and never
   written to disk. A present-but-malformed key returns a `signing_key.invalid`
   diagnostic rather than crashing.
-- `ucm validate-ledger [--repo <path>] [--json]`: check the append-only proof/
+- `uc validate-ledger [--repo <path>] [--json]`: check the append-only proof/
   evidence ledger for integrity (hash-chain, ordering, signature shape).
 
 ## Planning And Showcases

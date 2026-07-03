@@ -3,7 +3,7 @@ import { describe, expect, test } from "vitest";
 import { generateSigningKeypair } from "../../src/markers/keygen.js";
 import { signEvent, singleKeyResolver, verifyEvent } from "../../src/markers/index.js";
 
-// Task 3 (0.1.0): `ucm keygen` mints an ed25519 keypair in exactly the PEM
+// Task 3 (0.1.0): `uc keygen` mints an ed25519 keypair in exactly the PEM
 // formats `prove`/`--public-key` already consume — PKCS8 private, SPKI public.
 describe("generateSigningKeypair (opt-in signed tier)", () => {
   test("returns PKCS8 private + SPKI public PEM that node:crypto accepts", () => {

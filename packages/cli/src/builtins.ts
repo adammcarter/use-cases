@@ -18,7 +18,7 @@ const { PUBLIC_SCHEMA_IDS, createCliResult, getVersionInfo, validateFixtureWorks
 // Output mode for the whole process. Every command builds the SAME normative
 // envelope; `rendered()` is the single choke-point that decides whether the
 // caller sees the machine JSON (`--json`) or a human-readable view (the default).
-// This is what lets `ucm matrix list` work bare while `--json` stays byte-stable.
+// This is what lets `uc matrix list` work bare while `--json` stays byte-stable.
 let outputJson = false;
 
 type CliEnvelope = ReturnType<typeof createCliResult>;
@@ -46,7 +46,7 @@ export function runBuiltinCli(argv: string[]): number {
     return 0;
   }
 
-  // Discoverability: `ucm`, `ucm --help`, `ucm -h`, and `ucm <command> --help`
+  // Discoverability: `uc`, `uc --help`, `uc -h`, and `uc <command> --help`
   // all print a usage envelope. Agents reliably reach for `--help` first, so a
   // bare or help-flagged invocation must answer with the command/flag catalog
   // rather than the cryptic command.unknown response.
@@ -124,7 +124,7 @@ function runHelp(argv: string[], options: { unknown?: boolean; json?: boolean } 
   const tokens = argv.filter((arg) => !arg.startsWith("-"));
   const commands = selectUsageEntries(tokens);
   const requested = tokens.length > 0 ? tokens.join(" ") : null;
-  const unknownMessage = `No recognized command for '${requested ?? "(none)"}'. See the commands listed below or run \`ucm --help\`.`;
+  const unknownMessage = `No recognized command for '${requested ?? "(none)"}'. See the commands listed below or run \`uc --help\`.`;
 
   // Default to human-readable text; emit the JSON envelope only on --json. Agents
   // (and people) reach for `--help` first and expect prose, not a minified blob.
@@ -135,7 +135,7 @@ function runHelp(argv: string[], options: { unknown?: boolean; json?: boolean } 
 
   const data = {
     schema_version: 1,
-    usage: "ucm <command> [subcommand] [flags] --json",
+    usage: "uc <command> [subcommand] [flags] --json",
     requested,
     commands
   };
@@ -174,8 +174,8 @@ function renderHelpText(
   if (options.unknown) {
     lines.push(`error: ${options.unknownMessage}`, "");
   }
-  lines.push("ucm — use-case-matrix CLI", "");
-  lines.push("Usage: ucm <command> [subcommand] [flags] [--json]", "");
+  lines.push("uc — use-case-matrix CLI", "");
+  lines.push("Usage: uc <command> [subcommand] [flags] [--json]", "");
   const detailed = commands.length <= 3;
   const heading = options.requested ? `Commands matching '${options.requested}':` : "Commands:";
   lines.push(heading);
@@ -190,7 +190,7 @@ function renderHelpText(
   }
   lines.push("");
   if (!detailed) {
-    lines.push("Run `ucm <command> --help` for that command's flags.");
+    lines.push("Run `uc <command> --help` for that command's flags.");
   }
   lines.push("Add --json to any command for the machine-readable result envelope.");
   return `${lines.join("\n")}\n`;
@@ -242,7 +242,7 @@ function runInit(argv: string[], wantsJson: boolean): number {
     ];
     process.stdout.write(`${lines.join("\n")}\n`);
   } else {
-    process.stderr.write(`${result.diagnostics[0]?.message ?? "ucm init failed."}\n`);
+    process.stderr.write(`${result.diagnostics[0]?.message ?? "uc init failed."}\n`);
   }
 
   if (ok) {

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { nextSteps } from "../../src/init/scaffold.js";
 
-// `ucm init` prints next_steps to onboard a brand-new adopter. Those steps must
+// `uc init` prints next_steps to onboard a brand-new adopter. Those steps must
 // only cite docs that actually ship in the published package — pointing at a doc
 // that is not shipped dead-ends the adopter the moment they follow the link.
 //
@@ -28,7 +28,7 @@ function docRefsIn(line: string): string[] {
   return [...line.matchAll(/docs\/[A-Za-z0-9_./-]+\.md/g)].map((m) => m[0]);
 }
 
-describe("ucm init next_steps doc references", () => {
+describe("uc init next_steps doc references", () => {
   const steps = nextSteps();
 
   test("every cited docs/*.md path is a shipped doc", () => {

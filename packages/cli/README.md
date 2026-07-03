@@ -14,13 +14,13 @@ ships bundled inside the
 npm i -g use-case-matrix
 ```
 
-That provides the `ucm` binary (and its `use-case-matrix` long-form alias).
+That provides the `uc` binary (and its `use-case-matrix` long-form alias).
 
 ## Usage
 
 ```bash
-npx ucm --version --json
-npx ucm matrix validate --repo . --json
+npx uc --version --json
+npx uc matrix validate --repo . --json
 ```
 
 The `--json` envelope and every command's `data` shape, the command/flag names,

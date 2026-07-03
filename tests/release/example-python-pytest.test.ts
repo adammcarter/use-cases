@@ -9,7 +9,7 @@
 //      a CLEAN COPY of the example (mirrors tests/smoke/package-entrypoints.test.ts:
 //      a consumer with no repo workspace links, only the published bins);
 //   2. generate a throwaway ed25519 keypair in the temp dir (never committed);
-//   3. drive the installed `ucm` binary through the real trust flow —
+//   3. drive the installed `uc` binary through the real trust flow —
 //      bind -> scan(UNPROVEN) -> verify(runs REAL pytest, exit 0) ->
 //      prove(--trusted-ci, scratch key, signs) -> scan — and assert the row
 //      reaches FRESH;
@@ -82,15 +82,15 @@ function pytestAvailable(): boolean {
 // The parsed CLI envelope for one marker command (bind/scan/verify/prove all emit
 // the `{ ok, data, ... }` envelope unconditionally).
 function runUcm(
-  ucm: string,
+  uc: string,
   consumer: string,
   args: string[],
   env: Record<string, string> = {}
 ): { ok: boolean; data: Record<string, any>; raw: SpawnSyncReturns<string> } {
-  const result = run(ucm, args, consumer, env);
+  const result = run(uc, args, consumer, env);
   if (typeof result.stdout !== "string" || result.stdout.trim() === "") {
     throw new Error(
-      `ucm ${args.join(" ")} produced no JSON (status ${result.status}, stderr: ${result.stderr})`
+      `uc ${args.join(" ")} produced no JSON (status ${result.status}, stderr: ${result.stderr})`
     );
   }
   const payload = JSON.parse(result.stdout) as { ok: boolean; data: Record<string, any> };
@@ -99,7 +99,7 @@ function runUcm(
 
 interface Consumer {
   dir: string;
-  ucm: string;
+  uc: string;
   publicKeyPath: string;
   privateKeyPem: string;
   vrPath: string;
@@ -138,7 +138,7 @@ function installConsumer(): Consumer {
 
   return {
     dir,
-    ucm: join(dir, "node_modules/.bin/ucm"),
+    uc: join(dir, "node_modules/.bin/uc"),
     publicKeyPath,
     privateKeyPem: keypair.privateKey.export({ type: "pkcs8", format: "pem" }) as string,
     vrPath: join(dir, "verification-results.jsonl")
@@ -146,7 +146,7 @@ function installConsumer(): Consumer {
 }
 
 function bind(c: Consumer) {
-  return runUcm(c.ucm, c.dir, [
+  return runUcm(c.uc, c.dir, [
     "bind",
     "--repo",
     c.dir,
@@ -162,11 +162,11 @@ function bind(c: Consumer) {
 }
 
 function scan(c: Consumer) {
-  return runUcm(c.ucm, c.dir, ["scan", "--repo", c.dir, "--public-key", c.publicKeyPath, "--json"]);
+  return runUcm(c.uc, c.dir, ["scan", "--repo", c.dir, "--public-key", c.publicKeyPath, "--json"]);
 }
 
 function verify(c: Consumer) {
-  return runUcm(c.ucm, c.dir, [
+  return runUcm(c.uc, c.dir, [
     "verify",
     "--repo",
     c.dir,
@@ -181,7 +181,7 @@ function verify(c: Consumer) {
 
 function prove(c: Consumer) {
   return runUcm(
-    c.ucm,
+    c.uc,
     c.dir,
     [
       "prove",
@@ -243,7 +243,7 @@ describe("examples/python-pytest reaches FRESH from the published artifact (no p
     const consumer = installConsumer();
 
     // The scaffolded workspace validates out of the box.
-    const validate = runUcm(consumer.ucm, consumer.dir, [
+    const validate = runUcm(consumer.uc, consumer.dir, [
       "matrix",
       "validate",
       "--repo",

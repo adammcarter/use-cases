@@ -469,7 +469,7 @@ export function showcaseRequestApproval(args: JsonObject): CliResult<unknown> {
     finish_event_id: finish?.event_id ?? null,
     known_gaps: status.known_gaps,
     suggested_cli_command: [
-      "ucm",
+      "uc",
       "showcase",
       "approve",
       "--run",

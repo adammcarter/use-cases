@@ -9,7 +9,7 @@
 type UcmCoreModule = typeof import("@adammcarter/use-cases-core");
 
 export const MISSING_BUILD_MESSAGE =
-  "ucm: the compiled core is missing. Run `pnpm build` from the repository root before using the CLI.";
+  "uc: the compiled core is missing. Run `pnpm build` from the repository root before using the CLI.";
 
 export function isMissingCoreModule(error: unknown): boolean {
   return (

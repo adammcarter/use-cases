@@ -6,16 +6,16 @@ import { handleMcpMessage } from "../../../packages/mcp/src/index.js";
 const repoRoot = resolve(import.meta.dirname, "../../..");
 const fixture = resolve(repoRoot, "tests/fixtures/workspaces/minimal-valid");
 
-// The repo-scoped resources, by URI. ucm://schemas and ucm://config either need
+// The repo-scoped resources, by URI. uc://schemas and uc://config either need
 // no repo (schemas) or report config (config still needs a repo for context).
 const REPO_SCOPED_RESOURCES = [
-  "ucm://matrix",
-  "ucm://matrix/status",
-  "ucm://freshness",
-  "ucm://bindings",
-  "ucm://ledger",
-  "ucm://evidence",
-  "ucm://config"
+  "uc://matrix",
+  "uc://matrix/status",
+  "uc://freshness",
+  "uc://bindings",
+  "uc://ledger",
+  "uc://evidence",
+  "uc://config"
 ] as const;
 
 describe("P15 MCP resources + prompts surface", () => {
@@ -53,14 +53,14 @@ describe("P15 MCP resources + prompts surface", () => {
     const uris = resources.map((entry) => entry.uri);
 
     for (const uri of [
-      "ucm://matrix",
-      "ucm://matrix/status",
-      "ucm://freshness",
-      "ucm://bindings",
-      "ucm://ledger",
-      "ucm://evidence",
-      "ucm://schemas",
-      "ucm://config"
+      "uc://matrix",
+      "uc://matrix/status",
+      "uc://freshness",
+      "uc://bindings",
+      "uc://ledger",
+      "uc://evidence",
+      "uc://schemas",
+      "uc://config"
     ]) {
       expect(uris).toContain(uri);
     }
@@ -72,15 +72,15 @@ describe("P15 MCP resources + prompts surface", () => {
     }
 
     // SECURITY: no generic file-read resource is exposed.
-    expect(uris.some((uri) => uri.startsWith("ucm://file") || uri.includes("{path}"))).toBe(false);
+    expect(uris.some((uri) => uri.startsWith("uc://file") || uri.includes("{path}"))).toBe(false);
   });
 
-  test("resources/read of ucm://matrix returns valid structured matrix content", () => {
-    const result = readResource(`ucm://matrix?repo=${fixture}`);
+  test("resources/read of uc://matrix returns valid structured matrix content", () => {
+    const result = readResource(`uc://matrix?repo=${fixture}`);
     const contents = (result.result as { contents: Array<{ uri: string; mimeType: string; text: string }> }).contents;
     expect(contents).toHaveLength(1);
     expect(contents[0].mimeType).toBe("application/json");
-    expect(contents[0].uri).toBe(`ucm://matrix?repo=${fixture}`);
+    expect(contents[0].uri).toBe(`uc://matrix?repo=${fixture}`);
 
     const parsed = JSON.parse(contents[0].text) as { command: string; ok: boolean; data: { validation: unknown; list: unknown } };
     expect(parsed.command).toBe("matrix.validate");
@@ -88,16 +88,16 @@ describe("P15 MCP resources + prompts surface", () => {
     expect(parsed.data).toHaveProperty("list");
   });
 
-  test("resources/read of ucm://schemas/{name} returns the requested public schema without needing a repo", () => {
-    const result = readResource("ucm://schemas/common.schema.json");
+  test("resources/read of uc://schemas/{name} returns the requested public schema without needing a repo", () => {
+    const result = readResource("uc://schemas/common.schema.json");
     const contents = (result.result as { contents: Array<{ text: string }> }).contents;
     const parsed = JSON.parse(contents[0].text) as { id: string; schema: { $id?: string } };
     expect(parsed.id).toContain("common.schema.json");
     expect(parsed.schema).toBeTruthy();
   });
 
-  test("resources/read of ucm://schemas index lists available schema ids", () => {
-    const result = readResource("ucm://schemas");
+  test("resources/read of uc://schemas index lists available schema ids", () => {
+    const result = readResource("uc://schemas");
     const contents = (result.result as { contents: Array<{ text: string }> }).contents;
     const parsed = JSON.parse(contents[0].text) as { schemas: Array<{ id: string; uri: string }> };
     expect(parsed.schemas.length).toBeGreaterThan(0);
@@ -105,14 +105,14 @@ describe("P15 MCP resources + prompts surface", () => {
   });
 
   test("resources/read rejects a traversal repo path", () => {
-    const result = readResource("ucm://matrix?repo=../../../../../../../../etc");
+    const result = readResource("uc://matrix?repo=../../../../../../../../etc");
     expect(result.error).toMatchObject({ code: expect.any(Number) });
     expect(result.error?.message).toMatch(/escape|contain|boundary|UCM_PATH_ESCAPE/i);
     expect(result.result).toBeUndefined();
   });
 
   test("resources/read requires a repo when none is configured", () => {
-    const result = readResource("ucm://matrix");
+    const result = readResource("uc://matrix");
     expect(result.error).toMatchObject({ code: expect.any(Number) });
     expect(result.error?.message).toMatch(/repo/i);
     expect(result.result).toBeUndefined();
@@ -120,13 +120,13 @@ describe("P15 MCP resources + prompts surface", () => {
 
   test("resources/read falls back to the configured default repo", () => {
     process.env.UCM_MCP_REPO = fixture;
-    const result = readResource("ucm://matrix");
+    const result = readResource("uc://matrix");
     const contents = (result.result as { contents: Array<{ text: string }> }).contents;
     expect(JSON.parse(contents[0].text).command).toBe("matrix.validate");
   });
 
   test("resources/read of an unknown resource returns a not-found error", () => {
-    const result = readResource("ucm://does-not-exist");
+    const result = readResource("uc://does-not-exist");
     expect(result.error).toMatchObject({ code: expect.any(Number) });
     expect(result.result).toBeUndefined();
   });
@@ -145,7 +145,7 @@ describe("P15 MCP resources + prompts surface", () => {
     const prompts = (response?.result as { prompts: Array<{ name: string; description: string; arguments: unknown[] }> }).prompts;
     const names = prompts.map((entry) => entry.name);
 
-    for (const name of ["ucm/adopt-repo", "ucm/bind-row", "ucm/recover-suspect-row", "ucm/release-review"]) {
+    for (const name of ["uc/adopt-repo", "uc/bind-row", "uc/recover-suspect-row", "uc/release-review"]) {
       expect(names).toContain(name);
     }
     for (const entry of prompts) {
@@ -159,41 +159,41 @@ describe("P15 MCP resources + prompts surface", () => {
       jsonrpc: "2.0",
       id: 1,
       method: "prompts/get",
-      params: { name: "ucm/bind-row", arguments: { row: "auth.login" } }
+      params: { name: "uc/bind-row", arguments: { row: "auth.login" } }
     });
     const result = response?.result as { description: string; messages: Array<{ role: string; content: { type: string; text: string } }> };
     expect(result.description).toBeTruthy();
     expect(result.messages.length).toBeGreaterThan(0);
     expect(result.messages[0].content.type).toBe("text");
     // Grounded in the real CLI command and the supplied argument.
-    expect(result.messages[0].content.text).toContain("ucm bind");
+    expect(result.messages[0].content.text).toContain("uc bind");
     expect(result.messages[0].content.text).toContain("auth.login");
     // Safety: prompts never instruct minting proofs as part of binding.
-    expect(result.messages[0].content.text).not.toContain("ucm init");
+    expect(result.messages[0].content.text).not.toContain("uc init");
   });
 
   test("prompts never expose prove on the MCP surface and keep proofs CI-mediated", () => {
     const list = handleMcpMessage({ jsonrpc: "2.0", id: 1, method: "prompts/list", params: {} });
     const names = (list?.result as { prompts: Array<{ name: string }> }).prompts.map((entry) => entry.name);
-    expect(names).not.toContain("ucm/prove");
+    expect(names).not.toContain("uc/prove");
 
     const recover = handleMcpMessage({
       jsonrpc: "2.0",
       id: 2,
       method: "prompts/get",
-      params: { name: "ucm/recover-suspect-row", arguments: { row: "auth.login" } }
+      params: { name: "uc/recover-suspect-row", arguments: { row: "auth.login" } }
     });
     const text = (recover?.result as { messages: Array<{ content: { text: string } }> }).messages
       .map((message) => message.content.text)
       .join("\n");
     // The recovery path names the real verify/prove CLI commands and is explicit
     // that prove runs in trusted CI, not over MCP.
-    expect(text).toContain("ucm verify");
+    expect(text).toContain("uc verify");
     expect(text.toLowerCase()).toContain("ci");
   });
 
   test("prompts/get for an unknown prompt returns an error", () => {
-    const response = handleMcpMessage({ jsonrpc: "2.0", id: 1, method: "prompts/get", params: { name: "ucm/nope" } });
+    const response = handleMcpMessage({ jsonrpc: "2.0", id: 1, method: "prompts/get", params: { name: "uc/nope" } });
     expect(response?.error).toMatchObject({ code: expect.any(Number) });
     expect(response?.result).toBeUndefined();
   });

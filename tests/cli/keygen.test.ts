@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
 
-// Subprocess tests for `ucm keygen` (Task 3, 0.1.0): the opt-in signed tier's
+// Subprocess tests for `uc keygen` (Task 3, 0.1.0): the opt-in signed tier's
 // keypair generator. It prints (default) or writes (--out) an ed25519 keypair in
 // the PEM formats prove/--public-key consume, never writes into the repo tree,
 // carries a loud CI-only warning, and (with --ci github) emits a ready-to-paste
@@ -36,7 +36,7 @@ function runCli(args: string[]) {
 
 const STACK_TRACE = /UseCasesPluginError|\bat .*:\d+:\d+/;
 
-describe("ucm keygen (opt-in signed tier)", () => {
+describe("uc keygen (opt-in signed tier)", () => {
   test("--json prints an inline ed25519 keypair with a CI-only warning", () => {
     const res = runCli(["keygen", "--json"]);
 

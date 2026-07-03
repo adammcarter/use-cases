@@ -5,7 +5,7 @@ end-to-end with the real CLI.
 
 ## Code markers
 
-A binding is anchored in the source by an in-code **marker comment**. `ucm bind`
+A binding is anchored in the source by an in-code **marker comment**. `uc bind`
 writes them for you, but the grammar is small enough to read and hand-edit.
 
 ### Grammar
@@ -53,10 +53,10 @@ def checkout():
 | **swift-func** | a **lone** start marker, no end | inferred from the Swift function body | Swift only |
 
 - **explicit** brackets a precise span; the start and end slugs must match and
-  spans must not nest. This is the portable default (`ucm bind` explicit mode
+  spans must not nest. This is the portable default (`uc bind` explicit mode
   takes `--start-line`/`--end-line`).
 - **swift-func** places a lone start marker immediately before a Swift `func`
-  declaration and infers the span from the function body (`ucm bind` swift-func
+  declaration and infers the span from the function body (`uc bind` swift-func
   mode takes `--line`). Inferred ends are **only** supported for Swift func — a
   lone start marker in any other file fails closed and demands an explicit end.
 

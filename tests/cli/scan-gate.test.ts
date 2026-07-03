@@ -73,15 +73,15 @@ interface UcmRun {
 }
 
 function runUcm(
-  ucm: string,
+  uc: string,
   consumer: string,
   args: string[],
   env: Record<string, string> = {}
 ): UcmRun {
-  const result = run(ucm, args, consumer, env);
+  const result = run(uc, args, consumer, env);
   if (typeof result.stdout !== "string" || result.stdout.trim() === "") {
     throw new Error(
-      `ucm ${args.join(" ")} produced no JSON (status ${result.status}, stderr: ${result.stderr})`
+      `uc ${args.join(" ")} produced no JSON (status ${result.status}, stderr: ${result.stderr})`
     );
   }
   const payload = JSON.parse(result.stdout) as { ok: boolean; data: Record<string, any> };
@@ -90,7 +90,7 @@ function runUcm(
 
 interface Consumer {
   dir: string;
-  ucm: string;
+  uc: string;
   defaultVrPath: string;
 }
 
@@ -133,13 +133,13 @@ function installConsumer(): Consumer {
 
   return {
     dir,
-    ucm: join(dir, "node_modules/.bin/ucm"),
+    uc: join(dir, "node_modules/.bin/uc"),
     defaultVrPath: join(dir, ".use-cases", "verification-results.jsonl")
   };
 }
 
 function bind(c: Consumer): UcmRun {
-  return runUcm(c.ucm, c.dir, [
+  return runUcm(c.uc, c.dir, [
     "bind",
     "--repo",
     c.dir,
@@ -156,11 +156,11 @@ function bind(c: Consumer): UcmRun {
 
 // verify with NO --out: the default path IS the auto-discovered ledger.
 function verifyDefault(c: Consumer): UcmRun {
-  return runUcm(c.ucm, c.dir, ["verify", "--repo", c.dir, "--all", "--json"]);
+  return runUcm(c.uc, c.dir, ["verify", "--repo", c.dir, "--all", "--json"]);
 }
 
 function scan(c: Consumer, extra: string[] = []): UcmRun {
-  return runUcm(c.ucm, c.dir, ["scan", "--repo", c.dir, "--json", ...extra]);
+  return runUcm(c.uc, c.dir, ["scan", "--repo", c.dir, "--json", ...extra]);
 }
 
 function rowOf(scanData: Record<string, any>, rowId = ROW_ID) {

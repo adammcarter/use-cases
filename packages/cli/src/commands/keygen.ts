@@ -1,4 +1,4 @@
-// `ucm keygen` — mint an ed25519 keypair for the OPT-IN signed proof tier.
+// `uc keygen` — mint an ed25519 keypair for the OPT-IN signed proof tier.
 //
 // This removes the biggest adoption barrier for signing: manual key handling.
 // It prints the keypair (default) or writes it to --out <dir>, in the exact PEM
@@ -57,7 +57,7 @@ function githubCiSnippet(): string {
     "        env:",
     "          UCM_CI_SIGNING_KEY: ${{ secrets.UCM_CI_SIGNING_KEY }}",
     "        run: |",
-    "          ucm prove --all --trusted-ci \\",
+    "          uc prove --all --trusted-ci \\",
     "            --signing-key-env UCM_CI_SIGNING_KEY \\",
     "            --key-id ci-key-1",
     ""

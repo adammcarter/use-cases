@@ -54,11 +54,11 @@ All matrix commands emit the standard JSON envelope and take `--json`:
 
 | Goal | Command |
 |---|---|
-| Check structural integrity | `ucm matrix validate --repo . --json` |
-| List / filter addressable rows | `ucm matrix list --repo . --json` (filters: `--value`, `--journey-role`, `--lifecycle`, `--host`, `--tag`, `--changed-path`) |
-| Combine matrix + evidence status | `ucm matrix status --repo . --json` |
-| Add or update one row | `ucm matrix upsert --repo . --file <yaml> --use-case-json '<json>' --json` |
-| Retire a row | `ucm matrix remove --repo . --use-case <id> --reason <text> --json` |
+| Check structural integrity | `uc matrix validate --repo . --json` |
+| List / filter addressable rows | `uc matrix list --repo . --json` (filters: `--value`, `--journey-role`, `--lifecycle`, `--host`, `--tag`, `--changed-path`) |
+| Combine matrix + evidence status | `uc matrix status --repo . --json` |
+| Add or update one row | `uc matrix upsert --repo . --file <yaml> --use-case-json '<json>' --json` |
+| Retire a row | `uc matrix remove --repo . --use-case <id> --reason <text> --json` |
 
 `matrix remove` is a **lifecycle transition**, not a physical delete: the row is
 marked `lifecycle: removed` and its history is preserved. Mutations validate the

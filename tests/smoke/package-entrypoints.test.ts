@@ -133,12 +133,12 @@ describe("P0 package entrypoints", () => {
     requireSuccess(run("node", ["check.mjs"], consumer));
 
     const binDir = join(consumer, "node_modules/.bin");
-    const cli = run(join(binDir, "ucm"), ["--version", "--json"], consumer);
+    const cli = run(join(binDir, "uc"), ["--version", "--json"], consumer);
     requireSuccess(cli);
     expect(JSON.parse(cli.stdout).data.version).toBe("0.1.0");
 
     const mcp = runWithInput(
-      join(binDir, "ucm-mcp"),
+      join(binDir, "uc-mcp"),
       [],
       [
         JSON.stringify({

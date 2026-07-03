@@ -45,8 +45,8 @@ P0 turns that into a runnable TypeScript workspace.
 - Core package name: `@adammcarter/use-cases-core`.
 - CLI package name: `@adammcarter/use-cases-cli`.
 - MCP package name: `@adammcarter/use-cases-mcp`.
-- CLI executable: `ucm`.
-- MCP executable: `ucm-mcp`.
+- CLI executable: `uc`.
+- MCP executable: `uc-mcp`.
 
 ### Installed-Plugin Launch Model
 

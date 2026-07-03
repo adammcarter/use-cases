@@ -11,7 +11,7 @@ versions move.
 > `1.0.0`**; until then they may still change between `0.0.x` releases. Adopt
 > with that in mind.
 
-> Ships as a single package, `use-case-matrix` (binaries `ucm` and `ucm-mcp`);
+> Ships as a single package, `use-case-matrix` (binaries `uc` and `uc-mcp`);
 > the `core` / `cli` / `mcp` workspaces are bundled inside it, not published
 > separately. See the [publishing runbook](../release/publishing.md) for how a
 > release is cut (npm Trusted Publishing + provenance) and the owner one-time npm
@@ -32,7 +32,7 @@ observe different behaviour. When in doubt, treat it as major.
 
 These are versioned contracts:
 
-- **CLI command + subcommand names and their flags** — e.g. `ucm matrix validate`, `ucm verify`, `ucm prove`, `ucm bind`, `ucm scan`. Renames/removals are breaking.
+- **CLI command + subcommand names and their flags** — e.g. `uc matrix validate`, `uc verify`, `uc prove`, `uc bind`, `uc scan`. Renames/removals are breaking.
 - **CLI `--json` output** — the envelope and every command's `data` shape (see below). Human/text output is **not** part of the contract.
 - **CLI exit codes** and their meanings (see below).
 - **The result envelope** shared by CLI `--json` and MCP structured results.
@@ -85,7 +85,7 @@ signing-key missing) are documented in the CLI reference and are stable.
 These ship and work, but their **shape** may change in a minor release until
 promoted. They are called out here so adopters can depend on them with eyes open:
 
-- MCP **resources** (`ucm://…`) and **prompts** are exposed and read-only, but
+- MCP **resources** (`uc://…`) and **prompts** are exposed and read-only, but
   the exact URI/prompt set may grow in minor releases; treat the MCP *tool*
   surface as the most stable MCP contract.
 - MCP output **rate-limiting** and **size caps**.

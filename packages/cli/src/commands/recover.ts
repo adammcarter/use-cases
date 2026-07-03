@@ -1,4 +1,4 @@
-// `ucm recover` — drive a drifted / unproven row back to green in ONE command.
+// `uc recover` — drive a drifted / unproven row back to green in ONE command.
 //
 // The fleet found recovery non-obvious: a row that has drifted (STALE_LOCAL) or
 // was never verified (UNVERIFIED_LOCAL / UNPROVEN) needs a re-verify, and — for
@@ -210,8 +210,8 @@ export const recoverCommand: CliCommand = {
           severity: "error" as const,
           message:
             `recover could not restore ${named} to green: the verifier failed for ${named}. ` +
-            `Fix the code or the test so the row's verifier passes, then re-run \`ucm recover\`. ` +
-            `Inspect the failure with \`ucm verify --repo ${ctx.workspace_root} ${all ? "--all" : `--row ${rowId}`}\`.`,
+            `Fix the code or the test so the row's verifier passes, then re-run \`uc recover\`. ` +
+            `Inspect the failure with \`uc verify --repo ${ctx.workspace_root} ${all ? "--all" : `--row ${rowId}`}\`.`,
           source_path: null,
           json_pointer: null,
           entity_id: failedRows[0] ?? rowId ?? null,
@@ -345,8 +345,8 @@ export const recoverCommand: CliCommand = {
       const hint = needsPublicKey
         ? "To read back the freshly signed proof, also pass --public-key <path> (the public half of --signing-key-env)."
         : scanResult.exit_code !== 0
-          ? `\`ucm scan\` reported an integrity error (exit ${scanResult.exit_code}) — resolve it, then re-run \`ucm recover\`.`
-          : `Inspect the current state with \`ucm scan --repo ${ctx.workspace_root}\`.`;
+          ? `\`uc scan\` reported an integrity error (exit ${scanResult.exit_code}) — resolve it, then re-run \`uc recover\`.`
+          : `Inspect the current state with \`uc scan --repo ${ctx.workspace_root}\`.`;
       return {
         envelope: createCliResult(
           "markers.recover",
@@ -393,7 +393,7 @@ export const recoverCommand: CliCommand = {
           verify: verifyResult,
           ...(proveResult ? { prove: proveResult } : {}),
           // Mirror scan's shape so callers can read data.status.rows[].local_status
-          // and .status exactly as they do from `ucm scan`.
+          // and .status exactly as they do from `uc scan`.
           status: scanResult.status
         },
         {
