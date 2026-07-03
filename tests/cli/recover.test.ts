@@ -297,6 +297,45 @@ describe("ucm recover: drive a drifted / unproven row back to green", () => {
     expect(row.local_status).toBe("VERIFIED_LOCAL");
   });
 
+  test("recover --signing-key-env WITHOUT --public-key does NOT fake green", () => {
+    // The verifier passes and a proof is minted, but with no --public-key the
+    // re-scan cannot verify that proof, so the row never reaches FRESH. recover
+    // must report NON-green (exit != 0, ok:false) and point at --public-key —
+    // never a false exit-0 off the strength of a passing verifier alone.
+    const consumer = installConsumer();
+    expect(bind(consumer).ok).toBe(true);
+
+    const recovered = run(
+      consumer.ucm,
+      [
+        "recover",
+        "--repo",
+        consumer.dir,
+        "--all",
+        "--signing-key-env",
+        SIGNING_KEY_ENV,
+        "--key-id",
+        "test-key-1",
+        "--json"
+        // deliberately NO --public-key
+      ],
+      consumer.dir,
+      { [SIGNING_KEY_ENV]: privateKeyPem }
+    );
+    expect(recovered.status).not.toBe(0);
+    const payload = JSON.parse(recovered.stdout) as {
+      ok: boolean;
+      data: Record<string, any>;
+      diagnostics?: { code?: string; message: string }[];
+    };
+    expect(payload.ok).toBe(false);
+    expect(payload.data.recovered).toBe(false);
+    const row = rowOf(payload.data);
+    expect(row.status).not.toBe("FRESH");
+    const messages = (payload.diagnostics ?? []).map((d) => d.message).join(" ");
+    expect(messages).toContain("--public-key");
+  });
+
   test("a genuinely failing verifier -> non-zero + diagnostic, NO fake green", () => {
     const consumer = installConsumer();
     expect(bind(consumer).ok).toBe(true);

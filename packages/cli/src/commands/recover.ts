@@ -169,6 +169,20 @@ export const recoverCommand: CliCommand = {
     const resultsPath = defaultResultsPath(ctx);
     const targetLabel = all ? "--all" : rowId!;
 
+    // Validate the signing key BEFORE running the verifier or writing the
+    // ledger — a detectable usage error must not have side effects.
+    const signingKey = markerSigningKey(flags);
+    if (flags.signingKeyEnv !== undefined && !signingKey) {
+      return {
+        envelope: errorEnvelope(
+          "markers.recover",
+          "cli_invalid_arguments",
+          `--signing-key-env ${String(flags.signingKeyEnv)} is set but $${String(flags.signingKeyEnv)} is empty — provide the PKCS8 ed25519 private key PEM in that env var (a CI secret).`
+        ),
+        exitCode: 2
+      };
+    }
+
     // --- Step 1: re-run the verifier(s), writing the canonical unsigned ledger.
     const verifyResult = runVerifyCommand({
       context: ctx,
@@ -227,20 +241,10 @@ export const recoverCommand: CliCommand = {
       };
     }
 
-    // --- Step 3 (optional): re-prove to FRESH when a signing key is supplied.
+    // --- Step 3 (optional): re-prove to FRESH when a signing key is supplied
+    // (already validated above, before any side effects).
     let proveResult: ReturnType<typeof runProveCommand> | undefined;
-    const signingKey = markerSigningKey(flags);
-    if (flags.signingKeyEnv !== undefined) {
-      if (!signingKey) {
-        return {
-          envelope: errorEnvelope(
-            "markers.recover",
-            "cli_invalid_arguments",
-            `--signing-key-env ${String(flags.signingKeyEnv)} is set but $${String(flags.signingKeyEnv)} is empty — provide the PKCS8 ed25519 private key PEM in that env var (a CI secret).`
-          ),
-          exitCode: 2
-        };
-      }
+    if (signingKey) {
       proveResult = runProveCommand({
         context: ctx,
         productRoot: paths.productRoot,
@@ -312,6 +316,71 @@ export const recoverCommand: CliCommand = {
       baseRef,
       repoCwd: ctx.workspace_root
     });
+
+    // --- Step 5: CONFIRM the re-scan actually put the target row(s) at the
+    // intended bar before reporting success. A passing verifier ALONE is not
+    // enough: a signed proof we cannot read back (no --public-key), a
+    // pre-existing ledger-integrity error (scan exit 3/4), or an unbound target
+    // must all surface as NON-green — never a fake exit-0. The bar is FRESH when
+    // we re-proved, else VERIFIED_LOCAL (the keyless green).
+    const wantFresh = signingKey !== undefined;
+    const bar = wantFresh ? "FRESH" : "VERIFIED_LOCAL";
+    const scanRows = scanResult.status?.rows ?? [];
+    const rowById = new Map(scanRows.map((row) => [row.row_id, row]));
+    const targetRowIds = all ? verifyResult.results.map((r) => r.row_id) : [rowId!];
+    const notGreen = targetRowIds.filter((id) => {
+      const row = rowById.get(id);
+      const reached = wantFresh
+        ? row?.status === "FRESH"
+        : row?.status === "FRESH" || row?.local_status === "VERIFIED_LOCAL";
+      return !reached;
+    });
+
+    const recovered =
+      scanResult.exit_code === 0 && targetRowIds.length > 0 && notGreen.length === 0;
+    if (!recovered) {
+      const named = notGreen.length > 0 ? notGreen.join(", ") : targetLabel;
+      const needsPublicKey =
+        wantFresh && flags.publicKey === undefined && flags.keyring === undefined;
+      const hint = needsPublicKey
+        ? "To read back the freshly signed proof, also pass --public-key <path> (the public half of --signing-key-env)."
+        : scanResult.exit_code !== 0
+          ? `\`ucm scan\` reported an integrity error (exit ${scanResult.exit_code}) — resolve it, then re-run \`ucm recover\`.`
+          : `Inspect the current state with \`ucm scan --repo ${ctx.workspace_root}\`.`;
+      return {
+        envelope: createCliResult(
+          "markers.recover",
+          {
+            recovered: false,
+            proved: proveResult !== undefined,
+            target: targetLabel,
+            results_path: resultsPath,
+            verify: verifyResult,
+            ...(proveResult ? { prove: proveResult } : {}),
+            status: scanResult.status
+          },
+          {
+            ok: false,
+            complete: false,
+            workspaceRoot: ctx.workspace_root,
+            dataRoot: ctx.data_root,
+            componentId: ctx.component_id,
+            diagnostics: [
+              {
+                code: "recover.not_green",
+                severity: "error" as const,
+                message: `recover re-verified ${targetLabel} but ${named} did not reach ${bar}. ${hint}`,
+                source_path: null,
+                json_pointer: null,
+                entity_id: notGreen[0] ?? rowId ?? null,
+                related_ids: notGreen
+              }
+            ]
+          }
+        ),
+        exitCode: scanResult.exit_code !== 0 ? scanResult.exit_code : 1
+      };
+    }
 
     return {
       envelope: createCliResult(
