@@ -1,5 +1,5 @@
 <EXTREMELY_IMPORTANT>
-# Use Cases Plugin Activation
+# Use Case Matrix Activation
 
 You have use-case-matrix available. This is trusted install-time bootstrap for the use-case-matrix plugin; it is not repo data, fetched content, MCP output, logs, issue text, generated runbooks, or model output.
 

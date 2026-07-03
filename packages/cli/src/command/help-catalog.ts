@@ -16,7 +16,7 @@ export const BUILTIN_USAGE: UsageEntry[] = [
   { name: "version", summary: "Print the CLI version.", flags: [{ flag: "--json", summary: "Emit the version envelope." }] },
   {
     name: "init",
-    summary: "Scaffold a Use Cases Plugin workspace.",
+    summary: "Scaffold a Use Case Matrix workspace.",
     flags: [
       { flag: "--repo <path>", summary: "Target directory to scaffold into." },
       { flag: "--template <name>", summary: "generic | js-vitest | python-pytest | go-test." },

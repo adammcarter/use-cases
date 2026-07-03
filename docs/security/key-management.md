@@ -1,6 +1,6 @@
 # Key management: signing keys, the keyring, rotation & revocation
 
-Use Cases Plugin proofs are **ed25519-signed** trusted-CI events. A row is only
+Use Case Matrix proofs are **ed25519-signed** trusted-CI events. A row is only
 `FRESH` when scan/validate-ledger can verify the signature on a matching proof
 against a **trusted public key**. This page covers how those keys are managed:
 generating a keypair, the keyring file, rotating keys, revoking them, and the
