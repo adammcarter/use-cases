@@ -63,16 +63,16 @@ jobs:
       # the bundle is self-contained. `--provenance` is implied by Trusted
       # Publishing but set explicitly for clarity.
       #
-      # dist-tag is derived from the version: pre-1.0 (0.x) or any prerelease
-      # (contains a hyphen, e.g. 1.0.0-rc.1) publishes under `beta`; a stable
-      # >=1.0.0 publishes under `latest`. Deriving it also sidesteps npm's
-      # refusal to implicitly move `latest` to a version lower than one already
-      # published (e.g. publishing 0.0.1 while 1.0.1 still exists).
+      # dist-tag is derived from the version: only a true PRERELEASE (a version
+      # containing a hyphen, e.g. 1.0.0-rc.1) publishes under `beta`; every normal
+      # release — including the pre-1.0 `0.0.x` beta line, which is the active
+      # release line — publishes under `latest` so `npm i use-case-matrix` always
+      # resolves the newest release.
       - name: Publish to npm (Trusted Publishing + provenance)
         run: |
           VERSION=$(node -p "require('./package.json').version")
           case "$VERSION" in
-            0.*|*-*) TAG=beta ;;
+            *-*) TAG=beta ;;
             *) TAG=latest ;;
           esac
           echo "Publishing use-case-matrix@$VERSION under dist-tag: $TAG"
