@@ -55,11 +55,11 @@ jobs:
       # Node, then Corepack (puts pnpm on PATH), then setup-node again with
       # cache -- `cache: pnpm` invokes pnpm to find the store, so pnpm must
       # exist before the cache step runs.
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "22"
       - run: corepack enable
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "22"
           cache: pnpm
@@ -89,11 +89,11 @@ jobs:
       # Node, then Corepack (puts pnpm on PATH), then setup-node again with
       # cache -- `cache: pnpm` invokes pnpm to find the store, so pnpm must
       # exist before the cache step runs.
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "22"
       - run: corepack enable
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "22"
           cache: pnpm
@@ -145,11 +145,11 @@ jobs:
       # Node, then Corepack (puts pnpm on PATH), then setup-node again with
       # cache -- `cache: pnpm` invokes pnpm to find the store, so pnpm must
       # exist before the cache step runs.
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "22"
       - run: corepack enable
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "22"
           cache: pnpm

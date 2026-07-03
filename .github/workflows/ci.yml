@@ -12,11 +12,11 @@ jobs:
       # Node first, then enable Corepack so pnpm is on PATH, then re-run
       # setup-node with cache. setup-node's `cache: pnpm` shells out to pnpm to
       # resolve the store path, so pnpm must exist before the cache step runs.
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "22"
       - run: corepack enable
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "22"
           cache: pnpm
