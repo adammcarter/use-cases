@@ -1,6 +1,6 @@
 {
   "name": "@use-case-matrix/core",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "description": "Core domain library for use-case-matrix.",
   "license": "MIT",

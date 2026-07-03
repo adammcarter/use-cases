@@ -4,6 +4,37 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
 follows [Semantic Versioning](https://semver.org) (see docs/release.md).
 
+## 1.0.1 - 2026-07-03
+
+Patch release hardening the CLI against a clean-room dogfood of 1.0.0.
+
+### Fixed
+
+- Every CLI failure now renders the standard `ok:false` JSON envelope instead of
+  a bare Node stack trace. A malformed `use-case-matrix.yml`, a bad signing key,
+  or any other thrown error previously produced empty stdout plus a stack trace,
+  breaking any script or agent parsing `--json`.
+- `prove` / `scan` report a clean `signing_key.invalid` / `public_key.invalid`
+  diagnostic for a present-but-malformed PEM key instead of a raw OpenSSL crash.
+- Unknown / typo'd flags are rejected with exit 2 rather than silently ignored
+  (a mistyped `--end-line` no longer binds the wrong span).
+- `matrix validate` (and every workspace command) surfaces `workspace.not_found`
+  for a non-existent `--repo` instead of reporting `valid: true`.
+
+### Changed
+
+- The maintainer-only `doctor skills` / `doctor package` subcommands are hidden
+  from generated help (still dispatchable for the release gate).
+
+### Docs
+
+- Ship the `docs/security/*`, `docs/reference/*`, `docs/tutorials/*`,
+  getting-started, and docs-index pages in the npm package, so links from the
+  shipped docs resolve.
+- Document the trust commands (`bind` / `scan` / `verify` / `prove` /
+  `validate-ledger`) in the CLI reference, and add a cross-platform (Node)
+  ed25519 key-generation recipe (macOS LibreSSL cannot `genpkey ed25519`).
+
 ## 1.0.0 - 2026-06-30
 
 First public release. Builds on rc.1 with a full identity completion, an
