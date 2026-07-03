@@ -182,7 +182,10 @@ export const markersBindCommand: CliCommand = {
     const ctx = context.context;
     const rowId = flags.row as string | undefined;
     const file = flags.file as string | undefined;
-    const modeRaw = flags.mode as string | undefined;
+    // --register-existing registers an existing `//: @use-case:` marker span, so
+    // it implies --mode explicit when no mode is given. `bind --help` lists --mode
+    // as required only for a fresh bind, so requiring it here surprised users.
+    const modeRaw = (flags.mode as string | undefined) ?? (flags.registerExisting ? "explicit" : undefined);
     if (!rowId || !file || (modeRaw !== "explicit" && modeRaw !== "swift-func")) {
       return {
         envelope: errorEnvelope("markers.bind", "cli_invalid_arguments", "Missing --row, --file, or --mode (explicit|swift-func)."),

@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import { cpSync, mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
@@ -96,6 +96,31 @@ describe("CLI robustness (v1.0.1 dogfood fixes)", () => {
     const payload = JSON.parse(res.stdout);
     expect(payload.ok).toBe(false);
     expect(payload.diagnostics[0].code).toBe("signing_key.invalid");
+    expect(res.stderr).not.toMatch(STACK_TRACE);
+  });
+
+  test("bind --register-existing infers explicit mode (no --mode required)", () => {
+    const dir = mkdtempSync(join(tmpdir(), "ucm-bindreg-"));
+    tmpDirs.push(dir);
+    // The shipped pytest example has pre-marked code + a matching row.
+    cpSync(join(repoRoot, "examples/python-pytest"), dir, { recursive: true });
+
+    const res = runCli([
+      "bind",
+      "--row",
+      "example.checkout.apply_coupon",
+      "--file",
+      "src/coupon.py",
+      "--register-existing",
+      "--repo",
+      dir,
+      "--json"
+    ]);
+
+    const payload = JSON.parse(res.stdout);
+    // Must NOT fail with the "Missing … --mode" error — --register-existing implies explicit.
+    expect(payload.diagnostics.every((d: { message: string }) => !d.message.includes("--mode"))).toBe(true);
+    expect(payload.ok).toBe(true);
     expect(res.stderr).not.toMatch(STACK_TRACE);
   });
 });

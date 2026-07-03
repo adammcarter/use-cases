@@ -1,5 +1,5 @@
 name: Bug report
-description: Report a defect in Use Cases Plugin (ucm / ucm-mcp)
+description: Report a defect in Use Case Matrix (ucm / ucm-mcp)
 title: "[bug]: "
 labels: ["bug"]
 body:
