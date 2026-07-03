@@ -1,6 +1,6 @@
 {
   "name": "use-case-matrix",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": false,
   "license": "MIT",
   "repository": {
@@ -39,7 +39,12 @@
     "docs/migration.md",
     "docs/release.md",
     "docs/security.md",
+    "docs/security",
     "docs/showcase.md",
+    "docs/README.md",
+    "docs/getting-started.md",
+    "docs/reference",
+    "docs/tutorials",
     "examples",
     "hosts",
     "packages/cli/dist",
