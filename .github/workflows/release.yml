@@ -44,6 +44,15 @@ jobs:
       - run: npm install -g npm@latest
       - run: corepack enable
 
+      # pytest powers the pure-Python adoption example (examples/python-pytest);
+      # tests/release/example-python-pytest.test.ts runs the REAL verifier, so
+      # pytest must be on PATH for `pnpm -s test`. Mirror ci.yml — without this
+      # the release job's test gate fails (pytest missing) and never publishes.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade pytest
+
       - run: corepack pnpm install --frozen-lockfile
       - run: corepack pnpm -s build
       - run: corepack pnpm -s test
