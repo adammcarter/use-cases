@@ -1,6 +1,6 @@
-# Use Cases Plugin — documentation
+# Use Case Matrix — documentation
 
-Use Cases Plugin keeps an agent's product claims honest: it gives a repo a
+Use Case Matrix keeps an agent's product claims honest: it gives a repo a
 living use-case matrix, binds each row to the code that satisfies it, and marks a
 row **FRESH** only when trusted CI has signed proof that the current code,
 binding, and verifier context still match. Stale claims become visible instead of

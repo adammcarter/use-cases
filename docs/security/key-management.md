@@ -1,6 +1,6 @@
 # Key management: signing keys, the keyring, rotation & revocation
 
-Use Cases Plugin proofs are **ed25519-signed** trusted-CI events. A row is only
+Use Case Matrix proofs are **ed25519-signed** trusted-CI events. A row is only
 `FRESH` when scan/validate-ledger can verify the signature on a matching proof
 against a **trusted public key**. This page covers how those keys are managed:
 generating a keypair, the keyring file, rotating keys, revoking them, and the
@@ -23,11 +23,20 @@ both are present, the keyring wins.
 
 ## Generating an ed25519 keypair
 
-```sh
-# Private key (keep in CI secrets only — never commit):
-openssl genpkey -algorithm ed25519 -out ci-signing-key.pem
+The signing key is a **PKCS8 ed25519 PEM**; the public key is an **SPKI ed25519
+PEM**. Generate the pair with Node — this works everywhere the CLI runs and needs
+no external tools (macOS's bundled LibreSSL cannot `genpkey -algorithm ed25519`):
 
-# Public key (this is what goes in --public-key or the keyring):
+```sh
+node -e 'const c=require("crypto"),f=require("fs");const{publicKey,privateKey}=c.generateKeyPairSync("ed25519");f.writeFileSync("ci-signing-key.pem",privateKey.export({type:"pkcs8",format:"pem"}));f.writeFileSync("ci-signing-key.pub.pem",publicKey.export({type:"spki",format:"pem"}));'
+```
+
+This writes `ci-signing-key.pem` (the **private** key — keep in CI secrets only,
+never commit) and `ci-signing-key.pub.pem` (the **public** key, for `--public-key`
+or the keyring). If you have OpenSSL ≥ 3 (not macOS LibreSSL) you can instead run:
+
+```sh
+openssl genpkey -algorithm ed25519 -out ci-signing-key.pem
 openssl pkey -in ci-signing-key.pem -pubout -out ci-signing-key.pub.pem
 ```
 

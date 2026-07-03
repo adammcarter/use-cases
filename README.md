@@ -1,10 +1,10 @@
-# Use Cases Plugin
+# Use Case Matrix
 
 **Keep your AI agent's "it works" honest.**
 
 AI coding agents ship fast and claim confidently — "done", "tested", "this works". Some of those claims are true. Some were true last week. Some were never checked. You can't tell which by looking, and stale claims fail silently.
 
-Use Cases Plugin gives your repo a **living matrix of product behaviours**, binds each one to the code that satisfies it, and marks it **`FRESH` only when trusted CI has cryptographically signed proof that the current code still backs the claim.** Edit the code behind a behaviour and its row flips to `SUSPECT` on its own — the lie surfaces instead of being trusted.
+Use Case Matrix gives your repo a **living matrix of product behaviours**, binds each one to the code that satisfies it, and marks it **`FRESH` only when trusted CI has cryptographically signed proof that the current code still backs the claim.** Edit the code behind a behaviour and its row flips to `SUSPECT` on its own — the lie surfaces instead of being trusted.
 
 It's the difference between *"the agent said the checkout flow works"* and *"the checkout flow has a behaviour row, bound to `applyCoupon()`, proven `FRESH` by CI at commit `a1b2c3`, demonstrated to a human who signed off."*
 
@@ -20,7 +20,7 @@ It's the difference between *"the agent said the checkout flow works"* and *"the
 | `TEST-MATRIX.md` rotted months ago | Hand-maintained status tables drift the moment code changes; old `PASS` marks lie. |
 | "It's signed off" — by whom? when? | Approvals are vibes. An agent can type "approved" as easily as a human. |
 
-Use Cases Plugin replaces all of that with one append-only, content-addressed source of truth that an agent maintains as it works — and that *cannot* quietly lie.
+Use Case Matrix replaces all of that with one append-only, content-addressed source of truth that an agent maintains as it works — and that *cannot* quietly lie.
 
 ---
 

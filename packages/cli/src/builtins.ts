@@ -230,7 +230,7 @@ function runInit(argv: string[], wantsJson: boolean): number {
     );
   } else if (ok) {
     const lines = [
-      `Scaffolded a Use Cases Plugin workspace in ${repoRoot}`,
+      `Scaffolded a Use Case Matrix workspace in ${repoRoot}`,
       `  template:  ${result.template}`,
       `  component: ${result.component_id}`,
       "  created:",
