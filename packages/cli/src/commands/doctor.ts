@@ -25,7 +25,8 @@ function canWrite(path: string): boolean {
 export const doctorSkillsCommand: CliCommand = {
   path: ["doctor", "skills"],
   command: "doctor.skills",
-  summary: "Validate packaged skill assets.",
+  summary: "Validate packaged skill assets (maintainer-only; expects a plugin checkout).",
+  hidden: true,
   flags: workspaceFlags,
   handler: ({ argv }) => {
     const context = resolveContextOrError(argv, "doctor.skills");
@@ -50,7 +51,8 @@ export const doctorSkillsCommand: CliCommand = {
 export const doctorPackageCommand: CliCommand = {
   path: ["doctor", "package"],
   command: "doctor.package",
-  summary: "Inspect the packaged plugin artifact.",
+  summary: "Inspect the packaged plugin artifact (maintainer-only; builds via pnpm).",
+  hidden: true,
   flags: [
     ...workspaceFlags,
     { key: "tarball", name: "--tarball", kind: "string", valueName: "<path>", summary: "Inspect a packed tarball instead of the workspace." },

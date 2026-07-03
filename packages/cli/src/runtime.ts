@@ -4,6 +4,7 @@
 // return an envelope rather than write stdout, so these return the envelope (and
 // exit code) instead of emitting it. The envelopes are constructed identically to
 // the legacy ones, so `--json` output stays byte-for-byte the same.
+import { existsSync } from "node:fs";
 import { isAbsolute, relative, resolve } from "node:path";
 import { loadUcmCore } from "./coreLoader.js";
 import { valueAfter } from "./args/parse.js";
@@ -92,6 +93,17 @@ export function errorEnvelope(command: string, code: string, message: string): C
   );
 }
 
+// Render any thrown value as the standard error envelope. A UseCasesPluginError
+// carries a stable `.code`; anything else collapses to `internal_error`. This
+// mirrors the MCP server's top-level tool catch, so a thrown failure degrades to
+// the same ok:false envelope over the CLI as it does over MCP — never a bare
+// Node stack trace on stderr with empty stdout.
+export function caughtErrorEnvelope(command: string, error: unknown): CliEnvelope {
+  const code = error instanceof Error && "code" in error ? String((error as { code?: unknown }).code) : "internal_error";
+  const message = error instanceof Error ? error.message : String(error);
+  return errorEnvelope(command, code, message);
+}
+
 // Non-writing port of the legacy `containedFilePath`: bound a user-supplied path
 // to the workspace, returning a tagged error (envelope + exit 4) on escape.
 export type ContainedPathResult =
@@ -118,6 +130,16 @@ export type ContextResult =
 // 4) when --data-root escapes --repo, exactly as the legacy guard did.
 export function resolveContextOrError(argv: string[], command: string): ContextResult {
   const workspaceRoot = resolve(process.cwd(), valueAfter(argv, "--repo") ?? ".");
+  // A non-existent --repo is almost always a typo. Surface it explicitly rather
+  // than silently reporting an empty-but-valid workspace. (An existing-but-empty
+  // directory is still legitimate — that stays the "not populated" case.)
+  if (!existsSync(workspaceRoot)) {
+    return {
+      kind: "error",
+      envelope: errorEnvelope(command, "workspace.not_found", `--repo path does not exist: ${workspaceRoot}`),
+      exitCode: 2
+    };
+  }
   const dataRootValue = valueAfter(argv, "--data-root");
   if (dataRootValue) {
     const dataRoot = resolve(process.cwd(), dataRootValue);

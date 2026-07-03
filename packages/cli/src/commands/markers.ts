@@ -53,6 +53,19 @@ function markerPaths(flags: ParsedFlags, context: ResolvedContext) {
   return { productRoot, bindingsPath, evidencePath };
 }
 
+// A malformed key would otherwise surface as a raw OpenSSL DECODER exception with
+// an empty stdout. Turn it into a clean coded error that the dispatcher renders as
+// the standard ok:false envelope, and point the user at the key-management doc.
+function keyMaterialError(kind: "signing" | "public", origin: string, cause: unknown): Error {
+  const detail = cause instanceof Error ? cause.message : String(cause);
+  const error = new Error(
+    `The ${kind} key (${origin}) is not a valid PEM key — expected a PKCS8 ed25519 PEM. ` +
+      `See docs/security/key-management.md to generate one. (${detail})`
+  );
+  (error as { code?: string }).code = kind === "signing" ? "signing_key.invalid" : "public_key.invalid";
+  return error;
+}
+
 // Verbatim port of the legacy `markerPublicKeyResolver`.
 function markerPublicKeyResolver(flags: ParsedFlags): ReturnType<typeof singleKeyResolver> {
   // Opt-in multi-key path: --keyring builds a resolver that enforces per-key
@@ -68,7 +81,11 @@ function markerPublicKeyResolver(flags: ParsedFlags): ReturnType<typeof singleKe
     return () => undefined;
   }
   const pem = readFileSync(resolve(process.cwd(), keyPath), "utf8");
-  return singleKeyResolver(createPublicKey(pem));
+  try {
+    return singleKeyResolver(createPublicKey(pem));
+  } catch (error) {
+    throw keyMaterialError("public", keyPath, error);
+  }
 }
 
 // Verbatim port of the legacy `markerSigningKey`.
@@ -81,7 +98,11 @@ function markerSigningKey(flags: ParsedFlags): { privateKey: ReturnType<typeof c
   if (!pem) {
     return undefined;
   }
-  return { privateKey: createPrivateKey(pem), keyId: (flags.keyId as string | undefined) ?? "trusted-ci" };
+  try {
+    return { privateKey: createPrivateKey(pem), keyId: (flags.keyId as string | undefined) ?? "trusted-ci" };
+  } catch (error) {
+    throw keyMaterialError("signing", `$${envName}`, error);
+  }
 }
 
 // Minimal ULID-shaped id for registry/proof event ids (uniqueness from the tail).

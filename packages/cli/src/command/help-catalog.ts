@@ -49,5 +49,7 @@ function toUsageEntry(command: CliCommand): UsageEntry {
 // The full usage catalog: the hand-authored builtins followed by every registry
 // command projected from its declarative spec.
 export function buildUsageCatalog(commands: CliCommand[]): UsageEntry[] {
-  return [...BUILTIN_USAGE, ...commands.map(toUsageEntry)];
+  // Hidden commands stay dispatchable but are omitted from generated help (e.g.
+  // maintainer-only release tooling that users should not reach for).
+  return [...BUILTIN_USAGE, ...commands.filter((command) => !command.hidden).map(toUsageEntry)];
 }
