@@ -802,7 +802,17 @@ export function deriveFreshness(input: DeriveFreshnessInput): FreshnessStatus {
     if (localResultsProvided) {
       const bound =
         status !== "INVALID" && status !== "UNBOUND" && currentRegistered.length > 0;
-      if (bound) {
+      if (bound && status === "FRESH") {
+        // FRESH precedence: a trusted signed proof is a strictly stronger
+        // guarantee than an unsigned local run, so it always satisfies the
+        // keyless daily light — even when the throwaway verify-results ledger
+        // is absent or stale locally (e.g. the proof was minted in CI and the
+        // ledger, which `verify --out` overwrites, was never written here).
+        // Keeps `local_status` consistent with `status` (plan: FRESH ⇒
+        // VERIFIED_LOCAL) instead of showing a false non-green daily light.
+        localStatus = "VERIFIED_LOCAL";
+        localReason = "backed by trusted signed proof";
+      } else if (bound) {
         const derived = deriveLocalStatus(
           localResultsByRow.get(rowId) ?? [],
           input.current_context_hashes?.get(rowId),

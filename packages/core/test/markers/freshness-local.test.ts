@@ -290,7 +290,11 @@ describe("deriveFreshness local_status", () => {
     expect(validateFreshnessStatus(status).ok).toBe(true);
   });
 
-  test("precedence: signed FRESH row also reports local_status VERIFIED_LOCAL", () => {
+  test("FRESH precedence: signed FRESH row reports VERIFIED_LOCAL even with NO local result", () => {
+    // The unsigned ledger is opted-in but empty for this row (the common case:
+    // the proof was minted in CI and `verify --out` never wrote a local result
+    // here). FRESH must still show the green daily light. Without the FRESH
+    // override this would be UNVERIFIED_LOCAL, so this test is discriminating.
     const row = makeRow();
     const binding = makeBinding(SLUG);
     const status = run({
@@ -299,7 +303,27 @@ describe("deriveFreshness local_status", () => {
       scan: makeScan([binding]),
       evidence: [makeProof(row, [binding])],
       current_context_hashes: new Map([[row.row_id, CONTEXT_HASH]]),
-      local_results: [makeLocalResult(row, [binding])]
+      local_results: []
+    });
+    const result = rowOf(status, row.row_id);
+    expect(result.status).toBe("FRESH");
+    expect(result.local_status).toBe("VERIFIED_LOCAL");
+    expect(result.local_reason).toBe("backed by trusted signed proof");
+    expect(validateFreshnessStatus(status).ok).toBe(true);
+  });
+
+  test("FRESH precedence: signed FRESH row reports VERIFIED_LOCAL even with a STALE local result", () => {
+    // A trusted signed proof outranks a stale/failed unsigned run. Without the
+    // FRESH override this row would be STALE_LOCAL, so this too is discriminating.
+    const row = makeRow();
+    const binding = makeBinding(SLUG);
+    const status = run({
+      rows: [row],
+      registry: makeRegistry([[row.row_id, SLUG]]),
+      scan: makeScan([binding]),
+      evidence: [makeProof(row, [binding])],
+      current_context_hashes: new Map([[row.row_id, CONTEXT_HASH]]),
+      local_results: [makeLocalResult(row, [binding], { context_hash: OTHER_CONTEXT_HASH })]
     });
     const result = rowOf(status, row.row_id);
     expect(result.status).toBe("FRESH");
