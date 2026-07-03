@@ -60,7 +60,7 @@ describe("P0 package entrypoints", () => {
 
     expect(core.getVersionInfo()).toEqual({
       name: "use-case-matrix",
-      version: "0.0.3"
+      version: "0.1.0"
     });
   });
 
@@ -82,7 +82,7 @@ describe("P0 package entrypoints", () => {
       complete: true,
       data: {
         name: "use-case-matrix",
-        version: "0.0.3"
+        version: "0.1.0"
       },
       diagnostics: []
     });
@@ -116,9 +116,9 @@ describe("P0 package entrypoints", () => {
     );
 
     const tarballs = [
-      "use-case-matrix-core-0.0.3.tgz",
-      "use-case-matrix-cli-0.0.3.tgz",
-      "use-case-matrix-mcp-0.0.3.tgz"
+      "use-case-matrix-core-0.1.0.tgz",
+      "use-case-matrix-cli-0.1.0.tgz",
+      "use-case-matrix-mcp-0.1.0.tgz"
     ].map((name) => join(packDir, name));
     requireSuccess(run("npm", ["install", "--cache", npmCacheDir(), "--no-audit", "--no-fund", ...tarballs], consumer));
 
@@ -127,7 +127,7 @@ describe("P0 package entrypoints", () => {
       [
         "import { getVersionInfo } from '@use-case-matrix/core';",
         "const info = getVersionInfo();",
-        "if (info.name !== 'use-case-matrix' || info.version !== '0.0.3') throw new Error('bad version export');"
+        "if (info.name !== 'use-case-matrix' || info.version !== '0.1.0') throw new Error('bad version export');"
       ].join("\n")
     );
     requireSuccess(run("node", ["check.mjs"], consumer));
@@ -135,7 +135,7 @@ describe("P0 package entrypoints", () => {
     const binDir = join(consumer, "node_modules/.bin");
     const cli = run(join(binDir, "ucm"), ["--version", "--json"], consumer);
     requireSuccess(cli);
-    expect(JSON.parse(cli.stdout).data.version).toBe("0.0.3");
+    expect(JSON.parse(cli.stdout).data.version).toBe("0.1.0");
 
     const mcp = runWithInput(
       join(binDir, "ucm-mcp"),
@@ -170,7 +170,7 @@ describe("P0 package entrypoints", () => {
       expect.objectContaining({
         id: 1,
         result: expect.objectContaining({
-          serverInfo: { name: "use-case-matrix", version: "0.0.3" }
+          serverInfo: { name: "use-case-matrix", version: "0.1.0" }
         })
       }),
       expect.objectContaining({

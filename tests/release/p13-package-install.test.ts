@@ -143,7 +143,7 @@ describe("P13 installable root package artifact", () => {
       expect.objectContaining({
         id: 1,
         result: expect.objectContaining({
-          serverInfo: { name: "use-case-matrix", version: "0.0.3" }
+          serverInfo: { name: "use-case-matrix", version: "0.1.0" }
         })
       }),
       expect.objectContaining({

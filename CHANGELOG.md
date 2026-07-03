@@ -5,6 +5,48 @@ All notable changes to this project are documented here. The format is based on
 follows [Semantic Versioning](https://semver.org) (see docs/release.md). This is
 **pre-1.0 (beta) software**: anything MAY change before `1.0.0`.
 
+## 0.1.0 - 2026-07-03
+
+The **keyless daily loop**: a green "still covered" signal you get in seconds
+with no keys and no CI. Cryptographic proof becomes an opt-in upgrade for
+release/audit, instead of a prerequisite for everyday use.
+
+### Added
+
+- **Keyless local freshness (`VERIFIED_LOCAL`).** Each row now carries a
+  `local_status` alongside the signed `status`: a bound row whose verifier
+  passed locally reports `VERIFIED_LOCAL` — the daily green light — with no
+  keypair and no CI. `verify` then `scan` closes the loop (`verify` now writes
+  its unsigned results to `<data-root>/.use-cases/verification-results.jsonl` by
+  default, and `scan` auto-discovers them). A trusted signed proof (`FRESH`)
+  always satisfies the local light too; `STALE_LOCAL` / `UNVERIFIED_LOCAL` flag
+  drift or not-yet-verified rows. Fully additive — the signed `status` and its
+  derivation are unchanged.
+- **`scan --gate`.** Opt-in exit-code gating for CI: exits non-zero when a
+  required row is below the bar (`FRESH` in release mode, else at least
+  `VERIFIED_LOCAL`). Without `--gate`, `scan`'s exit code is unchanged.
+  `scan --results <path>` overrides the ledger location.
+- **`ucm keygen`.** Generates the ed25519 keypair for the opt-in signed tier
+  (PKCS8/SPKI PEM); `--out <dir>` writes them (private key `0600`, never inside
+  the repo), `--ci github` emits a paste-ready OIDC release-workflow snippet.
+- **`ucm recover`.** Drives a drifted/unproven row back to green in one command:
+  re-verifies to `VERIFIED_LOCAL`, or with `--signing-key-env`/`--public-key`
+  re-proves to `FRESH`. It confirms the row actually reached the bar before
+  reporting success — a failing verifier or an unverifiable proof surfaces as a
+  non-zero error, never a fake green.
+- **Agent enablement.** The shipped agent skill, MCP playbooks
+  (`ucm/adopt-repo`, `ucm/bind-row`, `ucm/recover-suspect-row`), and session
+  bootstrap are refocused on the keyless daily loop, plus a new `docs/agents.md`.
+  A conformance test keeps the agent guidance from drifting out of sync with the
+  commands.
+
+### Changed
+
+- **`verify` without `--out`** now writes the unsigned results ledger to the
+  default `<data-root>/.use-cases/verification-results.jsonl` (previously it
+  wrote nothing). Explicit `--out` still wins. This is what makes the bare
+  `verify` → `scan` keyless loop work with zero flags.
+
 ## 0.0.3 - 2026-07-03
 
 ### Changed
