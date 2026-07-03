@@ -14,6 +14,7 @@ import {
 import {
   deriveFreshness,
   type FreshnessStatus,
+  type LocalVerificationResult,
   type PolicyMode
 } from "../freshness.js";
 import type { PublicKeyResolver } from "../proofSignature.js";
@@ -29,12 +30,62 @@ import {
 } from "../scanner.js";
 import { readBaseRefFile, type GitRunner } from "../appendOnly.js";
 import { computeRowVerificationContextHash } from "../verificationContextHash.js";
+import { join } from "node:path";
 import { nodeMarkerFs, type MarkerFs } from "./io.js";
 import {
   collectSourceInputs,
   loadMarkerRows,
   type LoadedMarkerRows
 } from "./shared.js";
+
+// The conventional location of the UNSIGNED verification-results ledger, one row
+// per line, that `verify --out` writes. Scan auto-discovers it here (under the
+// data root's .use-cases dir) so the keyless daily loop — bind -> verify -> scan
+// -> VERIFIED_LOCAL — needs no key, no CI, and no extra flags.
+export const DEFAULT_VERIFICATION_RESULTS_FILENAME = "verification-results.jsonl";
+
+// Parse the unsigned verification-results ledger (JSONL of
+// `ucase-verification-result-v1` records) into the minimal shape freshness's
+// keyless tier consumes. Unreadable/blank/malformed content yields an empty list
+// (the keyless signal is best-effort and NEVER blocks the read-only scan).
+function loadLocalVerificationResults(text: string): LocalVerificationResult[] {
+  const results: LocalVerificationResult[] = [];
+  for (const raw of text.split("\n")) {
+    const line = raw.trim();
+    if (line === "") {
+      continue;
+    }
+    let record: unknown;
+    try {
+      record = JSON.parse(line);
+    } catch {
+      continue; // skip a malformed line rather than failing the whole scan
+    }
+    if (typeof record !== "object" || record === null) {
+      continue;
+    }
+    const value = record as Record<string, unknown>;
+    const rowId = value.row_id;
+    const contextHash = value.verification_context_hash;
+    const bindingSetHash = value.binding_set_hash;
+    const status = value.status;
+    if (
+      typeof rowId !== "string" ||
+      typeof contextHash !== "string" ||
+      typeof bindingSetHash !== "string" ||
+      typeof status !== "string"
+    ) {
+      continue;
+    }
+    results.push({
+      row_id: rowId,
+      context_hash: contextHash,
+      binding_set_hash: bindingSetHash,
+      passed: status === "pass"
+    });
+  }
+  return results;
+}
 
 export interface ScanCommandOptions {
   context: ResolvedWorkspaceContext;
@@ -51,6 +102,10 @@ export interface ScanCommandOptions {
   gitRunner?: GitRunner;
   // When set, registry/evidence are read relative to this dir for the base ref.
   repoCwd?: string;
+  // OPTIONAL override for the UNSIGNED verification-results ledger (`verify --out`)
+  // that feeds the keyless VERIFIED_LOCAL tier. Defaults to
+  // <data_root>/.use-cases/verification-results.jsonl. Absent file => no local tier.
+  resultsPath?: string;
 }
 
 export interface ScanPreparation {
@@ -135,6 +190,17 @@ export function prepareScan(options: ScanCommandOptions): ScanPreparation {
     );
   }
 
+  // Keyless local tier: auto-discover the UNSIGNED verification-results ledger
+  // (what `verify --out` writes) under the data root, or use the caller override.
+  // Read-only and best-effort: an absent/unreadable file simply yields no local
+  // results, and the local tier is reported as UNVERIFIED_LOCAL for bound rows.
+  const resultsPath =
+    options.resultsPath ??
+    join(options.context.data_root, ".use-cases", DEFAULT_VERIFICATION_RESULTS_FILENAME);
+  const resultsText = fs.readText(resultsPath);
+  const localResults =
+    resultsText == null ? [] : loadLocalVerificationResults(resultsText);
+
   const status = deriveFreshness({
     rows: loaded.rows,
     registry: registryResult.registry,
@@ -144,6 +210,7 @@ export function prepareScan(options: ScanCommandOptions): ScanPreparation {
     generated_at: options.generatedAt,
     product_root: options.productRoot,
     current_context_hashes: currentContextHashes,
+    local_results: localResults,
     global_integrity_errors: globalIntegrity,
     // OPTIONAL CI-neutral release-gate authority requirement from workspace
     // config (off by default). Only consulted in release mode by deriveFreshness.
