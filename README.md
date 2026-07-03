@@ -73,6 +73,8 @@ ucm matrix validate --repo .            # is the matrix clean?
 ucm matrix list --repo .                # what behaviours exist?  (lists example.feature.happy_path)
 
 # Bind a behaviour to the code that satisfies it — point --file at your own code.
+# Set --start-line/--end-line to a range that EXISTS in that file (1–20 is just
+# an example; a range past the end of a short file is rejected).
 ucm bind --row example.feature.happy_path \
   --file src/feature.ts --mode explicit --start-line 1 --end-line 20
 

@@ -3,7 +3,7 @@
   "version": "1.0.1",
   "description": "Use-case, evidence, and live showcase infrastructure for agent work.",
   "author": {
-    "name": "Use Cases Plugin"
+    "name": "Use Case Matrix"
   },
   "mcpServers": {
     "use-case-matrix": {
