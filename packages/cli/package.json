@@ -26,10 +26,7 @@
   "engines": {
     "node": ">=22"
   },
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
-  },
+  "private": true,
   "dependencies": {
     "@use-case-matrix/core": "workspace:*"
   },
