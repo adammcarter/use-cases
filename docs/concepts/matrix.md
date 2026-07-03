@@ -7,7 +7,7 @@ and (once bound and proved) gate releases on.
 
 ## Where it lives
 
-Rows live under the `use_cases_dir` declared in `use-case-matrix.yml`
+Rows live under the `use_cases_dir` declared in `use-cases.yml`
 (default `use-cases/`), split across as many YAML files as you like. Each file
 declares a `feature` and a list of `use_cases`:
 

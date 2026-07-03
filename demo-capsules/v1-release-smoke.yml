@@ -15,7 +15,7 @@ items:
         executable: node
         argv:
           - -e
-          - "require('node:fs').accessSync('use-case-matrix.yml'); process.stdout.write('use-case-matrix workspace smoke\\n');"
+          - "require('node:fs').accessSync('use-cases.yml'); process.stdout.write('use-case-matrix workspace smoke\\n');"
         working_directory: .
         expected_exit_codes: [0]
 permissions:

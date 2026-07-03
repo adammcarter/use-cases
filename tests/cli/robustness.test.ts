@@ -38,8 +38,8 @@ function runCli(args: string[]) {
 const STACK_TRACE = /UseCasesPluginError|\bat .*:\d+:\d+/;
 
 describe("CLI robustness (v1.0.1 dogfood fixes)", () => {
-  test("malformed use-case-matrix.yml yields an ok:false envelope, not a stack trace", () => {
-    const dir = tmpWorkspace({ "use-case-matrix.yml": "this is: not valid: [[[\n" });
+  test("malformed use-cases.yml yields an ok:false envelope, not a stack trace", () => {
+    const dir = tmpWorkspace({ "use-cases.yml": "this is: not valid: [[[\n" });
     const res = runCli(["matrix", "validate", "--repo", dir, "--json"]);
 
     expect(res.status).not.toBe(0);

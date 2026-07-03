@@ -282,12 +282,12 @@ const REGISTRY = {
   ),
   UCM_WORKSPACE_CONFIG_PARSE: entry(
     "workspace",
-    "Unable to parse use-case-matrix.yml.",
+    "Unable to parse use-cases.yml.",
     "UCM_WORKSPACE_CONFIG_PARSE"
   ),
   UCM_WORKSPACE_CONFIG_INVALID: entry(
     "workspace",
-    "Invalid use-case-matrix.yml.",
+    "Invalid use-cases.yml.",
     "UCM_WORKSPACE_CONFIG_INVALID"
   ),
 

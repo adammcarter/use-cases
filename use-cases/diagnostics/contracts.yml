@@ -104,7 +104,7 @@ use_cases:
       - kind: file
         path: packages/core/src/version.ts
       - kind: file
-        path: use-case-matrix.yml
+        path: use-cases.yml
     actor: agent
     intent: Emit the configured component identity (use-case-matrix) in every CLI and MCP result envelope, falling back to the same default when no workspace config is present, so a published build never leaks a stale product name.
     preconditions:

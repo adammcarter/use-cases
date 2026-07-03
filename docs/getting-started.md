@@ -45,11 +45,11 @@ uc init --repo . --template js-vitest
 - `--component <id>` sets the component id (otherwise it is derived from the
   repo directory name).
 - `--force` overwrites an existing workspace; without it, `init` refuses rather
-  than clobber a `use-case-matrix.yml` that already exists.
+  than clobber a `use-cases.yml` that already exists.
 - `--json` emits the standard result envelope; omit it for a human summary that
   prints these next steps.
 
-It writes `use-case-matrix.yml` and `use-cases/example.yml`. It never
+It writes `use-cases.yml` and `use-cases/example.yml`. It never
 generates or writes a private key, and it does not create the GitHub workflow —
 those steps are below. The generated config looks like:
 
@@ -182,10 +182,10 @@ The registry defaults to `.use-cases/bindings.jsonl` under your `data_root`
 
 The row's `required_verifiers: [acceptance]` is resolved **from config** — there
 is no hard-coded test runner. Point the `acceptance` id at a real command using a
-**preset** in `use-case-matrix.yml`:
+**preset** in `use-cases.yml`:
 
 ```yaml
-# use-case-matrix.yml (add this)
+# use-cases.yml (add this)
 verifiers:
   default: acceptance
   acceptance:

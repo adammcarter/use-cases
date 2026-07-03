@@ -6,12 +6,12 @@ All commands use JSON envelopes with `schema_version`, `protocol_version`,
 ## Onboarding
 
 - `uc init [--repo <dir>] [--template generic|js-vitest|python-pytest|go-test] [--component <id>] [--force] [--json]`:
-  scaffold a minimal working workspace — a `use-case-matrix.yml` (with a
+  scaffold a minimal working workspace — a `use-cases.yml` (with a
   `verifiers.default` matching the template) and a `use-cases/example.yml` whose
   one row already validates. The scaffolded workspace passes `matrix validate`
   immediately. `init` never generates or writes a private key and never creates
   the GitHub workflow; it prints the next steps (key setup, CI workflow) instead.
-  It refuses to overwrite an existing `use-case-matrix.yml` unless `--force`
+  It refuses to overwrite an existing `use-cases.yml` unless `--force`
   is given. Omit `--json` for a human-readable summary.
 
 ## Matrix

@@ -85,8 +85,8 @@ There are **66** codes across **9** surfaces.
 | Code | Severity | Message |
 |---|---|---|
 | `UCM_WORKSPACE_COMPONENT_UNKNOWN` | error | Unknown component '...'; does not match the declared component. |
-| `UCM_WORKSPACE_CONFIG_INVALID` | error | Invalid use-case-matrix.yml. |
-| `UCM_WORKSPACE_CONFIG_PARSE` | error | Unable to parse use-case-matrix.yml. |
+| `UCM_WORKSPACE_CONFIG_INVALID` | error | Invalid use-cases.yml. |
+| `UCM_WORKSPACE_CONFIG_PARSE` | error | Unable to parse use-cases.yml. |
 
 ## Migration
 

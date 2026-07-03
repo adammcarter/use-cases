@@ -255,7 +255,7 @@ const independentCases: IndependentCase[] = [
   },
   {
     command: "workflow.set-mode",
-    // Mutating (rewrites use-case-matrix.yml) → copy. data is an ad-hoc shape.
+    // Mutating (rewrites use-cases.yml) → copy. data is an ad-hoc shape.
     build: () => ["workflow", "set-mode", "--repo", copyFixture("minimal-valid"), "--mode", "showcase-only", "--json"]
   },
   {
@@ -663,7 +663,7 @@ describe("v1 CLI output conformance", () => {
     const workspaceRoot = mkdtempSync(join(tmpdir(), "ucm-conf-markers-"));
     tempDirs.push(workspaceRoot);
     writeFileSync(
-      join(workspaceRoot, "use-case-matrix.yml"),
+      join(workspaceRoot, "use-cases.yml"),
       [
         "schema_version: 1",
         "workspace_id: conformance.markers",

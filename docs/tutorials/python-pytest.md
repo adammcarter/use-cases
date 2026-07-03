@@ -19,7 +19,7 @@ end-to-end (from the published `uc` tarball, running real `pytest`) by
 
 ```
 examples/python-pytest/
-├─ use-case-matrix.yml                       # workspace config: acceptance → python.pytest preset
+├─ use-cases.yml                       # workspace config: acceptance → python.pytest preset
 ├─ pytest.ini                                     # importlib mode + pythonpath=src
 ├─ src/coupon.py                                  # implementation, wrapped in a marker block
 ├─ tests/use_cases/
@@ -27,7 +27,7 @@ examples/python-pytest/
 └─ use-cases/checkout.yml                         # the matrix row
 ```
 
-### The workspace config (`use-case-matrix.yml`)
+### The workspace config (`use-cases.yml`)
 
 The `acceptance` verifier resolves to the **`python.pytest` preset** — the same
 config-driven verifier model JS repos use, just pointed at pytest:

@@ -100,7 +100,7 @@ export function resolveWorkspaceContext(
   const pluginRoot = realpathIfExists(
     options.pluginRoot ?? resolve(dirname(fileURLToPath(import.meta.url)), "../../..")
   );
-  const configPath = join(workspaceRoot, "use-case-matrix.yml");
+  const configPath = join(workspaceRoot, "use-cases.yml");
   const config = existsSync(configPath) ? readWorkspaceConfig(configPath, workspaceRoot) : null;
 
   if (options.component && config?.value.component_id && options.component !== config.value.component_id) {
@@ -122,7 +122,7 @@ export function resolveWorkspaceContext(
     data_root: dataRoot,
     use_cases_root: useCasesRoot,
     component_id: options.component ?? config?.value.component_id ?? DEFAULT_COMPONENT_ID,
-    config_path: existsSync(configPath) ? "use-case-matrix.yml" : null,
+    config_path: existsSync(configPath) ? "use-cases.yml" : null,
     verifiers: normalizeWorkspaceVerifiers(config?.value.verifiers),
     release_gate: normalizeReleaseGate(config?.value.release_gate),
     provenance: {
@@ -164,20 +164,20 @@ function readWorkspaceConfig(
   workspaceRoot: string
 ): { value: WorkspaceConfig; diagnostics: Diagnostic[] } {
   const source = readFileSync(configPath, "utf8");
-  const parsed = parseYamlToJson(source, "use-case-matrix.yml");
+  const parsed = parseYamlToJson(source, "use-cases.yml");
   if (!parsed.ok) {
-    throw new UseCasesPluginError("Unable to parse use-case-matrix.yml.", "workspace_config.parse_error");
+    throw new UseCasesPluginError("Unable to parse use-cases.yml.", "workspace_config.parse_error");
   }
   const validation = validateBySchemaId(
     "https://use-case-matrix.dev/schemas/v1/workspace-config.schema.json",
     parsed.value,
-    "use-case-matrix.yml"
+    "use-cases.yml"
   );
   if (!validation.ok) {
-    throw new UseCasesPluginError("Invalid use-case-matrix.yml.", "workspace_config.schema_error");
+    throw new UseCasesPluginError("Invalid use-cases.yml.", "workspace_config.schema_error");
   }
   if (!isRecord(parsed.value)) {
-    throw new UseCasesPluginError("Invalid use-case-matrix.yml.", "workspace_config.schema_error");
+    throw new UseCasesPluginError("Invalid use-cases.yml.", "workspace_config.schema_error");
   }
 
   const config = parsed.value as WorkspaceConfig;

@@ -193,7 +193,7 @@ describe("P4 CLI contract", () => {
         changed: true
       }
     });
-    expect(readFileSync(join(workspaceRoot, "use-case-matrix.yml"), "utf8")).toContain(
+    expect(readFileSync(join(workspaceRoot, "use-cases.yml"), "utf8")).toContain(
       "default_workflow_mode: showcase_only"
     );
     const matrix = runCli(["matrix", "validate", "--repo", workspaceRoot, "--json"]);
@@ -204,7 +204,7 @@ describe("P4 CLI contract", () => {
   test("doctor roots is read-only and matrix status composes matrix and evidence state", () => {
     build();
     const workspaceRoot = copyFixture("minimal-valid");
-    const before = readFileSync(join(workspaceRoot, "use-case-matrix.yml"), "utf8");
+    const before = readFileSync(join(workspaceRoot, "use-cases.yml"), "utf8");
     const doctor = runCli(["doctor", "roots", "--repo", workspaceRoot, "--json"]);
     expect(doctor.status).toBe(0);
     expect(JSON.parse(doctor.stdout)).toMatchObject({
@@ -214,7 +214,7 @@ describe("P4 CLI contract", () => {
         writable: true
       }
     });
-    expect(readFileSync(join(workspaceRoot, "use-case-matrix.yml"), "utf8")).toBe(before);
+    expect(readFileSync(join(workspaceRoot, "use-cases.yml"), "utf8")).toBe(before);
 
     const status = runCli(["matrix", "status", "--repo", workspaceRoot, "--json"]);
     expect(status.status).toBe(0);

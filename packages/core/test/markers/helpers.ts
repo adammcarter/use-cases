@@ -160,7 +160,7 @@ export function writeWorkspaceFile(root: string, relPath: string, contents: stri
 export function makeWorkspace(sourceFiles: Record<string, string> = {}): Workspace {
   const root = mkdtempSync(join(tmpdir(), "ucm-p9-"));
   tempDirs.push(root);
-  writeWorkspaceFile(root, "use-case-matrix.yml", CONFIG_YAML);
+  writeWorkspaceFile(root, "use-cases.yml", CONFIG_YAML);
   writeWorkspaceFile(root, "use-cases/checkout.yml", TWO_ROW_YAML);
   for (const [relPath, contents] of Object.entries(sourceFiles)) {
     writeWorkspaceFile(root, relPath, contents);

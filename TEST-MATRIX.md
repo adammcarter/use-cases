@@ -32,7 +32,7 @@ row is explicitly marked as covered by the automated suite.
 
 | ID | Scenario | Command | Expected | Result |
 |---|---|---|---|---|
-| B1 | Scaffold workspace | `uc init --repo WS` | creates `use-case-matrix.yml` + `use-cases/` with 1 example row | ✅ exit 0; workspace + example row created |
+| B1 | Scaffold workspace | `uc init --repo WS` | creates `use-cases.yml` + `use-cases/` with 1 example row | ✅ exit 0; workspace + example row created |
 | B2 | Validate matrix | `uc matrix validate` | `ok:true`, `valid:true` | ✅ ok:true, valid:true |
 | B3 | List use cases | `uc matrix list` | `ok:true`, 1 row | ✅ ok:true, returned:1 |
 | B4 | Compose status | `uc matrix status` | `ok:true` | ✅ ok:true |

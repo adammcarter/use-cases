@@ -134,7 +134,7 @@ uc scan --repo <repo> --gate                          # dev bar: VERIFIED_LOCAL
 
 ## Authoring & inventory commands
 
-- Scaffold a workspace: `uc init --repo <repo>` (a `use-case-matrix.yml` config +
+- Scaffold a workspace: `uc init --repo <repo>` (a `use-cases.yml` config +
   a `use-cases/` tree with one example row).
 - Add or update a use case:
   `uc matrix upsert --file <feature.yml> --use-case-json '{...}'` — `--file` is

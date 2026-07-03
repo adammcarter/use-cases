@@ -84,7 +84,7 @@ function makeWorkspace(rowFlag: boolean | null): ReturnType<typeof resolveWorksp
   const root = mkdtempSync(join(tmpdir(), "ucm-relgate-"));
   tmpDirs.push(root);
   for (const [rel, body] of [
-    ["use-case-matrix.yml", CONFIG_YAML],
+    ["use-cases.yml", CONFIG_YAML],
     ["use-cases/checkout.yml", rowYaml(rowFlag)]
   ] as const) {
     const full = join(root, rel);
@@ -170,7 +170,7 @@ describe("release-gate authority requirement is read from workspace config", () 
     const root = mkdtempSync(join(tmpdir(), "ucm-relgate-cfg-"));
     tmpDirs.push(root);
     for (const [rel, body] of [
-      ["use-case-matrix.yml", configBody],
+      ["use-cases.yml", configBody],
       ["use-cases/checkout.yml", rowYaml(true)]
     ] as const) {
       const full = join(root, rel);

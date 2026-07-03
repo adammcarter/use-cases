@@ -148,7 +148,7 @@ function writeFile(root: string, relPath: string, contents: string): void {
 function makeWorkspace(sourceFiles: Record<string, string> = {}): Workspace {
   const root = mkdtempSync(join(tmpdir(), "cli-"));
   tempDirs.push(root);
-  writeFile(root, "use-case-matrix.yml", CONFIG_YAML);
+  writeFile(root, "use-cases.yml", CONFIG_YAML);
   writeFile(root, "use-cases/checkout.yml", USE_CASE_YAML);
   for (const [relPath, contents] of Object.entries(sourceFiles)) {
     writeFile(root, relPath, contents);

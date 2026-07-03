@@ -9,7 +9,7 @@ that for the step-by-step narrative; this README is the map.
 
 | Path | What it is |
 |---|---|
-| `use-case-matrix.yml` | Workspace config. `verifiers.default` runs pytest. |
+| `use-cases.yml` | Workspace config. `verifiers.default` runs pytest. |
 | `use-cases/checkout.yml` | One behaviour row: `example.checkout.apply_coupon`. |
 | `src/coupon.py` | The code that satisfies the row, wrapped in `//: @use-case:` markers (Python uses `#:` comment prefix). |
 | `tests/use_cases/…_test.py` | The pytest test that verifies the behaviour. |

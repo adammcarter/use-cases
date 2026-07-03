@@ -41,7 +41,7 @@ export function evidenceDigest(evidence: EvidenceSnapshot, useCaseIds: string[])
 }
 
 export function workflowSnapshot(options: PresentationPlanSelectionOptions): PresentationPlan["input_snapshot"]["workflow"] {
-  const configPath = join(options.context.workspace_root, "use-case-matrix.yml");
+  const configPath = join(options.context.workspace_root, "use-cases.yml");
   if (!existsSync(configPath)) {
     return { effective_mode: "continuous", source: "default", advisory: true };
   }

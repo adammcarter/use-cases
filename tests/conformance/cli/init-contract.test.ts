@@ -49,8 +49,8 @@ function parseEnvelope(stdout: string): { command: string; ok: boolean; complete
 }
 
 function readConfig(repoDir: string): Record<string, unknown> {
-  const source = readFileSync(join(repoDir, "use-case-matrix.yml"), "utf8");
-  const parsed = parseYamlToJson(source, "use-case-matrix.yml");
+  const source = readFileSync(join(repoDir, "use-cases.yml"), "utf8");
+  const parsed = parseYamlToJson(source, "use-cases.yml");
   expect(parsed.ok, `config did not parse: ${JSON.stringify(parsed)}`).toBe(true);
   return parsed.value as Record<string, unknown>;
 }
@@ -86,7 +86,7 @@ describe("uc init", () => {
     expect(payload.ok).toBe(true);
     expect(payload.data).toMatchObject({ status: "created", template: "generic" });
     const created = payload.data.created_files as string[];
-    expect(created).toContain("use-case-matrix.yml");
+    expect(created).toContain("use-cases.yml");
     expect(created.some((p) => p.startsWith("use-cases/"))).toBe(true);
     expect((payload.data.next_steps as string[]).length).toBeGreaterThan(0);
 
@@ -171,7 +171,7 @@ describe("uc init", () => {
   test("refuses an existing workspace without --force (stable error, non-zero, no clobber)", () => {
     const repo = freshRepo("refuse");
     expect(runCli(["init", "--repo", repo, "--component", "first-component", "--json"]).status).toBe(0);
-    const firstConfig = readFileSync(join(repo, "use-case-matrix.yml"), "utf8");
+    const firstConfig = readFileSync(join(repo, "use-cases.yml"), "utf8");
 
     const second = runCli(["init", "--repo", repo, "--component", "second-component", "--json"]);
     expect(second.status).not.toBe(0);
@@ -179,7 +179,7 @@ describe("uc init", () => {
     expect(payload).toMatchObject({ command: "init", ok: false, complete: false });
     expect(payload.diagnostics[0].code).toBe("init.workspace_exists");
     // Existing config is untouched.
-    expect(readFileSync(join(repo, "use-case-matrix.yml"), "utf8")).toBe(firstConfig);
+    expect(readFileSync(join(repo, "use-cases.yml"), "utf8")).toBe(firstConfig);
   });
 
   test("--force overwrites an existing workspace", () => {

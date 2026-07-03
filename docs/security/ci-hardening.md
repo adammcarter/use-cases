@@ -113,10 +113,10 @@ The file is validated against `authority.schema.json`, embedded, and signed.
 
 By default the release gate does **not** look at authority — a `FRESH` required
 row passes regardless of how it was proved. A repo can **opt in** to a minimum
-authority via the OPTIONAL `release_gate` section of `use-case-matrix.yml`:
+authority via the OPTIONAL `release_gate` section of `use-cases.yml`:
 
 ```yaml
-# use-case-matrix.yml
+# use-cases.yml
 release_gate:
   required_authority: ci        # matching proof must have authority.type === "ci"
   require_protected_ref: true   # ...and authority.protected_ref === true
