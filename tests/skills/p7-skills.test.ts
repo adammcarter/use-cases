@@ -41,6 +41,19 @@ const knownCliCommands = new Set([
   "workflow mode",
   "workflow set-mode"
 ]);
+// Flat, single-segment marker / keyless-tier commands. A reference like
+// `ucm bind --repo ...` carries a flag as its second token, so it is validated by
+// its bare command name (mirrors validateSkillAssets.KNOWN_FLAT_CLI_COMMANDS).
+const knownFlatCliCommands = new Set([
+  "init",
+  "bind",
+  "scan",
+  "verify",
+  "recover",
+  "keygen",
+  "prove",
+  "validate-ledger"
+]);
 
 describe("P7 canonical skills and activation bootstrap", () => {
   test("every canonical skill has valid frontmatter and a matching directory name", () => {
@@ -64,7 +77,8 @@ describe("P7 canonical skills and activation bootstrap", () => {
     );
     expect(references.length).toBeGreaterThan(0);
     for (const reference of references) {
-      expect(knownCliCommands.has(reference)).toBe(true);
+      const bare = reference.split(/\s+/)[0];
+      expect(knownCliCommands.has(reference) || knownFlatCliCommands.has(bare)).toBe(true);
     }
   });
 

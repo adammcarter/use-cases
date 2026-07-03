@@ -43,6 +43,19 @@ const KNOWN_CLI_COMMANDS = new Set([
   "workflow mode",
   "workflow set-mode"
 ]);
+// Flat, single-segment commands (no subcommand) shipped by the marker / keyless
+// tier. A reference like `ucm bind --repo ...` has a flag as its second token, so
+// it is validated by its bare command name, not a `command subcommand` pair.
+const KNOWN_FLAT_CLI_COMMANDS = new Set([
+  "init",
+  "bind",
+  "scan",
+  "verify",
+  "recover",
+  "keygen",
+  "prove",
+  "validate-ledger"
+]);
 const FORBIDDEN_PATTERNS: Array<{ code: string; pattern: RegExp; message: string }> = [
   {
     code: "skills.mandatory_showcase_claim",
@@ -153,7 +166,9 @@ export function validateSkillAssets(options: { context: ResolvedWorkspaceContext
   }
 
   for (const reference of commandReferences) {
-    if (!KNOWN_CLI_COMMANDS.has(reference.command)) {
+    const bare = reference.command.split(/\s+/)[0];
+    const known = KNOWN_CLI_COMMANDS.has(reference.command) || KNOWN_FLAT_CLI_COMMANDS.has(bare);
+    if (!known) {
       diagnostics.push(
         diagnostic("skills.unknown_cli_command", `Unknown CLI command '${reference.command}'.`, reference.source_path, reference.command)
       );

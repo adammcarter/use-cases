@@ -10,7 +10,8 @@ Why this exists:
 
 - Feature planning or behavior inventory work.
 - Implementation progress where use cases, variants, edge cases, or evidence should stay current.
-- Acceptance/evidence gathering, live demo/sign-off, or pre-merge proof.
+- The keyless daily loop: bind a behavior to code, verify it, and confirm `local_status: VERIFIED_LOCAL` (`ucm bind` → `ucm verify` → `ucm scan`) — no keys, no CI. Recover a drifted row with `ucm recover`.
+- Acceptance/evidence gathering, live demo/sign-off, or pre-merge proof. Signing to `FRESH` (`ucm keygen` + `ucm prove` in trusted CI) is the opt-in release/audit upgrade.
 - Matrix migration/backfill from TEST-MATRIX-style lists.
 
 ## When not to apply
@@ -34,6 +35,9 @@ Why this exists:
 
 | Situation | Do |
 |---|---|
+| Keyless daily loop | `ucm bind …` → `ucm verify --all` → `ucm scan --json` (expect `local_status: VERIFIED_LOCAL`) |
+| Drifted row | `ucm recover --row <id>` (or `--all`) → back to `VERIFIED_LOCAL` |
+| Release gate | `ucm scan --policy-mode release --gate --json` (signed `FRESH`; keys via `ucm keygen`, minted by `ucm prove` in trusted CI) |
 | Behavior inventory | `ucm matrix validate --json` / `ucm matrix list --json` |
 | Evidence health | `ucm matrix status --json` / `ucm evidence status --json` |
 | Showcase plan | `ucm plan showcase --json` |
