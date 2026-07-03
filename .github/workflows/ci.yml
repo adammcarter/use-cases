@@ -8,7 +8,7 @@ jobs:
   release-gate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # Node first, then enable Corepack so pnpm is on PATH, then re-run
       # setup-node with cache. setup-node's `cache: pnpm` shells out to pnpm to
       # resolve the store path, so pnpm must exist before the cache step runs.
