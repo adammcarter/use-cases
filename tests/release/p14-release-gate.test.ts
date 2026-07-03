@@ -25,21 +25,21 @@ describe("P14 production release gate", () => {
     expect(testIndex).toBeGreaterThan(buildIndex);
   });
 
-  test("root package is marked as a publishable v1 package", () => {
+  test("root package is marked as a publishable package", () => {
     const manifest = JSON.parse(readFileSync("package.json", "utf8")) as {
       version: string;
       private?: boolean;
       files: string[];
     };
 
-    expect(manifest.version).toBe("1.0.1");
+    expect(manifest.version).toBe("0.0.1");
     expect(manifest.private).toBe(false);
     expect(manifest.files).toContain("packages/cli/dist");
     expect(manifest.files).toContain("packages/mcp/dist");
     expect(manifest.files).toContain("schemas/v1");
   });
 
-  test("all published version surfaces report v1", () => {
+  test("all published version surfaces report the same version", () => {
     const rootManifest = JSON.parse(readFileSync("package.json", "utf8")) as { version: string };
     const cliManifest = JSON.parse(readFileSync("packages/cli/package.json", "utf8")) as { version: string };
     const coreManifest = JSON.parse(readFileSync("packages/core/package.json", "utf8")) as { version: string };
@@ -51,15 +51,15 @@ describe("P14 production release gate", () => {
     const hostProjection = readFileSync("packages/core/src/hosts/projectHostFiles.ts", "utf8");
     const changelog = readFileSync("CHANGELOG.md", "utf8");
 
-    expect(rootManifest.version).toBe("1.0.1");
+    expect(rootManifest.version).toBe("0.0.1");
     expect(cliManifest.version).toBe(rootManifest.version);
     expect(coreManifest.version).toBe(rootManifest.version);
     expect(mcpManifest.version).toBe(rootManifest.version);
     expect(rootPlugin.version).toBe(rootManifest.version);
     expect(codexPlugin.version).toBe(rootManifest.version);
     expect(claudePlugin.version).toBe(rootManifest.version);
-    expect(versionSource).toContain('UCM_VERSION = "1.0.1"');
+    expect(versionSource).toContain('UCM_VERSION = "0.0.1"');
     expect(hostProjection).toContain("plugin_version: UCM_VERSION");
-    expect(changelog).toContain("## 1.0.1");
+    expect(changelog).toContain("## 0.0.1");
   });
 });

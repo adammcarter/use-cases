@@ -6,6 +6,11 @@ change in breaking ways across a **major** version bump. This page is the
 authoritative declaration of what is stable, what is experimental, and how
 versions move.
 
+> **Pre-1.0 (beta).** The current release line is `0.0.x` — beta software. The
+> contracts below describe the *intended* shape that becomes binding **at
+> `1.0.0`**; until then they may still change between `0.0.x` releases. Adopt
+> with that in mind.
+
 > Ships as a single package, `use-case-matrix` (binaries `ucm` and `ucm-mcp`);
 > the `core` / `cli` / `mcp` workspaces are bundled inside it, not published
 > separately. See the [publishing runbook](../release/publishing.md) for how a
