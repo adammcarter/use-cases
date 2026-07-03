@@ -79,16 +79,21 @@ export const doctorPackageCommand: CliCommand = {
             ? { kind: "installed_root", path: resolve(process.cwd(), installedRoot) }
             : { kind: "workspace", path: context.context.workspace_root, build: true }
       });
+      const envelope = createCliResult("doctor.package", data, {
+        ok: data.complete,
+        complete: data.complete,
+        diagnostics: data.diagnostics,
+        workspaceRoot: context.context.workspace_root,
+        dataRoot: context.context.data_root,
+        componentId: context.context.component_id
+      });
+      // Derive the exit code from the FINAL envelope's `ok`, not `data.complete`.
+      // createCliResult forces ok:false when an error-severity diagnostic is present
+      // even if data.complete is true — so keying off data.complete could ship an
+      // ok:false envelope with exit 0 (a false green). ok is the exit-code contract.
       return {
-        envelope: createCliResult("doctor.package", data, {
-          ok: data.complete,
-          complete: data.complete,
-          diagnostics: data.diagnostics,
-          workspaceRoot: context.context.workspace_root,
-          dataRoot: context.context.data_root,
-          componentId: context.context.component_id
-        }),
-        exitCode: data.complete ? 0 : 1
+        envelope,
+        exitCode: envelope.ok ? 0 : 1
       };
     } catch (error) {
       return {
