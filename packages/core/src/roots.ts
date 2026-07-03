@@ -3,6 +3,7 @@ import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "nod
 import { fileURLToPath } from "node:url";
 import { UseCasesPluginError } from "./errors.js";
 import {
+  diagnostic,
   parseYamlToJson,
   validateBySchemaId,
   type Diagnostic
@@ -132,6 +133,30 @@ export function resolveWorkspaceContext(
     },
     diagnostics: config?.diagnostics ?? []
   };
+}
+
+// Canonical diagnostic code for a workspace root that does not exist on disk.
+// Single source of truth so the CLI and MCP transports emit an identical code.
+export const WORKSPACE_NOT_FOUND_CODE = "workspace.not_found";
+
+// Shared READ-side workspace-existence guard. A non-existent workspace root is a
+// user typo (a mistyped or stale --repo/repo), NOT a valid empty workspace: without
+// this guard the read-only matrix inspection surface (matrix validate/list/status)
+// reports a missing path as a clean, valid, zero-use-case matrix — a silent wrong
+// answer. Both transports' context resolvers call this (the CLI's
+// `resolveContextOrError` and the MCP's `contextFromArgs`) so a bad repo yields the
+// SAME `workspace.not_found` envelope on both — upholding the "envelopes match on
+// both transports" contract, and giving any future workspace tool the guard for
+// free. Returns the canonical diagnostic when the root is missing, else null.
+//
+// An existing-but-empty directory is still legitimate (the "not populated" case).
+// Deliberately NOT wired into the write/scaffold path (`ucm init`), which
+// legitimately targets a not-yet-existing root and has its own existence handling.
+// `workspaceRoot` MUST already be resolved to an absolute path by the caller.
+export function workspaceNotFoundDiagnostic(workspaceRoot: string): Diagnostic | null {
+  return existsSync(workspaceRoot)
+    ? null
+    : diagnostic(WORKSPACE_NOT_FOUND_CODE, `repo path does not exist: ${workspaceRoot}`);
 }
 
 function readWorkspaceConfig(

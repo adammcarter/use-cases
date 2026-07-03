@@ -1,4 +1,3 @@
-import { existsSync } from "node:fs";
 import { isAbsolute, relative, resolve } from "node:path";
 import type {
   CliResult,
@@ -34,6 +33,7 @@ const {
   replayShowcaseRun,
   resolveContainedPath,
   resolveWorkspaceContext,
+  workspaceNotFoundDiagnostic,
   runDemoCapsule,
   runHostDoctor,
   selectShowcasePlan,
@@ -519,12 +519,14 @@ function contextFromArgs(args: JsonObject, command: string): ResolvedWorkspaceCo
     return { envelope: errorEnvelope(command, "mcp.repo_required", "MCP workspace tools require repo.") };
   }
   const workspaceRoot = resolve(process.cwd(), repo);
-  // Parity with the CLI (resolveContextOrError): a non-existent repo is a typo,
-  // not a valid empty workspace. Without this the MCP matrix tools reported a
-  // missing path as valid:true — a silent wrong answer, and a CLI/MCP contract
-  // divergence.
-  if (!existsSync(workspaceRoot)) {
-    return { envelope: errorEnvelope(command, "workspace.not_found", `repo path does not exist: ${workspaceRoot}`) };
+  // Shared workspace-existence guard (core): a non-existent repo is a typo, not a
+  // valid empty workspace. Every MCP workspace tool funnels through here, so this
+  // one check covers matrix_validate/list/status and any future tool. The CLI's
+  // resolveContextOrError applies the SAME core guard, so both transports emit an
+  // identical workspace.not_found envelope.
+  const missing = workspaceNotFoundDiagnostic(workspaceRoot);
+  if (missing) {
+    return { envelope: errorEnvelope(command, missing.code, missing.message) };
   }
   const dataRootValue = stringArg(args, "data_root");
   const dataRoot = dataRootValue ? resolve(workspaceRoot, dataRootValue) : undefined;
