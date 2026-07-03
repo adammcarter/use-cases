@@ -41,6 +41,18 @@ describe("P9 MCP wrapper contract", () => {
     });
   });
 
+  test("workspace tools reject a non-existent repo (CLI/MCP parity: workspace.not_found)", () => {
+    const missing = resolve(repoRoot, "tests/fixtures/workspaces/__ucm_missing_repo__");
+    for (const tool of ["matrix_validate", "matrix_list", "matrix_status"]) {
+      const envelope = callTool(tool, { repo: missing });
+      expect(envelope, tool).toMatchObject({
+        ok: false,
+        complete: false,
+        diagnostics: [expect.objectContaining({ code: "workspace.not_found" })]
+      });
+    }
+  });
+
   test("write tools require explicit write mode before mutating ledgers", () => {
     const fixture = fixtureWorkspace("evidence-basic");
     const before = readTreeBytes(join(fixture, "evidence"));
