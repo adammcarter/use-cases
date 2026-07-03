@@ -9,6 +9,7 @@
 import { describe, expect, test } from "vitest";
 import {
   evaluateScanGate,
+  validateFreshnessStatus,
   type FreshnessRowOut,
   type FreshnessStatus,
   type LocalStatus,
@@ -39,7 +40,7 @@ function makeStatus(
   policyMode: PolicyMode = "feature"
 ): FreshnessStatus {
   return {
-    schema: "https://ucase.dev/schemas/v1/freshness-status.schema.json" as FreshnessStatus["schema"],
+    schema: "ucase-freshness-status-v1" as FreshnessStatus["schema"],
     generated_at: "2026-07-03T00:00:00Z",
     tool: { name: "use-case-matrix", version: "0.0.0" },
     product_root: ".",
@@ -115,6 +116,18 @@ describe("evaluateScanGate (release bar = FRESH)", () => {
   test("a required FRESH row passes in release mode", () => {
     const status = makeStatus([requiredRow("FRESH", "VERIFIED_LOCAL")], "release");
     expect(evaluateScanGate(status, "release").blocked).toBe(false);
+  });
+});
+
+describe("required_for_release on the row output validates against the schema", () => {
+  test("a status carrying required_for_release passes validateFreshnessStatus", () => {
+    const status = makeStatus([
+      requiredRow("UNPROVEN", "VERIFIED_LOCAL", "r1"),
+      makeRow({ row_id: "r2", status: "UNBOUND", required_for_release: false, local_status: null, local_reason: null })
+    ]);
+    const result = validateFreshnessStatus(status);
+    expect(result.errors).toEqual([]);
+    expect(result.ok).toBe(true);
   });
 });
 

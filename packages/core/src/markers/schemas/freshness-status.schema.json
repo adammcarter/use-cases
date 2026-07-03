@@ -95,7 +95,8 @@
         "latest_trusted_proof_event": {
           "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/proof_ref" }]
         },
-        "required_action": { "type": ["string", "null"] }
+        "required_action": { "type": ["string", "null"] },
+        "required_for_release": { "type": "boolean" }
       }
     }
   },
