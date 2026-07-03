@@ -1,7 +1,7 @@
 schema_version: 1
 feature:
   id: lifecycle.loop
-  name: Use Cases Plugin lifecycle
+  name: Use Case Matrix lifecycle
   summary: Recommended but optional workflows for keeping use cases, evidence, and showcases current.
 use_cases:
   - id: lifecycle.loop.continuous_loop

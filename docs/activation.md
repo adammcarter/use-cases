@@ -1,6 +1,6 @@
-# Use Cases Plugin Activation
+# Use Case Matrix Activation
 
-Use Cases Plugin can be used continuously during feature planning and implementation, or later as a backfill, walkthrough, or live showcase tool. The workflow mode is advisory only. It cannot weaken schema validation, matrix integrity, evidence safety, approval boundaries, or showcase run state.
+Use Case Matrix can be used continuously during feature planning and implementation, or later as a backfill, walkthrough, or live showcase tool. The workflow mode is advisory only. It cannot weaken schema validation, matrix integrity, evidence safety, approval boundaries, or showcase run state.
 
 ## Session-Start Bootstrap
 
