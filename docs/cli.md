@@ -54,7 +54,10 @@ signing key must be a PKCS8 ed25519 PEM — see
   bind a row to a code span. `--mode explicit` inserts `//: @use-case: <id>` …
   `//: @use-case: end <id>` markers around the span (the comment prefix is inferred
   per file type). Use `--register-existing` to register a span whose markers are
-  already present in the file instead of inserting new ones.
+  already present in the file instead of inserting new ones. Note: inserting the
+  opening marker shifts the file's line numbers down by one, so a later `scan`
+  reports the span one line below the `--start-line`/`--end-line` you passed —
+  that is expected, not drift.
 - `ucm scan [--repo <path>] [--public-key <pem>] [--keyring <path>] [--json]`:
   derive each row's freshness — `FRESH` / `SUSPECT` / `UNPROVEN` / `UNBOUND` /
   `INVALID` — from the current code, the binding registry, and the proof ledger.
