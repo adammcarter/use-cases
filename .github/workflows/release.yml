@@ -1,9 +1,16 @@
 name: release
 
-# Publishes @use-case-matrix/{core,cli,mcp} to npm with provenance using npm
-# Trusted Publishing (OIDC). No NPM_TOKEN secret is used or required: npm mints a
-# short-lived, workflow-scoped credential from the `id-token` OIDC token. See
-# docs/release/publishing.md for the one-time owner setup on npmjs.com.
+# Publishes the single `use-case-matrix` package to npm with provenance using
+# npm Trusted Publishing (OIDC). No NPM_TOKEN secret is used or required: npm
+# mints a short-lived, workflow-scoped credential from the GitHub Actions
+# `id-token`, so the credential cannot leak or be reused. The three workspace
+# packages (core/cli/mcp) are private and ship bundled inside this one package —
+# they are not published separately. See docs/release/publishing.md for the
+# one-time owner setup on npmjs.com.
+#
+# The publish step uses the npm CLI (not `pnpm publish`): npm is the reference
+# OIDC client, whereas pnpm 11 has an open trusted-publishing regression that
+# 404s on OIDC publish (pnpm/pnpm#11513).
 
 on:
   push:
@@ -27,30 +34,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Node first, then Corepack (so pnpm is on PATH), then re-run setup-node
-      # with the npm registry + cache. setup-node's `cache: pnpm` shells out to
-      # pnpm to resolve the store path, so pnpm must exist before the cache step.
-      # Node 22 + the bundled npm satisfy Trusted Publishing's floors
-      # (npm >= 11.5.1, Node >= 22.14.0).
+      # Node 24 ships an npm that clears Trusted Publishing's floors
+      # (npm >= 11.5.1, Node >= 22.14.0); upgrade npm to latest to be safe.
+      # Corepack puts the repo-pinned pnpm on PATH for the build/test steps.
       - uses: actions/setup-node@v4
         with:
-          node-version: "22"
-      - run: corepack enable
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
+          node-version: "24"
           registry-url: "https://registry.npmjs.org"
-          cache: pnpm
+      - run: npm install -g npm@latest
+      - run: corepack enable
 
       - run: corepack pnpm install --frozen-lockfile
       - run: corepack pnpm -s build
       - run: corepack pnpm -s test
 
-      # Publish all three packages together. `-r` recurses over the workspace and
-      # skips the private root. `--provenance` attaches the build attestation;
-      # `--access public` keeps the scoped packages public. `--no-git-checks`
-      # because the tag commit is already the source of truth.
+      # Publish the single root `use-case-matrix` package via the npm CLI so the
+      # OIDC trusted-publishing exchange and provenance attestation both work.
+      # The root manifest's `files` list ships the built core/cli/mcp dist, so
+      # the bundle is self-contained. `--provenance` is implied by Trusted
+      # Publishing but set explicitly for clarity.
       - name: Publish to npm (Trusted Publishing + provenance)
-        run: corepack pnpm -r publish --access public --provenance --no-git-checks
+        run: npm publish --provenance --access public
         env:
           NPM_CONFIG_PROVENANCE: "true"
