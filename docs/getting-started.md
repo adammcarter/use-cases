@@ -189,7 +189,7 @@ is no hard-coded test runner. Point the `acceptance` id at a real command using 
 verifiers:
   default: acceptance
   acceptance:
-    preset: js.vitest        # runs: pnpm -s vitest run tests/use-cases/{slug}.test.ts
+    preset: js.vitest        # runs: npx --no-install vitest run tests/use-cases/{slug}.test.ts
 ```
 
 `{slug}` is substituted with the row id everywhere it appears, so each row gets

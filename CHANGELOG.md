@@ -5,6 +5,26 @@ All notable changes to this project are documented here. The format is based on
 follows [Semantic Versioning](https://semver.org) (see docs/release.md). This is
 **pre-1.0 (beta) software**: anything MAY change before `1.0.0`.
 
+## 0.0.2 - 2026-07-03
+
+Patch fixes surfaced by continued dogfooding of the 0.0.1 beta.
+
+### Fixed
+
+- MCP `doctor_roots` now emits the `writable` field, matching the CLI — restoring
+  the "same JSON contract on both transports" guarantee.
+- The `js.vitest` verifier preset runs `npx --no-install vitest` instead of
+  `pnpm`, so `verify` works on npm-only machines (no global pnpm required);
+  pnpm users are unaffected.
+- `doctor package` returns a non-zero exit code when its envelope is `ok:false`
+  (previously it could report `ok:false` with exit 0).
+
+### Added
+
+- `ucm init --template js-vitest` now scaffolds a **runnable** example — a marked
+  `src/example.ts` span plus a matching vitest test — so `verify` works out of
+  the box, at parity with the python-pytest template.
+
 ## 0.0.1 - 2026-07-03
 
 Initial public beta. (The project was briefly published as `1.0.0`/`1.0.1`;

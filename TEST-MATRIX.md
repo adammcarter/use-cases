@@ -1,14 +1,14 @@
-# TEST-MATRIX — use-case-matrix v0.0.1
+# TEST-MATRIX — use-case-matrix v0.0.2
 
 Repo-owned acceptance source of truth. Says what must be true in real use, how it
 was proven, the observed evidence, and any open red signals.
 
 | Field | Value |
 |---|---|
-| Release | **use-case-matrix@0.0.1** |
+| Release | **use-case-matrix@0.0.2** |
 | Branch / commit | `main` @ `14d9b22` |
 | Run date | 2026-07-03 |
-| Artifact under test | `use-case-matrix-0.0.1.tgz` (433,738 bytes) packed via `pnpm pack`, installed into a clean throwaway project (`/tmp/ucm-accept-rig`, 75 deps) — **not** the dev checkout |
+| Artifact under test | `use-case-matrix-0.0.2.tgz` (433,738 bytes) packed via `pnpm pack`, installed into a clean throwaway project (`/tmp/ucm-accept-rig`, 75 deps) — **not** the dev checkout |
 | Bins exposed | `ucm`, `use-case-matrix`, `ucm-mcp`, `use-case-matrix-mcp` |
 | Automated gate | `pnpm test` → **677 passed / 85 files / 0 fail** |
 | Overall | ✅ **PASS** — 0 product defects; all rows green (signed-mint of proofs is CI-scoped, see Notes) |
@@ -23,9 +23,9 @@ row is explicitly marked as covered by the automated suite.
 
 | ID | Scenario | Command | Expected | Result |
 |---|---|---|---|---|
-| A1 | Tarball installs clean | `npm i use-case-matrix-0.0.1.tgz` in empty project | installs, no errors | ✅ `added 75 packages in 2s` |
+| A1 | Tarball installs clean | `npm i use-case-matrix-0.0.2.tgz` in empty project | installs, no errors | ✅ `added 75 packages in 2s` |
 | A2 | Both bins resolve | `ls node_modules/.bin` | `ucm`, `ucm-mcp`, `use-case-matrix`, `use-case-matrix-mcp` present + executable | ✅ all four present, `ucm-mcp` executable |
-| A3 | CLI version | `ucm version` | prints `0.0.1` | ✅ `0.0.1` |
+| A3 | CLI version | `ucm version` | prints `0.0.2` | ✅ `0.0.2` |
 | A4 | MCP stdio handshake | `initialize` + `tools/list` over stdio | initializes, lists tools | ✅ handshake OK, **20 tools** listed |
 
 ## B · CLI core lifecycle (host-agnostic)
@@ -107,7 +107,7 @@ row is explicitly marked as covered by the automated suite.
   `UNKNOWN_KEY_ID` error (exit 4) rather than a clearly-labelled "no key → proofs
   UNPROVEN" soft state. CI always passes the committed
   `.use-cases/trusted-ci-public-key.pem`, and both commands pass with it (G3/G4).
-  **Follow-up candidate (not a v0.0.1 blocker):** auto-discover a workspace-declared
+  **Follow-up candidate (not a v0.0.2 blocker):** auto-discover a workspace-declared
   public key, and/or soften the no-key path to an explicit UNPROVEN downgrade.
 - **N3 — Signed proof minting is CI-scoped.** The full `verify → prove(sign) →
   validate-ledger(verify signature)` happy path requires the CI signing key and is

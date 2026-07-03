@@ -39,7 +39,7 @@ verification_policy:
     script:
       kind: script
       evidence_kind: test_result
-      command: [pnpm, -s, vitest, run, tests/use-cases/apply_discount.test.ts]
+      command: [npx, --no-install, vitest, run, tests/use-cases/apply_discount.test.ts]
       inputs: [tests/use-cases/apply_discount.test.ts]
   requirements:
     - evidence_kind: test_result
@@ -65,7 +65,7 @@ substituted with the row id, so each row resolves to its own command and inputs:
 | Preset | Expands to | Declared inputs |
 |---|---|---|
 | `command.generic` | *(empty — you supply the argv)* | none |
-| `js.vitest` | `pnpm -s vitest run tests/use-cases/{slug}.test.ts` | `tests/use-cases/{slug}.test.ts` |
+| `js.vitest` | `npx --no-install vitest run tests/use-cases/{slug}.test.ts` | `tests/use-cases/{slug}.test.ts` |
 | `js.npm-test` | `npm test` | none |
 | `python.pytest` | `pytest tests/use_cases/{slug}_test.py` | `tests/use_cases/{slug}_test.py` |
 | `go.test` | `go test ./...` | none |

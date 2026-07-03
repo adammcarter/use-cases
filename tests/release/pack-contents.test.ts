@@ -25,7 +25,7 @@ interface PackageSpec {
 const packages: PackageSpec[] = [
   {
     filter: "@use-case-matrix/core",
-    tarball: "use-case-matrix-core-0.0.1.tgz",
+    tarball: "use-case-matrix-core-0.0.2.tgz",
     requiredIncludes: [
       "dist/index.js",
       "dist/index.d.ts",
@@ -37,7 +37,7 @@ const packages: PackageSpec[] = [
   },
   {
     filter: "@use-case-matrix/cli",
-    tarball: "use-case-matrix-cli-0.0.1.tgz",
+    tarball: "use-case-matrix-cli-0.0.2.tgz",
     requiredIncludes: [
       "dist/index.js",
       "dist/index.d.ts",
@@ -48,7 +48,7 @@ const packages: PackageSpec[] = [
   },
   {
     filter: "@use-case-matrix/mcp",
-    tarball: "use-case-matrix-mcp-0.0.1.tgz",
+    tarball: "use-case-matrix-mcp-0.0.2.tgz",
     requiredIncludes: [
       "dist/index.js",
       "dist/index.d.ts",
