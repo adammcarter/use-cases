@@ -106,6 +106,10 @@ export interface ScanCommandOptions {
   // that feeds the keyless VERIFIED_LOCAL tier. Defaults to
   // <data_root>/.use-cases/verification-results.jsonl. Absent file => no local tier.
   resultsPath?: string;
+  // OPT-IN exit-code gate (0.1.0). When true, a REQUIRED row below the mode's
+  // acceptable bar makes scan exit 1 (see evaluateScanGate). Off by default so
+  // scan's exit code is backward-compatible (0 even for SUSPECT).
+  gate?: boolean;
 }
 
 export interface ScanPreparation {
@@ -237,6 +241,10 @@ export interface ScanCommandResult {
   inferred_spans: string[];
   registry_errors: RegistryError[];
   evidence_errors: EvidenceError[];
+  // Present ONLY when --gate was requested (a `gate.blocked` diagnostic listing
+  // offending required rows). Absent otherwise, so the default envelope is
+  // byte-identical to pre-0.1.0.
+  gate?: ScanGateResult;
 }
 
 export function runScanCommand(options: ScanCommandOptions): ScanCommandResult {
@@ -249,7 +257,21 @@ export function runScanCommand(options: ScanCommandOptions): ScanCommandResult {
     .map((binding) => formatInferredSwiftSpanReport(binding))
     .filter((report): report is string => report !== null);
 
-  const exitCode = scanExitCode(prepared.status, registryValid, evidenceValid);
+  const baseExitCode = scanExitCode(prepared.status, registryValid, evidenceValid);
+
+  // Opt-in gate: escalate an otherwise-passing scan (exit 0) to exit 1 when a
+  // required row is below the bar. It NEVER lowers a higher-precedence failure
+  // (4 ledger/registry, 3 binding integrity) — those already surface real
+  // problems and outrank a freshness gate. Without --gate, nothing changes.
+  let gate: ScanGateResult | undefined;
+  let exitCode = baseExitCode;
+  if (options.gate) {
+    gate = evaluateScanGate(prepared.status, options.policyMode);
+    if (gate.blocked && exitCode === 0) {
+      exitCode = 1;
+    }
+  }
+
   return {
     exit_code: exitCode,
     ok: exitCode === 0,
@@ -258,7 +280,74 @@ export function runScanCommand(options: ScanCommandOptions): ScanCommandResult {
     evidence_valid: evidenceValid,
     inferred_spans: inferredSpans,
     registry_errors: prepared.registryErrors,
-    evidence_errors: prepared.evidenceErrors
+    evidence_errors: prepared.evidenceErrors,
+    ...(gate !== undefined ? { gate } : {})
+  };
+}
+
+// --- scan --gate (0.1.0) ------------------------------------------------------
+//
+// `scan --gate` is an OPT-IN exit-code gate. WITHOUT it, scan's exit code is
+// unchanged (0 even for SUSPECT). WITH it, scan exits 1 when any REQUIRED row is
+// below the mode's acceptable bar:
+//   - policy_mode "release" => the bar is FRESH (a trusted signed proof).
+//   - otherwise (feature/custom/dev) => the bar is "at least VERIFIED_LOCAL",
+//     i.e. the keyless local green light (VERIFIED_LOCAL) OR the stronger FRESH.
+// Only rows marked `required_for_release` are gated; everything else is advisory.
+export interface ScanGateOffender {
+  row_id: string;
+  status: FreshnessStatus["rows"][number]["status"];
+  local_status: FreshnessStatus["rows"][number]["local_status"];
+}
+
+export interface ScanGateResult {
+  blocked: boolean;
+  policy_mode: PolicyMode;
+  // The acceptable bar for this mode, for the diagnostic ("FRESH" or the keyless
+  // "VERIFIED_LOCAL" floor).
+  required_bar: "FRESH" | "VERIFIED_LOCAL";
+  offending_rows: ScanGateOffender[];
+}
+
+// True iff a row meets the acceptable bar for `policyMode`. FRESH always passes
+// (it strictly outranks the keyless local tier).
+function rowMeetsGateBar(
+  row: FreshnessStatus["rows"][number],
+  policyMode: PolicyMode
+): boolean {
+  if (row.status === "FRESH") {
+    return true;
+  }
+  if (policyMode === "release") {
+    return false; // release bar is FRESH; nothing else clears it.
+  }
+  return row.local_status === "VERIFIED_LOCAL";
+}
+
+// Pure gate decision over an already-derived FreshnessStatus. Never mutates the
+// status and never changes the signed `status` — it only reads it.
+export function evaluateScanGate(
+  status: FreshnessStatus,
+  policyMode: PolicyMode
+): ScanGateResult {
+  const offending: ScanGateOffender[] = [];
+  for (const row of status.rows) {
+    if (row.required_for_release !== true) {
+      continue; // only required rows are gated
+    }
+    if (!rowMeetsGateBar(row, policyMode)) {
+      offending.push({
+        row_id: row.row_id,
+        status: row.status,
+        local_status: row.local_status ?? null
+      });
+    }
+  }
+  return {
+    blocked: offending.length > 0,
+    policy_mode: policyMode,
+    required_bar: policyMode === "release" ? "FRESH" : "VERIFIED_LOCAL",
+    offending_rows: offending
   };
 }
 

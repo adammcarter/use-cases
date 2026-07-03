@@ -184,6 +184,10 @@ export interface FreshnessRowOut {
   matching_proof_event: ProofRef | null;
   latest_trusted_proof_event: ProofRef | null;
   required_action: string | null;
+  // Whether this row is marked `required_for_release` in its approval policy.
+  // Surfaced (0.1.0) so `scan --gate` can gate purely on required rows without
+  // re-reading the approval policy. Additive: never affects the headline status.
+  required_for_release?: boolean;
   // Keyless local-verification tier (0.1.0). Present only when the caller
   // supplied `local_results`; null/absent for UNBOUND/INVALID rows. Additive:
   // never changes the headline `status`.
@@ -839,7 +843,8 @@ export function deriveFreshness(input: DeriveFreshnessInput): FreshnessStatus {
       current_bindings: currentRegistered.map(bindingToOut),
       matching_proof_event: matching ? proofRef(matching) : null,
       latest_trusted_proof_event: latestProof ? proofRef(latestProof) : null,
-      required_action: requiredAction
+      required_action: requiredAction,
+      required_for_release: required
     };
     // Emit the keyless local tier only when the caller opted in via local_results.
     if (localStatus !== undefined) {
