@@ -8,7 +8,7 @@ import { describe, expect, test } from "vitest";
 // having to discover it by reading the repo. See critical-info-bootstrap.
 const repoRoot = resolve(import.meta.dirname, "../../..");
 const hookScript = resolve(repoRoot, "hooks/session-start");
-const BOOTSTRAP_MARKER = "Use Cases Plugin Activation";
+const BOOTSTRAP_MARKER = "Use Case Matrix Activation";
 
 function runHook(env: Record<string, string>) {
   return spawnSync("bash", [hookScript], {

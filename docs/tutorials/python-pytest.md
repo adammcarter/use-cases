@@ -1,6 +1,6 @@
 # Tutorial: adopt the matrix in a pure-Python repo (pytest, no JS)
 
-This walkthrough proves the headline claim — **anyone can adopt Use Cases Plugin,
+This walkthrough proves the headline claim — **anyone can adopt Use Case Matrix,
 not just JavaScript repos** — by taking a tiny Python project from nothing to a
 signed **FRESH** row using a **pure Python toolchain**. There is **no pnpm and no
 vitest** anywhere in the project: the verifier is `pytest`.

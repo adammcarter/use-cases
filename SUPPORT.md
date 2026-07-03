@@ -1,12 +1,12 @@
 # Support
 
-How to get help with Use Cases Plugin, and what we support at v1.
+How to get help with Use Case Matrix, and what we support at v1.
 
 ## Supported matrix
 
 | Area | v1 support |
 |---|---|
-| **Node** | Active LTS lines. Use Cases Plugin is built and tested against current LTS. |
+| **Node** | Active LTS lines. Use Case Matrix is built and tested against current LTS. |
 | **CI authority** | **GitHub Actions** is the reference, first-class path. The verify/prove proof model is **CI-neutral**: other providers (GitLab CI, CircleCI, generic) are best-effort and supported via the documented authority contract — see [`docs/security/ci-hardening.md`](docs/security/ci-hardening.md). |
 | **Verifiers** | Command verifiers for **any** language/toolchain (executable + argv, no shell). `pnpm`/`vitest` is one preset, not an assumption. |
 | **MCP transport** | **Local stdio** only. Remote/HTTP MCP is **not** a v1 contract. |

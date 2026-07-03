@@ -1,4 +1,4 @@
-// `ucm init` — scaffold a minimal, WORKING Use Cases Plugin workspace.
+// `ucm init` — scaffold a minimal, WORKING Use Case Matrix workspace.
 //
 // Takes a brand-new repo from nothing to a bindable, verifiable matrix in one
 // command: a workspace config (`use-case-matrix.yml`) wired to a default

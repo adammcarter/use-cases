@@ -1,7 +1,7 @@
 // `ucm init` contract test (public-v1 Phase 5 onboarding).
 //
 // Proves the new scaffolding command takes a brand-new repo from nothing to a
-// bindable, verifiable Use Cases Plugin workspace in ONE command:
+// bindable, verifiable Use Case Matrix workspace in ONE command:
 //   1. `ucm init` writes a workspace config + an example matrix file, and the
 //      scaffolded workspace IMMEDIATELY passes `ucm matrix validate`.
 //   2. Each --template (generic | js-vitest | python-pytest | go-test) writes the

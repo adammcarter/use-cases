@@ -1,7 +1,7 @@
 """A tiny, self-contained checkout helper an adopter might own.
 
 The function below is the implementation the use-case row
-`example.checkout.apply_coupon` describes. It is wrapped in a Use Cases Plugin
+`example.checkout.apply_coupon` describes. It is wrapped in a Use Case Matrix
 marker block (the `@use-case` start/end comments below) so the matrix can bind
 the row to exactly these source lines.
 

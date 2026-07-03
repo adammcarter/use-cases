@@ -23,7 +23,7 @@ use_cases:
     intent: Convert legacy TEST-MATRIX rows into draft use-case YAML with review warnings.
     preconditions:
       - A legacy TEST-MATRIX.md file exists.
-    trigger: User or agent backfills an existing project into Use Cases Plugin.
+    trigger: User or agent backfills an existing project into Use Case Matrix.
     scenarios:
       - id: migration.importer.reviewable_draft_import.dry_run
         kind: steps

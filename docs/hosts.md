@@ -1,6 +1,6 @@
 # Host Support
 
-Use Cases Plugin treats Claude, Codex, Copilot, and OpenCode as first-class
+Use Case Matrix treats Claude, Codex, Copilot, and OpenCode as first-class
 host families, but profile existence is not proof of support.
 
 | Host | Profile | Projection target | Current evidence rule |
