@@ -74,6 +74,13 @@
         "verification_policy_hash": { "$ref": "#/$defs/hash" },
         "approval_policy_hash": { "$ref": "#/$defs/hash" },
         "status": { "enum": ["FRESH", "SUSPECT", "UNPROVEN", "UNBOUND", "INVALID"] },
+        "local_status": {
+          "oneOf": [
+            { "type": "null" },
+            { "enum": ["VERIFIED_LOCAL", "STALE_LOCAL", "UNVERIFIED_LOCAL"] }
+          ]
+        },
+        "local_reason": { "type": ["string", "null"] },
         "policy_block": { "type": "boolean" },
         "reasons": { "type": "array", "items": { "$ref": "#/$defs/reason" } },
         "known_binding_slugs": { "type": "array", "items": { "type": "string" } },
