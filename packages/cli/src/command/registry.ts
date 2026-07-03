@@ -2,6 +2,7 @@ import { capsuleCommands } from "../commands/capsule.js";
 import { doctorCommands } from "../commands/doctor.js";
 import { evidenceCommands } from "../commands/evidence.js";
 import { hostCommands } from "../commands/host.js";
+import { keygenCommands } from "../commands/keygen.js";
 import { markersCommands } from "../commands/markers.js";
 import { matrixCommands } from "../commands/matrix.js";
 import { migrateCommands } from "../commands/migrate.js";
@@ -26,5 +27,6 @@ export const allCommands: CliCommand[] = [
   ...hostCommands,
   ...doctorCommands,
   ...markersCommands,
+  ...keygenCommands,
   ...showcaseCommands
 ];
