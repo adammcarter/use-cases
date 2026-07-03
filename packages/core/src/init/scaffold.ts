@@ -48,6 +48,17 @@ const CONFIG_FILE = "use-case-matrix.yml";
 const USE_CASE_FILE = join("use-cases", "example.yml");
 const DEFAULT_VERIFIER_ID = "acceptance";
 
+// The example row id scaffolded in `use-cases/example.yml`. The js-vitest
+// runnable example binds its marked source span to this id, and the acceptance
+// test lives at the path the `js.vitest` preset derives from it
+// (`tests/use-cases/<row-id>.test.ts`).
+const EXAMPLE_ROW_ID = "example.feature.happy_path";
+const JS_VITEST_SRC_FILE = join("src", "example.ts");
+const JS_VITEST_TEST_FILE = join("tests", "use-cases", `${EXAMPLE_ROW_ID}.test.ts`);
+
+// A template-specific extra file to write (relative path + rendered body).
+type TemplateFile = { relPath: string; body: string };
+
 export function scaffoldWorkspace(options: ScaffoldWorkspaceOptions): ScaffoldWorkspaceResult {
   const template: InitTemplate = options.template ?? "generic";
   const repoRoot = resolve(options.repoRoot);
@@ -65,12 +76,22 @@ export function scaffoldWorkspace(options: ScaffoldWorkspaceOptions): ScaffoldWo
     diagnostics: [diagnostic]
   });
 
+  // Template-specific runnable-example files (e.g. js-vitest ships a marked
+  // source file + a matching vitest test so `verify` works out of the box).
+  const templateFiles = templateFilesFor(template);
+
   // Path-containment: every write target must stay inside the repo root.
   let configPath: string;
   let useCasePath: string;
+  let templatePaths: { relPath: string; absPath: string; body: string }[];
   try {
     configPath = resolveContainedPath(repoRoot, CONFIG_FILE, "Scaffold target escapes the repo boundary.");
     useCasePath = resolveContainedPath(repoRoot, USE_CASE_FILE, "Scaffold target escapes the repo boundary.");
+    templatePaths = templateFiles.map((file) => ({
+      relPath: file.relPath,
+      absPath: resolveContainedPath(repoRoot, file.relPath, "Scaffold target escapes the repo boundary."),
+      body: file.body
+    }));
   } catch (error) {
     return blocked(
       diagnostic(
@@ -97,13 +118,22 @@ export function scaffoldWorkspace(options: ScaffoldWorkspaceOptions): ScaffoldWo
   writeFileSync(configPath, configBody, "utf8");
   writeFileSync(useCasePath, useCaseBody, "utf8");
 
+  for (const file of templatePaths) {
+    mkdirSync(dirname(file.absPath), { recursive: true });
+    writeFileSync(file.absPath, file.body, "utf8");
+  }
+
   return {
     schema_version: 1,
     status: "created",
     template,
     component_id: componentId,
     default_verifier: verifier.summary,
-    created_files: [toPosix(relative(repoRoot, configPath)), toPosix(relative(repoRoot, useCasePath))],
+    created_files: [
+      toPosix(relative(repoRoot, configPath)),
+      toPosix(relative(repoRoot, useCasePath)),
+      ...templatePaths.map((file) => toPosix(relative(repoRoot, file.absPath)))
+    ],
     next_steps: nextSteps(),
     diagnostics: []
   };
@@ -219,6 +249,77 @@ function renderExampleUseCase(): string {
     "          minimum_count: 1",
     "    approval_policy:",
     "      mode: none",
+    ""
+  ].join("\n");
+}
+
+// Extra files that make a template's scaffolded example RUNNABLE out of the
+// box. The `generic`, `python-pytest`, and `go-test` templates ship none here
+// (python-pytest's runnable example lives under examples/, not the scaffolder);
+// js-vitest ships a marked source file + a matching vitest test so that
+// `bind --register-existing` + `verify` succeed immediately after `init`.
+function templateFilesFor(template: InitTemplate): TemplateFile[] {
+  switch (template) {
+    case "js-vitest":
+      return [
+        { relPath: JS_VITEST_SRC_FILE, body: renderJsVitestSource() },
+        { relPath: JS_VITEST_TEST_FILE, body: renderJsVitestTest() }
+      ];
+    default:
+      return [];
+  }
+}
+
+// The implementation the `example.feature.happy_path` row describes, wrapped in
+// a Use Case Matrix marker span (`//` is the configured `.ts` comment prefix).
+// `bind --register-existing` binds the row to exactly these source lines.
+function renderJsVitestSource(): string {
+  return [
+    "// A tiny, self-contained module an adopter might own. The exported",
+    "// function below is the implementation the use-case row",
+    `// \`${EXAMPLE_ROW_ID}\` describes. It is wrapped in a Use Case Matrix`,
+    "// marker span (the `@use-case` start/end comments) so the matrix can bind",
+    "// the row to exactly these source lines. Replace it with your own code.",
+    "",
+    `//: @use-case: ${EXAMPLE_ROW_ID}`,
+    "export function greet(name: string): string {",
+    '  const trimmed = name.trim();',
+    '  if (trimmed === "") {',
+    '    throw new Error("name must not be empty");',
+    "  }",
+    "  return `Hello, ${trimmed}!`;",
+    "}",
+    `//: @use-case: end ${EXAMPLE_ROW_ID}`,
+    ""
+  ].join("\n");
+}
+
+// A plain vitest module at the path the `js.vitest` preset derives from the row
+// id (`tests/use-cases/<row-id>.test.ts`), so `ucm verify` runs it as-is.
+function renderJsVitestTest(): string {
+  return [
+    `// Acceptance test for the \`${EXAMPLE_ROW_ID}\` use-case row.`,
+    "//",
+    "// The `js.vitest` verifier preset runs this file with",
+    `//   pnpm -s vitest run tests/use-cases/${EXAMPLE_ROW_ID}.test.ts`,
+    "// (the path the preset derives from the row id). Replace these assertions",
+    "// with real ones as you replace the example row with your own use case.",
+    'import { describe, expect, test } from "vitest";',
+    'import { greet } from "../../src/example.js";',
+    "",
+    `describe("${EXAMPLE_ROW_ID}", () => {`,
+    '  test("greets a named user", () => {',
+    '    expect(greet("Ada")).toBe("Hello, Ada!");',
+    "  });",
+    "",
+    '  test("trims surrounding whitespace", () => {',
+    '    expect(greet("  Ada  ")).toBe("Hello, Ada!");',
+    "  });",
+    "",
+    '  test("rejects an empty name", () => {',
+    '    expect(() => greet("   ")).toThrow();',
+    "  });",
+    "});",
     ""
   ].join("\n");
 }
