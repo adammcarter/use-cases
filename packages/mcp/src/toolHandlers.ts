@@ -10,10 +10,10 @@ import type {
   ShowcaseAppendResult,
   ShowcaseVerdict,
   UseCaseQuery
-} from "@use-case-matrix/core";
+} from "@adammcarter/use-cases-core";
 import type { JsonObject } from "./toolSchemas.js";
 
-type UcmCoreModule = typeof import("@use-case-matrix/core");
+type UcmCoreModule = typeof import("@adammcarter/use-cases-core");
 
 const {
   appendEvidenceEvent,
@@ -48,7 +48,7 @@ const {
 
 async function loadUcmCore(): Promise<UcmCoreModule> {
   try {
-    return await import("@use-case-matrix/core");
+    return await import("@adammcarter/use-cases-core");
   } catch (error) {
     if (!isMissingCorePackage(error)) {
       throw error;
@@ -59,7 +59,7 @@ async function loadUcmCore(): Promise<UcmCoreModule> {
 }
 
 function isMissingCorePackage(error: unknown): boolean {
-  return error instanceof Error && "code" in error && error.code === "ERR_MODULE_NOT_FOUND" && error.message.includes("@use-case-matrix/core");
+  return error instanceof Error && "code" in error && error.code === "ERR_MODULE_NOT_FOUND" && error.message.includes("@adammcarter/use-cases-core");
 }
 
 const hostSurfaceDefault = "codex.cli" as HostSurface;

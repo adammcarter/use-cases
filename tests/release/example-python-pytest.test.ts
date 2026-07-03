@@ -5,7 +5,7 @@
 // This is the concrete payoff of the verifier-generality work and the evidence
 // behind the headline "anyone can adopt the matrix, not just JS repos":
 //
-//   1. pack @use-case-matrix/core + /cli into tarballs and `npm install` them into
+//   1. pack @adammcarter/use-cases-core + /cli into tarballs and `npm install` them into
 //      a CLEAN COPY of the example (mirrors tests/smoke/package-entrypoints.test.ts:
 //      a consumer with no repo workspace links, only the published bins);
 //   2. generate a throwaway ed25519 keypair in the temp dir (never committed);
@@ -107,7 +107,7 @@ interface Consumer {
 
 // A clean consumer: a COPY of the committed example with the published tarballs
 // installed via npm (no workspace linking), plus a scratch ed25519 keypair. This
-// is exactly what an adopter who `npm i @use-case-matrix/cli`'d would have.
+// is exactly what an adopter who `npm i @adammcarter/use-cases-cli`'d would have.
 function installConsumer(): Consumer {
   const dir = mkdtempSync(join(tmpdir(), "python-pytest-consumer-"));
   tempDirs.push(dir);
@@ -218,7 +218,7 @@ beforeAll(() => {
 
   const packDir = mkdtempSync(join(tmpdir(), "python-pytest-pack-"));
   tempDirs.push(packDir);
-  for (const filter of ["@use-case-matrix/core", "@use-case-matrix/cli"]) {
+  for (const filter of ["@adammcarter/use-cases-core", "@adammcarter/use-cases-cli"]) {
     requireSuccess(
       run("corepack", ["pnpm", "--filter", filter, "pack", "--pack-destination", packDir]),
       `pack ${filter}`

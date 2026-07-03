@@ -1,6 +1,6 @@
 export type JsonObject = Record<string, unknown>;
 
-// Closed value-domains mirrored from @use-case-matrix/core so the advertised MCP
+// Closed value-domains mirrored from @adammcarter/use-cases-core so the advertised MCP
 // schemas document exactly what each parameter accepts. These are advisory: the
 // server does not validate inbound args against the schema (handlers self-validate
 // and still forward every undeclared field to the CLI), so declaring them only

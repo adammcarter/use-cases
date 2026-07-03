@@ -1,4 +1,4 @@
-# @use-case-matrix/cli
+# @adammcarter/use-cases-cli
 
 Command-line interface for **use-case-matrix** — a repo-local, agent-facing
 assurance system for keeping product claims, code spans, demonstrations,

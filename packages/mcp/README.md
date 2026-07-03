@@ -1,4 +1,4 @@
-# @use-case-matrix/mcp
+# @adammcarter/use-cases-mcp
 
 Local stdio [Model Context Protocol](https://modelcontextprotocol.io) server for
 **use-case-matrix** — exposing the full workflow (matrix, freshness,
@@ -25,7 +25,7 @@ Configure your MCP client to launch the server over stdio:
   "mcpServers": {
     "use-case-matrix": {
       "command": "npx",
-      "args": ["-y", "@use-case-matrix/mcp"]
+      "args": ["-y", "@adammcarter/use-cases-mcp"]
     }
   }
 }

@@ -93,9 +93,9 @@ describe("P0 package entrypoints", () => {
 
     const packDir = mkdtempSync(join(tmpdir(), "use-case-matrix-pack-"));
     for (const filter of [
-      "@use-case-matrix/core",
-      "@use-case-matrix/cli",
-      "@use-case-matrix/mcp"
+      "@adammcarter/use-cases-core",
+      "@adammcarter/use-cases-cli",
+      "@adammcarter/use-cases-mcp"
     ]) {
       requireSuccess(
         run("corepack", [
@@ -125,7 +125,7 @@ describe("P0 package entrypoints", () => {
     writeFileSync(
       join(consumer, "check.mjs"),
       [
-        "import { getVersionInfo } from '@use-case-matrix/core';",
+        "import { getVersionInfo } from '@adammcarter/use-cases-core';",
         "const info = getVersionInfo();",
         "if (info.name !== 'use-case-matrix' || info.version !== '0.1.0') throw new Error('bad version export');"
       ].join("\n")

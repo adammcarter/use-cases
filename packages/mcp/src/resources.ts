@@ -8,9 +8,9 @@
 // root (the configured default, else the server cwd); a traversal path is
 // rejected before any disk read. Schema resources need no repo.
 import { join, resolve } from "node:path";
-import type { ResolvedWorkspaceContext } from "@use-case-matrix/core";
+import type { ResolvedWorkspaceContext } from "@adammcarter/use-cases-core";
 
-type UcmCoreModule = typeof import("@use-case-matrix/core");
+type UcmCoreModule = typeof import("@adammcarter/use-cases-core");
 
 const {
   UseCasesPluginError,
@@ -31,7 +31,7 @@ const {
 
 async function loadUcmCore(): Promise<UcmCoreModule> {
   try {
-    return await import("@use-case-matrix/core");
+    return await import("@adammcarter/use-cases-core");
   } catch (error) {
     if (!isMissingCorePackage(error)) {
       throw error;
@@ -42,7 +42,7 @@ async function loadUcmCore(): Promise<UcmCoreModule> {
 }
 
 function isMissingCorePackage(error: unknown): boolean {
-  return error instanceof Error && "code" in error && error.code === "ERR_MODULE_NOT_FOUND" && error.message.includes("@use-case-matrix/core");
+  return error instanceof Error && "code" in error && error.code === "ERR_MODULE_NOT_FOUND" && error.message.includes("@adammcarter/use-cases-core");
 }
 
 const JSON_MIME = "application/json";

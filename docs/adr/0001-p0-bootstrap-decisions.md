@@ -42,9 +42,9 @@ P0 turns that into a runnable TypeScript workspace.
 ### Package Names And Executables
 
 - Root package name: `use-case-matrix`.
-- Core package name: `@use-case-matrix/core`.
-- CLI package name: `@use-case-matrix/cli`.
-- MCP package name: `@use-case-matrix/mcp`.
+- Core package name: `@adammcarter/use-cases-core`.
+- CLI package name: `@adammcarter/use-cases-cli`.
+- MCP package name: `@adammcarter/use-cases-mcp`.
 - CLI executable: `ucm`.
 - MCP executable: `ucm-mcp`.
 

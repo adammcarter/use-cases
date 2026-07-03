@@ -10,7 +10,7 @@ How to get help with Use Case Matrix, and what we support at v1.
 | **CI authority** | **GitHub Actions** is the reference, first-class path. The verify/prove proof model is **CI-neutral**: other providers (GitLab CI, CircleCI, generic) are best-effort and supported via the documented authority contract — see [`docs/security/ci-hardening.md`](docs/security/ci-hardening.md). |
 | **Verifiers** | Command verifiers for **any** language/toolchain (executable + argv, no shell). `pnpm`/`vitest` is one preset, not an assumption. |
 | **MCP transport** | **Local stdio** only. Remote/HTTP MCP is **not** a v1 contract. |
-| **Packages** | `@use-case-matrix/core`, `@use-case-matrix/cli` (`ucm`), `@use-case-matrix/mcp` (`ucm-mcp`), released together at the same version. |
+| **Packages** | `@adammcarter/use-cases-core`, `@adammcarter/use-cases-cli` (`ucm`), `@adammcarter/use-cases-mcp` (`ucm-mcp`), released together at the same version. |
 
 The authoritative declaration of what is stable vs experimental is
 [`docs/reference/stability.md`](docs/reference/stability.md).

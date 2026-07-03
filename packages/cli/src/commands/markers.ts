@@ -10,7 +10,7 @@
 import { readFileSync } from "node:fs";
 import { createPrivateKey, createPublicKey } from "node:crypto";
 import { join, resolve } from "node:path";
-import type { CiAuthority, VerificationResultRecord } from "@use-case-matrix/core";
+import type { CiAuthority, VerificationResultRecord } from "@adammcarter/use-cases-core";
 import type { CliCommand, CommandOutput, ParsedFlags } from "../command/types.js";
 import {
   createCliResult,

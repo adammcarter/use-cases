@@ -1,17 +1,17 @@
 {
-  "name": "@use-case-matrix/cli",
+  "name": "@adammcarter/use-cases-cli",
   "version": "0.1.0",
   "type": "module",
-  "description": "CLI for use-case-matrix.",
+  "description": "CLI for @adammcarter/use-cases.",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/adammcarter/use-case-matrix.git",
+    "url": "git+https://github.com/adammcarter/use-cases.git",
     "directory": "packages/cli"
   },
   "bin": {
-    "ucm": "./dist/index.js",
-    "use-case-matrix": "./dist/index.js"
+    "uc": "./dist/index.js",
+    "use-cases": "./dist/index.js"
   },
   "exports": {
     ".": {
@@ -28,7 +28,7 @@
   },
   "private": true,
   "dependencies": {
-    "@use-case-matrix/core": "workspace:*"
+    "@adammcarter/use-cases-core": "workspace:*"
   },
   "scripts": {
     "build": "tsc -b",

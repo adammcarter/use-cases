@@ -1,17 +1,17 @@
 {
-  "name": "@use-case-matrix/mcp",
+  "name": "@adammcarter/use-cases-mcp",
   "version": "0.1.0",
   "type": "module",
-  "description": "MCP server for use-case-matrix.",
+  "description": "MCP server for @adammcarter/use-cases.",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/adammcarter/use-case-matrix.git",
+    "url": "git+https://github.com/adammcarter/use-cases.git",
     "directory": "packages/mcp"
   },
   "bin": {
-    "ucm-mcp": "./dist/index.js",
-    "use-case-matrix-mcp": "./dist/index.js"
+    "uc-mcp": "./dist/index.js",
+    "use-cases-mcp": "./dist/index.js"
   },
   "exports": {
     ".": {
@@ -28,7 +28,7 @@
   },
   "private": true,
   "dependencies": {
-    "@use-case-matrix/core": "workspace:*"
+    "@adammcarter/use-cases-core": "workspace:*"
   },
   "scripts": {
     "build": "tsc -b",

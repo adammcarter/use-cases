@@ -1,4 +1,4 @@
-import type { CliResult } from "@use-case-matrix/core";
+import type { CliResult } from "@adammcarter/use-cases-core";
 import {
   type JsonObject,
   cliEnvelopeSchema,

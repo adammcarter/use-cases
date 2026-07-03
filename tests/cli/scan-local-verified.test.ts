@@ -170,7 +170,7 @@ beforeAll(() => {
 
   const packDir = mkdtempSync(join(tmpdir(), "scan-local-pack-"));
   tempDirs.push(packDir);
-  for (const filter of ["@use-case-matrix/core", "@use-case-matrix/cli"]) {
+  for (const filter of ["@adammcarter/use-cases-core", "@adammcarter/use-cases-cli"]) {
     requireSuccess(
       run("corepack", ["pnpm", "--filter", filter, "pack", "--pack-destination", packDir]),
       `pack ${filter}`

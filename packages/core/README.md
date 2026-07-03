@@ -1,4 +1,4 @@
-# @use-case-matrix/core
+# @adammcarter/use-cases-core
 
 Core domain library for **use-case-matrix** — a repo-local, agent-facing
 assurance system for keeping product claims, code spans, demonstrations,
@@ -21,7 +21,7 @@ npm i -g use-case-matrix
 ## Usage
 
 ```ts
-import { getVersionInfo } from "@use-case-matrix/core";
+import { getVersionInfo } from "@adammcarter/use-cases-core";
 
 getVersionInfo(); // { name: "use-case-matrix", version: "1.0.0" }
 ```
