@@ -50,6 +50,7 @@ export const {
   detectCiAuthority,
   singleKeyResolver,
   keyringPublicKeyResolverFromFile,
+  generateSigningKeypair,
   replayShowcaseRun,
   startShowcaseRun,
   appendShowcaseObservation,
