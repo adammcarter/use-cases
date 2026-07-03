@@ -47,6 +47,7 @@ export const {
   runProveCommand,
   runVerifyCommand,
   runValidateLedgerCommand,
+  DEFAULT_VERIFICATION_RESULTS_FILENAME,
   detectCiAuthority,
   singleKeyResolver,
   keyringPublicKeyResolverFromFile,
