@@ -30,6 +30,20 @@ describe("P9 MCP wrapper contract", () => {
     expect(mcp).toEqual(cli);
   });
 
+  // Regression: the CLI `doctor roots` reports a `writable` boolean (a canWrite
+  // probe of data_root), but the MCP `doctor_roots` handler omitted it — breaking
+  // the "same JSON contract on both transports" guarantee. The MCP data field must
+  // include `writable` and match the CLI envelope byte-for-byte for the same fixture.
+  test("doctor_roots reports writable and matches CLI doctor roots envelope (parity)", () => {
+    build();
+    const fixture = resolve(repoRoot, "tests/fixtures/workspaces/minimal-valid");
+    const cli = runCli(["doctor", "roots", "--repo", fixture, "--json"]);
+    const mcp = callTool("doctor_roots", { repo: fixture });
+
+    expect((mcp as { data: { writable: unknown } }).data.writable).toBe(true);
+    expect(mcp).toEqual(cli);
+  });
+
   test("workspace tools require an explicit repository root", () => {
     const envelope = callTool("matrix_validate", {});
 

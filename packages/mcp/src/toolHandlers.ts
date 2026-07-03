@@ -1,3 +1,4 @@
+import { accessSync, constants } from "node:fs";
 import { isAbsolute, relative, resolve } from "node:path";
 import type {
   CliResult,
@@ -73,8 +74,21 @@ export function doctorRoots(args: JsonObject): CliResult<unknown> {
     use_cases_root: context.use_cases_root,
     component_id: context.component_id,
     config_path: context.config_path,
-    provenance: context.provenance
+    provenance: context.provenance,
+    writable: canWrite(context.data_root)
   }, context);
+}
+
+// Mirror of the CLI's `canWrite` (packages/cli/src/commands/doctor.ts): probe a
+// directory for write access without mutating it so both transports emit the same
+// `writable` boolean in the doctor.roots envelope.
+function canWrite(path: string): boolean {
+  try {
+    accessSync(path, constants.W_OK);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function matrixValidate(args: JsonObject): CliResult<unknown> {
