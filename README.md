@@ -60,24 +60,24 @@ Typical workflows: **continuous** (keep the matrix live as you build), **backfil
 ## Quickstart
 
 ```bash
-# Install the CLI (and MCP server) into your project
-npm i -D @use-case-matrix/cli @use-case-matrix/mcp
+# Install the CLI + MCP server (provides the `ucm` and `ucm-mcp` binaries)
+npm i -g use-case-matrix
 
 # Scaffold a workspace (creates use-cases/ + config with one example behaviour)
-npx ucm init
+ucm init
 
 # Explore — output is human-readable by default; add --json to ANY command for
 # the machine-readable result envelope.
-npx ucm --help
-npx ucm matrix validate --repo .            # is the matrix clean?
-npx ucm matrix list --repo .                # what behaviours exist?  (lists example.feature.happy_path)
+ucm --help
+ucm matrix validate --repo .            # is the matrix clean?
+ucm matrix list --repo .                # what behaviours exist?  (lists example.feature.happy_path)
 
 # Bind a behaviour to the code that satisfies it — point --file at your own code.
-npx ucm bind --row example.feature.happy_path \
+ucm bind --row example.feature.happy_path \
   --file src/feature.ts --mode explicit --start-line 1 --end-line 20
 
 # Pick a few high-value behaviours to demo
-npx ucm plan showcase --repo . --max-items 3
+ucm plan showcase --repo . --max-items 3
 ```
 
 Everything except `bind` runs as-is against the freshly scaffolded workspace;
@@ -99,7 +99,7 @@ For the technically curious — the high-level shape:
 - **Built-in CI + precommit.** `.github/workflows/use-cases.yml` runs `validate-ledger` and `scan`, and (on release) `verify → prove → release-gate` so required rows must be `FRESH` to ship. An optional local precommit hook gives fast, non-authoritative feedback. Publishing uses npm Trusted Publishing (OIDC) with build provenance — no tokens.
 - **Append-only everywhere.** The matrix, the binding registry, the evidence ledger, and showcase runs are all event-sourced and content-addressed: status is *derived* from history, never asserted.
 
-Packages: **`@use-case-matrix/cli`** (binary `ucm`), **`@use-case-matrix/mcp`** (binary `ucm-mcp`), **`@use-case-matrix/core`**.
+Ships as a single self-contained package: **`use-case-matrix`** (binaries `ucm` and `ucm-mcp`). The `core` / `cli` / `mcp` workspaces are bundled inside it, not published separately.
 
 Deeper reading: [CLI reference](docs/cli.md) · [data model](docs/data-model.md) · [code markers & freshness](docs/markers-adoption.md) · [evidence & security](docs/security.md) · [showcase runs](docs/showcase.md) · [hosts & activation](docs/hosts.md) · [MCP](docs/mcp.md) · [migration](docs/migration.md).
 

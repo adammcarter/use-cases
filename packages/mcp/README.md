@@ -1,19 +1,20 @@
 # @use-case-matrix/mcp
 
 Local stdio [Model Context Protocol](https://modelcontextprotocol.io) server for
-**Use Cases Plugin** — exposing the full workflow (matrix, freshness,
+**use-case-matrix** — exposing the full workflow (matrix, freshness,
 evidence, showcase, host applicability, and more) to coding agents without a GUI.
 
 ## Install
 
+This is an internal workspace package — it is **not published separately**. It
+ships bundled inside the
+[`use-case-matrix`](https://www.npmjs.com/package/use-case-matrix) package:
+
 ```bash
-npm install @use-case-matrix/mcp
+npm i -g use-case-matrix
 ```
 
-This installs two binaries:
-
-- `ucm-mcp` — primary binary.
-- `use-case-matrix-mcp` — long-form alias.
+That provides the `ucm-mcp` binary (and its `use-case-matrix-mcp` long-form alias).
 
 ## Usage
 

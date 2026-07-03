@@ -1,19 +1,20 @@
 # @use-case-matrix/cli
 
-Command-line interface for **Use Cases Plugin** — a repo-local, agent-facing
+Command-line interface for **use-case-matrix** — a repo-local, agent-facing
 assurance system for keeping product claims, code spans, demonstrations,
 evidence, and release decisions aligned.
 
 ## Install
 
+This is an internal workspace package — it is **not published separately**. It
+ships bundled inside the
+[`use-case-matrix`](https://www.npmjs.com/package/use-case-matrix) package:
+
 ```bash
-npm install -D @use-case-matrix/cli
+npm i -g use-case-matrix
 ```
 
-This installs two binaries:
-
-- `ucm` — primary binary.
-- `use-case-matrix` — long-form alias.
+That provides the `ucm` binary (and its `use-case-matrix` long-form alias).
 
 ## Usage
 

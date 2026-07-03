@@ -23,12 +23,11 @@ Every command shown here is a real `ucm` command. Concepts are linked to the
 ## 1. Install the CLI
 
 ```bash
-pnpm add -D @use-case-matrix/cli
+npm i -g use-case-matrix
 ```
 
-This puts the `ucm` binary on your project's path (via `pnpm exec ucm …` or a
-`package.json` script). The companion MCP server ships separately as
-`@use-case-matrix/mcp` (binary `ucm-mcp`) if you want agents to drive the same
+This puts the `ucm` binary on your PATH. The same package also ships the
+companion MCP server binary `ucm-mcp` if you want agents to drive the same
 commands — see [the MCP contract](./mcp.md).
 
 ## 2. Scaffold the workspace with `ucm init`

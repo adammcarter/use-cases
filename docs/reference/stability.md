@@ -1,15 +1,16 @@
 # Stability & Versioning Policy
 
-Use Cases Plugin follows [Semantic Versioning](https://semver.org). At
+use-case-matrix follows [Semantic Versioning](https://semver.org). At
 `1.0.0` the surfaces listed under **Public API** below are a contract: they only
 change in breaking ways across a **major** version bump. This page is the
 authoritative declaration of what is stable, what is experimental, and how
 versions move.
 
-> Packages are released together at the same version:
-> `@use-case-matrix/core`, `@use-case-matrix/cli`, `@use-case-matrix/mcp`.
-> See the [publishing runbook](../release/publishing.md) for how a release is cut
-> (npm Trusted Publishing + provenance) and the owner one-time npm setup.
+> Ships as a single package, `use-case-matrix` (binaries `ucm` and `ucm-mcp`);
+> the `core` / `cli` / `mcp` workspaces are bundled inside it, not published
+> separately. See the [publishing runbook](../release/publishing.md) for how a
+> release is cut (npm Trusted Publishing + provenance) and the owner one-time npm
+> setup.
 
 ## SemVer policy
 
@@ -35,7 +36,6 @@ These are versioned contracts:
 - **JSON Schemas** published under the `https://use-case-matrix.dev/schemas/v1/...` `$id` namespace (resolved locally; not fetched).
 - **The use-case marker grammar** (`//: @use-case: <slug>` … `//: @use-case: end <slug>`) and slug rules.
 - **The proof/trust model**: ed25519 signed proof events, the hashed inputs (row, binding-set, span, verification-context), and the freshness states (`FRESH`, `SUSPECT`, `UNPROVEN`, `UNBOUND`, `INVALID`). Signing-key management — the single `--public-key` path, the opt-in `--keyring` registry, and key rotation/revocation — is documented in [key management](../security/key-management.md).
-- **Documented `@use-case-matrix/core` TypeScript exports.** Undocumented internals are not public.
 - **Error codes** declared in the [error-code registry](./error-codes.md) (`UCM_*`).
 
 ### Result envelope
@@ -97,7 +97,7 @@ promoted. They are called out here so adopters can depend on them with eyes open
   opt-in release-gate authority requirement are documented in
   [CI hardening](../security/ci-hardening.md).
 - Any other CLI command's **human-readable** (non-`--json`) formatting.
-- Internal `@use-case-matrix/core` modules not listed in the documented export surface.
+- The `core` / `cli` / `mcp` workspaces are an internal implementation detail: they are bundled into the `use-case-matrix` package, **not** a published programmatic import surface. The stable contract is the CLI, the MCP tools, the JSON envelope, the schemas, and the persisted file formats — not TypeScript imports.
 
 ## Supported environments
 
