@@ -41,15 +41,32 @@ describe("P9 MCP wrapper contract", () => {
     });
   });
 
-  test("workspace tools reject a non-existent repo (CLI/MCP parity: workspace.not_found)", () => {
-    const missing = resolve(repoRoot, "tests/fixtures/workspaces/__ucm_missing_repo__");
-    for (const tool of ["matrix_validate", "matrix_list", "matrix_status"]) {
-      const envelope = callTool(tool, { repo: missing });
-      expect(envelope, tool).toMatchObject({
+  // Regression (dogfood finding N1): a non-existent --repo/repo is a typo, not a
+  // valid empty workspace. Both transports must reject it IDENTICALLY — otherwise
+  // the matrix inspection tools silently report a missing path as valid:true with
+  // zero use cases, and the "same JSON contract on both transports" guarantee
+  // breaks. The guard lives in the shared core resolver (workspaceNotFoundDiagnostic)
+  // so every matrix tool (and any future one) inherits it, and the CLI + MCP emit a
+  // byte-identical envelope.
+  test("matrix inspection tools reject a non-existent repo identically on CLI and MCP (workspace.not_found parity)", () => {
+    build();
+    const missing = resolve(repoRoot, "tests/fixtures/workspaces/__ucm_definitely_missing_repo__");
+    const tools: Array<[string, string[]]> = [
+      ["matrix_validate", ["matrix", "validate"]],
+      ["matrix_list", ["matrix", "list"]],
+      ["matrix_status", ["matrix", "status"]]
+    ];
+    for (const [tool, cliArgs] of tools) {
+      const mcp = callTool(tool, { repo: missing });
+      expect(mcp, tool).toMatchObject({
         ok: false,
         complete: false,
         diagnostics: [expect.objectContaining({ code: "workspace.not_found" })]
       });
+
+      const cli = runCliRaw([...cliArgs, "--repo", missing, "--json"]);
+      expect(cli.exitCode, `${tool}: CLI must exit 2 on a non-existent repo`).toBe(2);
+      expect(cli.envelope, `${tool}: CLI and MCP envelopes must match`).toEqual(mcp);
     }
   });
 
@@ -168,6 +185,16 @@ function runCli(args: string[]) {
     throw new Error(result.stderr || result.stdout);
   }
   return JSON.parse(result.stdout);
+}
+
+// Like runCli, but for the failure paths: capture the exit code and parsed
+// envelope WITHOUT throwing on a non-zero exit (workspace.not_found exits 2).
+function runCliRaw(args: string[]): { exitCode: number | null; envelope: unknown } {
+  const result = spawnSync("node", ["packages/cli/dist/index.js", ...args], {
+    cwd: repoRoot,
+    encoding: "utf8"
+  });
+  return { exitCode: result.status, envelope: JSON.parse(result.stdout) };
 }
 
 function fixtureWorkspace(name: string): string {

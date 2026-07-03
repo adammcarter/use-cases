@@ -4,7 +4,6 @@
 // return an envelope rather than write stdout, so these return the envelope (and
 // exit code) instead of emitting it. The envelopes are constructed identically to
 // the legacy ones, so `--json` output stays byte-for-byte the same.
-import { existsSync } from "node:fs";
 import { isAbsolute, relative, resolve } from "node:path";
 import { loadUcmCore } from "./coreLoader.js";
 import { valueAfter } from "./args/parse.js";
@@ -16,6 +15,7 @@ export const {
   createCliResult,
   validateFixtureWorkspace,
   resolveWorkspaceContext,
+  workspaceNotFoundDiagnostic,
   loadUseCaseMatrix,
   queryUseCases,
   toMatrixValidationResult,
@@ -130,15 +130,14 @@ export type ContextResult =
 // 4) when --data-root escapes --repo, exactly as the legacy guard did.
 export function resolveContextOrError(argv: string[], command: string): ContextResult {
   const workspaceRoot = resolve(process.cwd(), valueAfter(argv, "--repo") ?? ".");
-  // A non-existent --repo is almost always a typo. Surface it explicitly rather
-  // than silently reporting an empty-but-valid workspace. (An existing-but-empty
-  // directory is still legitimate — that stays the "not populated" case.)
-  if (!existsSync(workspaceRoot)) {
-    return {
-      kind: "error",
-      envelope: errorEnvelope(command, "workspace.not_found", `--repo path does not exist: ${workspaceRoot}`),
-      exitCode: 2
-    };
+  // Shared workspace-existence guard (core): a non-existent --repo is a typo, not a
+  // valid empty workspace. Exit 2 = usage/lookup failure (distinct from 4 = unsafe
+  // path). The MCP transport applies the SAME core guard, so both emit an identical
+  // workspace.not_found envelope. (An existing-but-empty directory is still
+  // legitimate — that stays the "not populated" case.)
+  const missing = workspaceNotFoundDiagnostic(workspaceRoot);
+  if (missing) {
+    return { kind: "error", envelope: errorEnvelope(command, missing.code, missing.message), exitCode: 2 };
   }
   const dataRootValue = valueAfter(argv, "--data-root");
   if (dataRootValue) {
