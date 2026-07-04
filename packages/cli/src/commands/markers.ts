@@ -19,6 +19,7 @@ import {
   keyringPublicKeyResolverFromFile,
   resolveContextOrError,
   runBindCommand,
+  runImpactCommand,
   runProveCommand,
   runScanCommand,
   runValidateLedgerCommand,
@@ -267,6 +268,40 @@ export const markersScanCommand: CliCommand = {
   }
 };
 
+export const markersImpactCommand: CliCommand = {
+  path: ["impact"],
+  command: "markers.impact",
+  summary: "Show which bound behaviours a git change touches (advisory; re-verify the impacted ones).",
+  flags: [
+    ...workspaceFlags,
+    ...markerPathFlags,
+    ...trustedKeyFlags,
+    { key: "base", name: "--base", kind: "string", valueName: "<ref>", summary: "Compare the working tree against this ref instead of HEAD." },
+    { key: "staged", name: "--staged", kind: "boolean", summary: "Compare the staged index against HEAD instead of the working tree." },
+    { key: "generatedAt", name: "--generated-at", kind: "string", valueName: "<iso>", summary: "Override the generated-at timestamp." }
+  ],
+  handler: ({ argv, flags }) => {
+    const context = resolveContextOrError(argv, "markers.impact");
+    if (context.kind === "error") {
+      return { envelope: context.envelope, exitCode: context.exitCode };
+    }
+    const ctx = context.context;
+    const paths = markerPaths(flags, ctx);
+    const result = runImpactCommand({
+      context: ctx,
+      productRoot: paths.productRoot,
+      bindingsPath: paths.bindingsPath,
+      evidencePath: paths.evidencePath,
+      publicKeyResolver: markerPublicKeyResolver(flags),
+      generatedAt: (flags.generatedAt as string | undefined) ?? new Date().toISOString(),
+      base: flags.base as string | undefined,
+      staged: flags.staged as boolean,
+      repoCwd: ctx.workspace_root
+    });
+    return markerOutput("markers.impact", result, ctx, result.exit_code === 0);
+  }
+};
+
 export const markersProveCommand: CliCommand = {
   path: ["prove"],
   command: "markers.prove",
@@ -502,6 +537,7 @@ export const markersValidateLedgerCommand: CliCommand = {
 export const markersCommands: CliCommand[] = [
   markersBindCommand,
   markersScanCommand,
+  markersImpactCommand,
   markersProveCommand,
   markersVerifyCommand,
   markersValidateLedgerCommand
