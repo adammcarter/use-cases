@@ -79,6 +79,7 @@ describe("P14 v1 release dogfood evidence", () => {
       "planning.cards.prepared_not_performed",
       "planning.cards.showcase_selection",
       "planning.cards.walkthrough_coverage",
+      "release.acceptance.packaged_scenario_sweep",
       "release.ci_gate.sequential",
       "release.package.installable_artifact",
       "release.proof.clean_snapshot",

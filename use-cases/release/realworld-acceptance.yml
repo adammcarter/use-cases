@@ -1,0 +1,60 @@
+schema_version: 1
+feature:
+  id: release.acceptance
+  name: Real-world release acceptance
+  summary: Gate a release on real-world usage of the packaged artifact, not just green unit tests.
+use_cases:
+  - id: release.acceptance.packaged_scenario_sweep
+    title: Packaged-artifact real-world acceptance sweep
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: rare
+    tags:
+      - release
+      - acceptance
+      - dogfood
+      - packaging
+    source_refs:
+      - kind: file
+        path: docs/acceptance.md
+      - kind: file
+        path: docs/release.md
+    actor: agent
+    intent: >-
+      Before signing off a release, pack the shipped artifact, install it into
+      fresh throwaway projects, and drive several real developer scenarios
+      against it — gating publication on the honest per-scenario verdicts rather
+      than on unit-test greenness alone.
+    preconditions:
+      - A release candidate is built and version-bumped, and the package can be
+        packed into an installable artifact.
+    trigger: A release is ready to sign off, before it is tagged or published.
+    scenarios:
+      - id: release.acceptance.packaged_scenario_sweep.default
+        kind: steps
+        steps:
+          - Pack the release artifact and confirm it installs into a clean project like a real user would (install the tarball; the bin runs).
+          - Dispatch one subagent per real developer goal (keyless daily loop, change-impact map, CI gate, trusted-approval security, human-readable output), each installing only the packaged artifact.
+          - Each subagent pursues its goal as a real user, using the CLI's own help and docs, and reports what worked, friction, bugs, and a ship verdict with real output evidence.
+          - Synthesize the verdicts into a go/no-go; a BLOCKER, a broken positive path, or output that contradicts the machine truth holds the release.
+    observable_outcomes:
+      - Each scenario returns an honest verdict backed by real command output, not a scripted pass.
+      - Issues invisible to unit tests surface before publish — unreachable shipped code paths, misleading human output, and discoverability gaps.
+      - The release is held when the packaged artifact does not deliver a scenario's goal end-to-end, even if the unit suite is fully green.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+      - host_surface: claude.cli
+        supported: true
+      - host_surface: copilot.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      requirements:
+        - evidence_kind: agent_observation
+          required_verifiers:
+            - agent
+          minimum_count: 1
+    approval_policy:
+      mode: none
