@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import {
+  keyringAssuranceTierResolver,
   keyringResolver,
   keyringPublicKeyResolverFromFile,
   loadKeyring,
@@ -221,6 +222,83 @@ describe("loadKeyring + keyringPublicKeyResolverFromFile (file loading)", () => 
 
   test("a missing keyring file throws a clear error", () => {
     expect(() => loadKeyring(join(dir, "does-not-exist.json"))).toThrowError(/keyring/i);
+  });
+});
+
+describe("keyringAssuranceTierResolver: fail-closed, same window gate (F3)", () => {
+  function tierKeyring(): Keyring {
+    return {
+      keyring_schema_id: "ucase-public-key-registry-v1",
+      keys: [
+        {
+          key_id: "human-key-1",
+          algorithm: "ed25519",
+          public_key: KEY_A.publicKeyPem,
+          valid_from: "2026-01-01T00:00:00Z",
+          valid_until: null,
+          status: "active",
+          assurance_tier: "trusted_host_user_presence"
+        },
+        {
+          // Active but with NO assurance_tier -> must default to untrusted.
+          key_id: "no-tier-key",
+          algorithm: "ed25519",
+          public_key: KEY_B.publicKeyPem,
+          valid_from: "2026-01-01T00:00:00Z",
+          valid_until: null,
+          status: "active"
+        },
+        {
+          key_id: "revoked-key",
+          algorithm: "ed25519",
+          public_key: KEY_B.publicKeyPem,
+          valid_from: "2026-01-01T00:00:00Z",
+          valid_until: null,
+          status: "revoked",
+          assurance_tier: "trusted_host_user_presence"
+        }
+      ]
+    };
+  }
+
+  test("an active, in-window key yields its bound tier", () => {
+    const tiers = keyringAssuranceTierResolver(tierKeyring());
+    expect(tiers("human-key-1", IN_WINDOW)).toBe("trusted_host_user_presence");
+  });
+
+  test("a key with no assurance_tier defaults to untrusted_automation (never trust by omission)", () => {
+    const tiers = keyringAssuranceTierResolver(tierKeyring());
+    expect(tiers("no-tier-key", IN_WINDOW)).toBe("untrusted_automation");
+  });
+
+  test("a revoked key lends NO tier even if it declares a trusted one", () => {
+    const tiers = keyringAssuranceTierResolver(tierKeyring());
+    expect(tiers("revoked-key", IN_WINDOW)).toBeUndefined();
+  });
+
+  test("an unknown key_id lends no tier", () => {
+    const tiers = keyringAssuranceTierResolver(tierKeyring());
+    expect(tiers("does-not-exist", IN_WINDOW)).toBeUndefined();
+  });
+
+  test("an out-of-window key lends no tier (same gate as the public-key resolver)", () => {
+    const tiers = keyringAssuranceTierResolver(
+      keyringObject({
+        keys: [
+          {
+            key_id: "human-key-1",
+            algorithm: "ed25519",
+            public_key: KEY_A.publicKeyPem,
+            valid_from: "2026-12-01T00:00:00Z",
+            valid_until: null,
+            status: "active",
+            assurance_tier: "trusted_host_user_presence"
+          }
+        ]
+      })
+    );
+    // IN_WINDOW (June) is before valid_from (December).
+    expect(tiers("human-key-1", IN_WINDOW)).toBeUndefined();
   });
 });
 

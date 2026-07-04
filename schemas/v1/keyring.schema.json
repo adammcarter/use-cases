@@ -35,6 +35,14 @@
         "status": {
           "enum": ["active", "revoked"],
           "description": "active keys may verify new proofs; revoked keys must not."
+        },
+        "assurance_tier": {
+          "enum": [
+            "untrusted_automation",
+            "same_channel_operator_confirmation",
+            "trusted_host_user_presence"
+          ],
+          "description": "F3 human-approval assurance tier BOUND to the key by whoever curates the keyring — NOT declarable by the token caller. Governs whether a signed approval token from this key satisfies a human-sign-off policy floor. Absent => untrusted_automation (fail-closed default)."
         }
       },
       "required": ["key_id", "algorithm", "public_key", "valid_from", "valid_until", "status"]

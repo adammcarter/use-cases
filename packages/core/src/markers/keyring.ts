@@ -24,7 +24,22 @@ export interface KeyringKey {
   valid_from: string; // ISO-8601 timestamp
   valid_until: string | null; // ISO-8601 timestamp, or null for open-ended
   status: "active" | "revoked";
+  // F3: human-approval assurance tier BOUND to the key by the keyring curator
+  // (never declared by the token caller). Absent => untrusted_automation.
+  assurance_tier?:
+    | "untrusted_automation"
+    | "same_channel_operator_confirmation"
+    | "trusted_host_user_presence";
 }
+
+// F3: resolve a key_id to the assurance tier the KEYRING binds to it, but ONLY
+// when the key is active and in-window at `createdAt` (same fail-closed gate as
+// the public-key resolver). A key that would not verify a signature must never
+// lend its tier either. Returns undefined when the key does not resolve.
+export type AssuranceTierResolver = (
+  keyId: string,
+  createdAt?: string
+) => KeyringKey["assurance_tier"] | undefined;
 
 export interface Keyring {
   keyring_schema_id: "ucase-public-key-registry-v1";
@@ -74,9 +89,7 @@ export function loadKeyring(filePath: string): Keyring {
   return parseKeyring(value, filePath);
 }
 
-// Build a fail-closed resolver over a keyring. A key_id resolves to its PEM only
-// when the key is active and the proof's createdAt is within its window.
-export function keyringResolver(keyring: Keyring): PublicKeyResolver {
+function keyIndex(keyring: Keyring): Map<string, KeyringKey> {
   const byId = new Map<string, KeyringKey>();
   for (const key of keyring.keys) {
     // First entry per key_id wins; later duplicates are ignored.
@@ -84,30 +97,60 @@ export function keyringResolver(keyring: Keyring): PublicKeyResolver {
       byId.set(key.key_id, key);
     }
   }
+  return byId;
+}
+
+// Fail-closed gate shared by the public-key and assurance-tier resolvers: return
+// the key ONLY when it exists, is active, and createdAt is inside its window.
+function resolveActiveInWindowKey(
+  byId: Map<string, KeyringKey>,
+  keyId: string,
+  createdAt?: string
+): KeyringKey | undefined {
+  const key = byId.get(keyId);
+  if (!key || key.status !== "active") {
+    return undefined; // unknown or revoked -> fail closed
+  }
+  // Without a created_at we cannot prove the window holds -> fail closed.
+  if (createdAt === undefined) {
+    return undefined;
+  }
+  const at = Date.parse(createdAt);
+  if (Number.isNaN(at)) {
+    return undefined;
+  }
+  const from = Date.parse(key.valid_from);
+  if (Number.isNaN(from) || at < from) {
+    return undefined;
+  }
+  if (key.valid_until !== null) {
+    const until = Date.parse(key.valid_until);
+    if (Number.isNaN(until) || at > until) {
+      return undefined;
+    }
+  }
+  return key;
+}
+
+// Build a fail-closed resolver over a keyring. A key_id resolves to its PEM only
+// when the key is active and the proof's createdAt is within its window.
+export function keyringResolver(keyring: Keyring): PublicKeyResolver {
+  const byId = keyIndex(keyring);
+  return (keyId: string, createdAt?: string) =>
+    resolveActiveInWindowKey(byId, keyId, createdAt)?.public_key;
+}
+
+// F3: build a fail-closed assurance-tier resolver over the SAME keyring. It
+// gates identically to keyringResolver, then returns the key's bound tier
+// (defaulting an absent tier to untrusted_automation — never trust by omission).
+export function keyringAssuranceTierResolver(keyring: Keyring): AssuranceTierResolver {
+  const byId = keyIndex(keyring);
   return (keyId: string, createdAt?: string) => {
-    const key = byId.get(keyId);
-    if (!key || key.status !== "active") {
-      return undefined; // unknown or revoked -> fail closed
-    }
-    // Without a created_at we cannot prove the window holds -> fail closed.
-    if (createdAt === undefined) {
+    const key = resolveActiveInWindowKey(byId, keyId, createdAt);
+    if (!key) {
       return undefined;
     }
-    const at = Date.parse(createdAt);
-    if (Number.isNaN(at)) {
-      return undefined;
-    }
-    const from = Date.parse(key.valid_from);
-    if (Number.isNaN(from) || at < from) {
-      return undefined;
-    }
-    if (key.valid_until !== null) {
-      const until = Date.parse(key.valid_until);
-      if (Number.isNaN(until) || at > until) {
-        return undefined;
-      }
-    }
-    return key.public_key;
+    return key.assurance_tier ?? "untrusted_automation";
   };
 }
 

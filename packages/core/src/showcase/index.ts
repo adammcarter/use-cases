@@ -3,6 +3,8 @@ export * from "./jsonlLedger.js";
 export * from "./replayRun.js";
 export * from "./appendShowcaseEvent.js";
 export * from "./approvalAuthority.js";
+export * from "./approvalTiers.js";
+export * from "./approvalToken.js";
 export * from "./planBinding.js";
 export * from "./startRun.js";
 export * from "./approval.js";
