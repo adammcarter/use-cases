@@ -19,6 +19,7 @@ export type ShowcaseEventType =
   | "approval_recorded"
   | "approval_rejected"
   | "approval_retracted"
+  | "approval_nonce_burned"
   | "observation_corrected"
   | "verdict_corrected"
   | "failure_decision_corrected"

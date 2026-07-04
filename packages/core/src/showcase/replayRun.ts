@@ -2,14 +2,35 @@ import type { PresentationPlanItem } from "../presentation/types.js";
 import type { ShowcaseEvent, ShowcaseItemStatus, ShowcaseRunStatus } from "./types.js";
 import type { ShowcaseRunOptions } from "./types.js";
 import { readShowcaseEvents } from "./jsonlLedger.js";
-import { isTrustedUserDecisionEvent } from "./approvalAuthority.js";
+import { isTrustedUserDecisionEvent, type ApprovalTrustContext } from "./approvalAuthority.js";
+import type { PublicKeyResolver } from "../markers/proofSignature.js";
+import type { AssuranceTierResolver } from "../markers/keyring.js";
+import { AssuranceTier } from "./approvalTiers.js";
 
-export function replayShowcaseRun(options: ShowcaseRunOptions): ShowcaseRunStatus {
-  const read = readShowcaseEvents(options.context, options.runId);
-  return replayShowcaseEvents(options.runId, read.events, read.complete);
+// F3: replay recomputes user-approval trust from the embedded signed token via
+// this resolver. Omitted => user approvals are untrusted (fail-closed).
+export interface ReplayTrustOptions {
+  trustResolver?: PublicKeyResolver;
+  trustTierResolver?: AssuranceTierResolver;
+  assuranceFloor?: AssuranceTier;
 }
 
-export function replayShowcaseEvents(runId: string, events: ShowcaseEvent[], ledgerComplete = true): ShowcaseRunStatus {
+export function replayShowcaseRun(options: ShowcaseRunOptions & ReplayTrustOptions): ShowcaseRunStatus {
+  const read = readShowcaseEvents(options.context, options.runId);
+  return replayShowcaseEvents(options.runId, read.events, read.complete, options);
+}
+
+export function replayShowcaseEvents(
+  runId: string,
+  events: ShowcaseEvent[],
+  ledgerComplete = true,
+  trustOptions: ReplayTrustOptions = {}
+): ShowcaseRunStatus {
+  const trust: ApprovalTrustContext = {
+    resolver: trustOptions.trustResolver,
+    tierResolver: trustOptions.trustTierResolver,
+    assuranceFloor: trustOptions.assuranceFloor ?? AssuranceTier.TRUSTED_HOST_USER_PRESENCE
+  };
   const ordered = events.slice().sort((left, right) => left.sequence - right.sequence);
   const start = ordered.find((event) => event.event_type === "run_started");
   const plan = start?.payload.plan as { selected_items?: PresentationPlanItem[]; known_gaps?: Record<string, unknown>[] } | undefined;
@@ -102,7 +123,7 @@ export function replayShowcaseEvents(runId: string, events: ShowcaseEvent[], led
       finished = true;
     }
     if (event.event_type === "approval_recorded") {
-      if (isTrustedUserDecisionEvent(event)) {
+      if (isTrustedUserDecisionEvent(event, trust)) {
         approvalState = event.payload.decision === "approved_with_known_gaps" ? "approved_with_known_gaps" : "approved";
         approvedSequence = event.sequence;
       } else {
@@ -110,7 +131,7 @@ export function replayShowcaseEvents(runId: string, events: ShowcaseEvent[], led
       }
     }
     if (event.event_type === "approval_rejected") {
-      if (isTrustedUserDecisionEvent(event)) {
+      if (isTrustedUserDecisionEvent(event, trust)) {
         approvalState = "rejected";
         approvedSequence = event.sequence;
       } else {

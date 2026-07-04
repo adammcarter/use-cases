@@ -6,9 +6,13 @@ import type { PresentationPlan } from "../presentation/index.js";
 import type { ResolvedWorkspaceContext } from "../roots.js";
 import type { HostSurface } from "../useCases/types.js";
 import { appendShowcaseEventLine, readShowcaseEvents, showcaseLedgerPath } from "./jsonlLedger.js";
-import { replayShowcaseEvents, replayShowcaseRun } from "./replayRun.js";
-import { requireTrustedUserApprovalAuthority, type TrustedApprovalAuthority } from "./approvalAuthority.js";
+import { replayShowcaseEvents, replayShowcaseRun, type ReplayTrustOptions } from "./replayRun.js";
 import { assertPresentationPlanHash } from "./planBinding.js";
+import { computeApprovalBindingFromEvents } from "./approvalBinding.js";
+import { verifyApprovalToken, type ApprovalToken } from "./approvalToken.js";
+import { AssuranceTier } from "./approvalTiers.js";
+import type { PublicKeyResolver } from "../markers/proofSignature.js";
+import type { AssuranceTierResolver } from "../markers/keyring.js";
 import type {
   ShowcaseActorType,
   ShowcaseAppendResult,
@@ -284,6 +288,16 @@ export function finishShowcaseRun(options: {
   return appendResult(options.context, event);
 }
 
+// F3: the resolver/tier/floor a caller (CLI/MCP) supplies from its configured
+// keyring so approval trust is computed from the signed token, never asserted.
+export interface ApprovalVerificationOptions {
+  approvalToken?: ApprovalToken;
+  resolver?: PublicKeyResolver;
+  tierResolver?: AssuranceTierResolver;
+  assuranceFloor?: AssuranceTier;
+  nowMs?: number;
+}
+
 export function appendShowcaseApproval(options: {
   context: ResolvedWorkspaceContext;
   runId: string;
@@ -293,41 +307,8 @@ export function appendShowcaseApproval(options: {
   statement: string;
   idempotencyKey: string;
   recordedAt?: string;
-  authority?: TrustedApprovalAuthority;
-}): ShowcaseAppendResult {
-  const read = readShowcaseEvents(options.context, options.runId);
-  const start = read.events.find((event) => event.event_type === "run_started");
-  const plan = start?.payload.plan as PresentationPlan | undefined;
-  requireTrustedUserApprovalAuthority({
-    actorType: options.actorType,
-    authority: options.authority,
-    userApprovalRequired: planRequiresUserApproval(plan)
-  });
-  const finish = read.events.slice().reverse().find((event) => event.event_type === "run_finished");
-  if (!finish) {
-    throw new UseCasesPluginError("User approval requires a finished showcase run.", "showcase.finish_required_for_approval");
-  }
-  const status = replayShowcaseRun({ context: options.context, runId: options.runId });
-  const event = appendEvent(options.context, options.runId, {
-    eventType: "approval_recorded",
-    actorType: options.actorType,
-    hostSurface: options.hostSurface,
-    idempotencyKey: options.idempotencyKey,
-    recordedAt: options.recordedAt,
-    payload: {
-      decision: options.decision,
-      approver: { type: options.actorType },
-      capture_method: options.actorType === "user" ? "trusted_user_interactive_cli" : "command_handler",
-      approval_statement: options.statement,
-      scope: {
-        plan_content_hash: plan?.plan_content_hash ?? "",
-        finish_event_id: finish.event_id,
-        run_outcome: status.run_outcome,
-        known_gap_count: status.known_gaps.length
-      }
-    }
-  });
-  return appendResult(options.context, event);
+} & ApprovalVerificationOptions): ShowcaseAppendResult {
+  return recordApprovalDecision(options, "approval_recorded", options.decision, "approval_statement");
 }
 
 export function rejectShowcaseApproval(options: {
@@ -338,41 +319,172 @@ export function rejectShowcaseApproval(options: {
   statement: string;
   idempotencyKey: string;
   recordedAt?: string;
-  authority?: TrustedApprovalAuthority;
-}): ShowcaseAppendResult {
+} & ApprovalVerificationOptions): ShowcaseAppendResult {
+  return recordApprovalDecision(options, "approval_rejected", "rejected", "rejection_statement");
+}
+
+// The single gate both approve and reject flow through. Trust is COMPUTED from
+// the signed token; nothing about trust is taken from the caller's word.
+function recordApprovalDecision(
+  options: {
+    context: ResolvedWorkspaceContext;
+    runId: string;
+    decision?: "approved" | "approved_with_known_gaps" | "rejected";
+    actorType: ShowcaseActorType;
+    hostSurface: HostSurface;
+    statement: string;
+    idempotencyKey: string;
+    recordedAt?: string;
+  } & ApprovalVerificationOptions,
+  eventType: "approval_recorded" | "approval_rejected",
+  decision: "approved" | "approved_with_known_gaps" | "rejected",
+  statementKey: "approval_statement" | "rejection_statement"
+): ShowcaseAppendResult {
   const read = readShowcaseEvents(options.context, options.runId);
+
+  // Idempotency FIRST: a re-submit of the same decision returns the existing
+  // event WITHOUT re-verifying or re-burning (the ledger has since changed, so a
+  // fresh binding recompute would spuriously mismatch, and the nonce is burned).
+  const existing = read.events.find((event) => event.idempotency_key === options.idempotencyKey);
+  if (existing) {
+    return appendResult(options.context, existing);
+  }
+
   const start = read.events.find((event) => event.event_type === "run_started");
   const plan = start?.payload.plan as PresentationPlan | undefined;
-  requireTrustedUserApprovalAuthority({
-    actorType: options.actorType,
-    authority: options.authority,
-    userApprovalRequired: planRequiresUserApproval(plan)
-  });
+  const userRequired = planRequiresUserApproval(plan);
+
+  // A non-user actor may never stand in for a user-required approval.
+  if (options.actorType !== "user") {
+    if (userRequired) {
+      throw new UseCasesPluginError("Agent cannot record user-required approval.", "showcase.user_required_approval");
+    }
+  }
+
   const finish = read.events.slice().reverse().find((event) => event.event_type === "run_finished");
   if (!finish) {
-    throw new UseCasesPluginError("User rejection requires a finished showcase run.", "showcase.finish_required_for_approval");
+    throw new UseCasesPluginError("User approval requires a finished showcase run.", "showcase.finish_required_for_approval");
   }
   const status = replayShowcaseRun({ context: options.context, runId: options.runId });
+
+  // Decide capture method + optionally verify & burn a signed token.
+  let captureMethod = options.actorType === "user" ? "same_channel_operator_confirmation" : "command_handler";
+  let embeddedToken: ApprovalToken | undefined;
+
+  if (options.actorType === "user") {
+    if (options.approvalToken) {
+      // A signed token was supplied: verify it against the LIVE run + keyring and
+      // burn its nonce. This is the ONLY path to a trusted human sign-off.
+      const liveBinding = computeApprovalBindingFromEvents(options.runId, read.events);
+      const burnedNonces = burnedNonceSet(read.events);
+      // Explicit double-spend guard FIRST: once a nonce is burned in the ledger,
+      // any resubmission is a replay regardless of how the ledger has since
+      // drifted. Surfacing the nonce reason (rather than a downstream binding
+      // mismatch) makes the single-use failure unambiguous.
+      if (burnedNonces.has(options.approvalToken.jti)) {
+        throw new UseCasesPluginError(
+          "User approval token rejected: NONCE_BURNED (approval token nonce already burned (replay))",
+          "showcase.approval_nonce_burned"
+        );
+      }
+      const verification = verifyApprovalToken({
+        token: options.approvalToken,
+        resolver: options.resolver ?? (() => undefined),
+        tierResolver: options.tierResolver,
+        liveBinding,
+        isNonceBurned: (jti) => burnedNonces.has(jti),
+        nowMs: options.nowMs,
+        assuranceFloor: options.assuranceFloor ?? AssuranceTier.TRUSTED_HOST_USER_PRESENCE
+      });
+      if (!verification.ok) {
+        throw new UseCasesPluginError(
+          `User approval token rejected: ${verification.code} (${verification.message})`,
+          approvalFailureCode(verification.code)
+        );
+      }
+      // Burn the nonce ATOMICALLY before the approval, so a concurrent replay of
+      // the same token sees it burned and cannot double-spend.
+      appendEvent(options.context, options.runId, {
+        eventType: "approval_nonce_burned",
+        actorType: options.actorType,
+        hostSurface: options.hostSurface,
+        idempotencyKey: `${options.idempotencyKey}:nonce-burn`,
+        recordedAt: options.recordedAt,
+        payload: { jti: options.approvalToken.jti, key_id: verification.key_id, run_id: options.runId }
+      });
+      captureMethod = "host_signed_approval_token";
+      embeddedToken = options.approvalToken;
+    } else if (userRequired) {
+      // User-required plan, no signed token -> stays pending.
+      throw new UseCasesPluginError(
+        "User approval requires a signed host approval token (out-of-band human sign-off).",
+        "showcase.trusted_user_confirmation_required"
+      );
+    }
+  }
+
+  const payload: Record<string, unknown> = {
+    decision,
+    approver: { type: options.actorType },
+    capture_method: captureMethod,
+    [statementKey]: options.statement,
+    scope: {
+      plan_content_hash: plan?.plan_content_hash ?? "",
+      finish_event_id: finish.event_id,
+      run_outcome: status.run_outcome,
+      known_gap_count: status.known_gaps.length
+    }
+  };
+  if (embeddedToken) {
+    payload.approval_token = embeddedToken;
+  }
+
   const event = appendEvent(options.context, options.runId, {
-    eventType: "approval_rejected",
+    eventType,
     actorType: options.actorType,
     hostSurface: options.hostSurface,
     idempotencyKey: options.idempotencyKey,
     recordedAt: options.recordedAt,
-    payload: {
-      decision: "rejected",
-      approver: { type: options.actorType },
-      capture_method: options.actorType === "user" ? "trusted_user_interactive_cli" : "command_handler",
-      rejection_statement: options.statement,
-      scope: {
-        plan_content_hash: plan?.plan_content_hash ?? "",
-        finish_event_id: finish.event_id,
-        run_outcome: status.run_outcome,
-        known_gap_count: status.known_gaps.length
+    payload
+  });
+  // Reflect the just-verified trust in the returned status: pass the caller's
+  // resolver so the embedded token is re-verified and the run reads as approved.
+  return appendResult(options.context, event, {
+    trustResolver: options.resolver,
+    trustTierResolver: options.tierResolver,
+    assuranceFloor: options.assuranceFloor
+  });
+}
+
+// The set of already-burned nonces recorded in the ledger.
+function burnedNonceSet(events: ShowcaseEvent[]): Set<string> {
+  const burned = new Set<string>();
+  for (const event of events) {
+    if (event.event_type === "approval_nonce_burned") {
+      const jti = (event.payload as { jti?: unknown }).jti;
+      if (typeof jti === "string") {
+        burned.add(jti);
       }
     }
-  });
-  return appendResult(options.context, event);
+  }
+  return burned;
+}
+
+// Map a token failure code to a stable plugin error code.
+function approvalFailureCode(code: string): string {
+  if (code === "NONCE_BURNED") {
+    return "showcase.approval_nonce_burned";
+  }
+  if (code === "TOKEN_EXPIRED") {
+    return "showcase.approval_token_expired";
+  }
+  if (code === "BINDING_MISMATCH") {
+    return "showcase.approval_binding_mismatch";
+  }
+  if (code === "ASSURANCE_TOO_LOW") {
+    return "showcase.approval_assurance_too_low";
+  }
+  return "showcase.trusted_user_confirmation_required";
 }
 
 export function correctShowcaseVerdict(options: {
@@ -475,13 +587,17 @@ function makeEvent(options: {
   };
 }
 
-function appendResult(context: ResolvedWorkspaceContext, event: ShowcaseEvent): ShowcaseAppendResult {
+function appendResult(
+  context: ResolvedWorkspaceContext,
+  event: ShowcaseEvent,
+  trustOptions: ReplayTrustOptions = {}
+): ShowcaseAppendResult {
   return {
     schema_version: 1,
     run_id: event.run_id,
     appended_event_ids: [event.event_id],
     event,
-    status: replayShowcaseEvents(event.run_id, readShowcaseEvents(context, event.run_id).events)
+    status: replayShowcaseEvents(event.run_id, readShowcaseEvents(context, event.run_id).events, true, trustOptions)
   };
 }
 

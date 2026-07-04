@@ -543,11 +543,12 @@ export const showcaseApproveCommand: CliCommand = {
         hostSurface: "codex.cli",
         statement,
         idempotencyKey: (flags.idempotencyKey as string | undefined) ?? `cli:approve:${runId}:${statement}`,
-        recordedAt: (flags.recordedAt as string | undefined) ?? "2026-06-25T12:04:00.000Z",
-        // SECURITY: the approval authority is HARDCODED to untrusted_automation —
-        // an agent driving the CLI cannot mint trusted user sign-off. Ported
-        // verbatim from the legacy runShowcaseApprove; do not parameterise.
-        authority: { kind: "untrusted_automation" }
+        recordedAt: (flags.recordedAt as string | undefined) ?? "2026-06-25T12:04:00.000Z"
+        // SECURITY (F3): this CLI path carries NO signed approval token, so it can
+        // never mint a trusted user sign-off — an agent driving `uc showcase
+        // approve` gets untrusted_automation and a user-required plan stays
+        // pending. Trusted human sign-off comes ONLY from `uc approve-run`, which
+        // signs an out-of-band token with a key outside the agent's scope.
       });
       return showcaseResultOutput("showcase.approve", result, contextResult, 0);
     } catch (error) {
@@ -594,11 +595,9 @@ export const showcaseRejectCommand: CliCommand = {
         hostSurface: "codex.cli",
         statement,
         idempotencyKey: (flags.idempotencyKey as string | undefined) ?? `cli:reject:${runId}:${statement}`,
-        recordedAt: (flags.recordedAt as string | undefined) ?? "2026-06-25T12:04:30.000Z",
-        // SECURITY: the rejection authority is HARDCODED to untrusted_automation —
-        // an agent driving the CLI cannot mint trusted user sign-off. Ported
-        // verbatim from the legacy runShowcaseReject; do not parameterise.
-        authority: { kind: "untrusted_automation" }
+        recordedAt: (flags.recordedAt as string | undefined) ?? "2026-06-25T12:04:30.000Z"
+        // SECURITY (F3): no signed token on this path -> untrusted_automation.
+        // Trusted human sign-off comes ONLY from `uc approve-run`.
       });
       return showcaseResultOutput("showcase.reject", result, contextResult, 1);
     } catch (error) {

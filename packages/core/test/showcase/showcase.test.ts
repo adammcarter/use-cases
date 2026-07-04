@@ -12,12 +12,53 @@ import {
   appendShowcaseEpoch,
   appendShowcaseObservation,
   appendShowcaseVerdict,
+  computeRunApprovalBinding,
   correctShowcaseVerdict,
   finishShowcaseRun,
+  mintApprovalRequest,
   readShowcaseEvents,
   replayShowcaseRun,
+  signApprovalToken,
   startShowcaseRun
 } from "../../src/showcase/index.js";
+import { generateKeyPairSync } from "node:crypto";
+import { keyringAssuranceTierResolver, keyringResolver, type Keyring } from "../../src/markers/index.js";
+
+// A trusted human signing key (out of the agent's scope) + its keyring resolver.
+const F3_KEY = (() => {
+  const { publicKey, privateKey } = generateKeyPairSync("ed25519");
+  return {
+    publicKeyPem: publicKey.export({ type: "spki", format: "pem" }).toString(),
+    privateKeyPem: privateKey.export({ type: "pkcs8", format: "pem" }).toString()
+  };
+})();
+const F3_KEYRING: Keyring = {
+  keyring_schema_id: "ucase-public-key-registry-v1",
+  keys: [
+    {
+      key_id: "f3-human-key",
+      algorithm: "ed25519",
+      public_key: F3_KEY.publicKeyPem,
+      valid_from: "2026-01-01T00:00:00Z",
+      valid_until: null,
+      status: "active",
+      assurance_tier: "trusted_host_user_presence"
+    }
+  ]
+};
+const f3Resolver = () => keyringResolver(F3_KEYRING);
+const f3TierResolver = () => keyringAssuranceTierResolver(F3_KEYRING);
+function f3SignFor(context: ReturnType<typeof resolveWorkspaceContext>, runId: string) {
+  const binding = computeRunApprovalBinding({ context, runId });
+  const request = mintApprovalRequest({ binding, nowMs: Date.parse("2026-06-25T12:04:00.000Z"), ttlMinutes: 60 });
+  return signApprovalToken({ request, decision: "approved", privateKey: F3_KEY.privateKeyPem, keyId: "f3-human-key" });
+}
+const f3VerifyOpts = () => ({
+  resolver: f3Resolver(),
+  tierResolver: f3TierResolver(),
+  assuranceFloor: "trusted_host_user_presence" as const,
+  nowMs: Date.parse("2026-06-25T12:04:00.000Z")
+});
 
 const repoRoot = resolve(import.meta.dirname, "../../../..");
 const fixturesRoot = join(repoRoot, "tests/fixtures/workspaces");
@@ -210,6 +251,26 @@ describe("P6 showcase run replay", () => {
       recordedAt: "2026-06-25T12:00:00.000Z"
     });
 
+    // A signed token whose binding points at the unfinished run: append still
+    // rejects because the run has no run_finished event yet.
+    const unfinishedToken = signApprovalToken({
+      request: mintApprovalRequest({
+        binding: {
+          run_id: unfinished.run_id,
+          finish_event_id: "evt.none",
+          plan_content_hash: "x",
+          ledger_head_hash: "x",
+          evidence_digest: "x",
+          git_commit: "x",
+          ci_freshness_digest: "x"
+        },
+        nowMs: Date.parse("2026-06-25T12:01:00.000Z"),
+        ttlMinutes: 60
+      }),
+      decision: "approved",
+      privateKey: F3_KEY.privateKeyPem,
+      keyId: "f3-human-key"
+    });
     expect(() =>
       appendShowcaseApproval({
         context,
@@ -220,12 +281,14 @@ describe("P6 showcase run replay", () => {
         statement: "Trusted approval still requires finish.",
         idempotencyKey: "p6-unfinished-approval",
         recordedAt: "2026-06-25T12:01:00.000Z",
-        authority: { kind: "trusted_host_token", token: "test-token", verified: true }
+        approvalToken: unfinishedToken,
+        ...f3VerifyOpts()
       })
     ).toThrow(/finish/i);
 
     const finished = completePassingRun(context);
     const finishEvent = readShowcaseEvents(context, finished.run_id).events.find((event) => event.event_type === "run_finished");
+    const token = f3SignFor(context, finished.run_id);
     const approval = appendShowcaseApproval({
       context,
       runId: finished.run_id,
@@ -235,7 +298,8 @@ describe("P6 showcase run replay", () => {
       statement: "Trusted user accepted the finished run.",
       idempotencyKey: "p6-finished-approval",
       recordedAt: "2026-06-25T12:04:00.000Z",
-      authority: { kind: "trusted_host_token", token: "test-token", verified: true }
+      approvalToken: token,
+      ...f3VerifyOpts()
     });
 
     expect(approval.event.payload.scope).toMatchObject({
@@ -243,6 +307,7 @@ describe("P6 showcase run replay", () => {
       finish_event_id: finishEvent?.event_id,
       run_outcome: "passed"
     });
+    expect(approval.event.payload.capture_method).toBe("host_signed_approval_token");
     expect(approval.status.approval_state).toBe("approved");
   });
 
