@@ -1,5 +1,5 @@
 // `scan --gate` exit-code gating acceptance + `verify --out` DEFAULT path (Task 2,
-// 0.1.0 keyless daily loop).
+// 0.2.0 keyless daily loop).
 //
 // Runs the PUBLISHED CLI artifact against a clean copy of the pure-Python example
 // (mirrors scan-local-verified.test.ts) so the assertions are end-to-end. The
@@ -185,8 +185,8 @@ beforeAll(() => {
       `pack ${filter}`
     );
   }
-  coreTarball = join(packDir, "adammcarter-use-cases-core-0.1.0.tgz");
-  cliTarball = join(packDir, "adammcarter-use-cases-cli-0.1.0.tgz");
+  coreTarball = join(packDir, "adammcarter-use-cases-core-0.2.0.tgz");
+  cliTarball = join(packDir, "adammcarter-use-cases-cli-0.2.0.tgz");
 }, 180_000);
 
 afterAll(() => {

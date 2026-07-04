@@ -1,4 +1,4 @@
-// Keyless daily loop acceptance (0.1.0, Task 1): a bound row reaches the green
+// Keyless daily loop acceptance (0.2.0, Task 1): a bound row reaches the green
 // keyless signal VERIFIED_LOCAL with NO ed25519 key and NO `prove` — the whole
 // point of the keyless tier. The flow is bind -> verify (writes the UNSIGNED
 // results ledger to the auto-discovered default path) -> scan, and scan reports
@@ -176,8 +176,8 @@ beforeAll(() => {
       `pack ${filter}`
     );
   }
-  coreTarball = join(packDir, "adammcarter-use-cases-core-0.1.0.tgz");
-  cliTarball = join(packDir, "adammcarter-use-cases-cli-0.1.0.tgz");
+  coreTarball = join(packDir, "adammcarter-use-cases-core-0.2.0.tgz");
+  cliTarball = join(packDir, "adammcarter-use-cases-cli-0.2.0.tgz");
 }, 180_000);
 
 afterAll(() => {

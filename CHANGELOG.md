@@ -5,6 +5,39 @@ All notable changes to this project are documented here. The format is based on
 follows [Semantic Versioning](https://semver.org) (see docs/release.md). This is
 **pre-1.0 (beta) software**: anything MAY change before `1.0.0`.
 
+## 0.2.0 - 2026-07-04
+
+Trustworthiness + reach: know what a change touches, and make human sign-off
+something an agent genuinely cannot fake.
+
+### Added
+
+- **`uc impact` — change-impact map.** Given a git change (working tree, `--base
+  <ref>`, or `--staged`), it lists which bound behaviours your diff touches via
+  line-level overlap with each binding's span: `impacted` (a hunk overlaps the
+  span — re-verify these), `touched` (file changed, span didn't), and
+  `broken_bindings` (the marked file was deleted or renamed away). Purely
+  advisory — it never changes a trust verdict and writes nothing.
+- **Trusted human approval an agent cannot fake.** A use-case that requires human
+  sign-off is now approved by a **signed, run-bound, single-use token**, not a
+  terminal prompt. A human mints it out-of-band with `approve-run`, signing with
+  an ed25519 key held outside the agent's reach; the plugin verifies it against
+  the same protected keyring your CI proofs use, and independently re-checks the
+  run binding, the single-use nonce, expiry, and the key's keyring-bound
+  assurance tier. An agent driving the CLI/MCP can **request** approval but cannot
+  **mint** it. The previously spoofable, caller-asserted trust flags are deleted —
+  trust is computed only from the signature — closing a latent hole where
+  `showcase approve --actor user` could self-approve.
+- **Human-readable trust output.** `scan`, `verify`, and `impact` print a friendly
+  at-a-glance summary (status glyphs, a headline count, and the next action for
+  non-green rows) when you don't pass `--json`. `--json` output is byte-identical.
+
+### Notes
+
+- Refactor-tolerant spans (planned for 0.2.0) was **deferred**: doing it safely on
+  a code fragment needs a per-language lexer, and the daily "cries wolf" case is
+  already a quick `verify`/`recover` away. It stays in the backlog.
+
 ## 0.1.0 - 2026-07-03
 
 The **keyless daily loop**: a green "still covered" signal you get in seconds

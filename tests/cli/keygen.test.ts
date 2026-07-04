@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
 
-// Subprocess tests for `uc keygen` (Task 3, 0.1.0): the opt-in signed tier's
+// Subprocess tests for `uc keygen` (Task 3, 0.2.0): the opt-in signed tier's
 // keypair generator. It prints (default) or writes (--out) an ed25519 keypair in
 // the PEM formats prove/--public-key consume, never writes into the repo tree,
 // carries a loud CI-only warning, and (with --ci github) emits a ready-to-paste

@@ -1,4 +1,4 @@
-// `uc recover` acceptance (0.1.0, Task 4): drive a drifted / unproven row back
+// `uc recover` acceptance (0.2.0, Task 4): drive a drifted / unproven row back
 // to green with ONE command. `recover` re-runs the row's verifier, writes the
 // UNSIGNED results ledger to the canonical auto-discover path, re-scans, and
 // reports the resulting local_status + status.
@@ -222,8 +222,8 @@ beforeAll(() => {
       `pack ${filter}`
     );
   }
-  coreTarball = join(packDir, "adammcarter-use-cases-core-0.1.0.tgz");
-  cliTarball = join(packDir, "adammcarter-use-cases-cli-0.1.0.tgz");
+  coreTarball = join(packDir, "adammcarter-use-cases-core-0.2.0.tgz");
+  cliTarball = join(packDir, "adammcarter-use-cases-cli-0.2.0.tgz");
 }, 180_000);
 
 afterAll(() => {

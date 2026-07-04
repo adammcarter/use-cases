@@ -1,7 +1,7 @@
 // The public PRODUCT identity (shown by `--version`, MCP serverInfo, npm package).
 // Renamed to Use Cases for public v1.
 export const PRODUCT_NAME = "@adammcarter/use-cases";
-export const UCM_VERSION = "0.1.0";
+export const UCM_VERSION = "0.2.0";
 
 // The DEFAULT workspace component id used when a repo's config does not set one.
 // This is matrix DATA (it appears in this repo's rows, bindings, proofs, and many
