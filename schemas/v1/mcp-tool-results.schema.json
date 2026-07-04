@@ -18,14 +18,14 @@
       "context": {
         "workspace_root": "/repo",
         "data_root": "/repo",
-        "component_id": "use-case-matrix",
+        "component_id": "use-cases",
         "workspace_snapshot": {
           "repository_id": "example",
           "vcs": "git",
           "head_revision": "abc123",
           "dirty": false,
           "working_tree_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-          "component_id": "use-case-matrix",
+          "component_id": "use-cases",
           "captured_at": "2026-06-28T12:00:00Z"
         }
       }

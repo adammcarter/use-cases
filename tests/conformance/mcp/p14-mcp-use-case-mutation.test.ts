@@ -132,7 +132,7 @@ function callTool(name: string, args: Record<string, unknown>) {
 }
 
 function fixtureWorkspace(name: string): string {
-  const workspaceRoot = mkdtempSync(join(tmpdir(), `use-case-matrix-mcp-${name}-`));
+  const workspaceRoot = mkdtempSync(join(tmpdir(), `use-cases-mcp-${name}-`));
   cpSync(join(repoRoot, "tests/fixtures/workspaces", name), workspaceRoot, { recursive: true });
   return workspaceRoot;
 }

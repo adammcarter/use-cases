@@ -341,7 +341,7 @@ export function validateSyntheticCommonContracts(validated: Set<string>, diagnos
       {
         type: "ci",
         provider: "github-actions",
-        repository: "use-case-matrix/use-case-matrix",
+        repository: "use-cases/use-cases",
         ref: "refs/heads/main",
         commit: "0123456789abcdef0123456789abcdef01234567",
         run_id: "1234567890",

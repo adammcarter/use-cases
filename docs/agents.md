@@ -5,8 +5,8 @@ The core is the **keyless daily loop** — three commands, no keys, no CI. Signi
 is an opt-in upgrade you reach for only at release/audit time.
 
 If you are installing the agent-facing material, the canonical sources are the
-skill (`.agents/skills/use-case-matrix/SKILL.md`), the install-time bootstrap
-(`bootstrap/use-case-matrix.md`), and the MCP playbooks (`uc/adopt-repo`,
+skill (`.agents/skills/use-cases/SKILL.md`), the install-time bootstrap
+(`bootstrap/use-cases.md`), and the MCP playbooks (`uc/adopt-repo`,
 `uc/bind-row`, `uc/recover-suspect-row`, `uc/release-review`).
 
 ## The keyless daily loop

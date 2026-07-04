@@ -67,7 +67,7 @@ const promptDefinitions: PromptDefinition[] = [
         messages: [
           userMessage(
             [
-              "Goal: adopt Use Case Matrix in this repository so every shippable behaviour is a matrix row bound to code and confirmed still-covered by the KEYLESS daily loop — no keys, no CI. Signing is an opt-in upgrade you add later, only when you want a cryptographic release gate.",
+              "Goal: adopt Use Cases in this repository so every shippable behaviour is a matrix row bound to code and confirmed still-covered by the KEYLESS daily loop — no keys, no CI. Signing is an opt-in upgrade you add later, only when you want a cryptographic release gate.",
               "",
               `Fastest start: \`uc init --repo ${repo}\` scaffolds the workspace (a use-cases.yml config + a use-cases/ directory with one example row). To adopt by hand instead — e.g. onto an existing repo — author the same two things:`,
               `1. A workspace config \`use-cases.yml\` at the repo root (declares data_root, use_cases_dir, component_id, and optional verifiers/release_gate).`,

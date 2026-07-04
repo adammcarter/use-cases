@@ -170,7 +170,7 @@ describe("binding registry event schema", () => {
       event_type: "binding_registered",
       event_id: "01JABCDEF00000000000000000",
       created_at: "2026-06-28T12:00:00Z",
-      created_by: { tool: "use-case-matrix", command: "bind", version: "0.1.0" },
+      created_by: { tool: "use-cases", command: "bind", version: "0.1.0" },
       row_id: "checkout.apply_coupon",
       binding_slug: "checkout.apply_coupon#handler",
       reason: "initial_bind"
@@ -295,7 +295,7 @@ describe("freshness status schema", () => {
     return {
       schema: "ucase-freshness-status-v1",
       generated_at: "2026-06-28T12:10:00Z",
-      tool: { name: "use-case-matrix", version: "0.1.0" },
+      tool: { name: "use-cases", version: "0.1.0" },
       product_root: "/workspace/product",
       policy_mode: "feature",
       guard_ok: true,

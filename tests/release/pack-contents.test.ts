@@ -25,7 +25,7 @@ interface PackageSpec {
 const packages: PackageSpec[] = [
   {
     filter: "@adammcarter/use-cases-core",
-    tarball: "use-case-matrix-core-0.1.0.tgz",
+    tarball: "adammcarter-use-cases-core-0.1.0.tgz",
     requiredIncludes: [
       "dist/index.js",
       "dist/index.d.ts",
@@ -37,7 +37,7 @@ const packages: PackageSpec[] = [
   },
   {
     filter: "@adammcarter/use-cases-cli",
-    tarball: "use-case-matrix-cli-0.1.0.tgz",
+    tarball: "adammcarter-use-cases-cli-0.1.0.tgz",
     requiredIncludes: [
       "dist/index.js",
       "dist/index.d.ts",
@@ -48,7 +48,7 @@ const packages: PackageSpec[] = [
   },
   {
     filter: "@adammcarter/use-cases-mcp",
-    tarball: "use-case-matrix-mcp-0.1.0.tgz",
+    tarball: "adammcarter-use-cases-mcp-0.1.0.tgz",
     requiredIncludes: [
       "dist/index.js",
       "dist/index.d.ts",
@@ -86,7 +86,7 @@ let packDir: string;
 
 beforeAll(() => {
   requireSuccess(run("corepack", ["pnpm", "build"]));
-  packDir = mkdtempSync(join(stableTmpRoot(), "use-case-matrix-pack-contents-"));
+  packDir = mkdtempSync(join(stableTmpRoot(), "use-cases-pack-contents-"));
 }, 120_000);
 
 describe("release pack contents", () => {

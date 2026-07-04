@@ -1,6 +1,6 @@
 name: release
 
-# Publishes the single `use-case-matrix` package to npm with provenance using
+# Publishes the single `use-cases` package to npm with provenance using
 # npm Trusted Publishing (OIDC). No NPM_TOKEN secret is used or required: npm
 # mints a short-lived, workflow-scoped credential from the GitHub Actions
 # `id-token`, so the credential cannot leak or be reused. The three workspace
@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     # Trusted Publishing is tokenless but still repo-scoped: only run from the
     # canonical repository, never a fork.
-    if: github.repository == 'adammcarter/use-case-matrix'
+    if: github.repository == 'adammcarter/use-cases'
     steps:
       - uses: actions/checkout@v4
 
@@ -58,7 +58,7 @@ jobs:
       - run: corepack pnpm -s build
       - run: corepack pnpm -s test
 
-      # Publish the single root `use-case-matrix` package via the npm CLI so the
+      # Publish the single root `use-cases` package via the npm CLI so the
       # OIDC trusted-publishing exchange and provenance attestation both work.
       # The root manifest's `files` list ships the built core/cli/mcp dist, so
       # the bundle is self-contained. `--provenance` is implied by Trusted
@@ -67,7 +67,7 @@ jobs:
       # dist-tag is derived from the version: only a true PRERELEASE (a version
       # containing a hyphen, e.g. 1.0.0-rc.1) publishes under `beta`; every normal
       # release — including the pre-1.0 `0.0.x` beta line, which is the active
-      # release line — publishes under `latest` so `npm i use-case-matrix` always
+      # release line — publishes under `latest` so `npm i use-cases` always
       # resolves the newest release.
       - name: Publish to npm (Trusted Publishing + provenance)
         run: |
@@ -76,7 +76,7 @@ jobs:
             *-*) TAG=beta ;;
             *) TAG=latest ;;
           esac
-          echo "Publishing use-case-matrix@$VERSION under dist-tag: $TAG"
+          echo "Publishing use-cases@$VERSION under dist-tag: $TAG"
           npm publish --provenance --access public --tag "$TAG"
         env:
           NPM_CONFIG_PROVENANCE: "true"

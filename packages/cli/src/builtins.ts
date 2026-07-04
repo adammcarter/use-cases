@@ -174,7 +174,7 @@ function renderHelpText(
   if (options.unknown) {
     lines.push(`error: ${options.unknownMessage}`, "");
   }
-  lines.push("uc — use-case-matrix CLI", "");
+  lines.push("uc — use-cases CLI", "");
   lines.push("Usage: uc <command> [subcommand] [flags] [--json]", "");
   const detailed = commands.length <= 3;
   const heading = options.requested ? `Commands matching '${options.requested}':` : "Commands:";
@@ -230,7 +230,7 @@ function runInit(argv: string[], wantsJson: boolean): number {
     );
   } else if (ok) {
     const lines = [
-      `Scaffolded a Use Case Matrix workspace in ${repoRoot}`,
+      `Scaffolded a Use Cases workspace in ${repoRoot}`,
       `  template:  ${result.template}`,
       `  component: ${result.component_id}`,
       "  created:",

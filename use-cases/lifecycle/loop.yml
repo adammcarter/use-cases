@@ -1,7 +1,7 @@
 schema_version: 1
 feature:
   id: lifecycle.loop
-  name: Use Case Matrix lifecycle
+  name: Use Cases lifecycle
   summary: Recommended but optional workflows for keeping use cases, evidence, and showcases current.
 use_cases:
   - id: lifecycle.loop.continuous_loop
@@ -20,7 +20,7 @@ use_cases:
       - kind: file
         path: docs/activation.md
       - kind: file
-        path: bootstrap/use-case-matrix.md
+        path: bootstrap/use-cases.md
     actor: agent
     intent: Keep behavior rows, proof, and showcase readiness connected during normal work.
     preconditions:
@@ -108,7 +108,7 @@ use_cases:
       - agent-boundary
     source_refs:
       - kind: file
-        path: .agents/skills/use-case-matrix/SKILL.md
+        path: .agents/skills/use-cases/SKILL.md
       - kind: file
         path: docs/activation.md
     actor: agent
@@ -198,7 +198,7 @@ use_cases:
       - scope-control
     source_refs:
       - kind: file
-        path: .agents/skills/use-case-matrix/SKILL.md
+        path: .agents/skills/use-cases/SKILL.md
       - kind: file
         path: docs/activation.md
     actor: agent

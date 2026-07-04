@@ -1,6 +1,6 @@
 # Example: Python + pytest
 
-A minimal, already-wired Use Case Matrix workspace that proves the headline
+A minimal, already-wired Use Cases workspace that proves the headline
 trust flow against real pytest tests. It mirrors the full walkthrough in
 [`docs/tutorials/python-pytest.md`](../../docs/tutorials/python-pytest.md) — read
 that for the step-by-step narrative; this README is the map.
@@ -21,7 +21,7 @@ markers).
 ## Run it
 
 ```bash
-# from this directory, with `use-case-matrix` installed (npm i -g use-case-matrix)
+# from this directory, with `use-cases` installed (npm i -g use-cases)
 uc matrix validate --repo .            # matrix is clean
 uc scan --repo .                       # row is UNBOUND until you register it
 

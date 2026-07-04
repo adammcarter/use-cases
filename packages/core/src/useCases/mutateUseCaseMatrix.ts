@@ -44,7 +44,7 @@ type UseCaseFileDocument = {
 export function mutateUseCaseMatrix(options: UseCaseMutationOptions): UseCaseMutationResult {
   const matrix = loadUseCaseMatrix({ context: options.context });
   if (!matrix.complete) {
-    return blocked(options, "matrix.mutation_incomplete_matrix", "Use-case matrix must be complete before mutation.");
+    return blocked(options, "matrix.mutation_incomplete_matrix", "Use cases must be complete before mutation.");
   }
 
   if (options.operation === "upsert") {
@@ -144,8 +144,8 @@ function removeUseCase(options: UseCaseMutationOptions): UseCaseMutationResult {
     lifecycle: "removed" as const,
     extensions: {
       ...asRecord(existing.extensions),
-      "use-case-matrix/removal": {
-        ...asRecord(asRecord(existing.extensions)["use-case-matrix/removal"]),
+      "use-cases/removal": {
+        ...asRecord(asRecord(existing.extensions)["use-cases/removal"]),
         reason: options.reason,
         actor: options.actor ?? "agent",
         recorded_at: RECORDED_AT

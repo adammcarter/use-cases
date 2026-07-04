@@ -1,6 +1,6 @@
 # Stability & Versioning Policy
 
-use-case-matrix follows [Semantic Versioning](https://semver.org). At
+use-cases follows [Semantic Versioning](https://semver.org). At
 `1.0.0` the surfaces listed under **Public API** below are a contract: they only
 change in breaking ways across a **major** version bump. This page is the
 authoritative declaration of what is stable, what is experimental, and how
@@ -11,7 +11,7 @@ versions move.
 > `1.0.0`**; until then they may still change between `0.0.x` releases. Adopt
 > with that in mind.
 
-> Ships as a single package, `use-case-matrix` (binaries `uc` and `uc-mcp`);
+> Ships as a single package, `use-cases` (binaries `uc` and `uc-mcp`);
 > the `core` / `cli` / `mcp` workspaces are bundled inside it, not published
 > separately. See the [publishing runbook](../release/publishing.md) for how a
 > release is cut (npm Trusted Publishing + provenance) and the owner one-time npm
@@ -102,7 +102,7 @@ promoted. They are called out here so adopters can depend on them with eyes open
   opt-in release-gate authority requirement are documented in
   [CI hardening](../security/ci-hardening.md).
 - Any other CLI command's **human-readable** (non-`--json`) formatting.
-- The `core` / `cli` / `mcp` workspaces are an internal implementation detail: they are bundled into the `use-case-matrix` package, **not** a published programmatic import surface. The stable contract is the CLI, the MCP tools, the JSON envelope, the schemas, and the persisted file formats — not TypeScript imports.
+- The `core` / `cli` / `mcp` workspaces are an internal implementation detail: they are bundled into the `use-cases` package, **not** a published programmatic import surface. The stable contract is the CLI, the MCP tools, the JSON envelope, the schemas, and the persisted file formats — not TypeScript imports.
 
 ## Supported environments
 

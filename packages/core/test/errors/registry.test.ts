@@ -32,7 +32,7 @@ const ENUM_FAMILIES = {
 
 const VALID_SEVERITIES = new Set(["error", "warning", "info"]);
 
-describe("Use Case Matrix error-code registry", () => {
+describe("Use Cases error-code registry", () => {
   it("has no duplicate codes and every entry is well-formed", () => {
     const codes = Object.keys(UCM_ERROR_REGISTRY);
     expect(new Set(codes).size).toBe(codes.length);

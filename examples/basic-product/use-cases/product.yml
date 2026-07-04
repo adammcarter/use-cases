@@ -4,7 +4,7 @@ feature:
   name: Product search
   summary: Users can find and refine product results.
 metadata:
-  owner: use-case-matrix
+  owner: use-cases
   lifecycle: active
 use_cases:
   - id: product.search.golden

@@ -20,7 +20,7 @@ use_cases:
       - kind: file
         path: packages/core/src/useCases/loadUseCaseMatrix.ts
     actor: agent
-    intent: Represent Use Case Matrix product behavior as stable, addressable use-case rows.
+    intent: Represent Use Cases product behavior as stable, addressable use-case rows.
     preconditions:
       - Product behavior has been identified at feature level.
     trigger: Agent or user needs acceptance, proof, or demo coverage for the product.
@@ -29,7 +29,7 @@ use_cases:
         kind: steps
         steps:
           - Run matrix list.
-          - Confirm product-level use-case-matrix rows exist alongside primitive support rows.
+          - Confirm product-level use-cases rows exist alongside primitive support rows.
           - Confirm each row has value, journey, usage, and scenario data.
     observable_outcomes:
       - Product behavior can be selected by row ID without reading implementation code.

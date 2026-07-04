@@ -1,6 +1,6 @@
 # MCP Contract
 
-The use-case-matrix MCP server is a convenience transport over the same application command contract used by the CLI. CLI JSON envelopes remain the compatibility contract:
+The use-cases MCP server is a convenience transport over the same application command contract used by the CLI. CLI JSON envelopes remain the compatibility contract:
 
 ```text
 schema_version

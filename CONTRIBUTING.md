@@ -1,6 +1,6 @@
-# Contributing to Use Case Matrix
+# Contributing to Use Cases
 
-Thanks for helping improve Use Case Matrix. This guide covers local setup,
+Thanks for helping improve Use Cases. This guide covers local setup,
 the repo layout, the trust model you should keep in mind, and what we expect on
 a pull request.
 
@@ -10,7 +10,7 @@ never a public issue.
 
 ## Development setup
 
-Use Case Matrix is a pnpm-managed TypeScript monorepo. You need Node (active LTS) and
+Use Cases is a pnpm-managed TypeScript monorepo. You need Node (active LTS) and
 Corepack (bundled with Node) to pin pnpm.
 
 ```bash
@@ -31,7 +31,7 @@ corepack pnpm cli -- matrix validate --repo . --json   # run the built CLI
 | Path | Package | What it is |
 |---|---|---|
 | `packages/core` | `@adammcarter/use-cases-core` | Core domain library: matrix, bindings, verify/prove, freshness, ledger, evidence, showcase, capsule, plan, host. The schemas live under `schemas/v1`. |
-| `packages/cli` | `@adammcarter/use-cases-cli` | The `uc` CLI (alias `use-case-matrix`). Thin command layer over core; owns the `--json` envelopes and exit codes. |
+| `packages/cli` | `@adammcarter/use-cases-cli` | The `uc` CLI (alias `use-cases`). Thin command layer over core; owns the `--json` envelopes and exit codes. |
 | `packages/mcp` | `@adammcarter/use-cases-mcp` | The `uc-mcp` MCP server. Wraps the same envelopes for agents over local stdio. |
 | `docs/` | — | Reference, security, and release docs. `docs/reference/stability.md` is the SemVer contract. |
 | `tests/` | — | Cross-package and acceptance tests. |
@@ -61,7 +61,7 @@ MCP.
   [`docs/reference/stability.md`](docs/reference/stability.md). If your change is
   additive it's a **minor**; if it removes/renames/repurposes a contract or
   changes an output shape it's a **major** — call that out in the PR.
-- **Keep it generic.** Use Case Matrix is language/CI-neutral. Don't bake in a hidden
+- **Keep it generic.** Use Cases is language/CI-neutral. Don't bake in a hidden
   dependency on pnpm/vitest or GitHub Actions; `pnpm`/`vitest` is one verifier
   preset, not an assumption.
 

@@ -42,7 +42,7 @@ function makeStatus(
   return {
     schema: "ucase-freshness-status-v1" as FreshnessStatus["schema"],
     generated_at: "2026-07-03T00:00:00Z",
-    tool: { name: "use-case-matrix", version: "0.0.0" },
+    tool: { name: "use-cases", version: "0.0.0" },
     product_root: ".",
     policy_mode: policyMode,
     guard_ok: true,

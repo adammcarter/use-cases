@@ -1,5 +1,5 @@
 name: Bug report
-description: Report a defect in Use Case Matrix (uc / uc-mcp)
+description: Report a defect in Use Cases (uc / uc-mcp)
 title: "[bug]: "
 labels: ["bug"]
 body:
@@ -10,7 +10,7 @@ body:
         fields below — they are what we need to reproduce.
 
         Do **not** report security vulnerabilities here. Use a private advisory:
-        https://github.com/adammcarter/use-case-matrix/security/advisories/new
+        https://github.com/adammcarter/use-cases/security/advisories/new
   - type: textarea
     id: version
     attributes:

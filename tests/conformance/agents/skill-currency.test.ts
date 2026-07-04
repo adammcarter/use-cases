@@ -13,7 +13,7 @@ import { describe, expect, test } from "vitest";
 import { getMcpPrompt, mcpPrompts } from "../../../packages/mcp/src/prompts.js";
 
 const repoRoot = resolve(import.meta.dirname, "../../..");
-const skillPath = resolve(repoRoot, ".agents/skills/use-case-matrix/SKILL.md");
+const skillPath = resolve(repoRoot, ".agents/skills/use-cases/SKILL.md");
 const skill = readFileSync(skillPath, "utf8");
 
 function promptText(name: string, args: Record<string, string> = {}): string {

@@ -73,7 +73,7 @@ function makeStatus(rows: FreshnessRowOut[], policy_mode: PolicyMode = "feature"
   return {
     schema: STATUS_SCHEMA_ID,
     generated_at: "2026-06-28T12:10:00.000Z",
-    tool: { name: "use-case-matrix", version: "0.1.0" },
+    tool: { name: "use-cases", version: "0.1.0" },
     product_root: ".",
     policy_mode,
     guard_ok: summary.invalid === 0,

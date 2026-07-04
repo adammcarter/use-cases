@@ -7,13 +7,13 @@ import { beforeAll, describe, expect, test } from "vitest";
 const repoRoot = resolve(import.meta.dirname, "../..");
 
 const requiredRootArtifactPaths = [
-  ".agents/skills/use-case-matrix/SKILL.md",
+  ".agents/skills/use-cases/SKILL.md",
   ".agents/skills/showcase/SKILL.md",
   ".agents/skills/walkthrough/SKILL.md",
   ".claude-plugin/plugin.json",
   ".codex-plugin/plugin.json",
   ".mcp.json",
-  "bootstrap/use-case-matrix.md",
+  "bootstrap/use-cases.md",
   "docs/release.md",
   "docs/security.md",
   "hosts/codex.yml",
@@ -143,7 +143,7 @@ describe("P13 installable root package artifact", () => {
       expect.objectContaining({
         id: 1,
         result: expect.objectContaining({
-          serverInfo: { name: "use-case-matrix", version: "0.1.0" }
+          serverInfo: { name: "@adammcarter/use-cases", version: "0.1.0" }
         })
       }),
       expect.objectContaining({
@@ -206,7 +206,7 @@ describe("P13 installable root package artifact", () => {
 });
 
 function packRoot(): { tarball: string; files: Array<{ path: string }> } {
-  const packDir = mkdtempSync(join(tmpdir(), "use-case-matrix-root-pack-"));
+  const packDir = mkdtempSync(join(tmpdir(), "use-cases-root-pack-"));
   const result = run("corepack", ["pnpm", "pack", "--json", "--pack-destination", packDir]);
   requireSuccess(result);
   const payload = JSON.parse(result.stdout) as { filename: string; files: Array<{ path: string }> };
@@ -220,7 +220,7 @@ function tarEntries(tarball: string): string[] {
 }
 
 function extractPackageRoot(tarball: string): string {
-  const extractDir = mkdtempSync(join(tmpdir(), "use-case-matrix-root-extract-"));
+  const extractDir = mkdtempSync(join(tmpdir(), "use-cases-root-extract-"));
   const result = run("tar", ["-xzf", tarball, "-C", extractDir]);
   requireSuccess(result);
   const packageRoot = join(extractDir, "package");
@@ -231,17 +231,17 @@ function extractPackageRoot(tarball: string): string {
 }
 
 function installRootTarball(tarball: string): { consumer: string; installedRoot: string } {
-  const consumer = mkdtempSync(join(tmpdir(), "use-case-matrix-root-consumer-"));
+  const consumer = mkdtempSync(join(tmpdir(), "use-cases-root-consumer-"));
   writeFileSync(join(consumer, "package.json"), JSON.stringify({ type: "module", dependencies: {} }, null, 2));
   requireSuccess(run("npm", ["install", "--cache", npmCacheDir(), "--no-audit", "--no-fund", tarball], consumer));
   return {
     consumer,
-    installedRoot: realpathSync(join(consumer, "node_modules", "use-case-matrix"))
+    installedRoot: realpathSync(join(consumer, "node_modules", "@adammcarter", "use-cases"))
   };
 }
 
 function npmCacheDir(): string {
-  return mkdtempSync(join(stableCacheRoot(), "use-case-matrix-npm-cache-"));
+  return mkdtempSync(join(stableCacheRoot(), "use-cases-npm-cache-"));
 }
 
 function stableCacheRoot(): string {
@@ -249,7 +249,7 @@ function stableCacheRoot(): string {
 }
 
 function fixtureWorkspace(name: string): string {
-  const workspaceRoot = mkdtempSync(join(tmpdir(), `use-case-matrix-installed-fixture-${name}-`));
+  const workspaceRoot = mkdtempSync(join(tmpdir(), `use-cases-installed-fixture-${name}-`));
   cpSync(join(repoRoot, "tests/fixtures/workspaces", name), workspaceRoot, { recursive: true });
   return workspaceRoot;
 }

@@ -23,7 +23,7 @@ Every command shown here is a real `uc` command. Concepts are linked to the
 ## 1. Install the CLI
 
 ```bash
-npm i -g use-case-matrix
+npm i -g use-cases
 ```
 
 This puts the `uc` binary on your PATH. The same package also ships the

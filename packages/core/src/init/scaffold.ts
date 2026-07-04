@@ -1,4 +1,4 @@
-// `uc init` — scaffold a minimal, WORKING Use Case Matrix workspace.
+// `uc init` — scaffold a minimal, WORKING Use Cases workspace.
 //
 // Takes a brand-new repo from nothing to a bindable, verifiable matrix in one
 // command: a workspace config (`use-cases.yml`) wired to a default
@@ -226,7 +226,7 @@ function renderExampleUseCase(): string {
     "      - kind: file",
     "        path: src/example.ts",
     "    actor: user",
-    "    intent: Demonstrate the use-case-matrix row shape so you can replace it.",
+    "    intent: Demonstrate the use-cases row shape so you can replace it.",
     "    preconditions:",
     "      - The project is set up.",
     "    trigger: The user performs the example action.",
@@ -271,13 +271,13 @@ function templateFilesFor(template: InitTemplate): TemplateFile[] {
 }
 
 // The implementation the `example.feature.happy_path` row describes, wrapped in
-// a Use Case Matrix marker span (`//` is the configured `.ts` comment prefix).
+// a Use Cases marker span (`//` is the configured `.ts` comment prefix).
 // `bind --register-existing` binds the row to exactly these source lines.
 function renderJsVitestSource(): string {
   return [
     "// A tiny, self-contained module an adopter might own. The exported",
     "// function below is the implementation the use-case row",
-    `// \`${EXAMPLE_ROW_ID}\` describes. It is wrapped in a Use Case Matrix`,
+    `// \`${EXAMPLE_ROW_ID}\` describes. It is wrapped in a Use Cases`,
     "// marker span (the `@use-case` start/end comments) so the matrix can bind",
     "// the row to exactly these source lines. Replace it with your own code.",
     "",

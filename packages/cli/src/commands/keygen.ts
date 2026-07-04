@@ -38,7 +38,7 @@ function isInside(repoRoot: string, candidate: string): boolean {
 // *secret*, authenticating via OIDC `id-token`. No long-lived token is embedded.
 function githubCiSnippet(): string {
   return [
-    "# .github/workflows/release.yml — sign use-case-matrix proofs in CI",
+    "# .github/workflows/release.yml — sign use-cases proofs in CI",
     "#",
     "# 1. Add the PRIVATE key PEM as a repository secret named UCM_CI_SIGNING_KEY",
     "#    (Settings -> Secrets and variables -> Actions -> New repository secret).",

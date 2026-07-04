@@ -18,11 +18,11 @@ use_cases:
       - kind: file
         path: packages/core/src/skills/validateSkillAssets.ts
       - kind: file
-        path: .agents/skills/use-case-matrix/SKILL.md
+        path: .agents/skills/use-cases/SKILL.md
       - kind: file
         path: docs/activation.md
     actor: script
-    intent: Confirm the shipped showcase, walkthrough, and use-case-matrix skills have required files and well-formed front-matter.
+    intent: Confirm the shipped showcase, walkthrough, and use-cases skills have required files and well-formed front-matter.
     preconditions:
       - The plugin ships one or more agent skill directories under .agents/skills.
     trigger: Agent or release gate runs doctor skills before publishing or activating a host.

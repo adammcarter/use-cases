@@ -1,5 +1,5 @@
 ---
-name: use-case-matrix
+name: use-cases
 description: Use when planning, updating, verifying, or recovering the freshness of product behaviours bound to code — the keyless daily loop (bind -> verify -> local ✓ -> recover), plus behaviour inventory, matrix health, and safe evidence records in a workspace.
 ---
 

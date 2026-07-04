@@ -94,7 +94,7 @@ items:
     scenario_ids: [presentation_skills.skills.asset_validation.doctor]
     runbook:
       - kind: instruction
-        text: Run doctor skills and show the shipped showcase, walkthrough, and use-case-matrix skills validating with intact assets.
+        text: Run doctor skills and show the shipped showcase, walkthrough, and use-cases skills validating with intact assets.
       - kind: observation
         text: Each shipped skill is discovered with a stable name and required files present.
   - use_case_id: presentation_skills.skills.degraded_assets

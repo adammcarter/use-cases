@@ -215,7 +215,7 @@ function registryEvent(binding_slug: string, row_id: string, overrides: Record<s
     event_type: "binding_registered",
     event_id: `01J${binding_slug.replace(/[^a-z0-9]/gi, "").toUpperCase().padEnd(23, "0").slice(0, 23)}`,
     created_at: "2026-06-28T12:00:00Z",
-    created_by: { tool: "use-case-matrix", command: "bind", version: "0.1.0" },
+    created_by: { tool: "use-cases", command: "bind", version: "0.1.0" },
     row_id,
     binding_slug,
     reason: "initial_bind",

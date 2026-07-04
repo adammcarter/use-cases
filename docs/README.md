@@ -1,12 +1,12 @@
-# Use Case Matrix — documentation
+# Use Cases — documentation
 
-Use Case Matrix keeps an agent's product claims honest: it gives a repo a
+Use Cases keeps an agent's product claims honest: it gives a repo a
 living use-case matrix, binds each row to the code that satisfies it, and marks a
 row **FRESH** only when trusted CI has signed proof that the current code,
 binding, and verifier context still match. Stale claims become visible instead of
 silently trusted.
 
-Ships as a single package, `use-case-matrix`, providing the `uc` CLI and the
+Ships as a single package, `use-cases`, providing the `uc` CLI and the
 `uc-mcp` MCP server.
 
 ## Start here

@@ -9,3 +9,9 @@ packages/*/*.tsbuildinfo
 # Transient per-run verification results (verify -> prove handoff in CI/local).
 # Only the signed evidence ledger is durable; this snapshot is never committed.
 .use-cases/verification-results.jsonl
+
+# session/OS cruft
+.claude/
+.DS_Store
+**/.DS_Store
+.cowork-receipts/

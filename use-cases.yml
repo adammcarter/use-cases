@@ -1,6 +1,6 @@
 schema_version: 1
-workspace_id: use-case-matrix
-component_id: use-case-matrix
+workspace_id: use-cases
+component_id: use-cases
 data_root: .
 use_cases_dir: use-cases
 evidence_dir: evidence

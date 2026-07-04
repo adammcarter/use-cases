@@ -1,6 +1,6 @@
 # Security Policy
 
-Use Case Matrix keeps an agent's product claims honest: a row is marked
+Use Cases keeps an agent's product claims honest: a row is marked
 **FRESH** only when trusted CI has signed proof that the current code, binding,
 span, and verifier context still match. Because that trust signal is the whole
 point of the tool, we take its threat model seriously — and we are explicit
@@ -12,7 +12,7 @@ about what it does **not** guarantee.
 
 Report privately through GitHub's private security advisories:
 
-> https://github.com/adammcarter/use-case-matrix/security/advisories/new
+> https://github.com/adammcarter/use-cases/security/advisories/new
 
 Please include the affected version (`uc --version --json`), a description of
 the issue, reproduction steps, and the impact you observed. We will acknowledge

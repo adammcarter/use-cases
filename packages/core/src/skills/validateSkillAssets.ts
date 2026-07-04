@@ -128,11 +128,11 @@ export function validateSkillAssets(options: { context: ResolvedWorkspaceContext
     });
   }
 
-  const bootstrapPath = "bootstrap/use-case-matrix.md";
+  const bootstrapPath = "bootstrap/use-cases.md";
   const bootstrapFullPath = join(root, bootstrapPath);
   const bootstrapSections: string[] = [];
   if (!existsSync(bootstrapFullPath)) {
-    diagnostics.push(diagnostic("skills.bootstrap_missing", "Missing use-case-matrix bootstrap.", bootstrapPath));
+    diagnostics.push(diagnostic("skills.bootstrap_missing", "Missing use-cases bootstrap.", bootstrapPath));
   } else {
     const source = readFileSync(bootstrapFullPath, "utf8");
     for (const section of BOOTSTRAP_SECTIONS) {
@@ -157,7 +157,7 @@ export function validateSkillAssets(options: { context: ResolvedWorkspaceContext
     diagnostics.push(diagnostic("skills.activation_missing", "Missing activation docs.", activationPath));
   } else {
     const source = readFileSync(activationFullPath, "utf8");
-    for (const marker of ["Decision Tree", "-> use-case-matrix", "-> showcase", "-> walkthrough", "-> migration", "-> do not activate"]) {
+    for (const marker of ["Decision Tree", "-> use-cases", "-> showcase", "-> walkthrough", "-> migration", "-> do not activate"]) {
       if (!source.includes(marker)) {
         diagnostics.push(diagnostic("skills.activation_tree_missing", `Activation docs missing '${marker}'.`, activationPath));
       }

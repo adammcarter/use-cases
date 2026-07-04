@@ -1,12 +1,12 @@
 # Support
 
-How to get help with Use Case Matrix, and what we support at v1.
+How to get help with Use Cases, and what we support at v1.
 
 ## Supported matrix
 
 | Area | v1 support |
 |---|---|
-| **Node** | Active LTS lines. Use Case Matrix is built and tested against current LTS. |
+| **Node** | Active LTS lines. Use Cases is built and tested against current LTS. |
 | **CI authority** | **GitHub Actions** is the reference, first-class path. The verify/prove proof model is **CI-neutral**: other providers (GitLab CI, CircleCI, generic) are best-effort and supported via the documented authority contract — see [`docs/security/ci-hardening.md`](docs/security/ci-hardening.md). |
 | **Verifiers** | Command verifiers for **any** language/toolchain (executable + argv, no shell). `pnpm`/`vitest` is one preset, not an assumption. |
 | **MCP transport** | **Local stdio** only. Remote/HTTP MCP is **not** a v1 contract. |
@@ -18,7 +18,7 @@ The authoritative declaration of what is stable vs experimental is
 ## Getting help
 
 - **Questions, usage help, and bug reports** → open a
-  [GitHub issue](https://github.com/adammcarter/use-case-matrix/issues/new/choose).
+  [GitHub issue](https://github.com/adammcarter/use-cases/issues/new/choose).
   For bugs, use the bug form; it asks for `uc --version --json`, the failing
   command with its `--json` output, and `uc matrix status --json` so we can
   reproduce.
@@ -31,7 +31,7 @@ The authoritative declaration of what is stable vs experimental is
 **Do not** open a public issue for a vulnerability. Report it privately through
 GitHub's security advisories:
 
-> https://github.com/adammcarter/use-case-matrix/security/advisories/new
+> https://github.com/adammcarter/use-cases/security/advisories/new
 
 See [SECURITY.md](SECURITY.md) for the threat model, guarantees, and what is
 explicitly out of scope.

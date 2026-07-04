@@ -1,6 +1,6 @@
 # CI hardening: the CI-neutral authority contract & release-gate requirement
 
-Use Case Matrix proofs record **where and how they were produced** in a
+Use Cases proofs record **where and how they were produced** in a
 provider-agnostic `authority` block, and a repo can **require a minimum
 authority** before a `required_for_release` row is allowed to ship. This page
 covers the CI-neutral authority contract, the GitHub Actions reference path, how

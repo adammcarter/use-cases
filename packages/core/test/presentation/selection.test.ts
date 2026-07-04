@@ -291,7 +291,7 @@ describe("P5 presentation plan selection", () => {
 });
 
 function fixtureWorkspace(name: string): string {
-  const workspaceRoot = mkdtempSync(join(tmpdir(), `use-case-matrix-${name}-`));
+  const workspaceRoot = mkdtempSync(join(tmpdir(), `use-cases-${name}-`));
   cpSync(join(fixturesRoot, name), workspaceRoot, { recursive: true });
   return workspaceRoot;
 }

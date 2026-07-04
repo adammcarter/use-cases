@@ -6,10 +6,10 @@ import { beforeAll, describe, expect, test } from "vitest";
 
 const repoRoot = resolve(import.meta.dirname, "../../..");
 const hostTargets = {
-  claude: ".claude/use-case-matrix.md",
-  codex: ".codex/use-case-matrix.md",
-  copilot: ".github/copilot/use-case-matrix.md",
-  opencode: ".opencode/use-case-matrix.md"
+  claude: ".claude/use-cases.md",
+  codex: ".codex/use-cases.md",
+  copilot: ".github/copilot/use-cases.md",
+  opencode: ".opencode/use-cases.md"
 } as const;
 
 beforeAll(() => {
@@ -39,7 +39,7 @@ describe("P14 host projection production status", () => {
         }
       });
     }
-    expect(existsSync(join(workspaceRoot, ".use-case-matrix-projection.json"))).toBe(true);
+    expect(existsSync(join(workspaceRoot, ".use-cases-projection.json"))).toBe(true);
     for (const target of Object.values(hostTargets)) {
       expect(existsSync(join(workspaceRoot, target))).toBe(true);
     }
@@ -97,7 +97,7 @@ describe("P14 host projection production status", () => {
       const reverted = runCliJson(["host", "project", "--host", host, "--repo", workspaceRoot, "--revert", "--json"]);
       expect(reverted.status).toBe(0);
     }
-    expect(existsSync(join(workspaceRoot, ".use-case-matrix-projection.json"))).toBe(false);
+    expect(existsSync(join(workspaceRoot, ".use-cases-projection.json"))).toBe(false);
     for (const target of Object.values(hostTargets)) {
       expect(existsSync(join(workspaceRoot, target))).toBe(false);
     }
@@ -105,7 +105,7 @@ describe("P14 host projection production status", () => {
 });
 
 function fixtureWorkspace(): string {
-  const workspaceRoot = mkdtempSync(join(tmpdir(), "use-case-matrix-hosts-p14-"));
+  const workspaceRoot = mkdtempSync(join(tmpdir(), "use-cases-hosts-p14-"));
   cpSync(join(repoRoot, "examples", "host-projections"), workspaceRoot, { recursive: true, errorOnExist: false });
   return workspaceRoot;
 }

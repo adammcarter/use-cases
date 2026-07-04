@@ -4,11 +4,11 @@ import { resolve } from "node:path";
 import { describe, expect, test } from "vitest";
 
 // The plugin ships a trusted session-start bootstrap and per-host delivery so an
-// installed agent receives bootstrap/use-case-matrix.md at session start without
+// installed agent receives bootstrap/use-cases.md at session start without
 // having to discover it by reading the repo. See critical-info-bootstrap.
 const repoRoot = resolve(import.meta.dirname, "../../..");
 const hookScript = resolve(repoRoot, "hooks/session-start");
-const BOOTSTRAP_MARKER = "Use Case Matrix Activation";
+const BOOTSTRAP_MARKER = "Use Cases Activation";
 
 function runHook(env: Record<string, string>) {
   return spawnSync("bash", [hookScript], {
@@ -55,7 +55,7 @@ describe("session-start bootstrap delivery", () => {
     const result = runHook({ CLAUDE_PLUGIN_ROOT: repoRoot });
     const ctx = JSON.parse(result.stdout).hookSpecificOutput.additionalContext as string;
     expect(ctx).toContain("<EXTREMELY_IMPORTANT>");
-    const bootstrap = readFileSync(resolve(repoRoot, "bootstrap/use-case-matrix.md"), "utf8");
+    const bootstrap = readFileSync(resolve(repoRoot, "bootstrap/use-cases.md"), "utf8");
     // The full bootstrap tail must survive (no truncation).
     expect(ctx).toContain(bootstrap.trim().slice(-40));
   });
@@ -74,7 +74,7 @@ describe("session-start bootstrap delivery", () => {
   });
 
   test("OpenCode plugin injects the bootstrap on session.started", async () => {
-    const modPath = resolve(repoRoot, ".opencode/plugin/use-case-matrix.js");
+    const modPath = resolve(repoRoot, ".opencode/plugin/use-cases.js");
     expect(existsSync(modPath)).toBe(true);
     const mod = await import(modPath);
     const factory = mod.UseCasesPlugin ?? mod.default;

@@ -1,10 +1,10 @@
-# Use Case Matrix
+# Use Cases
 
 **Keep your AI agent's "it works" honest.**
 
 AI coding agents ship fast and claim confidently — "done", "tested", "this works". Some of those claims are true. Some were true last week. Some were never checked. You can't tell which by looking, and stale claims fail silently.
 
-Use Case Matrix gives your repo a **living matrix of product behaviours**, binds each one to the code that satisfies it, and marks it **`FRESH` only when trusted CI has cryptographically signed proof that the current code still backs the claim.** Edit the code behind a behaviour and its row flips to `SUSPECT` on its own — the lie surfaces instead of being trusted.
+Use Cases gives your repo a **living matrix of product behaviours**, binds each one to the code that satisfies it, and marks it **`FRESH` only when trusted CI has cryptographically signed proof that the current code still backs the claim.** Edit the code behind a behaviour and its row flips to `SUSPECT` on its own — the lie surfaces instead of being trusted.
 
 It's the difference between *"the agent said the checkout flow works"* and *"the checkout flow has a behaviour row, bound to `applyCoupon()`, proven `FRESH` by CI at commit `a1b2c3`, demonstrated to a human who signed off."*
 
@@ -20,7 +20,7 @@ It's the difference between *"the agent said the checkout flow works"* and *"the
 | `TEST-MATRIX.md` rotted months ago | Hand-maintained status tables drift the moment code changes; old `PASS` marks lie. |
 | "It's signed off" — by whom? when? | Approvals are vibes. An agent can type "approved" as easily as a human. |
 
-Use Case Matrix replaces all of that with one append-only, content-addressed source of truth that an agent maintains as it works — and that *cannot* quietly lie.
+Use Cases replaces all of that with one append-only, content-addressed source of truth that an agent maintains as it works — and that *cannot* quietly lie.
 
 ---
 
@@ -61,7 +61,7 @@ Typical workflows: **continuous** (keep the matrix live as you build), **backfil
 
 ```bash
 # Install the CLI + MCP server (provides the `uc` and `uc-mcp` binaries)
-npm i -g use-case-matrix
+npm i -g use-cases
 
 # Scaffold a workspace (creates use-cases/ + config with one example behaviour)
 uc init
@@ -101,7 +101,7 @@ For the technically curious — the high-level shape:
 - **Built-in CI + precommit.** `.github/workflows/use-cases.yml` runs `validate-ledger` and `scan`, and (on release) `verify → prove → release-gate` so required rows must be `FRESH` to ship. An optional local precommit hook gives fast, non-authoritative feedback. Publishing uses npm Trusted Publishing (OIDC) with build provenance — no tokens.
 - **Append-only everywhere.** The matrix, the binding registry, the evidence ledger, and showcase runs are all event-sourced and content-addressed: status is *derived* from history, never asserted.
 
-Ships as a single self-contained package: **`use-case-matrix`** (binaries `uc` and `uc-mcp`). The `core` / `cli` / `mcp` workspaces are bundled inside it, not published separately.
+Ships as a single self-contained package: **`use-cases`** (binaries `uc` and `uc-mcp`). The `core` / `cli` / `mcp` workspaces are bundled inside it, not published separately.
 
 Deeper reading: [CLI reference](docs/cli.md) · [data model](docs/data-model.md) · [code markers & freshness](docs/markers-adoption.md) · [evidence & security](docs/security.md) · [showcase runs](docs/showcase.md) · [hosts & activation](docs/hosts.md) · [MCP](docs/mcp.md) · [migration](docs/migration.md).
 

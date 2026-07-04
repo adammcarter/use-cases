@@ -17,7 +17,7 @@ Generated plans, walkthroughs, capsules, and runbooks are prepared material only
 
 ## Defer To
 
-- `use-case-matrix` when the task is to maintain behavior inventory or evidence records.
+- `use-cases` when the task is to maintain behavior inventory or evidence records.
 - `walkthrough` when the user wants broad explanation, caveats, edge cases, or provenance rather than a live run.
 - Ordinary implementation/testing when no proof or presentation is requested.
 

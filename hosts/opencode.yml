@@ -20,7 +20,7 @@ expected_capabilities:
   artifact_visibility: optional
 projection_targets:
   - kind: activation_stub
-    path: .opencode/use-case-matrix.md
+    path: .opencode/use-cases.md
     managed: true
     content_policy: thin_stub
 doctor_checks: [profile_loaded, cli_available, projection_manifest_optional]

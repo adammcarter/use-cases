@@ -1,6 +1,6 @@
 # Publishing to npm (Trusted Publishing + provenance)
 
-How the **`use-case-matrix`** package is released to npm. This is a single,
+How the **`use-cases`** package is released to npm. This is a single,
 self-contained package: the `uc` and `uc-mcp` binaries plus the plugin bundle
 (skills, hooks, bootstrap, docs, schemas) ship together in one tarball. The
 `packages/core`, `packages/cli`, and `packages/mcp` workspaces are **private**
@@ -23,12 +23,12 @@ be reused.
 These steps require a logged-in npm account and must be done **once** on
 npmjs.com / GitHub before the first publish. CI cannot bootstrap them.
 
-1. **Make sure the name `use-case-matrix` is free — and not an npm _org_.** On
+1. **Make sure the name `use-cases` is free — and not an npm _org_.** On
    npm, org names and unscoped package names share one namespace: if an
-   organization named `use-case-matrix` exists, you **cannot** publish a package
+   organization named `use-cases` exists, you **cannot** publish a package
    of the same name. If you created such an org, delete it first (npmjs.com →
    your org → **Settings → Delete organization**; an org with no published
-   packages can be deleted directly). Then `use-case-matrix` is available to
+   packages can be deleted directly). Then `use-cases` is available to
    publish as a package.
 
 2. **Do the first publish manually (token-based).** npm Trusted Publishing
@@ -43,7 +43,7 @@ npmjs.com / GitHub before the first publish. CI cannot bootstrap them.
    npm publish --access public
    ```
 
-   Only `use-case-matrix` publishes — the three workspace packages are private
+   Only `use-cases` publishes — the three workspace packages are private
    and are skipped. This local publish carries **no provenance** (provenance
    needs the OIDC/CI context), so it arrives on the next release from CI. If you
    want provenance on the headline `1.0.0`, publish a throwaway prerelease here
@@ -51,11 +51,11 @@ npmjs.com / GitHub before the first publish. CI cannot bootstrap them.
    step 3 is in place. Delete any temporary token afterward.
 
 3. **Configure the Trusted Publisher on the package** (now that it exists). On
-   npmjs.com, open the `use-case-matrix` package → **Settings → Trusted
+   npmjs.com, open the `use-cases` package → **Settings → Trusted
    Publishing → Add a trusted publisher** and set:
    - **Publisher:** GitHub Actions
    - **Organization / user:** `adammcarter`
-   - **Repository:** `use-case-matrix`
+   - **Repository:** `use-cases`
    - **Workflow filename:** `release.yml`
    - **Environment:** leave blank (the workflow does not use a GitHub
      environment).
@@ -98,7 +98,7 @@ Everything below is normal repo work an agent or maintainer can do.
    node scripts/release-gate.mjs
    ```
 
-2. **Set the version** to the target. The `use-case-matrix` package version is
+2. **Set the version** to the target. The `use-cases` package version is
    the source of truth, but the version-parity test also checks the workspace
    package manifests, the plugin manifests, and `packages/core/src/version.ts` —
    bump them together. The quickest way for the manifests:
@@ -129,14 +129,14 @@ Everything below is normal repo work an agent or maintainer can do.
    ```
 
 6. **The workflow does the rest:** install → build → test → `npm publish` with
-   `--provenance`. Watch the `release` workflow run. On success, `use-case-matrix`
+   `--provenance`. Watch the `release` workflow run. On success, `use-cases`
    is live with provenance.
 
 7. **Post-publish smoke** (optional but recommended):
 
    ```bash
-   npx use-case-matrix --version --json           # runs the uc CLI
-   npx -p use-case-matrix use-case-matrix-mcp      # should start the stdio server
+   npx use-cases --version --json           # runs the uc CLI
+   npx -p use-cases use-cases-mcp      # should start the stdio server
    ```
 
    Confirm the provenance badge appears on the package page on npmjs.com.
@@ -150,7 +150,7 @@ npm dist-tags keep `latest` pointing at the stable line while RCs install only
 when asked for explicitly.
 
 1. **RC:** set the version to a prerelease and tag it. A prerelease version
-   (`1.0.0-rc.1`) is not tagged `latest`, so `npm install use-case-matrix` keeps
+   (`1.0.0-rc.1`) is not tagged `latest`, so `npm install use-cases` keeps
    resolving the last stable release:
 
    ```bash
@@ -164,7 +164,7 @@ when asked for explicitly.
    Install and exercise the RC explicitly:
 
    ```bash
-   npm install -g use-case-matrix@next       # or @1.0.0-rc.1
+   npm install -g use-cases@next       # or @1.0.0-rc.1
    ```
 
 2. **More RCs if needed:** `1.0.0-rc.2`, … repeat.

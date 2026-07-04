@@ -30,7 +30,7 @@ function requireSuccess(result: ReturnType<typeof run>) {
 describe("P3 evidence CLI", () => {
   test("records evidence and derives evidence status through schema-backed JSON", () => {
     requireSuccess(run("corepack", ["pnpm", "build"]));
-    const workspaceRoot = mkdtempSync(join(tmpdir(), "use-case-matrix-evidence-cli-"));
+    const workspaceRoot = mkdtempSync(join(tmpdir(), "use-cases-evidence-cli-"));
     cpSync(join(repoRoot, "tests/fixtures/workspaces/evidence-basic"), workspaceRoot, {
       recursive: true
     });

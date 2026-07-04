@@ -1,9 +1,9 @@
 {
-  "name": "use-case-matrix",
+  "name": "use-cases",
   "version": "0.1.0",
   "description": "Use-case, evidence, and live showcase infrastructure for agent work.",
   "author": {
-    "name": "Use Case Matrix"
+    "name": "Use Cases"
   },
   "license": "MIT",
   "keywords": [
@@ -14,10 +14,10 @@
   ],
   "mcpServers": "../.mcp.json",
   "interface": {
-    "displayName": "Use Case Matrix",
+    "displayName": "Use Cases",
     "shortDescription": "Plan, prove, and showcase agent work.",
     "longDescription": "Maintains use cases, proof history, and live showcase flows for agent-led product work.",
-    "developerName": "Use Case Matrix",
+    "developerName": "Use Cases",
     "category": "Productivity",
     "capabilities": [
       "Interactive",

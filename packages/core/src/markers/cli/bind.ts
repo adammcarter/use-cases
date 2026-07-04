@@ -210,7 +210,7 @@ export function runBindCommand(options: BindCommandOptions): BindCommandResult {
     event_id: options.idFactory(),
     created_at: options.clock(),
     created_by: {
-      tool: "use-case-matrix",
+      tool: "use-cases",
       command: "bind",
       version: options.version ?? UCM_VERSION
     },

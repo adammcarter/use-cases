@@ -25,7 +25,7 @@ function runCli(args: string[]) {
 }
 
 function fixtureWorkspace(name: string): string {
-  const workspaceRoot = mkdtempSync(join(tmpdir(), `use-case-matrix-pathsafety-${name}-`));
+  const workspaceRoot = mkdtempSync(join(tmpdir(), `use-cases-pathsafety-${name}-`));
   cpSync(join(repoRoot, "tests/fixtures/workspaces", name), workspaceRoot, { recursive: true });
   return workspaceRoot;
 }
@@ -184,7 +184,7 @@ describe("P-sec CLI bounds --plan-file to the workspace", () => {
   }
 
   function outsidePlanFile(plan: unknown): string {
-    const outsideDir = mkdtempSync(join(tmpdir(), "use-case-matrix-pathsafety-outside-"));
+    const outsideDir = mkdtempSync(join(tmpdir(), "use-cases-pathsafety-outside-"));
     const outsidePlan = join(outsideDir, "plan.json");
     writeFileSync(outsidePlan, `${JSON.stringify(plan, null, 2)}\n`);
     return outsidePlan;

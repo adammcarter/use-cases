@@ -1,6 +1,6 @@
 # Tutorial: adopt the matrix in a pure-Python repo (pytest, no JS)
 
-This walkthrough proves the headline claim — **anyone can adopt Use Case Matrix,
+This walkthrough proves the headline claim — **anyone can adopt Use Cases,
 not just JavaScript repos** — by taking a tiny Python project from nothing to a
 signed **FRESH** row using a **pure Python toolchain**. There is **no pnpm and no
 vitest** anywhere in the project: the verifier is `pytest`.
@@ -94,7 +94,7 @@ are the exact commands the release test runs.
 ### 0. Install the CLI and generate a scratch signing key
 
 ```bash
-npm i -g use-case-matrix                  # provides the `uc` binary
+npm i -g use-cases                  # provides the `uc` binary
 # A throwaway ed25519 keypair. In production the PRIVATE key lives ONLY in CI.
 node -e 'const c=require("crypto"),f=require("fs");const k=c.generateKeyPairSync("ed25519");
 f.writeFileSync("public-key.pem",k.publicKey.export({type:"spki",format:"pem"}));

@@ -31,7 +31,7 @@ function childEnv(): NodeJS.ProcessEnv {
 }
 
 function npmCacheDir(): string {
-  return mkdtempSync(join(stableCacheRoot(), "use-case-matrix-npm-cache-"));
+  return mkdtempSync(join(stableCacheRoot(), "use-cases-npm-cache-"));
 }
 
 function stableCacheRoot(): string {
@@ -59,7 +59,7 @@ describe("P0 package entrypoints", () => {
     );
 
     expect(core.getVersionInfo()).toEqual({
-      name: "use-case-matrix",
+      name: "@adammcarter/use-cases",
       version: "0.1.0"
     });
   });
@@ -81,7 +81,7 @@ describe("P0 package entrypoints", () => {
       protocol_version: 1,
       complete: true,
       data: {
-        name: "use-case-matrix",
+        name: "@adammcarter/use-cases",
         version: "0.1.0"
       },
       diagnostics: []
@@ -91,7 +91,7 @@ describe("P0 package entrypoints", () => {
   test("packed packages install into a clean consumer and expose imports and bins", () => {
     requireSuccess(run("corepack", ["pnpm", "build"]));
 
-    const packDir = mkdtempSync(join(tmpdir(), "use-case-matrix-pack-"));
+    const packDir = mkdtempSync(join(tmpdir(), "use-cases-pack-"));
     for (const filter of [
       "@adammcarter/use-cases-core",
       "@adammcarter/use-cases-cli",
@@ -109,16 +109,16 @@ describe("P0 package entrypoints", () => {
       );
     }
 
-    const consumer = mkdtempSync(join(tmpdir(), "use-case-matrix-consumer-"));
+    const consumer = mkdtempSync(join(tmpdir(), "use-cases-consumer-"));
     writeFileSync(
       join(consumer, "package.json"),
       JSON.stringify({ type: "module", dependencies: {} }, null, 2)
     );
 
     const tarballs = [
-      "use-case-matrix-core-0.1.0.tgz",
-      "use-case-matrix-cli-0.1.0.tgz",
-      "use-case-matrix-mcp-0.1.0.tgz"
+      "adammcarter-use-cases-core-0.1.0.tgz",
+      "adammcarter-use-cases-cli-0.1.0.tgz",
+      "adammcarter-use-cases-mcp-0.1.0.tgz"
     ].map((name) => join(packDir, name));
     requireSuccess(run("npm", ["install", "--cache", npmCacheDir(), "--no-audit", "--no-fund", ...tarballs], consumer));
 
@@ -127,7 +127,7 @@ describe("P0 package entrypoints", () => {
       [
         "import { getVersionInfo } from '@adammcarter/use-cases-core';",
         "const info = getVersionInfo();",
-        "if (info.name !== 'use-case-matrix' || info.version !== '0.1.0') throw new Error('bad version export');"
+        "if (info.name !== '@adammcarter/use-cases' || info.version !== '0.1.0') throw new Error('bad version export');"
       ].join("\n")
     );
     requireSuccess(run("node", ["check.mjs"], consumer));
@@ -170,7 +170,7 @@ describe("P0 package entrypoints", () => {
       expect.objectContaining({
         id: 1,
         result: expect.objectContaining({
-          serverInfo: { name: "use-case-matrix", version: "0.1.0" }
+          serverInfo: { name: "@adammcarter/use-cases", version: "0.1.0" }
         })
       }),
       expect.objectContaining({
@@ -206,7 +206,7 @@ describe("P0 staged plugin", () => {
   test("distributable manifest paths resolve inside a staged plugin root", () => {
     requireSuccess(run("corepack", ["pnpm", "build"]));
 
-    const staged = mkdtempSync(join(tmpdir(), "use-case-matrix-plugin-"));
+    const staged = mkdtempSync(join(tmpdir(), "use-cases-plugin-"));
     mkdirSync(join(staged, ".codex-plugin"), { recursive: true });
     mkdirSync(join(staged, ".claude-plugin"), { recursive: true });
     mkdirSync(join(staged, "packages/mcp/dist"), { recursive: true });
@@ -234,14 +234,14 @@ describe("P0 staged plugin", () => {
     const claudeManifest = JSON.parse(
       readFileSync(join(staged, ".claude-plugin/plugin.json"), "utf8")
     );
-    const claudeServer = claudeManifest.mcpServers["use-case-matrix"];
+    const claudeServer = claudeManifest.mcpServers["use-cases"];
     expect(claudeServer.command).toBe("node");
     expect(resolve(staged, claudeServer.args[0])).toBe(
       join(staged, "packages/mcp/dist/index.js")
     );
 
     const mcpConfig = JSON.parse(readFileSync(join(staged, ".mcp.json"), "utf8"));
-    const server = mcpConfig.mcpServers["use-case-matrix"];
+    const server = mcpConfig.mcpServers["use-cases"];
     expect(server.command).toBe("node");
     expect(resolve(staged, server.args[0])).toBe(
       join(staged, "packages/mcp/dist/index.js")

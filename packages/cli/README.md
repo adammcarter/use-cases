@@ -1,6 +1,6 @@
 # @adammcarter/use-cases-cli
 
-Command-line interface for **use-case-matrix** — a repo-local, agent-facing
+Command-line interface for **use-cases** — a repo-local, agent-facing
 assurance system for keeping product claims, code spans, demonstrations,
 evidence, and release decisions aligned.
 
@@ -8,13 +8,13 @@ evidence, and release decisions aligned.
 
 This is an internal workspace package — it is **not published separately**. It
 ships bundled inside the
-[`use-case-matrix`](https://www.npmjs.com/package/use-case-matrix) package:
+[`use-cases`](https://www.npmjs.com/package/use-cases) package:
 
 ```bash
-npm i -g use-case-matrix
+npm i -g use-cases
 ```
 
-That provides the `uc` binary (and its `use-case-matrix` long-form alias).
+That provides the `uc` binary (and its `use-cases` long-form alias).
 
 ## Usage
 
@@ -28,10 +28,10 @@ and the exit codes are versioned public contracts. Human-readable (non-`--json`)
 output is **not** part of the contract.
 
 See the
-[CLI reference](https://github.com/adammcarter/use-case-matrix/blob/main/docs/cli.md)
+[CLI reference](https://github.com/adammcarter/use-cases/blob/main/docs/cli.md)
 and the
-[stability & versioning policy](https://github.com/adammcarter/use-case-matrix/blob/main/docs/reference/stability.md).
+[stability & versioning policy](https://github.com/adammcarter/use-cases/blob/main/docs/reference/stability.md).
 
 ## License
 
-[MIT](https://github.com/adammcarter/use-case-matrix/blob/main/LICENSE)
+[MIT](https://github.com/adammcarter/use-cases/blob/main/LICENSE)

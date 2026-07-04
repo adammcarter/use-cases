@@ -1,4 +1,4 @@
-// MCP resources: READ-ONLY views of Use Case Matrix workspace state (MCP 2025-11-25).
+// MCP resources: READ-ONLY views of Use Cases workspace state (MCP 2025-11-25).
 //
 // Each resource reuses the same read-only cores the CLI/tools wrap and returns
 // the SAME structured JSON. Resources NEVER mutate, run verifiers, or mint
@@ -62,7 +62,7 @@ export type McpResourceDescriptor = {
 export const mcpResources: McpResourceDescriptor[] = [
   {
     uri: "uc://matrix",
-    name: "Use-case matrix",
+    name: "Use cases",
     description: "Matrix validation result plus the full list of use cases (read-only). Add ?repo=<path> or configure UCM_MCP_REPO.",
     mimeType: JSON_MIME
   },
@@ -99,7 +99,7 @@ export const mcpResources: McpResourceDescriptor[] = [
   {
     uri: "uc://schemas",
     name: "Public schema index",
-    description: "Index of public Use Case Matrix JSON schemas. Read an individual schema at uc://schemas/{name} (e.g. uc://schemas/common.schema.json). No repo required.",
+    description: "Index of public Use Cases JSON schemas. Read an individual schema at uc://schemas/{name} (e.g. uc://schemas/common.schema.json). No repo required.",
     mimeType: JSON_MIME
   },
   {

@@ -106,7 +106,7 @@ use_cases:
       - kind: file
         path: use-cases.yml
     actor: agent
-    intent: Emit the configured component identity (use-case-matrix) in every CLI and MCP result envelope, falling back to the same default when no workspace config is present, so a published build never leaks a stale product name.
+    intent: Emit the configured component identity (use-cases) in every CLI and MCP result envelope, falling back to the same default when no workspace config is present, so a published build never leaks a stale product name.
     preconditions:
       - The workspace config declares a component id, or none is set and the default applies.
     trigger: Any CLI or MCP command runs and returns a result envelope.
@@ -115,11 +115,11 @@ use_cases:
         kind: steps
         steps:
           - Run any command with --json and read context.component_id.
-          - Confirm it equals the configured component id, or the use-case-matrix default when unconfigured.
+          - Confirm it equals the configured component id, or the use-cases default when unconfigured.
           - Confirm no envelope, schema default, or version surface reports the pre-rename name.
     observable_outcomes:
-      - Every envelope reports component_id use-case-matrix for this repository.
-      - An unconfigured workspace still defaults to use-case-matrix rather than a stale name.
+      - Every envelope reports component_id use-cases for this repository.
+      - An unconfigured workspace still defaults to use-cases rather than a stale name.
     host_applicability:
       - host_surface: codex.cli
         supported: true

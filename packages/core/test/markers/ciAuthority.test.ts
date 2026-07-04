@@ -36,7 +36,7 @@ describe("detectCiAuthority", () => {
   test("recognises GitHub Actions from its env vars", () => {
     const authority = detectCiAuthority({
       GITHUB_ACTIONS: "true",
-      GITHUB_REPOSITORY: "use-case-matrix/use-case-matrix",
+      GITHUB_REPOSITORY: "use-cases/use-cases",
       GITHUB_REF: "refs/heads/main",
       GITHUB_SHA: "0123456789abcdef0123456789abcdef01234567",
       GITHUB_RUN_ID: "1234567890",
@@ -46,7 +46,7 @@ describe("detectCiAuthority", () => {
     expect(authority).toEqual({
       type: "ci",
       provider: "github-actions",
-      repository: "use-case-matrix/use-case-matrix",
+      repository: "use-cases/use-cases",
       ref: "refs/heads/main",
       commit: "0123456789abcdef0123456789abcdef01234567",
       run_id: "1234567890",

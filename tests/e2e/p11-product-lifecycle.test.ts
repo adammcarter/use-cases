@@ -300,7 +300,7 @@ describe("P11 host and project acceptance", () => {
 function exampleWorkspace(name: string): string {
   const sourceRoot = join(repoRoot, "examples", name);
   expect(existsSync(sourceRoot)).toBe(true);
-  const workspaceRoot = mkdtempSync(join(tmpdir(), `use-case-matrix-p11-${name}-`));
+  const workspaceRoot = mkdtempSync(join(tmpdir(), `use-cases-p11-${name}-`));
   cpSync(sourceRoot, workspaceRoot, { recursive: true });
   return workspaceRoot;
 }

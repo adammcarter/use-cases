@@ -25,7 +25,7 @@ hand-rolled format — but you can read one, infer its structure, and map it.
 
 ## Defer to
 
-- `use-case-matrix` once rows exist and the task is ongoing matrix upkeep.
+- `use-cases` once rows exist and the task is ongoing matrix upkeep.
 - `showcase` / `walkthrough` for performing or explaining, not importing.
 
 ## Fast path: a canonical TEST-MATRIX.md

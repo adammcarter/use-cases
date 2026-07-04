@@ -14,8 +14,8 @@ import type {
   HostProjectionResult
 } from "./types.js";
 
-const MANAGED_MARKER = "use-case-matrix:managed";
-const MANIFEST_PATH = ".use-case-matrix-projection.json";
+const MANAGED_MARKER = "use-cases:managed";
+const MANIFEST_PATH = ".use-cases-projection.json";
 const GENERATED_AT = "1970-01-01T00:00:00.000Z";
 
 export function projectHostFiles(options: {
@@ -181,7 +181,7 @@ export function runHostConformance(options: { context: ResolvedWorkspaceContext;
 function renderActivationStub(profile: HostProfile, sourceSkillHashes: Record<string, string>): string {
   return [
     `<!-- ${MANAGED_MARKER} host=${profile.host} profile=${profile.profile_id} -->`,
-    "# Use Case Matrix Host Projection",
+    "# Use Cases Host Projection",
     "",
     `Host: ${profile.host}`,
     `Surface: ${profile.surface}`,

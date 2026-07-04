@@ -2,7 +2,7 @@ schema_version: 1
 capsule_id: capsule.v1.release_smoke
 title: v1 release smoke showcase
 mode: showcase
-description: Perform a command-backed smoke demo of the use-case-matrix plugin itself.
+description: Perform a command-backed smoke demo of the use-cases plugin itself.
 audience: reviewer
 timebox_seconds: 300
 items:
@@ -15,7 +15,7 @@ items:
         executable: node
         argv:
           - -e
-          - "require('node:fs').accessSync('use-cases.yml'); process.stdout.write('use-case-matrix workspace smoke\\n');"
+          - "require('node:fs').accessSync('use-cases.yml'); process.stdout.write('use-cases workspace smoke\\n');"
         working_directory: .
         expected_exit_codes: [0]
 permissions:

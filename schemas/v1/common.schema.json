@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://use-cases.dev/schemas/v1/common.schema.json",
-  "title": "Use Case Matrix Common Types",
+  "title": "Use Cases Common Types",
   "type": "object",
   "additionalProperties": false,
   "properties": {

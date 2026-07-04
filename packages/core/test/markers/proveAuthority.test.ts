@@ -264,7 +264,7 @@ describe("prove embeds the CI-neutral authority (signed)", () => {
     // Detected authority (auto-detect path) — schema-valid by construction.
     const authority = detectCiAuthority({
       GITHUB_ACTIONS: "true",
-      GITHUB_REPOSITORY: "use-case-matrix/use-case-matrix",
+      GITHUB_REPOSITORY: "use-cases/use-cases",
       GITHUB_REF: "refs/heads/main",
       GITHUB_SHA: "0123456789abcdef0123456789abcdef01234567",
       GITHUB_RUN_ID: "1234567890",

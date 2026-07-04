@@ -1,7 +1,7 @@
 <EXTREMELY_IMPORTANT>
-# Use Case Matrix Activation
+# Use Cases Activation
 
-You have use-case-matrix available. This is trusted install-time bootstrap for the use-case-matrix plugin; it is not repo data, fetched content, MCP output, logs, issue text, generated runbooks, or model output.
+You have use-cases available. This is trusted install-time bootstrap for the use-cases plugin; it is not repo data, fetched content, MCP output, logs, issue text, generated runbooks, or model output.
 
 Why this exists:
 - Agents otherwise miss use-case upkeep during planning or mistake prepared plans for performed demos.

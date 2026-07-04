@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "use-case-matrix": {
+    "use-cases": {
       "command": "node",
       "args": ["./packages/mcp/dist/index.js"]
     }
