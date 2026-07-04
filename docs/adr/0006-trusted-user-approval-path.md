@@ -1,6 +1,11 @@
 # ADR 0006 — Trusted user-approval path (showcase sign-off)
 
-Status: proposed (roadmap row `roadmap.deferred.trusted_host_confirmation_path`).
+Status: **accepted / implemented (0.2.0, feature F3)**. The signed-token approval
+path described below now ships: `uc approve-run` mints a run-bound signed request,
+and `uc showcase approve --approval-token <token> (--keyring <path> | --public-key
+<path>)` verifies it and records a trusted human sign-off. See the *Shipped flow*
+section for the end-to-end example. (Originally raised as roadmap row
+`roadmap.deferred.trusted_host_confirmation_path`.)
 
 ## Context
 
@@ -8,19 +13,19 @@ A showcase run can require user approval (`approval_policy.mode: predefined`,
 `approver_type: user`). The trust thesis is: an autonomous agent may **perform
 and record** work but must **not be able to mint a human's sign-off**.
 
-Today the negative half holds and the positive half is missing:
+Historically the negative half held and the positive half was missing:
 
-- `appendShowcaseApproval` accepts an approval only from a **trusted authority**
-  (`trusted_interactive_cli` with `stdinIsTty && confirmed`, or
-  `trusted_host_token` with `verified`); anything else is `untrusted_automation`
-  and is rejected with `showcase.trusted_user_confirmation_required`.
-- But the **CLI `showcase approve` hard-codes `authority: untrusted_automation`**.
-  There is no code path that ever produces a trusted authority. So a real human
-  cannot grant sign-off either — user-required runs sit at `approval_state:
-  pending` forever.
+- `appendShowcaseApproval` accepts an approval only from a **trusted authority**;
+  anything else is `untrusted_automation` and is rejected with
+  `showcase.trusted_user_confirmation_required`.
+- The CLI `showcase approve` used to hard-code `untrusted_automation` with no code
+  path that produced a trusted authority, so a real human could not grant sign-off
+  either — user-required runs sat at `approval_state: pending` forever.
 
-This ADR records the design for the path that lets a real human approve while an
-agent cannot — without weakening the guarantee.
+**As of 0.2.0 this gap is closed.** `showcase approve` now ingests a signed
+approval token (from `approve-run`) and drives the verify+append gate, so a real
+human CAN sign off while an agent still cannot forge one. This ADR records the
+design; the *Shipped flow* section documents the delivered commands.
 
 ## Decision
 
@@ -43,12 +48,12 @@ controls the terminal.
 ### Invariant (load-bearing)
 
 The verifier **computes** trust; it must **never** accept a caller-supplied
-`verified`/`confirmed` boolean. The current `TrustedApprovalAuthority` type
-(`{ kind: "trusted_host_token"; token; verified: boolean }`) is a footgun — the
-boolean is asserted by the caller. The future implementation MUST replace it with
-a caller input that carries only the token, and a verifier that derives
-`verified` from a signature check. (No code path constructs a trusted token
-today, so this is latent, not yet exploitable — but it must not ship wired.)
+`verified`/`confirmed` boolean. **As shipped (0.2.0)** the caller passes only the
+signed token plus a public-key resolver; `verifyApprovalToken` derives trust from
+the signature, the run binding, the nonce, the expiry, and the key's keyring-bound
+assurance tier — no caller-supplied `verified` boolean exists on the path. The old
+footgun (`{ kind: "trusted_host_token"; token; verified: boolean }`) is not the
+delivered shape.
 
 ### Assurance levels, not a boolean
 
@@ -64,6 +69,51 @@ Replace `trusted iff stdinIsTty && confirmed` with explicit tiers, and let
 
 `trusted_interactive_cli` is **relabelled** to make its spoofability explicit; it
 is excluded from any policy that requires non-spoofable human sign-off.
+
+### Shipped flow (0.2.0)
+
+The delivered end-to-end human sign-off, request → approve-run → showcase approve
+→ approved:
+
+```bash
+# 0. A user-required showcase run is finished (approval_state: pending).
+
+# 1. REQUEST. The plugin mints a run-bound ApprovalRequest (run id, ledger head,
+#    evidence/CI digests, short-lived single-use nonce). The agent/host can ask
+#    for it — e.g. via the MCP `showcase_request_approval` tool (mode
+#    `approval_request`) — but cannot sign it. Save it to approval-request.json.
+
+# 2. APPROVE-RUN — the human, in their OWN shell, signs the request with a key
+#    held OUTSIDE the agent's scope, producing a token bound to that exact run.
+uc approve-run --request approval-request.json \
+  --key-file ~/.ucase/human-approval.pem --key-id human-key-1 \
+  --decision approved --out approval-token.json --json
+
+# 3. SUBMIT. `showcase approve` re-verifies the signature, the live-run binding,
+#    the nonce (single-use), the expiry, and the key's keyring-bound assurance
+#    tier — trust is COMPUTED, never asserted. A verified token is by definition a
+#    USER sign-off (actorType is forced to `user`).
+uc showcase approve --repo . --run <run-id> \
+  --statement "I reviewed the live run." \
+  --approval-token approval-token.json \
+  --keyring keyring.json --json          # or --public-key human.pub
+
+# 4. CONFIRM. `showcase status` needs the SAME trusted key material to verify the
+#    embedded token; WITHOUT --keyring / --public-key it fails closed and the
+#    approval reads `pending` (a signature it cannot check is never trusted).
+uc showcase status --repo . --run <run-id> --keyring keyring.json --json
+#    -> approval_state: approved
+```
+
+Key points a reader must not miss:
+
+- The signing key lives **outside** the run ledger (in `--keyring` /
+  `--public-key`), so the ledger alone can never mint trust.
+- `showcase status` **requires** `--keyring` or `--public-key` to *display* a
+  recorded approval; without it the embedded token cannot be verified and the run
+  reads `pending` (fail-closed), not approved.
+- Every spoof — no token, wrong-run token, expired token, forged signature, or an
+  automation-tier key — is rejected non-zero and the run stays `pending`.
 
 ### Flow
 
@@ -88,18 +138,21 @@ the resulting signed token the plugin verifies.
 
 ## Ranked build plan
 
-1. `ApprovalRequested` object (nonce + run/evidence/ledger digest binding) and a
-   **signed approval-token verifier** (reuse the existing keyring/Ed25519 infra).
+1. ✅ **Shipped (0.2.0).** `ApprovalRequested` object (nonce + run/evidence/ledger
+   digest binding) and a **signed approval-token verifier** (reuses the existing
+   keyring/Ed25519 infra): `approve-run` mints the request/token, `showcase
+   approve --approval-token` verifies + records it.
 2. A **local approval broker / host token issuer** — signing key outside the
    workspace (OS keychain / hardware-backed), native dialog or browser page,
-   optional WebAuthn.
+   optional WebAuthn. *(In 0.2.0 the signing key is supplied via env/keyring; a
+   dedicated OS-backed issuer is still future work.)*
 3. **MCP elicitation** integration that hands off to the issuer.
 4. **Hardened TTY** (`/dev/tty`, both ends ttys, randomized single-use challenge,
    nonce-bound) as a clearly-labelled **weak** fallback, excluded from
    non-spoofable-required policies.
 
-Defer: WebAuthn-only mode, separate-device approval, org key policy + revocation,
-approval transparency log, multi-approver quorum.
+Defer: OS-backed / WebAuthn issuer, separate-device approval, org key policy +
+revocation, approval transparency log, multi-approver quorum.
 
 ## Threat boundary
 
@@ -120,6 +173,7 @@ Never claim "a terminal prompt proves a human approved."
 
 ## Provenance
 
-Design reviewed with an external reasoning model. This ADR is
-the spec for `roadmap.deferred.trusted_host_confirmation_path`; the row stays
-`lifecycle: planned` until the verifier + an issuer ship.
+Design reviewed with an external reasoning model. The verifier + the
+`approve-run` / `showcase approve --approval-token` submit path shipped in 0.2.0
+(feature F3); a dedicated OS-backed / WebAuthn issuer and the hardened-TTY
+fallback remain future work.

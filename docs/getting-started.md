@@ -127,6 +127,13 @@ names a verifier id (`acceptance`) that CI must run and pass. We wire that id to
 real command in step 6. (`mode: none` rows are tracked but never become FRESH —
 there is nothing to prove.)
 
+> **Enforce this behaviour in CI.** Add `required_for_release: true` under
+> `approval_policy` (i.e. `approval_policy: { mode: none, required_for_release:
+> true }`) to make `uc scan --gate` **fail the build** when this row drops below
+> the bar. This is the single knob the gate enforces — see
+> *[Gate a behaviour in CI](#9-gate-a-behaviour-in-ci)* below. Rows without it are
+> advisory: the gate warns about their drift but does not block.
+
 Validate the matrix:
 
 ```bash
@@ -275,6 +282,41 @@ Don't hand-roll this. Use the **GitHub Actions reference workflow** at
 mints proofs from the `UCM_CI_SIGNING_KEY` secret. Generate the keypair following
 [key management](./security/key-management.md); the CI provenance/authority model
 is in [CI hardening](./security/ci-hardening.md).
+
+## 9. Gate a behaviour in CI
+
+Seeing a row's state is not the same as *enforcing* it. To make CI **fail** when a
+behaviour regresses, do two things:
+
+1. **Mark the row required.** In its use-case YAML, set
+   `approval_policy.required_for_release: true`. This flag — and only this flag —
+   is what the gate enforces:
+
+   ```yaml
+   approval_policy:
+     mode: none
+     required_for_release: true   # ← the gate blocks the build if this row drifts
+   ```
+
+2. **Run `scan` with `--gate`.** In release mode the bar is a signed `FRESH`
+   proof; otherwise it is the keyless `VERIFIED_LOCAL` pass or better:
+
+   ```bash
+   uc scan --repo . --product-root . --policy-mode release --gate
+   ```
+
+   - A required row below the bar → **exit 1** (the build fails), listed as an
+     offender.
+   - A required row meeting the bar → **exit 0**, and the summary states how many
+     required behaviours met the bar.
+   - A **non-required** row that is drifting is *not* enforced — but the passing
+     gate still **warns** about it (human: `⚠ … NOT gated`; JSON:
+     `gate.ungated_below_bar[]`) so "gate passed" never silently endorses drift.
+     Mark that row `required_for_release: true` to turn the warning into
+     enforcement.
+
+Only rows you have explicitly marked required can fail the gate, so opting a
+behaviour into CI enforcement is a deliberate, discoverable one-line change.
 
 ---
 

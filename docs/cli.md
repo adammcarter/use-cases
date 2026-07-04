@@ -30,7 +30,9 @@ All commands use JSON envelopes with `schema_version`, `protocol_version`,
   A row with `lifecycle: active` must include the conditionally-required fields
   (`actor`, `intent`, `preconditions`, `trigger`, `scenarios`,
   `observable_outcomes`, `host_applicability`, `verification_policy`,
-  `approval_policy`).
+  `approval_policy`). Set `approval_policy.required_for_release: true` on a row to
+  make `uc scan --gate` **enforce** it (fail CI when it drops below the bar); rows
+  without it are advisory (the gate only warns). See the `uc scan --gate` section.
 - `matrix remove --repo <path> --use-case <id> --reason <text> --json`:
   mark a use case as `removed`. This is a lifecycle change, not physical
   deletion.
@@ -58,11 +60,26 @@ signing key must be a PKCS8 ed25519 PEM — see
   opening marker shifts the file's line numbers down by one, so a later `scan`
   reports the span one line below the `--start-line`/`--end-line` you passed —
   that is expected, not drift.
-- `uc scan [--repo <path>] [--public-key <pem>] [--keyring <path>] [--json]`:
+- `uc scan [--repo <path>] [--public-key <pem>] [--keyring <path>] [--gate] [--policy-mode <mode>] [--json]`:
   derive each row's freshness — `FRESH` / `SUSPECT` / `UNPROVEN` / `UNBOUND` /
   `INVALID` — from the current code, the binding registry, and the proof ledger.
   Without a trusted `--public-key` (or `--keyring`), signed proofs read `UNPROVEN`
   (the tool never trusts a signature it cannot verify).
+
+  **`--gate` (CI enforcement).** Opt-in exit-code gate: `scan` exits `1` when a
+  **required** behaviour is below the bar for the policy mode
+  (`--policy-mode release` ⇒ the bar is a signed `FRESH` proof; otherwise the bar
+  is the keyless `VERIFIED_LOCAL` local pass or better). **A behaviour is only
+  enforced when its use-case YAML marks it
+  `approval_policy.required_for_release: true`.** This is the single knob that
+  makes the gate block on a row — nothing else is enforced. Rows that are NOT
+  marked required are *advisory*: the gate does not block on them, but a passing
+  gate still **warns** (human view: `⚠ … NOT gated`; JSON:
+  `gate.ungated_below_bar[]`) about any non-required behaviour that is drifting
+  (`SUSPECT` / `STALE_LOCAL` / `UNPROVEN`-not-`VERIFIED_LOCAL`), so a green gate
+  never silently endorses drift. To make the gate protect a behaviour, add
+  `approval_policy.required_for_release: true` to its use-case row (see
+  `matrix upsert` and `init`).
 - `uc verify [--row <id> | --all] --out <path> [--repo <path>] [--json]`: run each
   bound row's verifier command and write an **unsigned** verification-results
   ledger (one JSONL record per row). This is the step that actually executes tests.
