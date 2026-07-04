@@ -182,3 +182,63 @@ use_cases:
         path: docs/release.md
     actor: agent
     intent: Prove public registry publishing metadata and install path.
+  - id: roadmap.deferred.refactor_tolerant_spans
+    title: Refactor-tolerant binding spans
+    lifecycle: planned
+    value_tier: core
+    journey_role: alternate
+    usage_frequency: rare
+    tags:
+      - markers
+      - drift
+      - future
+    source_refs:
+      - kind: file
+        path: packages/core/src/markers/scanner.ts
+    actor: script
+    intent: Treat reformatting, moving code, and comment-only edits to a bound span as non-behavioural, so only genuine behavioural drift flips a row to SUSPECT/STALE_LOCAL — cutting false re-check noise while preserving real drift detection.
+  - id: roadmap.deferred.ci_authority_adapters
+    title: GitLab and CircleCI authority adapters
+    lifecycle: planned
+    value_tier: supporting
+    journey_role: alternate
+    usage_frequency: rare
+    tags:
+      - ci
+      - authority
+      - future
+    source_refs:
+      - kind: file
+        path: packages/core/src/markers/ciAuthority.ts
+    actor: agent
+    intent: Recognise GitLab CI and CircleCI as trusted proof-minting authorities (alongside GitHub Actions) so release-gate provenance works beyond a single provider.
+  - id: roadmap.deferred.human_readable_trust_output
+    title: Human-readable trust output
+    lifecycle: planned
+    value_tier: supporting
+    journey_role: alternate
+    usage_frequency: rare
+    tags:
+      - cli
+      - output
+      - future
+    source_refs:
+      - kind: file
+        path: docs/cli.md
+    actor: user
+    intent: Give the scan/verify/prove trust commands a friendly human view in addition to the machine JSON envelope, so a person can read freshness state at a glance.
+  - id: roadmap.deferred.v1_contract_freeze
+    title: v1 contract freeze
+    lifecycle: planned
+    value_tier: core
+    journey_role: alternate
+    usage_frequency: rare
+    tags:
+      - stability
+      - contracts
+      - future
+    source_refs:
+      - kind: file
+        path: docs/reference/stability.md
+    actor: script
+    intent: Freeze the commands, JSON output envelopes, and on-disk file formats as stable v1 contracts so downstream users and agents can build on them without breakage.
