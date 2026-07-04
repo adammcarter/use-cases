@@ -72,11 +72,18 @@ jobs:
       - name: Publish to npm (Trusted Publishing + provenance)
         run: |
           VERSION=$(node -p "require('./package.json').version")
+          # Idempotent: if this version is already on npm (e.g. a tag pushed for a
+          # historical or manually-published version), skip publish so the run
+          # stays green instead of 403-ing on an immutable version.
+          if npm view "@adammcarter/use-cases@$VERSION" version >/dev/null 2>&1; then
+            echo "@adammcarter/use-cases@$VERSION already published — skipping npm publish."
+            exit 0
+          fi
           case "$VERSION" in
             *-*) TAG=beta ;;
             *) TAG=latest ;;
           esac
-          echo "Publishing use-cases@$VERSION under dist-tag: $TAG"
+          echo "Publishing @adammcarter/use-cases@$VERSION under dist-tag: $TAG"
           npm publish --provenance --access public --tag "$TAG"
         env:
           NPM_CONFIG_PROVENANCE: "true"
