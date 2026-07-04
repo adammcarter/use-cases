@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://use-cases.dev/schemas/v1/approval-token.schema.json",
+  "title": "ucase-approval-token-v1",
+  "description": "F3 trusted human approval. A REQUEST is minted by the plugin (single-use nonce + run binding + expiry) and carries a PLUGIN-minted jti the caller never chooses. A TOKEN is the request signed OUT-OF-BAND by a real human with an ed25519 key held outside the in-session agent's scope (verified via proofSignature.ts verifyEvent + the keyring). The plugin then re-checks every bound field against the live run, the nonce (single-use), the expiry, and the key's keyring-bound assurance_tier before appending an approval. Trust is COMPUTED from the signature; it is never a caller-asserted boolean.",
+  "type": "object",
+  "$defs": {
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "The run facts the token is pinned to; each is re-checked against the LIVE run at verify time.",
+      "properties": {
+        "run_id": { "type": "string", "minLength": 1 },
+        "finish_event_id": { "type": "string", "minLength": 1 },
+        "plan_content_hash": { "type": "string" },
+        "ledger_head_hash": { "type": "string" },
+        "evidence_digest": { "type": "string" },
+        "git_commit": { "type": "string" },
+        "ci_freshness_digest": { "type": "string" }
+      },
+      "required": [
+        "run_id",
+        "finish_event_id",
+        "plan_content_hash",
+        "ledger_head_hash",
+        "evidence_digest",
+        "git_commit",
+        "ci_freshness_digest"
+      ]
+    },
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "ed25519 signature block (identical shape to a proof event's signature).",
+      "properties": {
+        "alg": { "const": "ed25519" },
+        "key_id": { "type": "string", "minLength": 1 },
+        "value": { "type": "string", "minLength": 1, "description": "base64-encoded ed25519 signature over canonical_json(token minus signature)." }
+      },
+      "required": ["alg", "key_id", "value"]
+    },
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "The plugin-minted, unsigned approval request handed to a human to sign.",
+      "properties": {
+        "approval_request_schema": { "const": "ucase-approval-request-v1" },
+        "binding": { "$ref": "#/$defs/binding" },
+        "jti": { "type": "string", "minLength": 1, "description": "Single-use nonce, minted by the PLUGIN (never by the caller)." },
+        "iat": { "$ref": "common.schema.json#/$defs/timestamp" },
+        "exp": { "$ref": "common.schema.json#/$defs/timestamp" }
+      },
+      "required": ["approval_request_schema", "binding", "jti", "iat", "exp"]
+    },
+    "token": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A request signed out-of-band by a human. The signature covers everything except itself.",
+      "properties": {
+        "approval_token_schema": { "const": "ucase-approval-token-v1" },
+        "binding": { "$ref": "#/$defs/binding" },
+        "jti": { "type": "string", "minLength": 1 },
+        "iat": { "$ref": "common.schema.json#/$defs/timestamp" },
+        "exp": { "$ref": "common.schema.json#/$defs/timestamp" },
+        "created_at": { "$ref": "common.schema.json#/$defs/timestamp" },
+        "decision": { "enum": ["approved", "approved_with_known_gaps", "rejected"] },
+        "signature": { "$ref": "#/$defs/signature" }
+      },
+      "required": [
+        "approval_token_schema",
+        "binding",
+        "jti",
+        "iat",
+        "exp",
+        "created_at",
+        "decision",
+        "signature"
+      ]
+    }
+  },
+  "oneOf": [
+    { "$ref": "#/$defs/request" },
+    { "$ref": "#/$defs/token" }
+  ],
+  "examples": [
+    {
+      "approval_request_schema": "ucase-approval-request-v1",
+      "binding": {
+        "run_id": "run.alpha",
+        "finish_event_id": "evt.run.alpha.7",
+        "plan_content_hash": "sha256:plan",
+        "ledger_head_hash": "sha256:head",
+        "evidence_digest": "sha256:evidence",
+        "git_commit": "0123456789abcdef0123456789abcdef01234567",
+        "ci_freshness_digest": "sha256:ci"
+      },
+      "jti": "approval.9d8f54b2-7a0d-4bc2-ad35-9035dcb623c5",
+      "iat": "2026-06-28T12:05:00.000Z",
+      "exp": "2026-06-28T12:20:00.000Z"
+    },
+    {
+      "approval_token_schema": "ucase-approval-token-v1",
+      "binding": {
+        "run_id": "run.alpha",
+        "finish_event_id": "evt.run.alpha.7",
+        "plan_content_hash": "sha256:plan",
+        "ledger_head_hash": "sha256:head",
+        "evidence_digest": "sha256:evidence",
+        "git_commit": "0123456789abcdef0123456789abcdef01234567",
+        "ci_freshness_digest": "sha256:ci"
+      },
+      "jti": "approval.9d8f54b2-7a0d-4bc2-ad35-9035dcb623c5",
+      "iat": "2026-06-28T12:05:00.000Z",
+      "exp": "2026-06-28T12:20:00.000Z",
+      "created_at": "2026-06-28T12:05:00.000Z",
+      "decision": "approved",
+      "signature": {
+        "alg": "ed25519",
+        "key_id": "human-key-1",
+        "value": "dmFsaWQtYmFzZTY0LXNpZ25hdHVyZS1wbGFjZWhvbGRlcg=="
+      }
+    }
+  ]
+}

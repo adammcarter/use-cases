@@ -44,6 +44,7 @@ const expectedSchemaIds = [
   "https://use-cases.dev/schemas/v1/ledger.schema.json",
   "https://use-cases.dev/schemas/v1/keyring.schema.json",
   "https://use-cases.dev/schemas/v1/authority.schema.json",
+  "https://use-cases.dev/schemas/v1/approval-token.schema.json",
   "https://use-cases.dev/schemas/v1/mcp-tool-results.schema.json"
 ];
 

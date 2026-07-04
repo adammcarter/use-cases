@@ -51,6 +51,7 @@ const NEW_SCHEMAS = [
   "ledger.schema.json",
   "keyring.schema.json",
   "authority.schema.json",
+  "approval-token.schema.json",
   "mcp-tool-results.schema.json"
 ] as const;
 
@@ -190,6 +191,53 @@ describe("v1 new schemas (5 gaps closed)", () => {
         validate({ type: "ci", provider: "gitlab-ci", protected_ref: protectedRef })
       ).toBe(true);
     }
+  });
+
+  test("approval-token rejects a token missing its signature", () => {
+    const validate = registry.validatorFor(`${ID_BASE}approval-token.schema.json`);
+    expect(
+      validate({
+        approval_token_schema: "ucase-approval-token-v1",
+        binding: {
+          run_id: "run.alpha",
+          finish_event_id: "evt.run.alpha.7",
+          plan_content_hash: "sha256:plan",
+          ledger_head_hash: "sha256:head",
+          evidence_digest: "sha256:evidence",
+          git_commit: "0123456789abcdef0123456789abcdef01234567",
+          ci_freshness_digest: "sha256:ci"
+        },
+        jti: "approval.abc",
+        iat: "2026-06-28T12:05:00.000Z",
+        exp: "2026-06-28T12:20:00.000Z",
+        created_at: "2026-06-28T12:05:00.000Z",
+        decision: "approved"
+      })
+    ).toBe(false);
+  });
+
+  test("approval-token rejects an out-of-enum decision", () => {
+    const validate = registry.validatorFor(`${ID_BASE}approval-token.schema.json`);
+    expect(
+      validate({
+        approval_token_schema: "ucase-approval-token-v1",
+        binding: {
+          run_id: "run.alpha",
+          finish_event_id: "evt.run.alpha.7",
+          plan_content_hash: "sha256:plan",
+          ledger_head_hash: "sha256:head",
+          evidence_digest: "sha256:evidence",
+          git_commit: "0123456789abcdef0123456789abcdef01234567",
+          ci_freshness_digest: "sha256:ci"
+        },
+        jti: "approval.abc",
+        iat: "2026-06-28T12:05:00.000Z",
+        exp: "2026-06-28T12:20:00.000Z",
+        created_at: "2026-06-28T12:05:00.000Z",
+        decision: "maybe",
+        signature: { alg: "ed25519", key_id: "human-key-1", value: "abc" }
+      })
+    ).toBe(false);
   });
 
   test("mcp-tool-results rejects a value missing the CLI envelope context", () => {

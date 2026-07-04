@@ -33,6 +33,7 @@ export const PUBLIC_SCHEMA_IDS = [
   "https://use-cases.dev/schemas/v1/ledger.schema.json",
   "https://use-cases.dev/schemas/v1/keyring.schema.json",
   "https://use-cases.dev/schemas/v1/authority.schema.json",
+  "https://use-cases.dev/schemas/v1/approval-token.schema.json",
   "https://use-cases.dev/schemas/v1/mcp-tool-results.schema.json"
 ] as const;
 
@@ -65,6 +66,7 @@ const SCHEMA_FILE_NAMES = [
   "ledger.schema.json",
   "keyring.schema.json",
   "authority.schema.json",
+  "approval-token.schema.json",
   "mcp-tool-results.schema.json"
 ] as const;
 

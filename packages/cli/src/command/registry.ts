@@ -1,3 +1,4 @@
+import { approveRunCommands } from "../commands/approveRun.js";
 import { capsuleCommands } from "../commands/capsule.js";
 import { doctorCommands } from "../commands/doctor.js";
 import { evidenceCommands } from "../commands/evidence.js";
@@ -30,5 +31,6 @@ export const allCommands: CliCommand[] = [
   ...markersCommands,
   ...keygenCommands,
   ...recoverCommands,
-  ...showcaseCommands
+  ...showcaseCommands,
+  ...approveRunCommands
 ];

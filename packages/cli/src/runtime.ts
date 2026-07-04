@@ -63,7 +63,9 @@ export const {
   correctShowcaseVerdict,
   finishShowcaseRun,
   pauseShowcaseRun,
-  resumeShowcaseRun
+  resumeShowcaseRun,
+  mintApprovalRequest,
+  signApprovalToken
 } = core;
 
 // Hosts the CLI supports (mirrors the legacy SUPPORTED_HOSTS constant).

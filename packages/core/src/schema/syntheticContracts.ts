@@ -350,6 +350,27 @@ export function validateSyntheticCommonContracts(validated: Set<string>, diagnos
         event: "push"
       }
     ],
+    [
+      "approval-token.schema.json",
+      {
+        approval_token_schema: "ucase-approval-token-v1",
+        binding: {
+          run_id: "run.alpha",
+          finish_event_id: "evt.run.alpha.7",
+          plan_content_hash: "sha256:plan",
+          ledger_head_hash: "sha256:head",
+          evidence_digest: "sha256:evidence",
+          git_commit: "0123456789abcdef0123456789abcdef01234567",
+          ci_freshness_digest: "sha256:ci"
+        },
+        jti: "approval.9d8f54b2-7a0d-4bc2-ad35-9035dcb623c5",
+        iat: "2026-06-28T12:05:00.000Z",
+        exp: "2026-06-28T12:20:00.000Z",
+        created_at: "2026-06-28T12:05:00.000Z",
+        decision: "approved",
+        signature: { alg: "ed25519", key_id: "human-key-1", value: "c2lnbmF0dXJl" }
+      }
+    ],
     ["mcp-tool-results.schema.json", createCliResult("matrix.status", { use_cases: [] })]
   ];
   for (const [fileName, sample] of newSchemaSamples) {
