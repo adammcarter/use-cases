@@ -139,9 +139,21 @@ describe("P9 MCP wrapper contract", () => {
         decision_required: true,
         trusted_confirmation_required: true,
         run_id: runId,
-        suggested_cli_command: expect.arrayContaining(["showcase", "approve", "--run", runId])
+        // F3: the tool mints a PLUGIN-owned single-use approval request bound to
+        // the run and points at the out-of-band signer (`uc approve-run`), NOT
+        // the spoofable `uc showcase approve`.
+        approval_request: expect.objectContaining({
+          approval_request_schema: "ucase-approval-request-v1",
+          binding: expect.objectContaining({ run_id: runId })
+        }),
+        suggested_signer_command: expect.arrayContaining(["approve-run"])
       }
     });
+    // The minted nonce and expiry are present.
+    const data = (envelope as { data: { approval_request: { jti: string; iat: string; exp: string } } }).data;
+    expect(data.approval_request.jti).toBeTruthy();
+    expect(Date.parse(data.approval_request.exp)).toBeGreaterThan(Date.parse(data.approval_request.iat));
+    // Requesting approval must NOT append to the ledger.
     expect(readFileSync(ledgerPath, "utf8")).toEqual(before);
   });
 

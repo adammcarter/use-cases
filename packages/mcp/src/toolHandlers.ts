@@ -25,8 +25,10 @@ const {
   createCliResult,
   finishShowcaseRun,
   loadHostProfile,
+  computeRunApprovalBinding,
   loadUseCaseMatrix,
   loadPresentationPlanFile,
+  mintApprovalRequest,
   mutateUseCaseMatrix,
   queryUseCases,
   readShowcaseEvents,
@@ -460,6 +462,23 @@ export function showcaseRequestApproval(args: JsonObject): CliResult<unknown> {
   const start = events.find((event) => event.event_type === "run_started");
   const finish = events.slice().reverse().find((event) => event.event_type === "run_finished");
   const plan = start?.payload.plan as { plan_content_hash?: string } | undefined;
+
+  // F3: an agent/MCP may only REQUEST approval. Mint a PLUGIN-owned, single-use
+  // approval request bound to the live run (nonce + exp minted HERE, never by the
+  // caller). A real human signs it out-of-band with `uc approve-run` using a key
+  // outside the agent's scope; the plugin then verifies the returned token. We no
+  // longer suggest `uc showcase approve` (that path can never mint trusted
+  // sign-off).
+  let approvalRequest: ReturnType<typeof mintApprovalRequest> | null = null;
+  if (finish) {
+    try {
+      const binding = computeRunApprovalBinding({ context, runId });
+      approvalRequest = mintApprovalRequest({ binding });
+    } catch {
+      approvalRequest = null; // run not in an approvable state yet
+    }
+  }
+
   return envelope("showcase.request-approval", {
     schema_version: 1,
     decision_required: true,
@@ -468,16 +487,14 @@ export function showcaseRequestApproval(args: JsonObject): CliResult<unknown> {
     plan_hash: plan?.plan_content_hash ?? null,
     finish_event_id: finish?.event_id ?? null,
     known_gaps: status.known_gaps,
-    suggested_cli_command: [
-      "uc",
-      "showcase",
-      "approve",
-      "--run",
-      runId,
-      "--statement",
-      stringArg(args, "statement") ?? "<user approval statement>",
-      "--json"
-    ],
+    // The out-of-band signing request. Write it to a file and hand it to a human.
+    approval_request: approvalRequest,
+    approval_request_schema: approvalRequest ? "ucase-approval-request-v1" : null,
+    // How a HUMAN signs it (their own shell, out-of-scope key). This produces the
+    // signed token the plugin verifies — an agent driving the CLI cannot fake it.
+    suggested_signer_command: approvalRequest
+      ? ["uc", "approve-run", "--request", "<request-file>", "--key-file", "<out-of-scope-key>", "--key-id", "<keyring-key-id>", "--json"]
+      : null,
     status
   }, context, { complete: status.complete });
 }
