@@ -8,6 +8,7 @@ import type { ResolvedWorkspaceContext } from "../../roots.js";
 import type { CommentPrefixConfig } from "../commentPrefix.js";
 import {
   validateEvidenceLedger,
+  isKeyResolutionOnlyError,
   type ProofEvent,
   type EvidenceError
 } from "../evidenceLedger.js";
@@ -94,6 +95,13 @@ export interface ScanCommandOptions {
   evidencePath: string;
   policyMode: PolicyMode;
   publicKeyResolver: PublicKeyResolver;
+  // Whether the caller actually configured trusted key material (a --public-key
+  // or --keyring). Defaults to true (conservative: any unresolved key_id is a
+  // trust failure — e.g. a revoked/expired keyring key — and fails closed). When
+  // FALSE (the keyless daily path — no key flag at all), a signed proof that
+  // cannot be checked is NOT corruption: it is the ordinary keyless case, the row
+  // reads UNPROVEN, and scan stays exit 0 so the green human view is truthful.
+  trustedKeyConfigured?: boolean;
   generatedAt: string;
   fs?: MarkerFs;
   commentConfig?: CommentPrefixConfig;
@@ -118,6 +126,11 @@ export interface ScanPreparation {
   registryErrors: RegistryError[];
   evidence: ProofEvent[];
   evidenceErrors: EvidenceError[];
+  // The subset of evidenceErrors that are REAL ledger corruption (everything
+  // except pure missing-key failures). This is what should flip evidence_valid /
+  // drive an exit-4 integrity failure — a signed proof the caller simply has no
+  // key to check is the ordinary keyless path, not corruption.
+  evidenceIntegrityErrors: EvidenceError[];
   scan: ScanResult;
   status: FreshnessStatus;
 }
@@ -157,8 +170,26 @@ export function prepareScan(options: ScanCommandOptions): ScanPreparation {
   });
   const scan = scanFiles(inputs, { config: options.commentConfig });
 
-  // Derive freshness. Registry/ledger validation failures become global
-  // integrity errors so guard_ok flips and they surface in the status object.
+  // A pure missing-key failure (a signed proof present, no key supplied to check
+  // it) is NOT ledger corruption — it is the ordinary keyless path. Such a proof
+  // is already dropped from the trusted `events` set (its signature did not
+  // verify), so its row correctly reads UNPROVEN; the keyless VERIFIED_LOCAL tier
+  // still applies. So it must NOT flip evidence_valid, NOT become a global
+  // integrity error, and NOT force an exit-4 "ledger invalid". Only REAL
+  // corruption (BAD_SIGNATURE, malformed/append-violating/schema-invalid) does.
+  //
+  // This grace applies ONLY when NO trusted key was configured (the keyless
+  // path). When a key/keyring IS configured, an unresolved key_id is a real trust
+  // decision (revoked / expired / wrong id) and MUST fail closed — so key-only
+  // errors stay integrity errors there.
+  const keyConfigured = options.trustedKeyConfigured ?? true;
+  const evidenceIntegrityErrors = keyConfigured
+    ? evidenceResult.errors
+    : evidenceResult.errors.filter((error) => !isKeyResolutionOnlyError(error));
+
+  // Derive freshness. Registry/ledger corruption become global integrity errors
+  // so guard_ok flips and they surface in the status object. Key-only failures
+  // are excluded (see above).
   const globalIntegrity = [
     ...registryErrors.map((error) => ({
       code: error.code,
@@ -166,7 +197,7 @@ export function prepareScan(options: ScanCommandOptions): ScanPreparation {
       message: error.message,
       binding_slug: error.binding_slug
     })),
-    ...evidenceResult.errors.map((error) => ({
+    ...evidenceIntegrityErrors.map((error) => ({
       code: error.code,
       line: error.line ?? undefined,
       message: error.message,
@@ -227,6 +258,7 @@ export function prepareScan(options: ScanCommandOptions): ScanPreparation {
     registryErrors,
     evidence: evidenceResult.events,
     evidenceErrors: evidenceResult.errors,
+    evidenceIntegrityErrors,
     scan,
     status
   };
@@ -250,7 +282,12 @@ export interface ScanCommandResult {
 export function runScanCommand(options: ScanCommandOptions): ScanCommandResult {
   const prepared = prepareScan(options);
   const registryValid = prepared.registryErrors.length === 0;
-  const evidenceValid = prepared.evidenceErrors.length === 0;
+  // evidence_valid / the exit code turn ONLY on real corruption. A pure
+  // missing-key failure (signed proof present, no key to check it) is the
+  // ordinary keyless path, not a ledger-integrity failure — the row already
+  // reads UNPROVEN, and the keyless VERIFIED_LOCAL tier keeps the green light
+  // truthful. This keeps exit 0 (== the human green view) consistent.
+  const evidenceValid = prepared.evidenceIntegrityErrors.length === 0;
 
   // Inferred Swift spans, for the CI human report (spec 8.2 "must print").
   const inferredSpans = prepared.scan.bindings

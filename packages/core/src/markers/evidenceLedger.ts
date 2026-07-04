@@ -299,6 +299,32 @@ export const EvidenceErrorCode = Object.freeze({
 
 export type EvidenceErrorCode = (typeof EvidenceErrorCode)[keyof typeof EvidenceErrorCode];
 
+// A PURE missing-key failure: a signed proof is present but the caller supplied
+// no key (or a keyring that does not know the proof's key_id) to CHECK it. This
+// is NOT ledger corruption — it is the ordinary keyless path (`uc scan` / `uc
+// verify` without --public-key). The proof simply cannot be TRUSTED without the
+// key, so its row reads UNPROVEN and the keyless VERIFIED_LOCAL tier still
+// applies. A key that is present but REJECTS the signature (BAD_SIGNATURE), or a
+// malformed/append-violating/ schema-invalid ledger, is REAL corruption and is
+// NOT in this set.
+const KEY_RESOLUTION_ONLY_CODES: ReadonlySet<EvidenceErrorCode> = new Set([
+  EvidenceErrorCode.SIGNATURE_MISSING,
+  EvidenceErrorCode.UNKNOWN_KEY_ID
+]);
+
+export function isKeyResolutionOnlyError(error: { code: EvidenceErrorCode }): boolean {
+  return KEY_RESOLUTION_ONLY_CODES.has(error.code);
+}
+
+// True when EVERY evidence error is a pure missing-key failure — i.e. the ledger
+// is structurally sound and the only thing wrong is "no key was supplied to
+// verify signed proofs". Callers use this to keep the keyless path exit-0 while
+// still failing closed on genuine corruption. An empty error list is (trivially)
+// key-only-clean.
+export function evidenceErrorsAreKeyResolutionOnly(errors: ReadonlyArray<{ code: EvidenceErrorCode }>): boolean {
+  return errors.every(isKeyResolutionOnlyError);
+}
+
 export interface EvidenceError {
   code: EvidenceErrorCode;
   line: number | null; // 1-based source line, or null for ledger-level errors

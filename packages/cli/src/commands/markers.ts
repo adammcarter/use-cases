@@ -67,6 +67,15 @@ function keyMaterialError(kind: "signing" | "public", origin: string, cause: unk
   return error;
 }
 
+// True when the caller configured trusted key material (--public-key or
+// --keyring). scan/verify use this to distinguish the keyless daily path (no key
+// at all -> a signed proof that can't be checked is NORMAL) from a configured
+// key that fails to resolve a key_id (revoked/expired/wrong -> a real trust
+// failure that must fail closed).
+function markerKeyConfigured(flags: ParsedFlags): boolean {
+  return Boolean(flags.keyring || flags.publicKey);
+}
+
 // Verbatim port of the legacy `markerPublicKeyResolver`.
 function markerPublicKeyResolver(flags: ParsedFlags): ReturnType<typeof singleKeyResolver> {
   // Opt-in multi-key path: --keyring builds a resolver that enforces per-key
@@ -250,6 +259,7 @@ export const markersScanCommand: CliCommand = {
       evidencePath: paths.evidencePath,
       policyMode,
       publicKeyResolver: markerPublicKeyResolver(flags),
+      trustedKeyConfigured: markerKeyConfigured(flags),
       generatedAt: (flags.generatedAt as string | undefined) ?? new Date().toISOString(),
       baseRef: flags.baseRef as string | undefined,
       repoCwd: ctx.workspace_root,
@@ -492,6 +502,7 @@ export const markersVerifyCommand: CliCommand = {
       bindingsPath: paths.bindingsPath,
       evidencePath: paths.evidencePath,
       publicKeyResolver: markerPublicKeyResolver(flags),
+      trustedKeyConfigured: markerKeyConfigured(flags),
       all,
       rowId,
       outPath,

@@ -353,7 +353,12 @@ describe("verify command", () => {
     expect(embeddedContextHash).toBe(recordHash);
   });
 
-  test("a signed proof whose key does not resolve surfaces the real integrity detail + a --public-key hint", () => {
+  // BLOCKER 2b: `verify` RUNS the verifier and never CONSUMES signed proofs, so a
+  // missing --public-key is NOT a reason to abort. With a signed proof present but
+  // no key to check it, verify still verifies the bound row (exit 0) — it does not
+  // fail with LEDGER_INVALID. (A key that REJECTS the signature is different: see
+  // the next test.)
+  test("a missing --public-key does NOT block verify: the bound row is still verified (exit 0, no LEDGER_INVALID)", () => {
     const ws = makeWorkspace();
     bind(ws, ROW_A, "Sources/Checkout/CouponService.swift");
 
@@ -376,23 +381,56 @@ describe("verify command", () => {
     expect(proof.proof_events_appended).toBe(1);
 
     // Re-run verify with a resolver that knows NO keys — exactly what happens when
-    // the caller forgets `--public-key`. The ledger fails signature validation.
+    // the caller forgets `--public-key`. A pure missing-key failure is the keyless
+    // path, not corruption: verify RUNS the verifier for the bound row.
     const emptyResolver: PublicKeyResolver = () => undefined;
     const result = runVerifyCommand({
       ...verifyBase(ws),
       publicKeyResolver: emptyResolver,
+      trustedKeyConfigured: false,
+      all: true,
+      spawnRunner: passSpawn
+    });
+
+    expect(result.exit_code).toBe(0);
+    expect(result.results.map((record) => record.row_id)).toContain(ROW_A);
+    expect(result.results.every((record) => record.status === "pass")).toBe(true);
+    expect(result.errors.map((error) => error.code)).not.toContain("LEDGER_INVALID");
+  });
+
+  // The complement: a key that is PRESENT but REJECTS the proof's signature is
+  // REAL corruption (BAD_SIGNATURE), and verify still fails closed (exit 4).
+  test("a WRONG --public-key (rejects the signature) still fails closed with LEDGER_INVALID (exit 4)", () => {
+    const ws = makeWorkspace();
+    bind(ws, ROW_A, "Sources/Checkout/CouponService.swift");
+    const minted = runVerifyCommand({ ...verifyBase(ws), rowId: ROW_A, spawnRunner: passSpawn });
+    runProveCommand({
+      context: ws.context,
+      productRoot: ws.productRoot,
+      bindingsPath: ws.bindingsPath,
+      evidencePath: ws.evidencePath,
+      publicKeyResolver: resolver,
+      rowId: ROW_A,
+      trustedCi: true,
+      verificationResults: minted.results,
+      signingKey: { privateKey: PRIVATE_KEY, keyId: KEY_ID },
+      generatedAt: GENERATED_AT,
+      idFactory: makeId("01JPROVE")
+    });
+
+    // A resolver that returns a DIFFERENT key for the same key_id -> BAD_SIGNATURE.
+    const wrong = generateKeyPairSync("ed25519");
+    const wrongResolver: PublicKeyResolver = singleKeyResolver(wrong.publicKey);
+    const result = runVerifyCommand({
+      ...verifyBase(ws),
+      publicKeyResolver: wrongResolver,
       all: true,
       spawnRunner: passSpawn
     });
 
     expect(result.exit_code).toBe(4);
-    const codes = result.errors.map((error) => error.code);
-    // The stable top-level code is still emitted...
-    expect(codes).toContain("LEDGER_INVALID");
-    // ...but the ACTUAL cause is no longer swallowed.
-    expect(codes).toContain("UNKNOWN_KEY_ID");
-    // ...and a targeted remediation hint points the caller at --public-key.
-    expect(result.errors.some((error) => /--public-key/.test(error.message))).toBe(true);
+    expect(result.errors.map((error) => error.code)).toContain("LEDGER_INVALID");
+    expect(result.errors.map((error) => error.code)).toContain("BAD_SIGNATURE");
   });
 
   test("writes one JSONL record per targeted row to --out", () => {

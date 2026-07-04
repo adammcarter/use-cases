@@ -75,6 +75,9 @@ export interface VerifyCommandOptions {
   bindingsPath: string;
   evidencePath: string;
   publicKeyResolver: PublicKeyResolver;
+  // See ScanCommandOptions.trustedKeyConfigured. verify never CONSUMES signed
+  // proofs, so with no key configured a missing-key failure never blocks it.
+  trustedKeyConfigured?: boolean;
   generatedAt: string;
   // Target selection: every bound row, or one row.
   all?: boolean;
@@ -154,6 +157,7 @@ export function runVerifyCommand(options: VerifyCommandOptions): VerifyCommandRe
     evidencePath: options.evidencePath,
     policyMode: "feature",
     publicKeyResolver: options.publicKeyResolver,
+    trustedKeyConfigured: options.trustedKeyConfigured,
     generatedAt: options.generatedAt,
     fs,
     commentConfig: options.commentConfig,
@@ -162,40 +166,28 @@ export function runVerifyCommand(options: VerifyCommandOptions): VerifyCommandRe
     repoCwd: options.repoCwd
   });
 
-  if (prepared.registryErrors.length > 0 || prepared.evidenceErrors.length > 0) {
-    // Surface the ACTUAL integrity failures instead of only the opaque top-level
-    // code — the most common one is a signed proof whose key the caller did not
-    // supply, which reads as UNKNOWN_KEY_ID / SIGNATURE_MISSING. Without this the
-    // user sees "LEDGER_INVALID" with no clue that `--public-key` is the fix.
+  // `verify` RUNS the row's verifier command and writes an UNSIGNED results
+  // ledger — it never CONSUMES signed proofs, so it does NOT need --public-key. A
+  // pure missing-key failure (a signed proof present, no key to check it) is
+  // therefore NOT a reason to abort: verify still verifies bound rows. Only REAL
+  // ledger corruption (BAD_SIGNATURE, malformed/append-violating/schema-invalid,
+  // or any registry error) blocks the run with LEDGER_INVALID (exit 4).
+  if (prepared.registryErrors.length > 0 || prepared.evidenceIntegrityErrors.length > 0) {
     const detail = [
       ...prepared.registryErrors.map((error) => ({
         code: error.code,
         message: error.line == null ? error.message : `line ${error.line}: ${error.message}`
       })),
-      ...prepared.evidenceErrors.map((error) => ({
+      ...prepared.evidenceIntegrityErrors.map((error) => ({
         code: error.code,
         message: error.line == null ? error.message : `line ${error.line}: ${error.message}`
       }))
     ];
-    const keyResolutionFailed = prepared.evidenceErrors.some(
-      (error) => error.code === "UNKNOWN_KEY_ID" || error.code === "SIGNATURE_MISSING"
-    );
-    const hint = keyResolutionFailed
-      ? [
-          {
-            code: "HINT",
-            message:
-              "a signed proof could not be verified — pass the trusted public key with " +
-              "`--public-key <path>` (or `--keyring <path>`); without it signed proofs cannot be checked."
-          }
-        ]
-      : [];
     return fail({
       exit_code: 4,
       errors: [
         { code: "LEDGER_INVALID", message: "registry or evidence ledger failed validation" },
-        ...detail,
-        ...hint
+        ...detail
       ]
     });
   }

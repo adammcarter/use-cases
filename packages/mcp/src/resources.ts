@@ -284,6 +284,7 @@ function freshnessView(context: ResolvedWorkspaceContext) {
     evidencePath: paths.evidencePath,
     policyMode: "feature",
     publicKeyResolver: noKeyResolver,
+    trustedKeyConfigured: false,
     generatedAt: new Date().toISOString(),
     repoCwd: context.workspace_root
   });
@@ -305,6 +306,7 @@ function bindingsView(context: ResolvedWorkspaceContext) {
     evidencePath: paths.evidencePath,
     policyMode: "feature",
     publicKeyResolver: noKeyResolver,
+    trustedKeyConfigured: false,
     generatedAt: new Date().toISOString(),
     repoCwd: context.workspace_root
   });
