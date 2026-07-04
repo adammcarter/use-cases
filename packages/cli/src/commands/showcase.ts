@@ -1,15 +1,22 @@
-import type { CliCommand, CommandOutput } from "../command/types.js";
+import { readFileSync } from "node:fs";
+import { createPublicKey } from "node:crypto";
+import { resolve } from "node:path";
+import type { CliCommand, CommandOutput, ParsedFlags } from "../command/types.js";
 import {
   appendShowcaseApproval,
   appendShowcaseFailureDecision,
   appendShowcaseObservation,
   appendShowcaseVerdict,
+  AssuranceTier,
   containedPathOrError,
   correctShowcaseVerdict,
   createCliResult,
   errorEnvelope,
   finishShowcaseRun,
   isValidId,
+  keyringAssuranceTierResolver,
+  keyringResolver,
+  loadKeyring,
   loadPresentationPlanFile,
   loadUseCaseMatrix,
   pauseShowcaseRun,
@@ -19,10 +26,106 @@ import {
   resolveContextOrError,
   resumeShowcaseRun,
   selectShowcasePlan,
+  singleKeyResolver,
   startShowcaseRun,
   type ResolvedContext
 } from "../runtime.js";
 import { workspaceFlags } from "./common.js";
+
+// F3 trusted approval submit path (BLOCKER 1): build the (approvalToken,
+// publicKeyResolver, tierResolver, assuranceFloor) bundle a trusted human
+// sign-off requires from the CLI's key flags. Returns null when no
+// --approval-token was supplied (the additive, backward-compatible default:
+// untrusted_automation, user-required plans stay pending). Throws a coded error
+// (rendered as ok:false, exit 1) when the token/key material is unreadable.
+interface TrustResolvers {
+  resolver: ReturnType<typeof singleKeyResolver>;
+  tierResolver: ReturnType<typeof keyringAssuranceTierResolver>;
+  assuranceFloor: typeof AssuranceTier.TRUSTED_HOST_USER_PRESENCE;
+}
+
+interface ApprovalTokenBundle extends TrustResolvers {
+  approvalToken: unknown;
+}
+
+function keyMaterialError(message: string, code: string): Error {
+  const error = new Error(message);
+  (error as { code?: string }).code = code;
+  return error;
+}
+
+// Build the (resolver, tierResolver, floor) that VERIFY a signed approval token —
+// used both to SUBMIT one (`showcase approve --approval-token`) and to READ an
+// already-embedded one (`showcase status`). --keyring keeps per-key assurance
+// tiers (the real multi-key security model); --public-key nominates a single key
+// as the trusted human signer, so its floor is met by construction. Returns null
+// when neither flag is present (no trust material configured).
+function loadTrustResolvers(flags: ParsedFlags): TrustResolvers | null {
+  const keyringPath = flags.keyring as string | undefined;
+  if (keyringPath) {
+    let keyring;
+    try {
+      keyring = loadKeyring(resolve(process.cwd(), keyringPath));
+    } catch (error) {
+      throw keyMaterialError(
+        `could not read --keyring: ${error instanceof Error ? error.message : String(error)}`,
+        "showcase.approval_keyring_unreadable"
+      );
+    }
+    return {
+      resolver: keyringResolver(keyring),
+      tierResolver: keyringAssuranceTierResolver(keyring),
+      assuranceFloor: AssuranceTier.TRUSTED_HOST_USER_PRESENCE
+    };
+  }
+  const publicKeyPath = flags.publicKey as string | undefined;
+  if (!publicKeyPath) {
+    return null;
+  }
+  let publicKey;
+  try {
+    publicKey = createPublicKey(readFileSync(resolve(process.cwd(), publicKeyPath), "utf8"));
+  } catch (error) {
+    throw keyMaterialError(
+      `could not read/parse --public-key: ${error instanceof Error ? error.message : String(error)}`,
+      "public_key.invalid"
+    );
+  }
+  return {
+    resolver: singleKeyResolver(publicKey),
+    // Operator explicitly nominated this single key as the trusted human signer:
+    // treat it as trusted_host_user_presence so the floor is met. (The keyring
+    // path is where per-key downgrades/revocations live.)
+    tierResolver: () => AssuranceTier.TRUSTED_HOST_USER_PRESENCE,
+    assuranceFloor: AssuranceTier.TRUSTED_HOST_USER_PRESENCE
+  };
+}
+
+function loadApprovalTokenBundle(flags: ParsedFlags): ApprovalTokenBundle | null {
+  const tokenPath = flags.approvalToken as string | undefined;
+  if (!tokenPath) {
+    return null;
+  }
+
+  let approvalToken: unknown;
+  try {
+    approvalToken = JSON.parse(readFileSync(resolve(process.cwd(), tokenPath), "utf8"));
+  } catch (error) {
+    throw keyMaterialError(
+      `could not read/parse --approval-token: ${error instanceof Error ? error.message : String(error)}`,
+      "showcase.approval_token_unreadable"
+    );
+  }
+
+  const trust = loadTrustResolvers(flags);
+  if (!trust) {
+    throw keyMaterialError(
+      "verifying --approval-token needs trusted key material: pass --keyring <path> or --public-key <path>.",
+      "showcase.approval_key_required"
+    );
+  }
+  return { approvalToken, ...trust };
+}
 
 // Non-writing port of the legacy `writeShowcaseResult`: wrap a showcase run
 // result in the canonical envelope (ok=true, complete from the run status) and
@@ -471,7 +574,9 @@ export const showcaseStatusCommand: CliCommand = {
   summary: "Replay and report a showcase run's status.",
   flags: [
     ...workspaceFlags,
-    { key: "run", name: "--run", kind: "string", required: true, valueName: "<id>", summary: "Showcase run id." }
+    { key: "run", name: "--run", kind: "string", required: true, valueName: "<id>", summary: "Showcase run id." },
+    { key: "keyring", name: "--keyring", kind: "string", valueName: "<path>", summary: "Keyring to verify an embedded approval token (else a signed approval reads pending, fail-closed)." },
+    { key: "publicKey", name: "--public-key", kind: "string", valueName: "<path>", summary: "Single trusted public key to verify an embedded approval token (alternative to --keyring)." }
   ],
   handler: ({ argv, flags }) => {
     const context = resolveContextOrError(argv, "showcase.status");
@@ -490,7 +595,22 @@ export const showcaseStatusCommand: CliCommand = {
     if (invalidStatusId !== null) {
       return invalidStatusId;
     }
-    const status = replayShowcaseRun({ context: contextResult, runId });
+    // Verifying an embedded signed approval token needs the trusted key material.
+    // WITHOUT a key, replay fails closed (a signed approval reads pending) — the
+    // same fail-closed default the append path and MCP use.
+    let trust: TrustResolvers | null;
+    try {
+      trust = loadTrustResolvers(flags);
+    } catch (error) {
+      return showcaseCaughtError("showcase.status", error);
+    }
+    const status = replayShowcaseRun({
+      context: contextResult,
+      runId,
+      ...(trust
+        ? { trustResolver: trust.resolver, trustTierResolver: trust.tierResolver, assuranceFloor: trust.assuranceFloor }
+        : {})
+    });
     return {
       envelope: createCliResult("showcase.status", status, {
         ok: true,
@@ -512,7 +632,10 @@ export const showcaseApproveCommand: CliCommand = {
     ...workspaceFlags,
     { key: "run", name: "--run", kind: "string", required: true, valueName: "<id>", summary: "Showcase run id." },
     { key: "statement", name: "--statement", kind: "string", required: true, valueName: "<text>", summary: "Approval statement." },
-    { key: "actor", name: "--actor", kind: "string", valueName: "<type>", summary: "Actor type (defaults to agent)." },
+    { key: "actor", name: "--actor", kind: "string", valueName: "<type>", summary: "Actor type (defaults to agent; --approval-token forces user)." },
+    { key: "approvalToken", name: "--approval-token", kind: "string", valueName: "<path>", summary: "Signed approval token JSON from `uc approve-run` — the ONLY trusted human sign-off path (F3)." },
+    { key: "keyring", name: "--keyring", kind: "string", valueName: "<path>", summary: "Public-key keyring that verifies --approval-token (per-key assurance tiers)." },
+    { key: "publicKey", name: "--public-key", kind: "string", valueName: "<path>", summary: "Single trusted public key that verifies --approval-token (alternative to --keyring)." },
     { key: "idempotencyKey", name: "--idempotency-key", kind: "string", valueName: "<key>", summary: "Idempotency key (defaults to a derived cli: key)." },
     { key: "recordedAt", name: "--recorded-at", kind: "string", valueName: "<iso>", summary: "Recorded-at timestamp for the approval event." }
   ],
@@ -534,21 +657,44 @@ export const showcaseApproveCommand: CliCommand = {
     if (invalidApproveId !== null) {
       return invalidApproveId;
     }
+    // F3 BLOCKER 1: a signed approval token turns this into the trusted human
+    // sign-off path. The verify+append core independently re-checks the
+    // signature, the live-run binding, the nonce burn, expiry, and the key's
+    // keyring-bound assurance tier — trust is COMPUTED, never asserted here. A
+    // signed token is by definition a USER sign-off, so it forces actorType=user.
+    let approvalBundle: ApprovalTokenBundle | null;
+    try {
+      approvalBundle = loadApprovalTokenBundle(flags);
+    } catch (error) {
+      return showcaseCaughtError("showcase.approve", error);
+    }
+    const actorType = (
+      approvalBundle ? "user" : ((flags.actor as string | undefined) ?? "agent")
+    ) as Parameters<typeof appendShowcaseApproval>[0]["actorType"];
     try {
       const result = appendShowcaseApproval({
         context: contextResult,
         runId,
         decision: "approved",
-        actorType: ((flags.actor as string | undefined) ?? "agent") as Parameters<typeof appendShowcaseApproval>[0]["actorType"],
+        actorType,
         hostSurface: "codex.cli",
         statement,
         idempotencyKey: (flags.idempotencyKey as string | undefined) ?? `cli:approve:${runId}:${statement}`,
-        recordedAt: (flags.recordedAt as string | undefined) ?? "2026-06-25T12:04:00.000Z"
-        // SECURITY (F3): this CLI path carries NO signed approval token, so it can
-        // never mint a trusted user sign-off — an agent driving `uc showcase
-        // approve` gets untrusted_automation and a user-required plan stays
-        // pending. Trusted human sign-off comes ONLY from `uc approve-run`, which
-        // signs an out-of-band token with a key outside the agent's scope.
+        recordedAt: (flags.recordedAt as string | undefined) ?? "2026-06-25T12:04:00.000Z",
+        // SECURITY (F3): WITHOUT --approval-token these are all undefined, so the
+        // CLI path carries no signed token — an agent driving `uc showcase
+        // approve` still gets untrusted_automation and a user-required plan stays
+        // pending. WITH --approval-token, the (token, resolver, tierResolver,
+        // floor) bundle drives the existing verify+append gate; the trusted key
+        // material lives OUTSIDE the run ledger (in --keyring / --public-key).
+        ...(approvalBundle
+          ? {
+              approvalToken: approvalBundle.approvalToken as Parameters<typeof appendShowcaseApproval>[0]["approvalToken"],
+              resolver: approvalBundle.resolver,
+              tierResolver: approvalBundle.tierResolver,
+              assuranceFloor: approvalBundle.assuranceFloor
+            }
+          : {})
       });
       return showcaseResultOutput("showcase.approve", result, contextResult, 0);
     } catch (error) {
