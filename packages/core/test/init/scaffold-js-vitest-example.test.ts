@@ -12,9 +12,8 @@ import { scanFileForMarkers } from "../../src/markers/scanner.js";
 // template is not runnable as scaffolded. These tests pin the runnable example.
 //
 // The example row id is `example.feature.happy_path` (the row scaffolded in
-// use-cases/example.yml). The js.vitest preset runs
-//   pnpm -s vitest run tests/use-cases/<row-id>.test.ts
-// so the acceptance test MUST live at tests/use-cases/example.feature.happy_path.test.ts.
+// use-cases/example.yml). The generated run-command hint points at
+// tests/use-cases/<row-id>.test.ts, so the acceptance test MUST live there.
 
 const ROW_ID = "example.feature.happy_path";
 const SRC_REL = "src/example.ts";

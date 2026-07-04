@@ -43,16 +43,24 @@ The everyday "is this behaviour still covered?" check, made instant and setup-fr
 
 ## Planned
 
-### 0.3.0 — higher assurance + tolerance
+### 0.3.0 — higher assurance + adopter reach
 
-- **Refactor-tolerant spans** — stop flagging cosmetic edits (reformatting,
-  comments) without missing real behavioural drift. Deferred from 0.2.0: doing it
-  safely on a code fragment needs a per-language lexer.
-  (`roadmap.deferred.refactor_tolerant_spans`)
-- **Higher-assurance approval tiers** — WebAuthn/passkey, OS-native auth (Touch
-  ID / Windows Hello), and host-signed dialogs, layered onto the same approval
-  verifier for stronger user-presence guarantees.
+- **F1 refactor-tolerant spans with a per-language lexer** — stop flagging
+  cosmetic edits (reformatting, comments) without missing real behavioural drift.
+  Deferred from 0.2.0 after the multiline-string comment-strip safety hole made
+  regex-only normalization too risky. (`roadmap.deferred.refactor_tolerant_spans`)
+- **Higher-assurance approval tiers** — OS-auth, host-dialog, and WebAuthn /
+  passkey approval paths flow into the same approval verifier, raising
+  user-presence guarantees without splitting the trust model.
   (`roadmap.deferred.trusted_host_confirmation_path`)
+- **`uc` approval-request helper** — mint the approval request from the CLI
+  instead of requiring the MCP-only path.
+- **Showcase approval status clarity** — `uc showcase status` surfaces the
+  approver's `actor_type` and `assurance_tier`, so reviewers can see what kind
+  of approval actually backed a run.
+- **Package-manager-agnostic init scaffold** — `uc init --template js-vitest`
+  detects the target workspace lockfile and prints pnpm, yarn, npm, bun, or
+  neutral npx run commands instead of hardcoding pnpm.
 
 ### 1.0.0 — freeze
 

@@ -55,6 +55,14 @@ const DEFAULT_VERIFIER_ID = "acceptance";
 const EXAMPLE_ROW_ID = "example.feature.happy_path";
 const JS_VITEST_SRC_FILE = join("src", "example.ts");
 const JS_VITEST_TEST_FILE = join("tests", "use-cases", `${EXAMPLE_ROW_ID}.test.ts`);
+type InitPackageManager = "pnpm" | "yarn" | "npm" | "bun" | "none";
+
+const PACKAGE_MANAGER_LOCKFILES: { packageManager: InitPackageManager; lockfile: string }[] = [
+  { packageManager: "pnpm", lockfile: "pnpm-lock.yaml" },
+  { packageManager: "yarn", lockfile: "yarn.lock" },
+  { packageManager: "npm", lockfile: "package-lock.json" },
+  { packageManager: "bun", lockfile: "bun.lockb" }
+];
 
 // A template-specific extra file to write (relative path + rendered body).
 type TemplateFile = { relPath: string; body: string };
@@ -64,6 +72,8 @@ export function scaffoldWorkspace(options: ScaffoldWorkspaceOptions): ScaffoldWo
   const repoRoot = resolve(options.repoRoot);
   const componentId = deriveComponentId(options.component ?? baseNameOf(repoRoot));
   const verifier = defaultVerifierFor(template);
+  const packageManager = detectPackageManager(repoRoot);
+  const jsVitestRunCommand = renderJsVitestRunCommand(packageManager, toPosix(JS_VITEST_TEST_FILE));
 
   const blocked = (diagnostic: Diagnostic): ScaffoldWorkspaceResult => ({
     schema_version: 1,
@@ -78,7 +88,7 @@ export function scaffoldWorkspace(options: ScaffoldWorkspaceOptions): ScaffoldWo
 
   // Template-specific runnable-example files (e.g. js-vitest ships a marked
   // source file + a matching vitest test so `verify` works out of the box).
-  const templateFiles = templateFilesFor(template);
+  const templateFiles = templateFilesFor(template, jsVitestRunCommand);
 
   // Path-containment: every write target must stay inside the repo root.
   let configPath: string;
@@ -145,6 +155,31 @@ type VerifierPlan = {
   yaml: string[];
   summary: ScaffoldWorkspaceResult["default_verifier"];
 };
+
+function detectPackageManager(repoRoot: string): InitPackageManager {
+  for (const candidate of PACKAGE_MANAGER_LOCKFILES) {
+    if (existsSync(join(repoRoot, candidate.lockfile))) {
+      return candidate.packageManager;
+    }
+  }
+  return "none";
+}
+
+function renderJsVitestRunCommand(packageManager: InitPackageManager, testPath: string): string {
+  switch (packageManager) {
+    case "pnpm":
+      return `pnpm -s vitest run ${testPath}`;
+    case "yarn":
+      return `yarn vitest run ${testPath}`;
+    case "npm":
+      return `npm exec -- vitest run ${testPath}`;
+    case "bun":
+      return `bun x vitest run ${testPath}`;
+    case "none":
+    default:
+      return `npx vitest run ${testPath}`;
+  }
+}
 
 function defaultVerifierFor(template: InitTemplate): VerifierPlan {
   const preset = (id: string): VerifierPlan => ({
@@ -258,12 +293,12 @@ function renderExampleUseCase(): string {
 // (python-pytest's runnable example lives under examples/, not the scaffolder);
 // js-vitest ships a marked source file + a matching vitest test so that
 // `bind --register-existing` + `verify` succeed immediately after `init`.
-function templateFilesFor(template: InitTemplate): TemplateFile[] {
+function templateFilesFor(template: InitTemplate, jsVitestRunCommand: string): TemplateFile[] {
   switch (template) {
     case "js-vitest":
       return [
         { relPath: JS_VITEST_SRC_FILE, body: renderJsVitestSource() },
-        { relPath: JS_VITEST_TEST_FILE, body: renderJsVitestTest() }
+        { relPath: JS_VITEST_TEST_FILE, body: renderJsVitestTest(jsVitestRunCommand) }
       ];
     default:
       return [];
@@ -296,14 +331,14 @@ function renderJsVitestSource(): string {
 
 // A plain vitest module at the path the `js.vitest` preset derives from the row
 // id (`tests/use-cases/<row-id>.test.ts`), so `uc verify` runs it as-is.
-function renderJsVitestTest(): string {
+function renderJsVitestTest(runCommand: string): string {
   return [
     `// Acceptance test for the \`${EXAMPLE_ROW_ID}\` use-case row.`,
     "//",
-    "// The `js.vitest` verifier preset runs this file with",
-    `//   pnpm -s vitest run tests/use-cases/${EXAMPLE_ROW_ID}.test.ts`,
-    "// (the path the preset derives from the row id). Replace these assertions",
-    "// with real ones as you replace the example row with your own use case.",
+    "// Run this file directly with",
+    `//   ${runCommand}`,
+    "// or let `uc verify` invoke the `js.vitest` preset for the row. Replace",
+    "// these assertions as you replace the example row with your own use case.",
     'import { describe, expect, test } from "vitest";',
     'import { greet } from "../../src/example.js";',
     "",
@@ -358,4 +393,3 @@ function baseNameOf(repoRoot: string): string {
 function toPosix(path: string): string {
   return path.split(sep).join("/");
 }
-
