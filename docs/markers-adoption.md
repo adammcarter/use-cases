@@ -13,9 +13,15 @@ writes them for you, but the grammar is small enough to read and hand-edit.
 A marker is a single source line. After optional leading whitespace it is exactly:
 
 ```
-<comment-prefix>: @use-case:<slug>          # start of a span
+<comment-prefix>: @use-case:<slug>          # start of a span (implicit begin)
+<comment-prefix>: @use-case:begin <slug>    # start of a span (explicit begin)
 <comment-prefix>: @use-case:end <slug>      # end of a span
 ```
+
+The start can be written two ways: a bare slug (**implicit begin**, the default)
+or an explicit **`begin <slug>`**. They are equivalent, except an explicit `begin`
+**requires** an explicit `end` — it never gets an inferred end. The space after
+`@use-case:` is optional on input but the canonical form is spaceless.
 
 - **`<comment-prefix>`** is the file's line-comment prefix, resolved **per file
   extension** — `//` for `.ts/.tsx/.js/.jsx/.mjs/.cjs/.swift/.c/.cc/.cpp/.cxx/.h/.hpp/.m/.mm/.java/.kt/.kts/.go/.rs/.scala`,

@@ -5,6 +5,38 @@ All notable changes to this project are documented here. The format is based on
 follows [Semantic Versioning](https://semver.org) (see docs/release.md). This is
 **pre-1.0 (beta) software**: anything MAY change before `1.0.0`.
 
+## 0.3.0 - unreleased
+
+### Changed
+
+- **Marker grammar is now spaceless.** A marker is `<prefix>: @use-case:<payload>`
+  — the space after `@use-case:` is gone (`//: @use-case:checkout.apply_coupon`,
+  `//: @use-case:end checkout.apply_coupon`). A single space is still tolerated on
+  input for compatibility, but the canonical/emitted form is spaceless. Every
+  in-repo marker was migrated.
+
+### Added
+
+- **Explicit `begin` directive.** For authors who want explicit span boundaries:
+  `//: @use-case:begin <slug>` … `//: @use-case:end <slug>`. An explicit `begin`
+  requires an explicit `end` (it never gets an inferred end). The bare-slug start
+  (`//: @use-case:<slug>`, implicit begin) remains the default and is unchanged.
+- **`uc showcase request-approval`** — mint the unsigned `ucase-approval-request-v1`
+  from the CLI (previously only reachable via the MCP `showcase_request_approval`
+  tool). It cannot sign or approve; an operator still signs out-of-band with
+  `approve-run`.
+- **`uc showcase status` surfaces the approver** — the verified `actor_type` and
+  `assurance_tier` of a run's approval (sourced from the signed token, not a
+  caller-asserted string).
+- **Package-manager-agnostic `uc init` scaffold** — detects the target workspace's
+  lockfile (pnpm/yarn/npm/bun) and emits the matching vitest run command, or a
+  neutral `npx` default, instead of hardcoding pnpm.
+
+### Fixed
+
+- **`uc recover` failure output** — a failed recover now shows the reason and the
+  next step in human output (previously only in `--json`).
+
 ## 0.2.0 - 2026-07-04
 
 Trustworthiness + reach: know what a change touches, and make human sign-off
