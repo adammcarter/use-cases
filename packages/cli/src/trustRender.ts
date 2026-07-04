@@ -258,23 +258,30 @@ function renderImpact(data: ImpactData): string[] {
 
 // --- dispatch -----------------------------------------------------------------
 
-// Render one of the trust commands' human views, or return null when the command
-// is not a trust command (the caller then falls back to the generic dumper). The
-// caller has already decided this is the non-json path AND that the envelope
-// succeeded (error envelopes keep the generic diagnostics view).
+// Render one of the trust commands' human views, or return null so the caller
+// falls back to the generic dumper. Returns null when the command is not a trust
+// command OR when the payload lacks the command's trust-data shape — the latter
+// is how a genuine ERROR envelope (workspace-not-found, bad args: ok:false with
+// no status/results/impacted) keeps its generic diagnostics view. A NON-GREEN
+// trust result (ok:false but with a real status/results payload) DOES render
+// here — that is a normal outcome the human view is meant to show.
 export function renderTrustHuman(command: string, data: unknown): string | null {
   if (!TRUST_COMMANDS.has(command) || data === null || typeof data !== "object") {
     return null;
   }
+  const d = data as Record<string, unknown>;
   let body: string[];
   switch (command) {
     case "markers.scan":
+      if (typeof d.status !== "object" || d.status === null) return null;
       body = renderScan(data as ScanData);
       break;
     case "markers.verify":
+      if (!Array.isArray(d.results)) return null;
       body = renderVerify(data as VerifyData);
       break;
     case "markers.impact":
+      if (!Array.isArray(d.impacted)) return null;
       body = renderImpact(data as ImpactData);
       break;
     default:

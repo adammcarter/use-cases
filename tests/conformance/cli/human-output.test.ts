@@ -298,12 +298,20 @@ describe("F4: human-readable trust output (scan / verify / impact)", () => {
     const result = uc(dir, ["verify", "--repo", dir, "--all", "--public-key", publicKeyPath]);
     expect(isJson(result.stdout)).toBe(false);
     const out = result.stdout;
+    // verify with any non-passing row returns ok:false — a NORMAL trust outcome,
+    // not an error. The human view MUST still render (the F4 blocker was gating it
+    // on ok===true, so failing runs fell through to the raw dump).
     expect(out).toContain(ROW_FRESH);
     expect(out).toContain(ROW_SUSPECT);
-    // A per-row verdict word.
-    expect(out.toLowerCase()).toMatch(/pass|fail|blocked/);
-    // A headline count.
-    expect(out.toLowerCase()).toMatch(/behaviour|verif/);
+    // Human-specific headline (the generic dumper prints `command: markers.verify`,
+    // never `verify: N behaviours`).
+    expect(out).toMatch(/verify: \d+ behaviour/);
+    // A per-row verdict badge + word.
+    expect(out).toMatch(/[✓✗] (PASS|FAIL|BLOCKED)/);
+    // The per-row action line is emitted ONLY by renderVerify, and ONLY reachable
+    // now that the human view renders for a non-green (ok:false) verify result —
+    // this is the regression guard for the fixed blocker.
+    expect(out).toContain("→ fix the row and re-run");
   });
 
   test("`impact` (no --json) prints an 'impacted' list with the impacted row id", () => {

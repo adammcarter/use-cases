@@ -27,13 +27,15 @@ export function renderEnvelope(envelope: unknown, json: boolean): string {
   }
   const record = envelope as RenderableEnvelope;
   // The daily trust commands (scan / verify / impact) get a friendly at-a-glance
-  // view when they SUCCEEDED. Error envelopes (ok:false, no expected data shape)
-  // fall through to the generic dumper so their diagnostics still surface.
-  if (record.ok === true) {
-    const trust = renderTrustHuman(record.command, record.data);
-    if (trust !== null) {
-      return trust;
-    }
+  // view — INCLUDING when the trust result is non-green. A `verify` with a failing
+  // row, or a SUSPECT/INVALID scan, returns ok:false but that is a NORMAL trust
+  // outcome, not an error, and is exactly the case the human view is for. So we do
+  // NOT gate on ok: renderTrustHuman returns null for non-trust commands AND for
+  // genuine error envelopes (no trust-data shape — e.g. workspace-not-found),
+  // which then fall through to the generic diagnostics dumper.
+  const trust = renderTrustHuman(record.command, record.data);
+  if (trust !== null) {
+    return trust;
   }
   return renderHumanEnvelope(record);
 }
