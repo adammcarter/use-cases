@@ -344,7 +344,12 @@ function renderRecover(data: RecoverData): string[] {
 // no status/results/impacted) keeps its generic diagnostics view. A NON-GREEN
 // trust result (ok:false but with a real status/results payload) DOES render
 // here — that is a normal outcome the human view is meant to show.
-export function renderTrustHuman(command: string, data: unknown, ok?: boolean): string | null {
+export function renderTrustHuman(
+  command: string,
+  data: unknown,
+  ok?: boolean,
+  diagnostics?: Array<{ code?: string; severity?: string; message?: string }>,
+): string | null {
   if (!TRUST_COMMANDS.has(command) || data === null || typeof data !== "object") {
     return null;
   }
@@ -382,8 +387,37 @@ export function renderTrustHuman(command: string, data: unknown, ok?: boolean): 
   // unchanged. `exit_code` (when present in data) is surfaced for precision.
   const failed = ok === false;
   const banner = failed ? [failureBanner(command, d)] : [];
-  const lines = [...banner, ...body, "", JSON_FOOTER];
+  // On failure, surface the envelope's diagnostics (the WHY + the next step).
+  // Without this, a failure that carries no status rows — notably `recover`'s
+  // verifier-failed path, which returns before it can scan — prints only the
+  // headline and leaves the reader with no reason and no action. The generic
+  // dumper shows diagnostics; the concise trust view must not lose them.
+  const why = failed ? renderDiagnosticLines(diagnostics) : [];
+  // Avoid a double blank where a body that already ends in a spacer meets the
+  // diagnostics block (which leads with its own spacer).
+  const trimmedBody = why.length > 0 && body[body.length - 1] === "" ? body.slice(0, -1) : body;
+  const lines = [...banner, ...trimmedBody, ...why, "", JSON_FOOTER];
   return `${lines.join("\n")}\n`;
+}
+
+// Diagnostic lines for a failed trust command, in the same glyph vocabulary the
+// generic envelope dumper uses so the two views read alike. Empty when there are
+// no diagnostics (nothing to add) — the caller only invokes this on failure.
+function renderDiagnosticLines(
+  diagnostics?: Array<{ code?: string; severity?: string; message?: string }>,
+): string[] {
+  const usable = (diagnostics ?? []).filter(
+    (d) => typeof d?.message === "string" && d.message.length > 0,
+  );
+  if (usable.length === 0) return [];
+  const out: string[] = [""];
+  for (const d of usable) {
+    const severity = d.severity ?? "info";
+    const glyph = severity === "error" ? "✗" : severity === "warning" ? "!" : "·";
+    const code = d.code ? `${d.code}: ` : "";
+    out.push(`  ${glyph} ${code}${d.message}`);
+  }
+  return out;
 }
 
 // The leading line shown when a trust COMMAND failed (envelope ok:false). Uses
@@ -393,5 +427,5 @@ function failureBanner(command: string, data: Record<string, unknown>): string {
   const verb = command.slice("markers.".length);
   const exit = typeof data.exit_code === "number" ? data.exit_code : undefined;
   const suffix = exit !== undefined ? ` (exit ${exit})` : "";
-  return `✗ ${verb} FAILED${suffix} — see the rows below; add --json for the machine-readable envelope.\n`;
+  return `✗ ${verb} FAILED${suffix} — details below; add --json for the machine-readable envelope.\n`;
 }

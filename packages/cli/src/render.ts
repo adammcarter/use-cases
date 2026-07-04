@@ -39,7 +39,7 @@ export function renderEnvelope(envelope: unknown, json: boolean): string {
   // command failed. Per-row glyphs can legitimately be green (e.g. a keyless
   // VERIFIED_LOCAL row) while the command as a whole FAILED (exit 4) — the banner
   // reconciles the two so the human framing matches the envelope ok.
-  const trust = renderTrustHuman(record.command, record.data, record.ok);
+  const trust = renderTrustHuman(record.command, record.data, record.ok, record.diagnostics);
   if (trust !== null) {
     return trust;
   }

@@ -205,6 +205,45 @@ describe("recover — concise human view (not the raw status envelope)", () => {
     // Gives the user a next action.
     expect(human).toMatch(/→|next|verify|scan/i);
   });
+
+  test("recover that fails BEFORE it can scan (no status rows) still tells the user WHY and what to do", () => {
+    // The verifier-failed path returns before recover can produce a status
+    // block, so `status.rows` is empty. The only source of the reason + the next
+    // step is the envelope diagnostic. A concise view that dropped it left the
+    // reader with a bare "could NOT recover" headline and a blank line — the
+    // 0.2.0 regression this test locks shut.
+    const env = {
+      command: "markers.recover",
+      ok: false,
+      complete: false,
+      data: {
+        exit_code: 1,
+        recovered: false,
+        proved: false,
+        target: "checkout.apply_coupon",
+        results_path: "/tmp/x/.use-cases/verification-results.jsonl",
+        status: { schema: "ucase-freshness-status-v1", rows: [] }
+      },
+      diagnostics: [
+        {
+          code: "recover.verification_failed",
+          severity: "error",
+          message:
+            "recover could not restore checkout.apply_coupon to green: the verifier failed. Fix the code or the test, then re-run `uc recover`. Inspect the failure with `uc verify --row checkout.apply_coupon`."
+        }
+      ]
+    };
+    const human = renderEnvelope(env, false);
+    // Reads as failure, never as unqualified green.
+    expect(looksUnqualifiedGreen(human)).toBe(false);
+    expect(human).toMatch(/could NOT recover|FAILED/i);
+    // The WHY (verifier failed) and the next step (re-run / uc verify) survive
+    // into the concise human view — not just the --json envelope.
+    expect(human).toMatch(/verifier failed/i);
+    expect(human).toMatch(/uc verify --row checkout\.apply_coupon/);
+    // Still concise — no raw hash tree leaked in.
+    expect(human).not.toMatch(/span_sha256s/);
+  });
 });
 
 describe("scan count vocabulary — keyless VERIFIED_LOCAL is not conflated with signed FRESH", () => {
