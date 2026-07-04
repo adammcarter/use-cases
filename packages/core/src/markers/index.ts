@@ -22,6 +22,8 @@ export * from "./swiftFuncRecognizer.js";
 export * from "./registry.js";
 export * from "./appendOnly.js";
 export * from "./reconcile.js";
+// 0.2.0 F2: pure git-diff helpers backing the change-impact map.
+export * from "./gitDiff.js";
 // Phase 5: evidence ledger validation + trusted-CI proof signatures.
 export * from "./proofSignature.js";
 export * from "./evidenceLedger.js";
