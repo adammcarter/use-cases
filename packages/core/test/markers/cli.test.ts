@@ -261,8 +261,8 @@ describe("bind command", () => {
     expect(result.scan_result?.extent_kind).toBe("explicit");
 
     const source = readFileSync(join(ws.productRoot, "Sources/Checkout/CouponRules.swift"), "utf8");
-    expect(source).toContain("//: @use-case: checkout.apply_coupon#tax");
-    expect(source).toContain("//: @use-case: end checkout.apply_coupon#tax");
+    expect(source).toContain("//: @use-case:checkout.apply_coupon#tax");
+    expect(source).toContain("//: @use-case:end checkout.apply_coupon#tax");
 
     const registry = readFileSync(ws.bindingsPath, "utf8").trim().split("\n");
     expect(registry).toHaveLength(1);
@@ -277,7 +277,7 @@ describe("bind command", () => {
     expect(result.scan_result?.extent_kind).toBe("swift_func_inferred");
 
     const source = readFileSync(join(ws.productRoot, "Sources/Checkout/CouponService.swift"), "utf8");
-    expect(source).toContain("//: @use-case: checkout.apply_coupon\n@MainActor");
+    expect(source).toContain("//: @use-case:checkout.apply_coupon\n@MainActor");
 
     const registry = readFileSync(ws.bindingsPath, "utf8").trim().split("\n");
     expect(registry).toHaveLength(1);
@@ -315,7 +315,7 @@ describe("bind command", () => {
 
     expect(result.exit_code).toBe(0);
     const source = readFileSync(hookAbs, "utf8");
-    expect(source).toContain("#: @use-case: checkout.apply_coupon");
+    expect(source).toContain("#: @use-case:checkout.apply_coupon");
     expect(statSync(hookAbs).mode & 0o111).not.toBe(0);
   });
 });

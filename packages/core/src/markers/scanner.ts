@@ -179,6 +179,22 @@ function resolveLoneStart(
   start: MarkerHit
 ): { binding?: CurrentBindingRecord; error?: MarkerError } {
   const slug = start.parse.slug;
+
+  // An explicit `begin` marker must be closed by an explicit `end` — it never
+  // gets an inferred end, even in Swift. The author opted into explicit span
+  // boundaries, so a missing end is an error, not an inference candidate.
+  if (start.parse.kind === "start" && start.parse.explicit) {
+    return {
+      error: {
+        code: MarkerErrorCode.UNSUPPORTED_INFERENCE,
+        message: `explicit begin marker for ${slug} has no matching end; add "${commentPrefix}: @use-case:end ${slug}"`,
+        file_path: filePath,
+        line: start.lineIndex + 1,
+        slug
+      }
+    };
+  }
+
   const isSwift = commentPrefix === "//" && fileExtension(filePath) === ".swift";
 
   if (!isSwift) {
@@ -200,7 +216,7 @@ function resolveLoneStart(
     return {
       error: {
         code: result.code,
-        message: `${result.message}; fix: add an explicit "${commentPrefix}: @use-case: end ${slug}" or move the marker`,
+        message: `${result.message}; fix: add an explicit "${commentPrefix}: @use-case:end ${slug}" or move the marker`,
         file_path: filePath,
         line: start.lineIndex + 1,
         slug

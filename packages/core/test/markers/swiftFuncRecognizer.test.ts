@@ -27,7 +27,7 @@ describe("Swift recognizer -- supported forms (spec 9.1, acceptance 1/2)", () =>
     const src = [
       "import Foundation", // line 1
       "", // 2
-      "//: @use-case: checkout.apply_coupon", // 3 (marker)
+      "//: @use-case:checkout.apply_coupon", // 3 (marker)
       "@MainActor", // 4  <- span start
       "@available(iOS 17, *)", // 5
       "public func applyCoupon(_ code: String) async throws -> Int {", // 6
@@ -44,7 +44,7 @@ describe("Swift recognizer -- supported forms (spec 9.1, acceptance 1/2)", () =>
 
   test("#2 multiline generic signature with where-clause -> correct span", () => {
     const src = [
-      "//: @use-case: checkout.apply_coupon", // 1
+      "//: @use-case:checkout.apply_coupon", // 1
       "@MainActor", // 2  <- start
       "public func applyCoupon<T>(_ code: String, cart: T) async throws -> CouponResult", // 3
       "    where T: CartLike {", // 4
@@ -61,7 +61,7 @@ describe("Swift recognizer -- supported forms (spec 9.1, acceptance 1/2)", () =>
   });
 
   test("no modifiers / no attributes: span starts at the func line", () => {
-    const src = ["//: @use-case: a.b", "func f() {", "  doThing()", "}"].join("\n");
+    const src = ["//: @use-case:a.b", "func f() {", "  doThing()", "}"].join("\n");
     const r = recognize(src);
     expect(r.ok).toBe(true);
     if (!r.ok) return;
@@ -72,7 +72,7 @@ describe("Swift recognizer -- supported forms (spec 9.1, acceptance 1/2)", () =>
   test("type-member func is supported", () => {
     const src = [
       "struct Cart {",
-      "    //: @use-case: cart.total",
+      "    //: @use-case:cart.total",
       "    func total() -> Int {",
       "        return 0",
       "    }",
@@ -89,7 +89,7 @@ describe("Swift recognizer -- supported forms (spec 9.1, acceptance 1/2)", () =>
   test("class func (type method) is supported; symbol name captured", () => {
     const src = [
       "class C {",
-      "    //: @use-case: c.make",
+      "    //: @use-case:c.make",
       "    class func make() -> C {",
       "        return C()",
       "    }",
@@ -104,7 +104,7 @@ describe("Swift recognizer -- supported forms (spec 9.1, acceptance 1/2)", () =>
   test("operator func captures the operator as the symbol name", () => {
     const src = [
       "struct V {",
-      "    //: @use-case: v.eq",
+      "    //: @use-case:v.eq",
       "    static func == (l: V, r: V) -> Bool {",
       "        return true",
       "    }",
@@ -120,7 +120,7 @@ describe("Swift recognizer -- supported forms (spec 9.1, acceptance 1/2)", () =>
     const src = [
       "extension Cart",
       "    where Element: Equatable {",
-      "    //: @use-case: cart.dedupe",
+      "    //: @use-case:cart.dedupe",
       "    func dedupe() {",
       "    }",
       "}"
@@ -135,7 +135,7 @@ describe("Swift recognizer -- supported forms (spec 9.1, acceptance 1/2)", () =>
 describe("Swift recognizer -- brace matching skips strings/comments", () => {
   test("a `}` inside a string literal does NOT end the span early", () => {
     const src = [
-      "//: @use-case: a.b", // 1
+      "//: @use-case:a.b", // 1
       "func f() {", // 2
       '    let s = "this } is not a brace"', // 3
       '    let t = "neither is this { one"', // 4
@@ -151,7 +151,7 @@ describe("Swift recognizer -- brace matching skips strings/comments", () => {
 
   test("multiline and raw strings containing braces are skipped", () => {
     const src = [
-      "//: @use-case: a.b",
+      "//: @use-case:a.b",
       "func f() {",
       '    let m = """',
       "    } still in the string {",
@@ -168,7 +168,7 @@ describe("Swift recognizer -- brace matching skips strings/comments", () => {
 
   test("string interpolation with a closure brace is handled", () => {
     const src = [
-      "//: @use-case: a.b",
+      "//: @use-case:a.b",
       "func f() {",
       '    let s = "count=\\(items.map { $0 }.count)"',
       "    print(s)",
@@ -185,7 +185,7 @@ describe("Swift recognizer -- placement rule (spec 9.2, acceptance 3/4/5)", () =
   test("#3 marker AFTER @MainActor -> MARKER_INSIDE_ATTACHED_DECLARATION", () => {
     const src = [
       "@MainActor",
-      "//: @use-case: checkout.apply_coupon",
+      "//: @use-case:checkout.apply_coupon",
       "public func applyCoupon() {",
       "}"
     ].join("\n");
@@ -198,7 +198,7 @@ describe("Swift recognizer -- placement rule (spec 9.2, acceptance 3/4/5)", () =
   test("marker AFTER a bare modifier -> MARKER_INSIDE_ATTACHED_DECLARATION", () => {
     const src = [
       "public",
-      "//: @use-case: a.b",
+      "//: @use-case:a.b",
       "func f() {",
       "}"
     ].join("\n");
@@ -210,7 +210,7 @@ describe("Swift recognizer -- placement rule (spec 9.2, acceptance 3/4/5)", () =
 
   test("#4 marker followed by a blank line -> MARKER_NOT_ADJACENT_TO_DECLARATION", () => {
     const src = [
-      "//: @use-case: checkout.apply_coupon",
+      "//: @use-case:checkout.apply_coupon",
       "",
       "public func applyCoupon() {",
       "}"
@@ -223,7 +223,7 @@ describe("Swift recognizer -- placement rule (spec 9.2, acceptance 3/4/5)", () =
 
   test("#5 marker followed by a comment -> MARKER_NOT_ADJACENT_TO_DECLARATION", () => {
     const src = [
-      "//: @use-case: checkout.apply_coupon",
+      "//: @use-case:checkout.apply_coupon",
       "// TODO: coupon behavior",
       "public func applyCoupon() {",
       "}"
@@ -239,7 +239,7 @@ describe("Swift recognizer -- unsupported forms (spec 9.1, acceptance 6/7)", () 
   test("#6 protocol requirement with no body -> FUNC_HAS_NO_BODY", () => {
     const src = [
       "protocol P {",
-      "    //: @use-case: p.req",
+      "    //: @use-case:p.req",
       "    func required() -> Int",
       "}"
     ].join("\n");
@@ -250,7 +250,7 @@ describe("Swift recognizer -- unsupported forms (spec 9.1, acceptance 6/7)", () 
   });
 
   test("marker before var -> NEXT_NODE_NOT_FUNC", () => {
-    const src = ["//: @use-case: a.b", "var x = 1"].join("\n");
+    const src = ["//: @use-case:a.b", "var x = 1"].join("\n");
     const r = recognize(src);
     expect(r.ok).toBe(false);
     if (r.ok) return;
@@ -259,7 +259,7 @@ describe("Swift recognizer -- unsupported forms (spec 9.1, acceptance 6/7)", () 
 
   test("marker before init -> NEXT_NODE_NOT_FUNC", () => {
     const src = [
-      "//: @use-case: a.b",
+      "//: @use-case:a.b",
       "init(x: Int) {",
       "    self.x = x",
       "}"
@@ -272,7 +272,7 @@ describe("Swift recognizer -- unsupported forms (spec 9.1, acceptance 6/7)", () 
 
   test("marker before subscript -> NEXT_NODE_NOT_FUNC", () => {
     const src = [
-      "//: @use-case: a.b",
+      "//: @use-case:a.b",
       "subscript(i: Int) -> Int {",
       "    return 0",
       "}"
@@ -285,7 +285,7 @@ describe("Swift recognizer -- unsupported forms (spec 9.1, acceptance 6/7)", () 
 
   test("marker before a computed property (var with body) -> NEXT_NODE_NOT_FUNC", () => {
     const src = [
-      "//: @use-case: a.b",
+      "//: @use-case:a.b",
       "var total: Int {",
       "    return 1",
       "}"
@@ -299,7 +299,7 @@ describe("Swift recognizer -- unsupported forms (spec 9.1, acceptance 6/7)", () 
   test("#7 marker before a nested func -> NESTED_FUNC_UNSUPPORTED", () => {
     const src = [
       "func outer() {",
-      "    //: @use-case: a.b",
+      "    //: @use-case:a.b",
       "    func inner() {",
       "        doThing()",
       "    }",
@@ -314,7 +314,7 @@ describe("Swift recognizer -- unsupported forms (spec 9.1, acceptance 6/7)", () 
   test("marker before a func inside a closure -> NESTED_FUNC_UNSUPPORTED", () => {
     const src = [
       "let handler = run {",
-      "    //: @use-case: a.b",
+      "    //: @use-case:a.b",
       "    func helper() {",
       "    }",
       "}"
@@ -330,7 +330,7 @@ describe("Swift recognizer -- conditional compilation (spec 9.3 rule 8)", () => 
   test("declaration inside #if -> CONDITIONAL_COMPILATION_IN_SPAN", () => {
     const src = [
       "#if DEBUG",
-      "//: @use-case: a.b",
+      "//: @use-case:a.b",
       "func f() {",
       "}",
       "#endif"
@@ -343,7 +343,7 @@ describe("Swift recognizer -- conditional compilation (spec 9.3 rule 8)", () => 
 
   test("#if directive inside the computed span -> CONDITIONAL_COMPILATION_IN_SPAN", () => {
     const src = [
-      "//: @use-case: a.b",
+      "//: @use-case:a.b",
       "func f() {",
       "#if DEBUG",
       "    log()",
@@ -360,10 +360,10 @@ describe("Swift recognizer -- conditional compilation (spec 9.3 rule 8)", () => 
 describe("Swift recognizer -- another marker inside the span (spec 9.3 rule 9)", () => {
   test("a second marker inside the computed span -> ANOTHER_MARKER_INSIDE_SPAN", () => {
     const src = [
-      "//: @use-case: checkout.outer",
+      "//: @use-case:checkout.outer",
       "@MainActor",
       "public func outer() {",
-      "    //: @use-case: checkout.inner",
+      "    //: @use-case:checkout.inner",
       "    doThing()",
       "}"
     ].join("\n");
@@ -376,7 +376,7 @@ describe("Swift recognizer -- another marker inside the span (spec 9.3 rule 9)",
 
 describe("Swift recognizer -- parse error / no closing brace", () => {
   test("func body with no closing brace -> FUNC_BODY_HAS_NO_CLOSING_BRACE", () => {
-    const src = ["//: @use-case: a.b", "func f() {", "    doThing()"].join("\n");
+    const src = ["//: @use-case:a.b", "func f() {", "    doThing()"].join("\n");
     const r = recognize(src);
     expect(r.ok).toBe(false);
     if (r.ok) return;
@@ -393,7 +393,7 @@ describe("scanner wiring -- inferred Swift binding (acceptance 9 / CI print)", (
   const SRC = [
     "import Foundation", // 1
     "", // 2
-    "//: @use-case: checkout.apply_coupon#handler", // 3 (marker)
+    "//: @use-case:checkout.apply_coupon#handler", // 3 (marker)
     "@MainActor", // 4 start
     "public func applyCoupon(_ code: String) -> Int {", // 5
     "    return 1", // 6
@@ -460,11 +460,11 @@ describe("scanner wiring -- inferred Swift binding (acceptance 9 / CI print)", (
 describe("scanner wiring -- explicit end still wins (spec 2.1 rule 6)", () => {
   test("a Swift func with explicit start+end resolves as explicit, not inferred", () => {
     const src = [
-      "//: @use-case: a.b",
+      "//: @use-case:a.b",
       "func f() {",
       "    return",
       "}",
-      "//: @use-case: end a.b"
+      "//: @use-case:end a.b"
     ].join("\n");
     const result = scanFileForMarkers("f.swift", src);
     expect(result.errors).toEqual([]);
@@ -475,21 +475,21 @@ describe("scanner wiring -- explicit end still wins (spec 2.1 rule 6)", () => {
 
 describe("scanner wiring -- unsupported inference stays INVALID (acceptance 8, 11.3)", () => {
   test("TypeScript function marker without explicit end -> UNSUPPORTED_INFERENCE", () => {
-    const src = ["//: @use-case: a.b", "export function f() {}"].join("\n");
+    const src = ["//: @use-case:a.b", "export function f() {}"].join("\n");
     const result = scanFileForMarkers("src/f.ts", src);
     expect(result.bindings).toHaveLength(0);
     expect(result.errors.map((e) => e.code)).toContain("UNSUPPORTED_INFERENCE");
   });
 
   test("Python function marker without explicit end -> UNSUPPORTED_INFERENCE", () => {
-    const src = ["#: @use-case: a.b", "def f():", "    pass"].join("\n");
+    const src = ["#: @use-case:a.b", "def f():", "    pass"].join("\n");
     const result = scanFileForMarkers("scripts/f.py", src);
     expect(result.bindings).toHaveLength(0);
     expect(result.errors.map((e) => e.code)).toContain("UNSUPPORTED_INFERENCE");
   });
 
   test("unsupported Swift form via the scanner is INVALID with a 9.4 code", () => {
-    const src = ["//: @use-case: a.b", "var x = 1"].join("\n");
+    const src = ["//: @use-case:a.b", "var x = 1"].join("\n");
     const result = scanFileForMarkers("f.swift", src);
     expect(result.bindings).toHaveLength(0);
     expect(result.errors.map((e) => e.code)).toContain("NEXT_NODE_NOT_FUNC");
@@ -497,10 +497,10 @@ describe("scanner wiring -- unsupported inference stays INVALID (acceptance 8, 1
 
   test("two separate inferred funcs in one Swift file both resolve", () => {
     const src = [
-      "//: @use-case: a.one",
+      "//: @use-case:a.one",
       "func one() {",
       "}",
-      "//: @use-case: a.two",
+      "//: @use-case:a.two",
       "func two() {",
       "}"
     ].join("\n");

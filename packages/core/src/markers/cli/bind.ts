@@ -239,7 +239,7 @@ function insertMarker(
   options: BindCommandOptions
 ): InsertResult {
   const { lines, terminator } = splitKeepingTerminator(source);
-  const marker = `${commentPrefix}: @use-case: ${slug}`;
+  const marker = `${commentPrefix}: @use-case:${slug}`;
 
   if (options.mode === "swift-func") {
     if (options.line === undefined || options.line < 1) {
@@ -265,7 +265,7 @@ function insertMarker(
       }
     };
   }
-  const endMarker = `${commentPrefix}: @use-case: end ${slug}`;
+  const endMarker = `${commentPrefix}: @use-case:end ${slug}`;
   // Insert end first (higher index) so the start insertion does not shift it.
   lines.splice(options.endLine, 0, endMarker);
   lines.splice(options.startLine - 1, 0, marker);

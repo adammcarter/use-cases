@@ -22,7 +22,7 @@
     },
     "kind": {
       "enum": ["start", "end"],
-      "description": "start = a begin marker (`<prefix>: @use-case: <slug>`); end = `<prefix>: @use-case: end <slug>`."
+      "description": "start = a begin marker (`<prefix>: @use-case:<slug>`); end = `<prefix>: @use-case:end <slug>`."
     },
     "slug": {
       "$ref": "#/$defs/slug",

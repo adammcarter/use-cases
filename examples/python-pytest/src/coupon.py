@@ -10,7 +10,7 @@ spelling of the same convention `//` languages use. No JavaScript, pnpm, or
 vitest is involved anywhere in this project.
 """
 
-#: @use-case: example.checkout.apply_coupon
+#: @use-case:example.checkout.apply_coupon
 COUPONS = {
     "SAVE10": 10,  # 10% off
     "HALF": 50,  # 50% off
@@ -29,4 +29,4 @@ def apply_coupon(subtotal_cents: int, code: str) -> int:
         raise KeyError(f"unknown coupon: {code}")
     discount = subtotal_cents * COUPONS[code] // 100
     return subtotal_cents - discount
-#: @use-case: end example.checkout.apply_coupon
+#: @use-case:end example.checkout.apply_coupon

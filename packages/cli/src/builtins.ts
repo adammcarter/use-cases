@@ -119,7 +119,7 @@ function selectUsageEntries(tokens: string[]): UsageEntry[] {
   return group.length > 0 ? group : USAGE;
 }
 
-//: @use-case: diagnostics.contracts.cli_self_documents
+//: @use-case:diagnostics.contracts.cli_self_documents
 function runHelp(argv: string[], options: { unknown?: boolean; json?: boolean } = {}): number {
   const tokens = argv.filter((arg) => !arg.startsWith("-"));
   const commands = selectUsageEntries(tokens);
@@ -195,7 +195,7 @@ function renderHelpText(
   lines.push("Add --json to any command for the machine-readable result envelope.");
   return `${lines.join("\n")}\n`;
 }
-//: @use-case: end diagnostics.contracts.cli_self_documents
+//: @use-case:end diagnostics.contracts.cli_self_documents
 
 function runInit(argv: string[], wantsJson: boolean): number {
   const repoRoot = resolve(process.cwd(), valueAfter(argv, "--repo") ?? ".");

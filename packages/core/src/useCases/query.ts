@@ -10,7 +10,7 @@ export type UseCaseQuery = {
   changedPaths?: readonly string[];
 };
 
-//: @use-case: matrix.product.coverage_by_value_and_journey
+//: @use-case:matrix.product.coverage_by_value_and_journey
 export function queryUseCases(snapshot: MatrixSnapshot, query: UseCaseQuery = {}): LoadedUseCase[] {
   return snapshot.addressableUseCases
     .filter((item) => matchesValueTier(item, query))
@@ -21,7 +21,7 @@ export function queryUseCases(snapshot: MatrixSnapshot, query: UseCaseQuery = {}
     .filter((item) => matchesChangedPaths(item, query))
     .sort((left, right) => left.value.id.localeCompare(right.value.id));
 }
-//: @use-case: end matrix.product.coverage_by_value_and_journey
+//: @use-case:end matrix.product.coverage_by_value_and_journey
 
 function matchesValueTier(item: LoadedUseCase, query: UseCaseQuery): boolean {
   return !query.valueTiers?.length || query.valueTiers.includes(item.value.value_tier);

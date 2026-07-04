@@ -128,7 +128,7 @@ claims surface instead of being silently trusted.
   hash-chained proof/evidence ledger and fail-closed ed25519 signature
   verification (`FRESH` / `SUSPECT` / `UNPROVEN` / `UNBOUND` / `INVALID`). A
   keyring supports per-key status + validity windows, rotation, and revocation.
-- **Language-agnostic markers** (`//: @use-case: <id>` … `end`) with per-file
+- **Language-agnostic markers** (`//: @use-case:<id>` … `end`) with per-file
   comment-prefix inference; verifier presets for any language/CI (`js-vitest`,
   `python-pytest`, `go-test`, `generic`).
 - **One contract, two transports** — every CLI `--json` envelope is mirrored by

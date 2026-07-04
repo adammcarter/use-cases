@@ -53,8 +53,8 @@ signing key must be a PKCS8 ed25519 PEM — see
 [key management](./security/key-management.md) for how to generate one.
 
 - `uc bind --row <id> --file <path> --mode explicit --start-line <n> --end-line <n> [--repo <path>] [--json]`:
-  bind a row to a code span. `--mode explicit` inserts `//: @use-case: <id>` …
-  `//: @use-case: end <id>` markers around the span (the comment prefix is inferred
+  bind a row to a code span. `--mode explicit` inserts `//: @use-case:<id>` …
+  `//: @use-case:end <id>` markers around the span (the comment prefix is inferred
   per file type). Use `--register-existing` to register a span whose markers are
   already present in the file instead of inserting new ones. Note: inserting the
   opening marker shifts the file's line numbers down by one, so a later `scan`

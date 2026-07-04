@@ -112,7 +112,7 @@ export const matrixListInputSchema = workspaceSchema({
   strict: { type: "boolean", description: "Report ok=false when the matrix is incomplete." }
 });
 
-//: @use-case: mcp.surface.declared_tool_schemas
+//: @use-case:mcp.surface.declared_tool_schemas
 export const useCaseUpsertInputSchema = workspaceSchema({
   file: { type: "string", description: "Workspace-relative matrix file the entry is written into." },
   use_case: useCaseObjectProp,
@@ -120,7 +120,7 @@ export const useCaseUpsertInputSchema = workspaceSchema({
   actor_type: actorTypeProp,
   allow_write: allowWriteProp
 }, ["file", "use_case"]);
-//: @use-case: end mcp.surface.declared_tool_schemas
+//: @use-case:end mcp.surface.declared_tool_schemas
 
 export const useCaseRemoveInputSchema = workspaceSchema({
   use_case: { type: "string", description: "Canonical use-case id to mark removed." },

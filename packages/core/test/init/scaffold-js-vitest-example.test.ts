@@ -42,8 +42,8 @@ describe("uc init --template js-vitest scaffolds a runnable example", () => {
     const srcPath = join(repoRoot, SRC_REL);
     const contents = readFileSync(srcPath, "utf8");
     // `//` is the `.ts` comment prefix, so the span markers are the JS spelling.
-    expect(contents).toContain(`//: @use-case: ${ROW_ID}`);
-    expect(contents).toContain(`//: @use-case: end ${ROW_ID}`);
+    expect(contents).toContain(`//: @use-case:${ROW_ID}`);
+    expect(contents).toContain(`//: @use-case:end ${ROW_ID}`);
 
     const scan = scanFileForMarkers(SRC_REL, contents);
     expect(scan.errors).toEqual([]);

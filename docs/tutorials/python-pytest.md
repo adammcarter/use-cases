@@ -43,10 +43,10 @@ verifiers:
 ### The marked code (`src/coupon.py`)
 
 `#` is the configured comment prefix for `.py`, so the marker is the Python
-spelling of the same `<comment>: @use-case: <slug>` convention:
+spelling of the same `<comment>: @use-case:<slug>` convention:
 
 ```python
-#: @use-case: example.checkout.apply_coupon
+#: @use-case:example.checkout.apply_coupon
 COUPONS = {"SAVE10": 10, "HALF": 50}
 
 
@@ -57,7 +57,7 @@ def apply_coupon(subtotal_cents: int, code: str) -> int:
         raise KeyError(f"unknown coupon: {code}")
     discount = subtotal_cents * COUPONS[code] // 100
     return subtotal_cents - discount
-#: @use-case: end example.checkout.apply_coupon
+#: @use-case:end example.checkout.apply_coupon
 ```
 
 ### The acceptance test

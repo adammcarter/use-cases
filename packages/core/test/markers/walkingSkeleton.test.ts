@@ -197,8 +197,8 @@ describe("walking skeleton (spec section 13)", () => {
 
     // Re-slug the in-source marker from the old row to the new row id.
     const reslugged = readFileSync(sourcePath(ws), "utf8").replace(
-      `//: @use-case: ${ROW_ID}`,
-      `//: @use-case: ${ROW_ID_2}`
+      `//: @use-case:${ROW_ID}`,
+      `//: @use-case:${ROW_ID_2}`
     );
     writeFileSync(sourcePath(ws), reslugged);
 
@@ -233,8 +233,8 @@ describe("walking skeleton (spec section 13)", () => {
 
     // Re-slug to the second row WITHOUT registering it.
     const reslugged = readFileSync(sourcePath(ws), "utf8").replace(
-      `//: @use-case: ${ROW_ID}`,
-      `//: @use-case: ${ROW_ID_2}`
+      `//: @use-case:${ROW_ID}`,
+      `//: @use-case:${ROW_ID_2}`
     );
     writeFileSync(sourcePath(ws), reslugged);
 

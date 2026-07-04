@@ -8,7 +8,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { collectSourceInputs, scanFiles } from "../../src/markers/index.js";
 
-const SRC = `//: @use-case: demo.row
+const SRC = `//: @use-case:demo.row
 public func f() -> Int {
     return 1
 }

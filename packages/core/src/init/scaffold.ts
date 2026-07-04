@@ -316,7 +316,7 @@ function renderJsVitestSource(): string {
     "// marker span (the `@use-case` start/end comments) so the matrix can bind",
     "// the row to exactly these source lines. Replace it with your own code.",
     "",
-    `//: @use-case: ${EXAMPLE_ROW_ID}`,
+    `//: @use-case:${EXAMPLE_ROW_ID}`,
     "export function greet(name: string): string {",
     '  const trimmed = name.trim();',
     '  if (trimmed === "") {',
@@ -324,7 +324,7 @@ function renderJsVitestSource(): string {
     "  }",
     "  return `Hello, ${trimmed}!`;",
     "}",
-    `//: @use-case: end ${EXAMPLE_ROW_ID}`,
+    `//: @use-case:end ${EXAMPLE_ROW_ID}`,
     ""
   ].join("\n");
 }

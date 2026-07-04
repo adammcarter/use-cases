@@ -97,7 +97,7 @@ For the technically curious — the high-level shape:
 
 - **Contract-first.** Every command returns a versioned, schema-validated JSON envelope (`ok`, `complete`, `data`, `diagnostics`, `context`). The MCP tools wrap the exact same envelopes, so agents get identical behaviour over either transport.
 - **The trust core.** A behaviour row → a code-span *marker* → an append-only *binding registry* → a *signed proof event* in the evidence ledger. CI is the only authority that can mint proof (Ed25519 key held as a CI secret; a public-key keyring verifies it). `scan` derives each row's freshness (`FRESH` / `SUSPECT` / `UNPROVEN` / `UNBOUND` / `INVALID`) from the current code, the registry, and the proofs.
-- **Markers are language-agnostic.** `//: @use-case: <id>` … `//: @use-case: end <id>` with the comment prefix inferred per file type (`#` for Python/shell/YAML, shebang-detected for extensionless scripts, a dedicated mode for Swift functions).
+- **Markers are language-agnostic.** `//: @use-case:<id>` … `//: @use-case:end <id>` with the comment prefix inferred per file type (`#` for Python/shell/YAML, shebang-detected for extensionless scripts, a dedicated mode for Swift functions).
 - **Built-in CI + precommit.** `.github/workflows/use-cases.yml` runs `validate-ledger` and `scan`, and (on release) `verify → prove → release-gate` so required rows must be `FRESH` to ship. An optional local precommit hook gives fast, non-authoritative feedback. Publishing uses npm Trusted Publishing (OIDC) with build provenance — no tokens.
 - **Append-only everywhere.** The matrix, the binding registry, the evidence ledger, and showcase runs are all event-sourced and content-addressed: status is *derived* from history, never asserted.
 

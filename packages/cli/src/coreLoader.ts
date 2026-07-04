@@ -35,12 +35,12 @@ export async function loadUcmCore(): Promise<UcmCoreModule> {
       // The package alias AND the bundled dist both failed to resolve: the
       // compiled core/dist has not been built yet. Surface an actionable hint
       // instead of letting a raw ERR_MODULE_NOT_FOUND stack reach the user.
-//: @use-case: diagnostics.contracts.missing_build_hint
+//: @use-case:diagnostics.contracts.missing_build_hint
       if (isMissingCoreModule(fallbackError)) {
         process.stderr.write(`${MISSING_BUILD_MESSAGE}\n`);
         process.exit(2);
       }
-//: @use-case: end diagnostics.contracts.missing_build_hint
+//: @use-case:end diagnostics.contracts.missing_build_hint
       throw fallbackError;
     }
   }

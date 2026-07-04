@@ -1,6 +1,6 @@
 // Comment-prefix resolver (spec section 1.1, Amendment 1).
 //
-// The semantic marker is `<line-comment-prefix>: @use-case: <payload>`. The
+// The semantic marker is `<line-comment-prefix>: @use-case:<payload>`. The
 // line-comment prefix is not universal (`//` is invalid in Python/YAML/shell),
 // so it is resolved per file extension from a config-driven map. A default map
 // covers the common `//` and `#` languages so explicit spans work out of the box.

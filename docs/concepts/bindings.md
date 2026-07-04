@@ -10,20 +10,20 @@ A binding starts as a **marker** — a comment in your source using a stable
 grammar that is independent of language:
 
 ```
-<comment-prefix>: @use-case: <slug>
+<comment-prefix>: @use-case:<slug>
 … implementing code …
-<comment-prefix>: @use-case: end <slug>
+<comment-prefix>: @use-case:end <slug>
 ```
 
 For example, in TypeScript (`//`) or Python (`#`):
 
 ```ts
-//: @use-case: billing.core.apply_discount
+//: @use-case:billing.core.apply_discount
 export function applyDiscount(total: number, percent: number): number { … }
-//: @use-case: end billing.core.apply_discount
+//: @use-case:end billing.core.apply_discount
 ```
 
-- The marker grammar (`//: @use-case: <slug>` … `//: @use-case: end <slug>`) and
+- The marker grammar (`//: @use-case:<slug>` … `//: @use-case:end <slug>`) and
   the slug rules are a versioned contract (see
   [stability](../reference/stability.md)).
 - A **swift-func** binding is a shortcut for Swift: a single marker placed before

@@ -70,7 +70,7 @@ function listJsonlFiles(root: string, rootReal: string): string[] {
   return results;
 }
 
-//: @use-case: evidence.ledger.damaged_ledger_replay
+//: @use-case:evidence.ledger.damaged_ledger_replay
 function readLedgerFile(path: string, relPath: string): {
   ledger: EvidenceLedgerResult;
   events: EvidenceEvent[];
@@ -136,7 +136,7 @@ function readLedgerFile(path: string, relPath: string): {
     diagnostics
   };
 }
-//: @use-case: end evidence.ledger.damaged_ledger_replay
+//: @use-case:end evidence.ledger.damaged_ledger_replay
 
 function isEvidenceEventShape(value: unknown): value is EvidenceEvent {
   if (value === null || typeof value !== "object" || Array.isArray(value)) {

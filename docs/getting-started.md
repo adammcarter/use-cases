@@ -149,15 +149,15 @@ marker. Markers are language-agnostic comments. Wrap the implementing span with 
 explicit start/end pair (here in TypeScript, comment prefix `//`):
 
 ```ts
-//: @use-case: billing.core.apply_discount
+//: @use-case:billing.core.apply_discount
 export function applyDiscount(total: number, percent: number): number {
   const discounted = total * (1 - percent / 100);
   return Math.max(0, discounted);
 }
-//: @use-case: end billing.core.apply_discount
+//: @use-case:end billing.core.apply_discount
 ```
 
-The grammar is `<comment>: @use-case: <slug>` … `<comment>: @use-case: end
+The grammar is `<comment>: @use-case:<slug>` … `<comment>: @use-case:end
 <slug>`. See [bindings & markers](./concepts/bindings.md).
 
 ## 5. Register the binding with `uc bind`

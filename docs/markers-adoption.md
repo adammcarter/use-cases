@@ -13,8 +13,8 @@ writes them for you, but the grammar is small enough to read and hand-edit.
 A marker is a single source line. After optional leading whitespace it is exactly:
 
 ```
-<comment-prefix>: @use-case: <slug>          # start of a span
-<comment-prefix>: @use-case: end <slug>      # end of a span
+<comment-prefix>: @use-case:<slug>          # start of a span
+<comment-prefix>: @use-case:end <slug>      # end of a span
 ```
 
 - **`<comment-prefix>`** is the file's line-comment prefix, resolved **per file
@@ -33,16 +33,16 @@ A marker is a single source line. After optional leading whitespace it is exactl
 Examples:
 
 ```ts
-//: @use-case: billing.checkout.happy_path
+//: @use-case:billing.checkout.happy_path
 export function checkout() { /* … */ }
-//: @use-case: end billing.checkout.happy_path
+//: @use-case:end billing.checkout.happy_path
 ```
 
 ```python
-#: @use-case: billing.checkout.happy_path
+#: @use-case:billing.checkout.happy_path
 def checkout():
     ...
-#: @use-case: end billing.checkout.happy_path
+#: @use-case:end billing.checkout.happy_path
 ```
 
 ### Bind modes

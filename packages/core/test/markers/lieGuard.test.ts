@@ -229,16 +229,16 @@ function registryEvent(binding_slug: string, row_id: string, overrides: Record<s
 describe("11.1 marker laundering -> INVALID, forbidden / malformed marker", () => {
   for (const payload of ["fresh=true", "proven=true", "sha256=abc", "row_hash=abc", "span_hash=abc", "role=impl", "tier1"]) {
     test(`add "${payload}" after slug -> FORBIDDEN_MARKER_PAYLOAD`, () => {
-      expect(scanCodes(`//: @use-case: ${ROW_ID} ${payload}`)).toContain("FORBIDDEN_MARKER_PAYLOAD");
+      expect(scanCodes(`//: @use-case:${ROW_ID} ${payload}`)).toContain("FORBIDDEN_MARKER_PAYLOAD");
     });
   }
 
   test("naked `end` with no slug -> MALFORMED_END_MARKER", () => {
-    expect(scanCodes("//: @use-case: end")).toContain("MALFORMED_END_MARKER");
+    expect(scanCodes("//: @use-case:end")).toContain("MALFORMED_END_MARKER");
   });
 
   test("mismatched end slug -> MISMATCHED_END_MARKER", () => {
-    const source = ["//: @use-case: checkout.apply_coupon", "body()", "//: @use-case: end checkout.other_row"].join("\n");
+    const source = ["//: @use-case:checkout.apply_coupon", "body()", "//: @use-case:end checkout.other_row"].join("\n");
     expect(scanCodes(source)).toContain("MISMATCHED_END_MARKER");
   });
 });
@@ -249,12 +249,12 @@ describe("11.1 marker laundering -> INVALID, forbidden / malformed marker", () =
 describe("11.2 binding identity", () => {
   test("duplicate same full slug in two starts -> INVALID, DUPLICATE_BINDING_SLUG", () => {
     const source = [
-      "//: @use-case: checkout.apply_coupon",
+      "//: @use-case:checkout.apply_coupon",
       "a()",
-      "//: @use-case: end checkout.apply_coupon",
-      "//: @use-case: checkout.apply_coupon",
+      "//: @use-case:end checkout.apply_coupon",
+      "//: @use-case:checkout.apply_coupon",
       "b()",
-      "//: @use-case: end checkout.apply_coupon"
+      "//: @use-case:end checkout.apply_coupon"
     ].join("\n");
     expect(scanCodes(source)).toContain("DUPLICATE_BINDING_SLUG");
   });
@@ -367,72 +367,72 @@ describe("11.3 span inference -> INVALID, inference fails closed", () => {
 
   test("Swift marker followed by a blank line before func -> MARKER_NOT_ADJACENT_TO_DECLARATION", () => {
     expectInferenceFailure(
-      ["//: @use-case: a.b", "", "public func f() {", "}"].join("\n"),
+      ["//: @use-case:a.b", "", "public func f() {", "}"].join("\n"),
       "MARKER_NOT_ADJACENT_TO_DECLARATION"
     );
   });
 
   test("Swift marker followed by a comment before func -> MARKER_NOT_ADJACENT_TO_DECLARATION", () => {
     expectInferenceFailure(
-      ["//: @use-case: a.b", "// TODO", "public func f() {", "}"].join("\n"),
+      ["//: @use-case:a.b", "// TODO", "public func f() {", "}"].join("\n"),
       "MARKER_NOT_ADJACENT_TO_DECLARATION"
     );
   });
 
   test("Swift marker placed after @MainActor -> MARKER_INSIDE_ATTACHED_DECLARATION", () => {
     expectInferenceFailure(
-      ["@MainActor", "//: @use-case: a.b", "public func f() {", "}"].join("\n"),
+      ["@MainActor", "//: @use-case:a.b", "public func f() {", "}"].join("\n"),
       "MARKER_INSIDE_ATTACHED_DECLARATION"
     );
   });
 
   test("Swift marker before a protocol func with no body -> FUNC_HAS_NO_BODY", () => {
     expectInferenceFailure(
-      ["protocol P {", "    //: @use-case: p.req", "    func required() -> Int", "}"].join("\n"),
+      ["protocol P {", "    //: @use-case:p.req", "    func required() -> Int", "}"].join("\n"),
       "FUNC_HAS_NO_BODY"
     );
   });
 
   test("Swift marker before `var` -> NEXT_NODE_NOT_FUNC", () => {
-    expectInferenceFailure(["//: @use-case: a.b", "var x = 1"].join("\n"), "NEXT_NODE_NOT_FUNC");
+    expectInferenceFailure(["//: @use-case:a.b", "var x = 1"].join("\n"), "NEXT_NODE_NOT_FUNC");
   });
 
   test("Swift marker before `init` -> NEXT_NODE_NOT_FUNC", () => {
     expectInferenceFailure(
-      ["//: @use-case: a.b", "init(x: Int) {", "    self.x = x", "}"].join("\n"),
+      ["//: @use-case:a.b", "init(x: Int) {", "    self.x = x", "}"].join("\n"),
       "NEXT_NODE_NOT_FUNC"
     );
   });
 
   test("Swift marker before a nested func -> NESTED_FUNC_UNSUPPORTED", () => {
     expectInferenceFailure(
-      ["func outer() {", "    //: @use-case: a.b", "    func inner() {", "    }", "}"].join("\n"),
+      ["func outer() {", "    //: @use-case:a.b", "    func inner() {", "    }", "}"].join("\n"),
       "NESTED_FUNC_UNSUPPORTED"
     );
   });
 
   test("Swift marker in a conditional-compilation span -> CONDITIONAL_COMPILATION_IN_SPAN", () => {
     expectInferenceFailure(
-      ["#if DEBUG", "//: @use-case: a.b", "func f() {", "}", "#endif"].join("\n"),
+      ["#if DEBUG", "//: @use-case:a.b", "func f() {", "}", "#endif"].join("\n"),
       "CONDITIONAL_COMPILATION_IN_SPAN"
     );
   });
 
   test("Swift marker before a malformed Swift region (no closing brace) -> FUNC_BODY_HAS_NO_CLOSING_BRACE", () => {
     expectInferenceFailure(
-      ["//: @use-case: a.b", "func f() {", "    doThing()"].join("\n"),
+      ["//: @use-case:a.b", "func f() {", "    doThing()"].join("\n"),
       "FUNC_BODY_HAS_NO_CLOSING_BRACE"
     );
   });
 
   test("TypeScript function marker without explicit end -> INVALID, UNSUPPORTED_INFERENCE", () => {
-    const result = scanFileForMarkers("src/f.ts", ["//: @use-case: a.b", "export function f() {}"].join("\n"));
+    const result = scanFileForMarkers("src/f.ts", ["//: @use-case:a.b", "export function f() {}"].join("\n"));
     expect(result.bindings).toHaveLength(0);
     expect(result.errors.map((error) => error.code)).toContain("UNSUPPORTED_INFERENCE");
   });
 
   test("Python function marker without explicit end -> INVALID, UNSUPPORTED_INFERENCE", () => {
-    const result = scanFileForMarkers("scripts/f.py", ["#: @use-case: a.b", "def f():", "    pass"].join("\n"));
+    const result = scanFileForMarkers("scripts/f.py", ["#: @use-case:a.b", "def f():", "    pass"].join("\n"));
     expect(result.bindings).toHaveLength(0);
     expect(result.errors.map((error) => error.code)).toContain("UNSUPPORTED_INFERENCE");
   });

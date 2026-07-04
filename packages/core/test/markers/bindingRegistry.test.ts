@@ -37,9 +37,9 @@ const YAML_ROWS = new Set(["checkout.apply_coupon", "checkout.remove_coupon"]);
 
 // The marker file binding `checkout.apply_coupon#tax` (explicit span).
 const TAX_FILE = [
-  "//: @use-case: checkout.apply_coupon#tax",
+  "//: @use-case:checkout.apply_coupon#tax",
   "func computeTax() -> Int { return 1 }",
-  "//: @use-case: end checkout.apply_coupon#tax"
+  "//: @use-case:end checkout.apply_coupon#tax"
 ].join("\n");
 
 describe("bindings.jsonl reader", () => {

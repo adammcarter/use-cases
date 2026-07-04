@@ -20,7 +20,7 @@ Ships as a single package, `use-cases`, providing the `uc` CLI and the
 ## Adopting the matrix
 
 - **[Code markers & adoption log](./markers-adoption.md)** — the in-code marker
-  grammar (`//: @use-case: <slug>` … `//: @use-case: end <slug>`), the explicit
+  grammar (`//: @use-case:<slug>` … `//: @use-case:end <slug>`), the explicit
   and swift-func bind modes, the per-extension comment prefix, and a real
   dogfooded binding.
 - **[Acceptance matrix](./acceptance.md)** — how this repo dogfoods its own
