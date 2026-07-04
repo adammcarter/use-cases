@@ -1,6 +1,7 @@
 import type { ResolvedWorkspaceContext } from "../roots.js";
 import type { HostSurface } from "../useCases/types.js";
 import type { PresentationPlan } from "../presentation/types.js";
+import type { AssuranceTier } from "./approvalTiers.js";
 
 export type ShowcaseActorType = "user" | "agent" | "script" | "system";
 export type ShowcaseControlMode = "agent_led" | "user_led" | "script_led" | "mixed";
@@ -65,6 +66,10 @@ export type ShowcaseRunStatus = {
     | "approved_with_known_gaps"
     | "stale_due_to_run_change";
   unresolved_failure_count: number;
+  approval?: {
+    actor_type: ShowcaseActorType;
+    assurance_tier: AssuranceTier;
+  };
   items: ShowcaseItemStatus[];
   known_gaps: Record<string, unknown>[];
   diagnostic_summary: Record<string, unknown>;

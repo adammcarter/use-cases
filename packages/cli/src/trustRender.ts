@@ -19,7 +19,8 @@ export const TRUST_COMMANDS = new Set([
   "markers.scan",
   "markers.verify",
   "markers.impact",
-  "markers.recover"
+  "markers.recover",
+  "showcase.status"
 ]);
 
 // One line steering the human to the machine-readable form, appended to every
@@ -335,6 +336,69 @@ function renderRecover(data: RecoverData): string[] {
   return lines;
 }
 
+// --- showcase approval --------------------------------------------------------
+
+interface ApprovalRequestData {
+  approval_request_schema: "ucase-approval-request-v1";
+  binding: {
+    run_id: string;
+    finish_event_id: string;
+    plan_content_hash: string;
+  };
+  jti: string;
+  exp: string;
+}
+
+interface ShowcaseStatusData {
+  run_id: string;
+  execution_status: string;
+  run_outcome: string;
+  approval_state: string;
+  approval?: {
+    actor_type?: string;
+    assurance_tier?: string;
+  };
+}
+
+function isApprovalRequestData(value: unknown): value is ApprovalRequestData {
+  if (value === null || typeof value !== "object") return false;
+  const record = value as { approval_request_schema?: unknown; binding?: unknown };
+  return record.approval_request_schema === "ucase-approval-request-v1" && record.binding !== null && typeof record.binding === "object";
+}
+
+function renderApprovalRequest(data: ApprovalRequestData): string[] {
+  return [
+    "approval request",
+    "",
+    `  run ${data.binding.run_id}`,
+    `  finish event ${data.binding.finish_event_id}`,
+    `  plan ${data.binding.plan_content_hash}`,
+    `  nonce ${data.jti}`,
+    `  expires ${data.exp}`,
+    "",
+    "Sign out-of-band:",
+    "  uc approve-run --request <request-file> --key-file <out-of-scope-key> --key-id <keyring-key-id> --json"
+  ];
+}
+
+function renderShowcaseStatus(data: ShowcaseStatusData): string[] {
+  const lines = [
+    `showcase ${data.run_id}: ${data.execution_status} · ${data.run_outcome}`,
+    `approval: ${data.approval_state}`
+  ];
+  if (data.approval?.actor_type && data.approval.assurance_tier) {
+    lines.push(`approved by ${data.approval.actor_type} · tier ${data.approval.assurance_tier}`);
+  }
+  return lines;
+}
+
+export function renderTrustObjectHuman(value: unknown): string | null {
+  if (!isApprovalRequestData(value)) {
+    return null;
+  }
+  return `${[...renderApprovalRequest(value), "", JSON_FOOTER].join("\n")}\n`;
+}
+
 // --- dispatch -----------------------------------------------------------------
 
 // Render one of the trust commands' human views, or return null so the caller
@@ -374,6 +438,10 @@ export function renderTrustHuman(
       // the generic diagnostics dumper.
       if (typeof d.recovered !== "boolean") return null;
       body = renderRecover(data as RecoverData);
+      break;
+    case "showcase.status":
+      if (typeof d.run_id !== "string" || typeof d.approval_state !== "string") return null;
+      body = renderShowcaseStatus(data as unknown as ShowcaseStatusData);
       break;
     default:
       return null;
@@ -424,7 +492,7 @@ function renderDiagnosticLines(
 // the same "✗" glyph the non-green rows use, so a reader scanning for failure
 // markers sees one at the top regardless of per-row greenness.
 function failureBanner(command: string, data: Record<string, unknown>): string {
-  const verb = command.slice("markers.".length);
+  const verb = command.startsWith("markers.") ? command.slice("markers.".length) : command;
   const exit = typeof data.exit_code === "number" ? data.exit_code : undefined;
   const suffix = exit !== undefined ? ` (exit ${exit})` : "";
   return `✗ ${verb} FAILED${suffix} — details below; add --json for the machine-readable envelope.\n`;

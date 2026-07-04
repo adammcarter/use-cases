@@ -66,6 +66,7 @@ export const {
   appendShowcaseApproval,
   rejectShowcaseApproval,
   correctShowcaseVerdict,
+  computeRunApprovalBinding,
   finishShowcaseRun,
   pauseShowcaseRun,
   resumeShowcaseRun,

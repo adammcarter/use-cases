@@ -16,9 +16,10 @@ import { AssuranceTier } from "./approvalTiers.js";
 import {
   verifyApprovalToken,
   type ApprovalRequestBinding,
+  type ApprovalDecision,
   type ApprovalToken
 } from "./approvalToken.js";
-import type { ShowcaseEvent } from "./types.js";
+import type { ShowcaseActorType, ShowcaseEvent } from "./types.js";
 
 // What replay needs to recompute trust: the resolver(s) and (optionally) the
 // run's live binding. Absent a resolver, EVERY user approval is untrusted
@@ -48,6 +49,53 @@ export function embeddedApprovalToken(event: ShowcaseEvent): ApprovalToken | und
   return undefined;
 }
 
+export type TrustedUserDecisionMetadata = {
+  actor_type: ShowcaseActorType;
+  assurance_tier: AssuranceTier;
+  decision: ApprovalDecision;
+  key_id: string;
+};
+
+// Return the verified facts for a trusted user approval/rejection event. The
+// assurance tier comes from verifyApprovalToken's keyring-backed verification,
+// not from a caller-supplied display string.
+export function trustedUserDecisionMetadata(
+  event: ShowcaseEvent,
+  trust: ApprovalTrustContext = {}
+): TrustedUserDecisionMetadata | null {
+  if (event.actor_type !== "user") {
+    return null;
+  }
+  if (event.event_type !== "approval_recorded" && event.event_type !== "approval_rejected") {
+    return null;
+  }
+  const token = embeddedApprovalToken(event);
+  if (!token || !trust.resolver) {
+    return null;
+  }
+  const floor = trust.tierResolver
+    ? trust.assuranceFloor ?? AssuranceTier.TRUSTED_HOST_USER_PRESENCE
+    : AssuranceTier.UNTRUSTED_AUTOMATION;
+  const result = verifyApprovalToken({
+    token,
+    resolver: trust.resolver,
+    tierResolver: trust.tierResolver,
+    liveBinding: trust.liveBinding ?? token.binding,
+    isNonceBurned: () => false,
+    nowMs: trust.nowMs ?? Date.parse(token.iat),
+    assuranceFloor: floor
+  });
+  if (!result.ok) {
+    return null;
+  }
+  return {
+    actor_type: event.actor_type,
+    assurance_tier: result.assurance_tier,
+    decision: result.decision,
+    key_id: result.key_id
+  };
+}
+
 // The replay-side trust decision. A user decision event is trusted ONLY when it
 // carries a structurally-valid signed approval_token that verifies against the
 // resolver at or above the assurance floor. No token, no resolver, a
@@ -59,31 +107,5 @@ export function isTrustedUserDecisionEvent(event: ShowcaseEvent, trust: Approval
   if (event.event_type !== "approval_recorded" && event.event_type !== "approval_rejected") {
     return true;
   }
-  const token = embeddedApprovalToken(event);
-  if (!token || !trust.resolver) {
-    return false; // fail-closed: no signed token / no way to verify => untrusted
-  }
-  // The assurance-tier floor was already enforced at APPEND time (a token below
-  // the floor was never embedded in an accepted approval). At replay we may not
-  // have the keyring's tier map, so we only re-enforce the floor when a tier
-  // resolver is actually supplied; otherwise a valid signature + binding is the
-  // replay gate.
-  const floor = trust.tierResolver
-    ? trust.assuranceFloor ?? AssuranceTier.TRUSTED_HOST_USER_PRESENCE
-    : AssuranceTier.UNTRUSTED_AUTOMATION;
-  const result = verifyApprovalToken({
-    token,
-    resolver: trust.resolver,
-    tierResolver: trust.tierResolver,
-    liveBinding: trust.liveBinding ?? token.binding,
-    // Replay: the token is expected to be already-burned in the ledger by
-    // design, so the single-use gate is not re-run here (append-time owns it).
-    isNonceBurned: () => false,
-    // Replay must not reject a legitimately-approved run just because the token's
-    // exp has since passed; expiry is an append-time gate. Use the token's own
-    // iat so the keyring validity window still holds.
-    nowMs: trust.nowMs ?? Date.parse(token.iat),
-    assuranceFloor: floor
-  });
-  return result.ok;
+  return trustedUserDecisionMetadata(event, trust) !== null;
 }

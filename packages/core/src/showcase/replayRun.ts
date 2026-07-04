@@ -2,7 +2,11 @@ import type { PresentationPlanItem } from "../presentation/types.js";
 import type { ShowcaseEvent, ShowcaseItemStatus, ShowcaseRunStatus } from "./types.js";
 import type { ShowcaseRunOptions } from "./types.js";
 import { readShowcaseEvents } from "./jsonlLedger.js";
-import { isTrustedUserDecisionEvent, type ApprovalTrustContext } from "./approvalAuthority.js";
+import {
+  isTrustedUserDecisionEvent,
+  trustedUserDecisionMetadata,
+  type ApprovalTrustContext
+} from "./approvalAuthority.js";
 import type { PublicKeyResolver } from "../markers/proofSignature.js";
 import type { AssuranceTierResolver } from "../markers/keyring.js";
 import { AssuranceTier } from "./approvalTiers.js";
@@ -45,6 +49,7 @@ export function replayShowcaseEvents(
   let approvalState: ShowcaseRunStatus["approval_state"] = userApprovalRequired(plan) ? "pending" : "not_required";
   let outcomeAffectingEventAfterApproval = false;
   let approvedSequence = 0;
+  let approval: ShowcaseRunStatus["approval"] | undefined;
   const ignoredApprovalEvents: string[] = [];
 
   for (const event of ordered) {
@@ -123,9 +128,14 @@ export function replayShowcaseEvents(
       finished = true;
     }
     if (event.event_type === "approval_recorded") {
-      if (isTrustedUserDecisionEvent(event, trust)) {
+      const verified = trustedUserDecisionMetadata(event, trust);
+      if (verified) {
         approvalState = event.payload.decision === "approved_with_known_gaps" ? "approved_with_known_gaps" : "approved";
         approvedSequence = event.sequence;
+        approval = {
+          actor_type: verified.actor_type,
+          assurance_tier: verified.assurance_tier
+        };
       } else {
         ignoredApprovalEvents.push(event.event_id);
       }
@@ -134,6 +144,7 @@ export function replayShowcaseEvents(
       if (isTrustedUserDecisionEvent(event, trust)) {
         approvalState = "rejected";
         approvedSequence = event.sequence;
+        approval = undefined;
       } else {
         ignoredApprovalEvents.push(event.event_id);
       }
@@ -142,6 +153,7 @@ export function replayShowcaseEvents(
 
   if (outcomeAffectingEventAfterApproval) {
     approvalState = "stale_due_to_run_change";
+    approval = undefined;
   }
 
   const unresolvedFailureCount = unresolvedFailures.size;
@@ -187,6 +199,7 @@ export function replayShowcaseEvents(
     run_outcome: ledgerComplete ? runOutcome : "incomplete",
     approval_state: approvalState,
     unresolved_failure_count: unresolvedFailureCount,
+    ...(approval ? { approval } : {}),
     items,
     known_gaps: knownGaps,
     diagnostic_summary: ignoredApprovalEvents.length > 0 ? { ignored_approval_events: ignoredApprovalEvents } : {}

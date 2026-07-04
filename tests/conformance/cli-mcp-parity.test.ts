@@ -18,10 +18,10 @@ const mcpOpIds = new Set(mcpOps.map((tool) => tool.command));
 // command. Keep this list tiny and documented — it is the record of allowed
 // transport drift.
 const MCP_ONLY: Record<string, string> = {
-  // MCP can REQUEST a user approval (elicitation/out-of-band); the CLI ACTS on it
-  // via showcase approve/reject. An agent cannot mint trusted sign-off either way
-  // (ADR 0006).
-  "showcase.request-approval": "MCP requests approval; the CLI approves/rejects (ADR 0006)."
+  // No MCP-only operations remain. `showcase.request-approval` now has full CLI
+  // parity (0.3.0): minting an approval REQUEST is safe on either surface because
+  // the request is UNSIGNED — an agent still cannot mint trusted sign-off, which
+  // requires the out-of-band `approve-run` signer (ADR 0006).
 };
 
 // Operations that MUST stay CLI/CI-only — never exposed as MCP tools. The signing

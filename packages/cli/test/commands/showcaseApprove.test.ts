@@ -16,10 +16,13 @@ import { cpSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { approveRunCommand } from "../../src/commands/approveRun.js";
 import {
   showcaseApproveCommand,
+  showcaseRequestApprovalCommand,
   showcaseStatusCommand
 } from "../../src/commands/showcase.js";
+import { renderEnvelope } from "../../src/render.js";
 import {
   appendShowcaseEpoch,
   appendShowcaseObservation,
@@ -230,6 +233,24 @@ function completePassingRun(suffix = "one"): string {
   return started.run_id;
 }
 
+// Build a run with enough ledger state to have a plan binding, but no finish
+// event yet. Approval requests must refuse this because no one can sign a stable
+// finished-run binding.
+function unfinishedRun(suffix = "unfinished"): string {
+  const ctx = context();
+  const plan = planFor(ctx);
+  const started = startShowcaseRun({
+    context: ctx,
+    plan,
+    controlMode: "agent_led",
+    actorType: "agent",
+    hostSurface: "codex.cli",
+    idempotencyKey: `b1-${suffix}-start`,
+    recordedAt: "2026-06-25T12:00:00.000Z"
+  });
+  return started.run_id;
+}
+
 // Sign a genuine token bound to the LIVE run with the out-of-scope trusted key.
 function humanSignsFor(runId: string, keyId = "human-key-1", privateKeyPem = HUMAN_KEY.privateKeyPem): ApprovalToken {
   const binding = computeRunApprovalBinding({ context: context(), runId });
@@ -255,6 +276,12 @@ function writePublicKey(): string {
   return path;
 }
 
+function writePrivateKey(): string {
+  const path = join(workspaceRoot, "human.key");
+  writeFileSync(path, HUMAN_KEY.privateKeyPem, "utf8");
+  return path;
+}
+
 // Read the approval state as `showcase status` reports it. A trust flag
 // (keyring/publicKey) is REQUIRED to verify an embedded signed token — without
 // it, status fails closed (a signed approval reads pending). The trust flags
@@ -276,6 +303,68 @@ afterEach(() => {
 });
 
 describe("BLOCKER 1 — showcase approve --approval-token: trusted submit path", () => {
+  test("request-approval mints a raw approve-run-compatible ucase-approval-request-v1 for a finished run", () => {
+    const runId = completePassingRun();
+    const result = showcaseRequestApprovalCommand.handler({
+      argv: ["showcase", "request-approval", "--run", runId, "--repo", workspaceRoot],
+      json: true,
+      flags: { run: runId }
+    });
+
+    expect(result.exitCode).toBe(0);
+    const request = result.envelope as ReturnType<typeof mintApprovalRequest>;
+    expect(request.approval_request_schema).toBe("ucase-approval-request-v1");
+    expect(request.binding).toEqual(computeRunApprovalBinding({ context: context(), runId }));
+    expect(request.binding.run_id).toBe(runId);
+    expect(request.jti).toMatch(/^approval\./);
+    expect(Date.parse(request.exp)).toBeGreaterThan(Date.parse(request.iat));
+
+    const requestPath = join(workspaceRoot, "approval-request.json");
+    const privateKeyPath = writePrivateKey();
+    writeFileSync(requestPath, `${JSON.stringify(request, null, 2)}\n`, "utf8");
+    const signed = approveRunCommand.handler({
+      argv: ["approve-run", "--request", requestPath, "--key-file", privateKeyPath, "--key-id", "human-key-1"],
+      json: true,
+      flags: { request: requestPath, keyFile: privateKeyPath, keyId: "human-key-1" }
+    });
+    expect(signed.exitCode).toBe(0);
+    expect((signed.envelope as { data?: { approval_token?: ApprovalToken } }).data?.approval_token?.binding).toEqual(request.binding);
+  });
+
+  test("request-approval human view summarizes the unsigned request without signing it", () => {
+    const runId = completePassingRun();
+    const result = showcaseRequestApprovalCommand.handler({
+      argv: ["showcase", "request-approval", "--run", runId, "--repo", workspaceRoot],
+      json: false,
+      flags: { run: runId }
+    });
+
+    const text = renderEnvelope(result.envelope, false);
+    expect(text).toContain("approval request");
+    expect(text).toContain(`run ${runId}`);
+    expect(text).toContain("uc approve-run --request");
+    expect(text).not.toContain("approval_token_schema");
+  });
+
+  test("request-approval refuses a missing run id and an unfinished run binding", () => {
+    const missing = showcaseRequestApprovalCommand.handler({
+      argv: ["showcase", "request-approval", "--repo", workspaceRoot],
+      json: true,
+      flags: {}
+    });
+    expect(missing.exitCode).toBe(2);
+    expect((missing.envelope as { diagnostics?: Array<{ code?: string }> }).diagnostics?.[0]?.code).toBe("cli_invalid_arguments");
+
+    const runId = unfinishedRun();
+    const unfinished = showcaseRequestApprovalCommand.handler({
+      argv: ["showcase", "request-approval", "--run", runId, "--repo", workspaceRoot],
+      json: true,
+      flags: { run: runId }
+    });
+    expect(unfinished.exitCode).not.toBe(0);
+    expect((unfinished.envelope as { diagnostics?: Array<{ code?: string }> }).diagnostics?.[0]?.code).toBe("showcase.finish_required_for_approval");
+  });
+
   test("(a) request -> approve-run signs a keyring token -> approve --approval-token --keyring -> status approved", () => {
     const runId = completePassingRun();
     // Precondition: a user-required run starts pending.
@@ -475,5 +564,51 @@ describe("BLOCKER 1 — showcase approve --approval-token: trusted submit path",
     });
     expect(result.exitCode).not.toBe(0);
     expect(approvalState(runId)).toBe("pending");
+  });
+
+  test("status exposes verified approval actor_type and assurance_tier in json and human output", () => {
+    const runId = completePassingRun();
+    const token = humanSignsFor(runId);
+    const tokenPath = writeToken(token);
+    const keyringPath = writeKeyring();
+
+    showcaseApproveCommand.handler({
+      argv: ["showcase", "approve", "--run", runId, "--repo", workspaceRoot],
+      json: true,
+      flags: {
+        run: runId,
+        statement: "Genuine human sign-off.",
+        actor: "user",
+        approvalToken: tokenPath,
+        keyring: keyringPath
+      }
+    });
+
+    const status = showcaseStatusCommand.handler({
+      argv: ["showcase", "status", "--run", runId, "--repo", workspaceRoot, "--keyring", keyringPath],
+      json: true,
+      flags: { run: runId, keyring: keyringPath }
+    });
+    expect((status.envelope as { data?: { approval?: unknown } }).data?.approval).toEqual({
+      actor_type: "user",
+      assurance_tier: "trusted_host_user_presence"
+    });
+
+    const text = renderEnvelope(status.envelope, false);
+    expect(text).toContain("approved by user · tier trusted_host_user_presence");
+  });
+
+  test("status leaves unapproved runs without approval actor metadata", () => {
+    const runId = completePassingRun();
+    const status = showcaseStatusCommand.handler({
+      argv: ["showcase", "status", "--run", runId, "--repo", workspaceRoot],
+      json: true,
+      flags: { run: runId }
+    });
+
+    const data = (status.envelope as { data?: Record<string, unknown> }).data ?? {};
+    expect(data.approval_state).toBe("pending");
+    expect(Object.hasOwn(data, "approval")).toBe(false);
+    expect(renderEnvelope(status.envelope, false)).not.toContain("approved by");
   });
 });

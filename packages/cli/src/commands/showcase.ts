@@ -8,6 +8,7 @@ import {
   appendShowcaseObservation,
   appendShowcaseVerdict,
   AssuranceTier,
+  computeRunApprovalBinding,
   containedPathOrError,
   correctShowcaseVerdict,
   createCliResult,
@@ -19,6 +20,7 @@ import {
   loadKeyring,
   loadPresentationPlanFile,
   loadUseCaseMatrix,
+  mintApprovalRequest,
   pauseShowcaseRun,
   rejectShowcaseApproval,
   replayEvidence,
@@ -648,6 +650,41 @@ export const showcaseStatusCommand: CliCommand = {
   }
 };
 
+export const showcaseRequestApprovalCommand: CliCommand = {
+  path: ["showcase", "request-approval"],
+  command: "showcase.request-approval",
+  summary: "Mint an unsigned approval request for a finished showcase run.",
+  flags: [
+    ...workspaceFlags,
+    { key: "run", name: "--run", kind: "string", required: true, valueName: "<id>", summary: "Showcase run id." }
+  ],
+  handler: ({ argv, flags }) => {
+    const context = resolveContextOrError(argv, "showcase.request-approval");
+    if (context.kind === "error") {
+      return { envelope: context.envelope, exitCode: context.exitCode };
+    }
+    const contextResult = context.context;
+    const runId = flags.run as string | undefined;
+    if (!runId) {
+      return {
+        envelope: errorEnvelope("showcase.request-approval", "cli_invalid_arguments", "Missing --run."),
+        exitCode: 2
+      };
+    }
+    const invalidRequestId = rejectUnsafeId("showcase.request-approval", "--run", runId);
+    if (invalidRequestId !== null) {
+      return invalidRequestId;
+    }
+    try {
+      const binding = computeRunApprovalBinding({ context: contextResult, runId });
+      const request = mintApprovalRequest({ binding });
+      return { envelope: request, exitCode: 0 };
+    } catch (error) {
+      return showcaseCaughtError("showcase.request-approval", error);
+    }
+  }
+};
+
 export const showcaseApproveCommand: CliCommand = {
   path: ["showcase", "approve"],
   command: "showcase.approve",
@@ -841,6 +878,7 @@ export const showcaseCommands: CliCommand[] = [
   showcaseResumeCommand,
   showcaseFinishCommand,
   showcaseStatusCommand,
+  showcaseRequestApprovalCommand,
   showcaseApproveCommand,
   showcaseRejectCommand,
   showcaseCorrectCommand

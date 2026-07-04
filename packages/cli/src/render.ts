@@ -5,7 +5,7 @@
 // running the legacy path. The `--json` form is byte-identical to the original
 // `JSON.stringify(envelope)` output.
 
-import { renderTrustHuman } from "./trustRender.js";
+import { renderTrustHuman, renderTrustObjectHuman } from "./trustRender.js";
 
 // Structural shape of the fields the human renderer reads. Kept deliberately
 // loose so this module does not depend on core's envelope type (which is loaded
@@ -24,6 +24,10 @@ export function renderEnvelope(envelope: unknown, json: boolean): string {
   // path (0.2.0 F4).
   if (json) {
     return `${JSON.stringify(envelope)}\n`;
+  }
+  const trustObject = renderTrustObjectHuman(envelope);
+  if (trustObject !== null) {
+    return trustObject;
   }
   const record = envelope as RenderableEnvelope;
   // The daily trust commands (scan / verify / impact) get a friendly at-a-glance
