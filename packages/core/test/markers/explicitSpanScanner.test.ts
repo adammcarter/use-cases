@@ -95,13 +95,60 @@ describe("marker-line parser (spec 1.2/1.3)", () => {
     });
   });
 
-  test("parses start and end markers", () => {
-    expect(parseMarkerLine("//: @use-case: checkout.apply_coupon#tax", "//")).toEqual({
+  test.each([
+    { prefix: "//", payloadGap: "" },
+    { prefix: "//", payloadGap: " " },
+    { prefix: "#", payloadGap: "" },
+    { prefix: "#", payloadGap: " " }
+  ])("parses marker payload table for $prefix with payload gap '$payloadGap'", ({ prefix, payloadGap }) => {
+    const line = (payload: string) => `${prefix}: @use-case:${payloadGap}${payload}`;
+
+    expect(parseMarkerLine(line("checkout.apply_coupon#tax"), prefix)).toEqual({
       kind: "start",
+      slug: "checkout.apply_coupon#tax",
+      explicit: false,
+      column: 1
+    });
+    expect(parseMarkerLine(line("begin checkout.apply_coupon#tax"), prefix)).toEqual({
+      kind: "start",
+      slug: "checkout.apply_coupon#tax",
+      explicit: true,
+      column: 1
+    });
+    expect(parseMarkerLine(line("end checkout.apply_coupon#tax"), prefix)).toEqual({
+      kind: "end",
       slug: "checkout.apply_coupon#tax",
       column: 1
     });
-    expect(parseMarkerLine("  //: @use-case: end checkout.apply_coupon#tax", "//")).toEqual({
+
+    expect(parseMarkerLine(line("begin"), prefix)).toMatchObject({
+      kind: "invalid",
+      code: "MALFORMED_MARKER",
+      message: "begin marker has no slug; expected `begin <slug>`"
+    });
+    expect(parseMarkerLine(line("end"), prefix)).toMatchObject({
+      kind: "invalid",
+      code: "MALFORMED_END_MARKER"
+    });
+    expect(parseMarkerLine(line("begin checkout.apply_coupon#tax extra"), prefix)).toMatchObject({
+      kind: "invalid",
+      code: "FORBIDDEN_MARKER_PAYLOAD",
+      slug: "checkout.apply_coupon#tax"
+    });
+    expect(parseMarkerLine(line("end checkout.apply_coupon#tax extra"), prefix)).toMatchObject({
+      kind: "invalid",
+      code: "FORBIDDEN_MARKER_PAYLOAD",
+      slug: "checkout.apply_coupon#tax"
+    });
+    expect(parseMarkerLine(line("checkout.apply_coupon#tax extra"), prefix)).toMatchObject({
+      kind: "invalid",
+      code: "FORBIDDEN_MARKER_PAYLOAD",
+      slug: "checkout.apply_coupon#tax"
+    });
+  });
+
+  test("preserves marker column with leading indentation", () => {
+    expect(parseMarkerLine("  //: @use-case:end checkout.apply_coupon#tax", "//")).toEqual({
       kind: "end",
       slug: "checkout.apply_coupon#tax",
       column: 3
