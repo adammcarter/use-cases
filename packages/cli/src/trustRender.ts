@@ -265,7 +265,7 @@ function renderImpact(data: ImpactData): string[] {
 // no status/results/impacted) keeps its generic diagnostics view. A NON-GREEN
 // trust result (ok:false but with a real status/results payload) DOES render
 // here — that is a normal outcome the human view is meant to show.
-export function renderTrustHuman(command: string, data: unknown): string | null {
+export function renderTrustHuman(command: string, data: unknown, ok?: boolean): string | null {
   if (!TRUST_COMMANDS.has(command) || data === null || typeof data !== "object") {
     return null;
   }
@@ -287,6 +287,25 @@ export function renderTrustHuman(command: string, data: unknown): string | null 
     default:
       return null;
   }
-  const lines = [...body, "", JSON_FOOTER];
+  // BLOCKER 2: never let the human view read as unqualified success when the
+  // COMMAND failed. Per-row glyphs may be green (a keyless VERIFIED_LOCAL row, or
+  // an advisory non-blocking row) while the envelope is ok:false (e.g. scan exit
+  // 4 on a rejected proof). A leading failure banner reconciles the framing with
+  // the envelope so no green-while-failed slips through. Truthful green (ok:true)
+  // and normal non-green outcomes (ok undefined, the pre-0.2.0 default) are
+  // unchanged. `exit_code` (when present in data) is surfaced for precision.
+  const failed = ok === false;
+  const banner = failed ? [failureBanner(command, d)] : [];
+  const lines = [...banner, ...body, "", JSON_FOOTER];
   return `${lines.join("\n")}\n`;
+}
+
+// The leading line shown when a trust COMMAND failed (envelope ok:false). Uses
+// the same "✗" glyph the non-green rows use, so a reader scanning for failure
+// markers sees one at the top regardless of per-row greenness.
+function failureBanner(command: string, data: Record<string, unknown>): string {
+  const verb = command.slice("markers.".length);
+  const exit = typeof data.exit_code === "number" ? data.exit_code : undefined;
+  const suffix = exit !== undefined ? ` (exit ${exit})` : "";
+  return `✗ ${verb} FAILED${suffix} — see the rows below; add --json for the machine-readable envelope.\n`;
 }

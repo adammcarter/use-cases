@@ -33,7 +33,13 @@ export function renderEnvelope(envelope: unknown, json: boolean): string {
   // NOT gate on ok: renderTrustHuman returns null for non-trust commands AND for
   // genuine error envelopes (no trust-data shape — e.g. workspace-not-found),
   // which then fall through to the generic diagnostics dumper.
-  const trust = renderTrustHuman(record.command, record.data);
+  //
+  // Pass the envelope-level ok so the trust view can SURFACE a command failure
+  // (BLOCKER 2): the human view must NEVER read as unqualified success when the
+  // command failed. Per-row glyphs can legitimately be green (e.g. a keyless
+  // VERIFIED_LOCAL row) while the command as a whole FAILED (exit 4) — the banner
+  // reconciles the two so the human framing matches the envelope ok.
+  const trust = renderTrustHuman(record.command, record.data, record.ok);
   if (trust !== null) {
     return trust;
   }
