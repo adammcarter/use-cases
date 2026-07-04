@@ -23,6 +23,22 @@ or an explicit **`begin <slug>`**. They are equivalent, except an explicit `begi
 **requires** an explicit `end` — it never gets an inferred end. The space after
 `@use-case:` is optional on input but the canonical form is spaceless.
 
+**Ignore regions.** Inside a span you can carve out cosmetic lines so editing them
+does not flip the span hash, using paired `ignore` markers:
+
+```
+<comment-prefix>: @use-case:ignore:begin    # start of an ignored region
+<comment-prefix>: @use-case:ignore:end      # end of an ignored region
+```
+
+Everything from `ignore:begin` through `ignore:end` (the two marker lines
+included) is dropped before the span is hashed — use it for comments, debug
+logging, or other lines you deem non-behavioural. Because the region is marked
+in-source, the choice is visible in the diff and auditable. Ignore regions may
+not nest and must be balanced inside their span; an unbalanced or nested region
+is a hard error (never a silent drop). The `ignore` here is the first example of
+the general boundary rule `@use-case:[<block-path>:]<begin|end>`.
+
 - **`<comment-prefix>`** is the file's line-comment prefix, resolved **per file
   extension** — `//` for `.ts/.tsx/.js/.jsx/.mjs/.cjs/.swift/.c/.cc/.cpp/.cxx/.h/.hpp/.m/.mm/.java/.kt/.kts/.go/.rs/.scala`,
   and `#` for `.py/.rb/.sh/.bash/.zsh/.yaml/.yml/.toml/.pl/.r`. The map is

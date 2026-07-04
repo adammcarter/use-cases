@@ -21,6 +21,12 @@ follows [Semantic Versioning](https://semver.org) (see docs/release.md). This is
   `//: @use-case:begin <slug>` … `//: @use-case:end <slug>`. An explicit `begin`
   requires an explicit `end` (it never gets an inferred end). The bare-slug start
   (`//: @use-case:<slug>`, implicit begin) remains the default and is unchanged.
+- **Ignore regions in spans.** `//: @use-case:ignore:begin` … `//: @use-case:ignore:end`
+  carve cosmetic lines (comments, debug logging) out of a span so editing them
+  does not change the span hash. The ignore markers and everything between them
+  are dropped before hashing. Regions must be balanced and may not nest — an
+  unbalanced/nested region is a hard error, never a silent drop. This is the first
+  use of the general boundary rule `@use-case:[<block-path>:]<begin|end>`.
 - **`uc showcase request-approval`** — mint the unsigned `ucase-approval-request-v1`
   from the CLI (previously only reachable via the MCP `showcase_request_approval`
   tool). It cannot sign or approve; an operator still signs out-of-band with
