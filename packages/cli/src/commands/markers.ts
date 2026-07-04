@@ -233,7 +233,7 @@ export const markersScanCommand: CliCommand = {
     ...workspaceFlags,
     ...markerPathFlags,
     { key: "policyMode", name: "--policy-mode", kind: "string", valueName: "<mode>", summary: "feature | release | custom." },
-    { key: "gate", name: "--gate", kind: "boolean", summary: "Exit 1 when a required row is below the bar (release => FRESH, else >= VERIFIED_LOCAL). Off by default." },
+    { key: "gate", name: "--gate", kind: "boolean", summary: "Exit 1 when a row marked `approval_policy.required_for_release: true` is below the bar (release => FRESH, else >= VERIFIED_LOCAL). ONLY required rows are enforced; non-required drift is reported as a warning, not a block. Off by default." },
     { key: "results", name: "--results", kind: "string", valueName: "<path>", summary: "Override the unsigned verify-results ledger feeding the keyless tier (default <data-root>/.use-cases/verification-results.jsonl)." },
     ...trustedKeyFlags,
     { key: "generatedAt", name: "--generated-at", kind: "string", valueName: "<iso>", summary: "Override the generated-at timestamp." },

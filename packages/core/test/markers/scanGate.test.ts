@@ -107,6 +107,62 @@ describe("evaluateScanGate (dev/feature bar = at least VERIFIED_LOCAL)", () => {
   });
 });
 
+// GATE HONESTY (0.2.0 pass 2): a passing gate must NOT read as endorsing a
+// drifted, ungated row. The gate reports ungated_below_bar[] — every NON-required
+// row that is below the mode's acceptable bar — so the human/JSON views can warn
+// that these rows exist but are NOT enforced. Additive: existing fields unchanged.
+describe("evaluateScanGate ungated_below_bar (honest pass)", () => {
+  test("a NON-required SUSPECT row is reported as ungated-below-bar while the gate still passes", () => {
+    const status = makeStatus([
+      requiredRow("UNPROVEN", "VERIFIED_LOCAL", "req-ok"),
+      makeRow({ row_id: "drifted", status: "SUSPECT", required_for_release: false, local_status: "STALE_LOCAL", local_reason: null })
+    ]);
+    const result = evaluateScanGate(status, "feature");
+    expect(result.blocked).toBe(false);
+    expect(result.ungated_below_bar.map((r) => r.row_id)).toEqual(["drifted"]);
+    expect(result.ungated_below_bar[0].status).toBe("SUSPECT");
+    expect(result.ungated_below_bar[0].local_status).toBe("STALE_LOCAL");
+  });
+
+  test("a NON-required VERIFIED_LOCAL row is NOT reported (it meets the dev bar)", () => {
+    const status = makeStatus([
+      makeRow({ row_id: "green", status: "UNPROVEN", required_for_release: false, local_status: "VERIFIED_LOCAL", local_reason: null })
+    ]);
+    expect(evaluateScanGate(status, "feature").ungated_below_bar).toEqual([]);
+  });
+
+  test("a NON-required VERIFIED_LOCAL row IS reported below the release bar (FRESH)", () => {
+    const status = makeStatus(
+      [makeRow({ row_id: "not-fresh", status: "UNPROVEN", required_for_release: false, local_status: "VERIFIED_LOCAL", local_reason: null })],
+      "release"
+    );
+    const result = evaluateScanGate(status, "release");
+    expect(result.ungated_below_bar.map((r) => r.row_id)).toEqual(["not-fresh"]);
+  });
+
+  test("required rows never appear in ungated_below_bar (they are gated, not ungated)", () => {
+    const status = makeStatus([requiredRow("SUSPECT", "STALE_LOCAL", "req-bad")]);
+    const result = evaluateScanGate(status, "feature");
+    expect(result.ungated_below_bar).toEqual([]);
+    expect(result.blocked).toBe(true);
+  });
+
+  test("a non-required UNPROVEN-not-verified row is reported as below bar", () => {
+    const status = makeStatus([
+      makeRow({ row_id: "unproven", status: "UNPROVEN", required_for_release: false, local_status: "UNVERIFIED_LOCAL", local_reason: null })
+    ]);
+    const result = evaluateScanGate(status, "feature");
+    expect(result.ungated_below_bar.map((r) => r.row_id)).toEqual(["unproven"]);
+  });
+
+  test("a non-required UNBOUND row is NOT drift and is NOT reported as below bar", () => {
+    const status = makeStatus([
+      makeRow({ row_id: "unbound", status: "UNBOUND", required_for_release: false, local_status: null, local_reason: null })
+    ]);
+    expect(evaluateScanGate(status, "feature").ungated_below_bar).toEqual([]);
+  });
+});
+
 describe("evaluateScanGate (release bar = FRESH)", () => {
   test("a required VERIFIED_LOCAL row blocks in release mode (bar is FRESH)", () => {
     const status = makeStatus([requiredRow("UNPROVEN", "VERIFIED_LOCAL")], "release");

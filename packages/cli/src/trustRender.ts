@@ -63,12 +63,16 @@ interface FreshnessRow {
   status: RowStatus;
   local_status?: LocalStatus;
   required_action?: string | null;
+  required_for_release?: boolean;
 }
 
 interface ScanGate {
   blocked: boolean;
   required_bar?: string;
   offending_rows?: Array<{ row_id: string }>;
+  // GATE HONESTY (0.2.0): non-required rows below the bar. Present on a passing
+  // gate so the human view can warn that drift exists but is NOT enforced.
+  ungated_below_bar?: Array<{ row_id: string; status?: string; local_status?: string | null }>;
 }
 
 interface ScanData {
@@ -103,17 +107,19 @@ function renderScan(data: ScanData): string[] {
   const summary = data.status?.summary ?? { fresh: 0, suspect: 0, unproven: 0, unbound: 0, invalid: 0 };
   const lines: string[] = [];
 
-  // Headline count line, e.g. "3 behaviours: 2 fresh, 1 suspect". "fresh" here is
-  // the daily GREEN light (FRESH proof OR keyless VERIFIED_LOCAL); a keyless
-  // green row is therefore NOT double-counted under "unproven".
+  // Headline count line, e.g. "3 behaviours: 2 fresh, 1 verified-local". The two
+  // GREEN tiers are counted SEPARATELY so the keyless local light is never
+  // conflated with the signed FRESH tier: "fresh" means a trusted signed proof,
+  // "verified-local" means the keyless local pass (VERIFIED_LOCAL). A keyless
+  // green row is therefore NOT counted under "fresh" and NOT under "unproven".
   const total = rows.length;
-  const green = rows.filter((row) => isGreen(row.status, row.local_status ?? null)).length;
   const keylessGreen = rows.filter(
     (row) => row.status === "UNPROVEN" && (row.local_status ?? null) === "VERIFIED_LOCAL"
   ).length;
   const unprovenNotGreen = summary.unproven - keylessGreen;
   const parts: string[] = [];
-  if (green > 0) parts.push(`${green} fresh`);
+  if (summary.fresh > 0) parts.push(`${summary.fresh} fresh`);
+  if (keylessGreen > 0) parts.push(`${keylessGreen} verified-local`);
   if (summary.suspect > 0) parts.push(`${summary.suspect} suspect`);
   if (unprovenNotGreen > 0) parts.push(`${unprovenNotGreen} unproven`);
   if (summary.unbound > 0) parts.push(`${summary.unbound} unbound`);
@@ -133,14 +139,34 @@ function renderScan(data: ScanData): string[] {
     }
   }
 
-  // Honour --gate when present: state whether the release/dev bar blocked.
+  // Honour --gate when present: state whether the release/dev bar blocked, and —
+  // on a PASS — state HOW MANY required behaviours were evaluated against the bar
+  // AND warn about any ungated drift so "gate passed" never reads as endorsing a
+  // drifted row that simply lacks required_for_release:true.
   if (data.gate) {
     lines.push("");
+    const bar = data.gate.required_bar ?? "?";
     if (data.gate.blocked) {
       const offenders = (data.gate.offending_rows ?? []).map((r) => r.row_id).join(", ");
-      lines.push(`✗ gate BLOCKED (bar: ${data.gate.required_bar ?? "?"}) — ${offenders}`);
+      lines.push(`✗ gate BLOCKED (bar: ${bar}) — ${offenders}`);
     } else {
-      lines.push(`✓ gate passed (bar: ${data.gate.required_bar ?? "?"})`);
+      // Count the required behaviours the gate actually evaluated (required rows
+      // that met the bar). This is the honest scope of what "passed" covers.
+      const requiredMet = rows.filter(
+        (row) => row.required_for_release === true && isGreen(row.status, row.local_status ?? null)
+      ).length;
+      const behaviourWord = requiredMet === 1 ? "behaviour" : "behaviours";
+      lines.push(`✓ gate passed — ${requiredMet} required ${behaviourWord} meet ${bar}.`);
+    }
+    // Warn about EVERY non-required row below the bar (present on pass AND block),
+    // naming the single knob that would enforce it. This is what keeps a passing
+    // gate from silently endorsing drift.
+    const ungated = data.gate.ungated_below_bar ?? [];
+    for (const row of ungated) {
+      const state = row.status === "UNPROVEN" && (row.local_status ?? null) ? `${row.status}/${row.local_status}` : row.status ?? "below bar";
+      lines.push(
+        `⚠ ${row.row_id} is ${state} but NOT gated — mark it \`approval_policy.required_for_release: true\` to enforce it.`
+      );
     }
   }
 

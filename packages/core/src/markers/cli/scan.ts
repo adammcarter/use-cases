@@ -344,6 +344,14 @@ export interface ScanGateResult {
   // "VERIFIED_LOCAL" floor).
   required_bar: "FRESH" | "VERIFIED_LOCAL";
   offending_rows: ScanGateOffender[];
+  // GATE HONESTY (0.2.0): every NON-required row that is BELOW the bar and
+  // drifting (SUSPECT / STALE_LOCAL / UNPROVEN-not-VERIFIED_LOCAL). These are NOT
+  // enforced by the gate (they lack required_for_release:true), so a "gate
+  // passed" that hides them is false safety. They are surfaced here — additive,
+  // advisory — so both the human and JSON views can WARN that drift exists but is
+  // not gated. UNBOUND rows are excluded: an uncovered behaviour is a coverage
+  // gap, not silently-passed drift.
+  ungated_below_bar: ScanGateOffender[];
 }
 
 // True iff a row meets the acceptable bar for `policyMode`. FRESH always passes
@@ -368,12 +376,25 @@ export function evaluateScanGate(
   policyMode: PolicyMode
 ): ScanGateResult {
   const offending: ScanGateOffender[] = [];
+  const ungatedBelowBar: ScanGateOffender[] = [];
   for (const row of status.rows) {
-    if (row.required_for_release !== true) {
-      continue; // only required rows are gated
+    const belowBar = !rowMeetsGateBar(row, policyMode);
+    if (row.required_for_release === true) {
+      // Gated row: below the bar => it blocks (exit 1).
+      if (belowBar) {
+        offending.push({
+          row_id: row.row_id,
+          status: row.status,
+          local_status: row.local_status ?? null
+        });
+      }
+      continue;
     }
-    if (!rowMeetsGateBar(row, policyMode)) {
-      offending.push({
+    // Non-required (ungated) row: below the bar AND drifting => surface it as an
+    // honest WARNING so a passing gate never reads as endorsing it. An UNBOUND
+    // row is an uncovered-coverage gap, not drift, so it is NOT flagged here.
+    if (belowBar && row.status !== "UNBOUND") {
+      ungatedBelowBar.push({
         row_id: row.row_id,
         status: row.status,
         local_status: row.local_status ?? null
@@ -384,7 +405,8 @@ export function evaluateScanGate(
     blocked: offending.length > 0,
     policy_mode: policyMode,
     required_bar: policyMode === "release" ? "FRESH" : "VERIFIED_LOCAL",
-    offending_rows: offending
+    offending_rows: offending,
+    ungated_below_bar: ungatedBelowBar
   };
 }
 

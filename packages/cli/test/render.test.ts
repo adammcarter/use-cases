@@ -124,6 +124,95 @@ describe("BLOCKER 2 — human trust view never shows green while the command fai
   });
 });
 
+describe("scan count vocabulary — keyless VERIFIED_LOCAL is not conflated with signed FRESH", () => {
+  test("a keyless VERIFIED_LOCAL row is NOT counted as 'fresh' in the header", () => {
+    const env = scanEnvelope({
+      ok: true,
+      exitCode: 0,
+      rows: [{ row_id: "checkout.apply_coupon", status: "UNPROVEN", local_status: "VERIFIED_LOCAL" }],
+      summary: { unproven: 1 }
+    });
+    const human = renderEnvelope(env, false);
+    // The header must not call a keyless local pass "fresh" (the signed tier word).
+    expect(human).not.toMatch(/1 fresh/);
+    // It is still reported as green (verified-local), just under an honest word.
+    expect(human).toMatch(/verified-local|1 green/i);
+  });
+
+  test("a signed FRESH row is still counted under 'fresh'", () => {
+    const env = scanEnvelope({
+      ok: true,
+      exitCode: 0,
+      rows: [{ row_id: "checkout.apply_coupon", status: "FRESH", local_status: "VERIFIED_LOCAL" }],
+      summary: { fresh: 1 }
+    });
+    const human = renderEnvelope(env, false);
+    expect(human).toMatch(/1 fresh/);
+  });
+});
+
+describe("GATE HONESTY — a passing gate must warn about ungated drift", () => {
+  function gateScanEnvelope(gate: {
+    blocked: boolean;
+    required_bar: string;
+    offending_rows?: Array<{ row_id: string }>;
+    ungated_below_bar?: Array<{ row_id: string; status: string; local_status?: string | null }>;
+  }, rows: Array<{ row_id: string; status: string; local_status?: string | null; required_for_release?: boolean }>, summary: Partial<{ fresh: number; suspect: number; unproven: number; unbound: number; invalid: number }>) {
+    return {
+      command: "markers.scan",
+      ok: true,
+      complete: true,
+      data: {
+        exit_code: 0,
+        ok: true,
+        status: { summary: { fresh: 0, suspect: 0, unproven: 0, unbound: 0, invalid: 0, ...summary }, rows },
+        registry_valid: true,
+        evidence_valid: true,
+        gate: { policy_mode: "release", ...gate }
+      }
+    };
+  }
+
+  test("gate passed states HOW MANY required behaviours met the bar", () => {
+    const env = gateScanEnvelope(
+      { blocked: false, required_bar: "FRESH", offending_rows: [], ungated_below_bar: [] },
+      [
+        { row_id: "req.a", status: "FRESH", local_status: "VERIFIED_LOCAL", required_for_release: true },
+        { row_id: "req.b", status: "FRESH", local_status: "VERIFIED_LOCAL", required_for_release: true }
+      ],
+      { fresh: 2 }
+    );
+    const human = renderEnvelope(env, false);
+    expect(human).toMatch(/gate passed/);
+    // Names the count of required behaviours evaluated against the bar.
+    expect(human).toMatch(/2 required behaviours? meet FRESH/i);
+  });
+
+  test("a passing gate WARNS about a non-required SUSPECT row that is not gated", () => {
+    const env = gateScanEnvelope(
+      {
+        blocked: false,
+        required_bar: "FRESH",
+        offending_rows: [],
+        ungated_below_bar: [{ row_id: "drifted.row", status: "SUSPECT", local_status: "STALE_LOCAL" }]
+      },
+      [
+        { row_id: "req.a", status: "FRESH", local_status: "VERIFIED_LOCAL", required_for_release: true },
+        { row_id: "drifted.row", status: "SUSPECT", local_status: "STALE_LOCAL" }
+      ],
+      { fresh: 1, suspect: 1 }
+    );
+    const human = renderEnvelope(env, false);
+    // The pass line still shows.
+    expect(human).toMatch(/gate passed/);
+    // But a warning surfaces the ungated drift + the exact knob to enforce it.
+    expect(human).toMatch(/⚠/);
+    expect(human).toMatch(/not gated|NOT gated/);
+    expect(human).toMatch(/drifted\.row/);
+    expect(human).toMatch(/required_for_release/);
+  });
+});
+
 describe("BLOCKER 2 — render is a pure function of the envelope (exit-code parity precondition)", () => {
   // The dispatcher returns ONE exitCode and renders the SAME envelope in both
   // modes; parity holds iff the render layer never alters control flow by mode.
