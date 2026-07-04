@@ -15,7 +15,12 @@
 
 // The command ids these renderers own. Everything else stays on the generic
 // dumper (prove / keygen / bind / validate-ledger / …).
-export const TRUST_COMMANDS = new Set(["markers.scan", "markers.verify", "markers.impact"]);
+export const TRUST_COMMANDS = new Set([
+  "markers.scan",
+  "markers.verify",
+  "markers.impact",
+  "markers.recover"
+]);
 
 // One line steering the human to the machine-readable form, appended to every
 // trust view (kept identical to the generic renderer's footer so existing
@@ -282,6 +287,54 @@ function renderImpact(data: ImpactData): string[] {
   return lines;
 }
 
+// --- recover ------------------------------------------------------------------
+
+interface RecoverData {
+  recovered?: boolean;
+  proved?: boolean;
+  target?: string;
+  status?: {
+    rows?: FreshnessRow[];
+  };
+}
+
+// A concise human view for `uc recover`: whether it recovered, the target row's
+// resulting state (green via VERIFIED_LOCAL / FRESH, or still not green), and a
+// next action ONLY when it is still not green. It deliberately does NOT dump the
+// raw status envelope (row_hash / span_sha256s / verification_context_hash /
+// timestamps) the generic renderer would, and it never headlines "run uc prove"
+// when the keyless light is already green — keyless success is a first-class
+// green, not a lesser UNPROVEN state.
+function renderRecover(data: RecoverData): string[] {
+  const rows = data.status?.rows ?? [];
+  const target = data.target ?? "the target row";
+  const recovered = data.recovered === true;
+  const lines: string[] = [];
+
+  // Headline: did recovery restore the row(s) to green?
+  if (recovered) {
+    lines.push(`✓ recovered ${target} — back to green.`);
+  } else {
+    lines.push(`✗ could NOT recover ${target} — still not green.`);
+  }
+  lines.push("");
+
+  // One concise line per row: glyph + state word + row id. For a green row that
+  // is the whole story; for a non-green row, add the daily next action.
+  for (const row of rows) {
+    const badge = statusBadge(row.status, row.local_status ?? null);
+    lines.push(`  ${badge.glyph} ${badge.word.padEnd(14)} ${row.row_id}`);
+    if (!isGreen(row.status, row.local_status ?? null)) {
+      const action = scanRowAction(row);
+      if (action) {
+        lines.push(`      → ${action}`);
+      }
+    }
+  }
+
+  return lines;
+}
+
 // --- dispatch -----------------------------------------------------------------
 
 // Render one of the trust commands' human views, or return null so the caller
@@ -309,6 +362,13 @@ export function renderTrustHuman(command: string, data: unknown, ok?: boolean): 
     case "markers.impact":
       if (!Array.isArray(d.impacted)) return null;
       body = renderImpact(data as ImpactData);
+      break;
+    case "markers.recover":
+      // A real recover result always carries a boolean `recovered`. An error
+      // envelope (workspace-not-found, bad args) does not, so it falls through to
+      // the generic diagnostics dumper.
+      if (typeof d.recovered !== "boolean") return null;
+      body = renderRecover(data as RecoverData);
       break;
     default:
       return null;

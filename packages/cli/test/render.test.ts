@@ -124,6 +124,89 @@ describe("BLOCKER 2 — human trust view never shows green while the command fai
   });
 });
 
+describe("recover — concise human view (not the raw status envelope)", () => {
+  function recoverEnvelope(options: {
+    ok: boolean;
+    exitCode: number;
+    recovered: boolean;
+    proved?: boolean;
+    target: string;
+    rows: Array<{ row_id: string; status: string; local_status?: string | null }>;
+    diagnostics?: Array<{ code: string; severity?: string; message: string }>;
+  }) {
+    return {
+      command: "markers.recover",
+      ok: options.ok,
+      complete: options.ok,
+      data: {
+        exit_code: options.exitCode,
+        recovered: options.recovered,
+        proved: options.proved ?? false,
+        target: options.target,
+        results_path: "/tmp/x/.use-cases/verification-results.jsonl",
+        // recover mirrors scan's status shape; the raw envelope also carries
+        // row_hash / span_sha256s / verification_context_hash under status.rows —
+        // exactly the noisy tree the concise view must NOT dump.
+        status: {
+          schema: "ucase-freshness-status-v1",
+          generated_at: "2026-07-04T00:00:00Z",
+          verification_context_hash: "ctx-deadbeef",
+          summary: { fresh: 0, suspect: 0, unproven: 0, unbound: 0, invalid: 0 },
+          rows: options.rows.map((r) => ({
+            ...r,
+            row_hash: "rowhash-deadbeef",
+            span_sha256s: ["span-deadbeef"],
+            verification_context_hash: "ctx-deadbeef"
+          }))
+        }
+      },
+      ...(options.diagnostics ? { diagnostics: options.diagnostics } : {})
+    };
+  }
+
+  test("a drifted-then-recovered row prints a SHORT success summary (recovered -> green), not the nested envelope", () => {
+    const env = recoverEnvelope({
+      ok: true,
+      exitCode: 0,
+      recovered: true,
+      target: "checkout.apply_coupon",
+      rows: [{ row_id: "checkout.apply_coupon", status: "UNPROVEN", local_status: "VERIFIED_LOCAL" }]
+    });
+    const human = renderEnvelope(env, false);
+    // Reads as success/recovered.
+    expect(human).toMatch(/recovered/i);
+    expect(human).toMatch(/checkout\.apply_coupon/);
+    // Green state is surfaced.
+    expect(human).toMatch(/VERIFIED_LOCAL|green/i);
+    // The raw hash envelope is NOT dumped.
+    expect(human).not.toMatch(/row_hash/);
+    expect(human).not.toMatch(/span_sha256s/);
+    expect(human).not.toMatch(/verification_context_hash/);
+    // And it must NOT headline "run uc prove" when the keyless light is already green.
+    expect(human).not.toMatch(/uc prove/);
+    // Nor headline UNPROVEN / required_action.
+    expect(human).not.toMatch(/required_action/);
+  });
+
+  test("a row that could NOT be recovered shows a next action", () => {
+    const env = recoverEnvelope({
+      ok: false,
+      exitCode: 1,
+      recovered: false,
+      target: "checkout.apply_coupon",
+      rows: [{ row_id: "checkout.apply_coupon", status: "SUSPECT", local_status: "STALE_LOCAL" }],
+      diagnostics: [{ code: "recover.not_green", severity: "error", message: "recover re-verified checkout.apply_coupon but it did not reach VERIFIED_LOCAL." }]
+    });
+    const human = renderEnvelope(env, false);
+    // Surfaces failure (not an unqualified green).
+    expect(looksUnqualifiedGreen(human)).toBe(false);
+    // Still concise — no raw hash tree.
+    expect(human).not.toMatch(/span_sha256s/);
+    // Gives the user a next action.
+    expect(human).toMatch(/→|next|verify|scan/i);
+  });
+});
+
 describe("scan count vocabulary — keyless VERIFIED_LOCAL is not conflated with signed FRESH", () => {
   test("a keyless VERIFIED_LOCAL row is NOT counted as 'fresh' in the header", () => {
     const env = scanEnvelope({
