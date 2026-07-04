@@ -120,6 +120,14 @@ describe("marker-line parser (spec 1.2/1.3)", () => {
       slug: "checkout.apply_coupon#tax",
       column: 1
     });
+    expect(parseMarkerLine(line("ignore:begin"), prefix)).toEqual({
+      kind: "ignore-begin",
+      column: 1
+    });
+    expect(parseMarkerLine(line("ignore:end"), prefix)).toEqual({
+      kind: "ignore-end",
+      column: 1
+    });
 
     expect(parseMarkerLine(line("begin"), prefix)).toMatchObject({
       kind: "invalid",
@@ -144,6 +152,26 @@ describe("marker-line parser (spec 1.2/1.3)", () => {
       kind: "invalid",
       code: "FORBIDDEN_MARKER_PAYLOAD",
       slug: "checkout.apply_coupon#tax"
+    });
+    expect(parseMarkerLine(line("ignore:begin foo"), prefix)).toMatchObject({
+      kind: "invalid",
+      code: "FORBIDDEN_MARKER_PAYLOAD",
+      message: "ignore:begin marker takes no payload"
+    });
+    expect(parseMarkerLine(line("ignore:end foo"), prefix)).toMatchObject({
+      kind: "invalid",
+      code: "FORBIDDEN_MARKER_PAYLOAD",
+      message: "ignore:end marker takes no payload"
+    });
+    expect(parseMarkerLine(line("foo:begin"), prefix)).toMatchObject({
+      kind: "invalid",
+      code: "MALFORMED_MARKER",
+      message: "unknown block path"
+    });
+    expect(parseMarkerLine(line("ignore:middle"), prefix)).toMatchObject({
+      kind: "invalid",
+      code: "MALFORMED_MARKER",
+      message: "unknown block path"
     });
   });
 

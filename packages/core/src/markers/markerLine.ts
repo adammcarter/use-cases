@@ -55,6 +55,8 @@ export type MarkerLineParse =
   | { kind: "none" }
   | { kind: "start"; slug: string; explicit: boolean; column: number }
   | { kind: "end"; slug: string; column: number }
+  | { kind: "ignore-begin"; column: number }
+  | { kind: "ignore-end"; column: number }
   | { kind: "invalid"; code: MarkerErrorCode; message: string; column: number; slug?: string };
 
 // Parse a single physical line against a known comment prefix.
@@ -87,6 +89,27 @@ export function parseMarkerLine(line: string, commentPrefix: string): MarkerLine
   }
 
   const tokens = payload.split(/[ \t]+/);
+
+  if (tokens[0].includes(":")) {
+    if (tokens[0] === "ignore:begin" || tokens[0] === "ignore:end") {
+      if (tokens.length > 1) {
+        return {
+          kind: "invalid",
+          code: MarkerErrorCode.FORBIDDEN_MARKER_PAYLOAD,
+          message: `${tokens[0]} marker takes no payload`,
+          column
+        };
+      }
+      return { kind: tokens[0] === "ignore:begin" ? "ignore-begin" : "ignore-end", column };
+    }
+    return {
+      kind: "invalid",
+      code: MarkerErrorCode.MALFORMED_MARKER,
+      message: "unknown block path",
+      column,
+      slug: tokens[0]
+    };
+  }
 
   if (tokens[0] === "begin") {
     if (tokens.length === 1) {
