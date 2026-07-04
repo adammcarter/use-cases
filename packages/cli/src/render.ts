@@ -5,6 +5,8 @@
 // running the legacy path. The `--json` form is byte-identical to the original
 // `JSON.stringify(envelope)` output.
 
+import { renderTrustHuman } from "./trustRender.js";
+
 // Structural shape of the fields the human renderer reads. Kept deliberately
 // loose so this module does not depend on core's envelope type (which is loaded
 // dynamically at runtime by the CLI).
@@ -17,7 +19,23 @@ interface RenderableEnvelope {
 }
 
 export function renderEnvelope(envelope: unknown, json: boolean): string {
-  return json ? `${JSON.stringify(envelope)}\n` : renderHumanEnvelope(envelope as RenderableEnvelope);
+  // The --json form stays BYTE-IDENTICAL to the original `JSON.stringify(envelope)
+  // + "\n"` — the human-readable trust view below only ever touches the non-json
+  // path (0.2.0 F4).
+  if (json) {
+    return `${JSON.stringify(envelope)}\n`;
+  }
+  const record = envelope as RenderableEnvelope;
+  // The daily trust commands (scan / verify / impact) get a friendly at-a-glance
+  // view when they SUCCEEDED. Error envelopes (ok:false, no expected data shape)
+  // fall through to the generic dumper so their diagnostics still surface.
+  if (record.ok === true) {
+    const trust = renderTrustHuman(record.command, record.data);
+    if (trust !== null) {
+      return trust;
+    }
+  }
+  return renderHumanEnvelope(record);
 }
 
 // Render any result envelope as readable text. Because the envelope shape is
