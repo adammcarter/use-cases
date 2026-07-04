@@ -127,6 +127,25 @@ function loadApprovalTokenBundle(flags: ParsedFlags): ApprovalTokenBundle | null
   return { approvalToken, ...trust };
 }
 
+// EXIT PARITY (0.2.0): the process exit code an approval-bearing verb reports.
+// A recorded approval is only an unqualified success when the resulting run is
+// COMPLETE, its approval_state is a POSITIVE approval (approved /
+// approved_with_known_gaps / not_required), AND the run itself ended in a
+// passing outcome. Approving a rejected / still-pending / stale / failed /
+// incomplete run must NOT read as exit 0 — otherwise a human sees green while
+// the run did not actually pass (the acceptance re-run's false-success). This is
+// single-sourced (the handler returns one exitCode used for BOTH --json and human
+// renders), so the two modes are identical by construction.
+function approvalExitCode(status: ReturnType<typeof startShowcaseRun>["status"]): number {
+  const positiveApproval =
+    status.approval_state === "approved" ||
+    status.approval_state === "approved_with_known_gaps" ||
+    status.approval_state === "not_required";
+  const passingOutcome =
+    status.run_outcome === "passed" || status.run_outcome === "passed_with_waivers";
+  return status.complete && positiveApproval && passingOutcome ? 0 : 1;
+}
+
 // Non-writing port of the legacy `writeShowcaseResult`: wrap a showcase run
 // result in the canonical envelope (ok=true, complete from the run status) and
 // pair it with the verb's exit code instead of writing to stdout.
@@ -134,11 +153,16 @@ function showcaseResultOutput(
   command: string,
   result: ReturnType<typeof startShowcaseRun>,
   context: ResolvedContext,
-  exitCode: number
+  exitCode: number,
+  // OPTIONAL envelope-ok override. Defaults to true so every existing verb's
+  // envelope is byte-identical; approve passes (exitCode === 0) so a non-zero
+  // (rejected/incomplete) approval reads ok:false in --json too, matching the
+  // non-zero process exit.
+  ok = true
 ): CommandOutput {
   return {
     envelope: createCliResult(command, result, {
-      ok: true,
+      ok,
       complete: result.status.complete,
       workspaceRoot: context.workspace_root,
       dataRoot: context.data_root,
@@ -696,7 +720,10 @@ export const showcaseApproveCommand: CliCommand = {
             }
           : {})
       });
-      return showcaseResultOutput("showcase.approve", result, contextResult, 0);
+      // EXIT PARITY: derive the exit from the recorded run state — a rejected,
+      // still-pending, stale, failed, or incomplete run is NOT an exit-0 success.
+      const exitCode = approvalExitCode(result.status);
+      return showcaseResultOutput("showcase.approve", result, contextResult, exitCode, exitCode === 0);
     } catch (error) {
       return showcaseCaughtError("showcase.approve", error);
     }

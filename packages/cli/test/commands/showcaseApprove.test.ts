@@ -21,6 +21,7 @@ import {
   showcaseStatusCommand
 } from "../../src/commands/showcase.js";
 import {
+  appendShowcaseEpoch,
   appendShowcaseObservation,
   appendShowcaseVerdict,
   computeRunApprovalBinding,
@@ -109,6 +110,72 @@ function planFor(ctx: ReturnType<typeof resolveWorkspaceContext>) {
     throw new Error("expected fixture plan");
   }
   return result.plan;
+}
+
+// Build a finished run whose plan REQUIRES user approval but that did NOT end in a
+// clean pass: the item's verdict is staled by an epoch change, so the run_outcome
+// is "incomplete". The run is still finishable (no unresolved failures), so an
+// approval CAN be recorded — yet the run itself did not pass, and the CLI must
+// NOT report approving it as an unqualified exit-0 success (exit parity + honesty).
+function completeIncompleteRun(suffix = "inc"): string {
+  const ctx = context();
+  const plan = planFor(ctx);
+  const planItemId = plan.selected_items[0]?.plan_item_id;
+  if (!planItemId) {
+    throw new Error("expected a plan item");
+  }
+  const started = startShowcaseRun({
+    context: ctx,
+    plan,
+    controlMode: "agent_led",
+    actorType: "agent",
+    hostSurface: "codex.cli",
+    idempotencyKey: `bf-${suffix}-start`,
+    recordedAt: "2026-06-25T12:00:00.000Z"
+  });
+  const observation = appendShowcaseObservation({
+    context: ctx,
+    runId: started.run_id,
+    planItemId,
+    text: "The live behaviour matched, then the environment changed.",
+    actorType: "agent",
+    hostSurface: "codex.cli",
+    idempotencyKey: `bf-${suffix}-observe`,
+    recordedAt: "2026-06-25T12:01:00.000Z"
+  });
+  appendShowcaseVerdict({
+    context: ctx,
+    runId: started.run_id,
+    planItemId,
+    verdict: "pass",
+    observationEventIds: [observation.event.event_id],
+    actorType: "agent",
+    hostSurface: "codex.cli",
+    idempotencyKey: `bf-${suffix}-verdict`,
+    recordedAt: "2026-06-25T12:02:00.000Z"
+  });
+  // An epoch change stales the passing verdict -> run_outcome becomes "incomplete"
+  // (the item is no longer current) while leaving no unresolved failures to block
+  // finish.
+  appendShowcaseEpoch({
+    context: ctx,
+    runId: started.run_id,
+    reason: "Environment changed under the run.",
+    staleItemIds: [planItemId],
+    actorType: "agent",
+    hostSurface: "codex.cli",
+    idempotencyKey: `bf-${suffix}-epoch`,
+    recordedAt: "2026-06-25T12:02:30.000Z"
+  });
+  finishShowcaseRun({
+    context: ctx,
+    runId: started.run_id,
+    actorType: "agent",
+    hostSurface: "codex.cli",
+    idempotencyKey: `bf-${suffix}-finish`,
+    recordedAt: "2026-06-25T12:03:00.000Z"
+  });
+  return started.run_id;
 }
 
 // Build a completed, passing run whose plan REQUIRES user approval, returning the
@@ -336,6 +403,56 @@ describe("BLOCKER 1 — showcase approve --approval-token: trusted submit path",
     });
     expect(result.exitCode).not.toBe(0);
     expect(approvalState(runId)).toBe("pending");
+  });
+
+  test("EXIT PARITY — approving a finished-but-INCOMPLETE run does NOT exit 0 (json AND human)", () => {
+    const runId = completeIncompleteRun();
+    const token = humanSignsFor(runId);
+    const tokenPath = writeToken(token);
+    const keyringPath = writeKeyring();
+
+    const flags = {
+      run: runId,
+      statement: "Signed off despite the failing run.",
+      actor: "user",
+      approvalToken: tokenPath,
+      keyring: keyringPath
+    };
+    const jsonResult = showcaseApproveCommand.handler({
+      argv: ["showcase", "approve", "--run", runId, "--repo", workspaceRoot],
+      json: true,
+      flags
+    });
+    const humanResult = showcaseApproveCommand.handler({
+      argv: ["showcase", "approve", "--run", runId, "--repo", workspaceRoot],
+      json: false,
+      flags: { ...flags, idempotencyKey: "cli:approve:parity:human" }
+    });
+    // The run did not pass, so approve must NOT read as an unqualified success.
+    expect(jsonResult.exitCode).not.toBe(0);
+    // Parity: the SAME outcome in human mode must have the SAME (non-zero) exit.
+    expect(humanResult.exitCode).toBe(jsonResult.exitCode);
+    expect(humanResult.exitCode).not.toBe(0);
+  });
+
+  test("EXIT PARITY — a genuine passing approval still exits 0 in BOTH modes", () => {
+    const runId = completePassingRun();
+    const token = humanSignsFor(runId);
+    const tokenPath = writeToken(token);
+    const keyringPath = writeKeyring();
+    const flags = {
+      run: runId,
+      statement: "Genuine sign-off.",
+      actor: "user",
+      approvalToken: tokenPath,
+      keyring: keyringPath
+    };
+    const jsonResult = showcaseApproveCommand.handler({
+      argv: ["showcase", "approve", "--run", runId, "--repo", workspaceRoot],
+      json: true,
+      flags
+    });
+    expect(jsonResult.exitCode).toBe(0);
   });
 
   test("(b) an agent self-approve attempt (untrusted_automation-tier token) -> rejected NON-ZERO, stays pending", () => {
