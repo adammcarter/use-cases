@@ -86,6 +86,11 @@ const REGISTRY = {
     "Marker spans may not be nested.",
     "UCM_MARKER_NESTED_SPAN"
   ),
+  UCM_MARKER_UNBALANCED_IGNORE: entry(
+    "marker",
+    "Marker ignore region is unbalanced or nested.",
+    "UCM_MARKER_UNBALANCED_IGNORE"
+  ),
   UCM_MARKER_DUPLICATE_BINDING_SLUG: entry(
     "marker",
     "Duplicate binding slug within the same source.",
@@ -435,6 +440,7 @@ export const LEGACY_ENUM_CODE_MAP: {
     END_WITHOUT_START: "UCM_MARKER_END_WITHOUT_START",
     UNSUPPORTED_INFERENCE: "UCM_MARKER_UNSUPPORTED_INFERENCE",
     NESTED_SPAN: "UCM_MARKER_NESTED_SPAN",
+    UNBALANCED_IGNORE: "UCM_MARKER_UNBALANCED_IGNORE",
     DUPLICATE_BINDING_SLUG: "UCM_MARKER_DUPLICATE_BINDING_SLUG"
   }),
   registry: Object.freeze({

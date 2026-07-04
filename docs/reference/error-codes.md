@@ -9,7 +9,7 @@ code below is a versioned contract: a code is only removed or repurposed in a
 **major** release; new codes ship additively in a **minor**. Diagnostics carry
 the code in their `code` field.
 
-There are **66** codes across **9** surfaces.
+There are **67** codes across **9** surfaces.
 
 ## Marker grammar
 
@@ -22,6 +22,7 @@ There are **66** codes across **9** surfaces.
 | `UCM_MARKER_FORBIDDEN_PAYLOAD` | error | Marker line carries a forbidden payload. |
 | `UCM_MARKER_MALFORMED` | error | Marker line is malformed. |
 | `UCM_MARKER_NESTED_SPAN` | error | Marker spans may not be nested. |
+| `UCM_MARKER_UNBALANCED_IGNORE` | error | Marker ignore region is unbalanced or nested. |
 | `UCM_MARKER_UNSUPPORTED_INFERENCE` | error | Marker span uses an unsupported inference. |
 
 ## Binding registry

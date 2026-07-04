@@ -257,6 +257,107 @@ describe("explicit span scan -- acceptance #2 (configured # file)", () => {
   });
 });
 
+describe("explicit span scan -- ignore regions", () => {
+  function scanSwiftBody(bodyLines: string[]) {
+    const contents = [
+      "//: @use-case: begin checkout.apply_coupon",
+      ...bodyLines,
+      "//: @use-case: end checkout.apply_coupon"
+    ].join("\n");
+    return scanFileForMarkers("f.swift", contents);
+  }
+
+  test("ignored region content changes do not change the span hash", () => {
+    const before = scanSwiftBody([
+      "keptBefore()",
+      "//: @use-case:ignore:begin",
+      "ignoredValue(1)",
+      "//: @use-case:ignore:end",
+      "keptAfter()"
+    ]);
+    const after = scanSwiftBody([
+      "keptBefore()",
+      "//: @use-case:ignore:begin",
+      "ignoredValue(2)",
+      "ignoredValue(3)",
+      "//: @use-case:ignore:end",
+      "keptAfter()"
+    ]);
+
+    expect(before.errors).toEqual([]);
+    expect(after.errors).toEqual([]);
+    expect(before.bindings[0].span.sha256).toBe(after.bindings[0].span.sha256);
+  });
+
+  test("non-ignored body line changes still change the span hash", () => {
+    const before = scanSwiftBody([
+      "keptBefore()",
+      "//: @use-case:ignore:begin",
+      "ignoredValue(1)",
+      "//: @use-case:ignore:end",
+      "keptAfter()"
+    ]);
+    const after = scanSwiftBody([
+      "keptBefore()",
+      "//: @use-case:ignore:begin",
+      "ignoredValue(1)",
+      "//: @use-case:ignore:end",
+      "keptAfterChanged()"
+    ]);
+
+    expect(before.errors).toEqual([]);
+    expect(after.errors).toEqual([]);
+    expect(before.bindings[0].span.sha256).not.toBe(after.bindings[0].span.sha256);
+  });
+
+  test("ignore marker lines are excluded from the span hash", () => {
+    const result = scanSwiftBody([
+      "keptBefore()",
+      "//: @use-case:ignore:begin",
+      "// marker line should not hash",
+      "//: @use-case:ignore:end",
+      "keptAfter()"
+    ]);
+
+    expect(result.errors).toEqual([]);
+    expect(result.bindings[0].span.sha256).toBe(sha256("keptBefore()\nkeptAfter()\n"));
+  });
+
+  test("ignore begin without end fails closed", () => {
+    const result = scanSwiftBody([
+      "keptBefore()",
+      "//: @use-case:ignore:begin",
+      "ignoredValue(1)",
+      "keptAfter()"
+    ]);
+
+    expect(result.errors.map((e) => e.code)).toContain("UNBALANCED_IGNORE");
+    expect(result.bindings).toHaveLength(0);
+  });
+
+  test("ignore end without begin fails closed", () => {
+    const result = scanSwiftBody(["keptBefore()", "//: @use-case:ignore:end", "keptAfter()"]);
+
+    expect(result.errors.map((e) => e.code)).toContain("UNBALANCED_IGNORE");
+    expect(result.bindings).toHaveLength(0);
+  });
+
+  test("nested ignore begin fails closed", () => {
+    const result = scanSwiftBody([
+      "keptBefore()",
+      "//: @use-case:ignore:begin",
+      "ignoredValue(1)",
+      "//: @use-case:ignore:begin",
+      "ignoredValue(2)",
+      "//: @use-case:ignore:end",
+      "keptAfter()"
+    ]);
+
+    expect(result.errors.map((e) => e.code)).toContain("UNBALANCED_IGNORE");
+    expect(result.bindings).toHaveLength(0);
+  });
+});
+
 describe("explicit span scan -- INVALID detections (acceptance #3-#8)", () => {
   function codes(file: string, path = "f.swift"): string[] {
     return scanFileForMarkers(path, file).errors.map((e) => e.code);

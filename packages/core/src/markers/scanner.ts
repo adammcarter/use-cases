@@ -107,13 +107,82 @@ interface MarkerHit {
   parse: Extract<MarkerLineParse, { kind: "start" | "end" }>;
 }
 
+type ExplicitRecordResult =
+  | { binding: CurrentBindingRecord; error?: never }
+  | { binding?: never; error: MarkerError };
+
+function spanBodyTextsExcludingIgnoreRegions(
+  filePath: string,
+  commentPrefix: string,
+  lines: PhysicalLine[],
+  firstBody: number,
+  lastBody: number,
+  slug: string
+): { bodyTexts: string[]; error?: never } | { bodyTexts?: never; error: MarkerError } {
+  const bodyTexts: string[] = [];
+  let openIgnoreLine: number | null = null;
+
+  for (let i = firstBody; i <= lastBody; i += 1) {
+    const parse = parseMarkerLine(lines[i].text, commentPrefix);
+    if (parse.kind === "ignore-begin") {
+      if (openIgnoreLine !== null) {
+        return {
+          error: {
+            code: MarkerErrorCode.UNBALANCED_IGNORE,
+            message: `nested ignore region inside ${slug}; close the current ignore region before starting another`,
+            file_path: filePath,
+            line: i + 1,
+            slug
+          }
+        };
+      }
+      openIgnoreLine = i;
+      continue;
+    }
+
+    if (parse.kind === "ignore-end") {
+      if (openIgnoreLine === null) {
+        return {
+          error: {
+            code: MarkerErrorCode.UNBALANCED_IGNORE,
+            message: `ignore end inside ${slug} has no matching ignore begin`,
+            file_path: filePath,
+            line: i + 1,
+            slug
+          }
+        };
+      }
+      openIgnoreLine = null;
+      continue;
+    }
+
+    if (openIgnoreLine === null) {
+      bodyTexts.push(lines[i].text);
+    }
+  }
+
+  if (openIgnoreLine !== null) {
+    return {
+      error: {
+        code: MarkerErrorCode.UNBALANCED_IGNORE,
+        message: `ignore begin inside ${slug} has no matching ignore end before the span ends`,
+        file_path: filePath,
+        line: openIgnoreLine + 1,
+        slug
+      }
+    };
+  }
+
+  return { bodyTexts };
+}
+
 function buildExplicitRecord(
   filePath: string,
   commentPrefix: string,
   lines: PhysicalLine[],
   start: MarkerHit,
   end: MarkerHit
-): CurrentBindingRecord {
+): ExplicitRecordResult {
   const slug = start.parse.slug;
   const parts = splitSlug(slug);
   const startIdx = start.lineIndex;
@@ -130,7 +199,18 @@ function buildExplicitRecord(
   let endByte: number;
   if (firstBody <= lastBody) {
     const body = lines.slice(firstBody, lastBody + 1);
-    bodyTexts = body.map((line) => line.text);
+    const result = spanBodyTextsExcludingIgnoreRegions(
+      filePath,
+      commentPrefix,
+      lines,
+      firstBody,
+      lastBody,
+      slug
+    );
+    if (result.error) {
+      return { error: result.error };
+    }
+    bodyTexts = result.bodyTexts;
     startLine = firstBody + 1;
     endLine = lastBody + 1;
     startByte = body[0].byteStart;
@@ -147,24 +227,26 @@ function buildExplicitRecord(
   const canonical = canonicalizeSpanLines(bodyTexts);
 
   return {
-    binding_slug: slug,
-    row_id: parts ? parts.row_id : slug,
-    suffix: parts ? parts.suffix : null,
-    file_path: filePath,
-    comment_prefix: commentPrefix,
-    extent_kind: "explicit",
-    recognizer_id: EXPLICIT_RECOGNIZER_ID,
-    span_canon_id: SPAN_CANON_ID,
-    start_marker: { line: startIdx + 1, column: start.parse.column },
-    end_marker: { line: endIdx + 1, column: end.parse.column },
-    span: {
-      start_line: startLine,
-      end_line: endLine,
-      start_byte: startByte,
-      end_byte: endByte,
-      sha256: sha256(canonical)
-    },
-    diagnostic: { inferred: false }
+    binding: {
+      binding_slug: slug,
+      row_id: parts ? parts.row_id : slug,
+      suffix: parts ? parts.suffix : null,
+      file_path: filePath,
+      comment_prefix: commentPrefix,
+      extent_kind: "explicit",
+      recognizer_id: EXPLICIT_RECOGNIZER_ID,
+      span_canon_id: SPAN_CANON_ID,
+      start_marker: { line: startIdx + 1, column: start.parse.column },
+      end_marker: { line: endIdx + 1, column: end.parse.column },
+      span: {
+        start_line: startLine,
+        end_line: endLine,
+        start_byte: startByte,
+        end_byte: endByte,
+        sha256: sha256(canonical)
+      },
+      diagnostic: { inferred: false }
+    }
   };
 }
 
@@ -287,7 +369,9 @@ export function scanFileForMarkers(
       });
       continue;
     }
-    markers.push({ lineIndex: i, parse });
+    if (parse.kind === "start" || parse.kind === "end") {
+      markers.push({ lineIndex: i, parse });
+    }
   }
 
   // Pass 2: duplicate full start-slug detection (spec 1.3 rule 2, within file).
@@ -372,7 +456,19 @@ export function scanFileForMarkers(
   }
 
   for (const pair of explicitPairs) {
-    bindings.push(buildExplicitRecord(filePath, commentPrefix, lines, pair.start, pair.end));
+    const { binding, error } = buildExplicitRecord(
+      filePath,
+      commentPrefix,
+      lines,
+      pair.start,
+      pair.end
+    );
+    if (binding) {
+      bindings.push(binding);
+    }
+    if (error) {
+      errors.push(error);
+    }
   }
 
   // Pass 4: lone (unclosed) start markers -> Swift inference or unsupported.
