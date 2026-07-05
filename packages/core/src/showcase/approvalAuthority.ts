@@ -11,7 +11,7 @@
 // =trusted_user_interactive_cli and the replay verifier trusted that string
 // with no signature.
 import type { PublicKeyResolver } from "../markers/proofSignature.js";
-import type { AssuranceTierResolver } from "../markers/keyring.js";
+import type { AssuranceTierResolver, WebAuthnCredentialResolver } from "../markers/keyring.js";
 import { AssuranceTier } from "./approvalTiers.js";
 import {
   verifyApprovalToken,
@@ -28,6 +28,7 @@ import type { ShowcaseActorType, ShowcaseEvent } from "./types.js";
 export interface ApprovalTrustContext {
   resolver?: PublicKeyResolver;
   tierResolver?: AssuranceTierResolver;
+  webauthnCredentialResolver?: WebAuthnCredentialResolver;
   assuranceFloor?: AssuranceTier;
   // The live run binding to re-check the embedded token against. When omitted,
   // the token's own embedded binding is used (append-time already enforced the
@@ -80,6 +81,7 @@ export function trustedUserDecisionMetadata(
     token,
     resolver: trust.resolver,
     tierResolver: trust.tierResolver,
+    webauthnCredentialResolver: trust.webauthnCredentialResolver,
     liveBinding: trust.liveBinding ?? token.binding,
     isNonceBurned: () => false,
     nowMs: trust.nowMs ?? Date.parse(token.iat),

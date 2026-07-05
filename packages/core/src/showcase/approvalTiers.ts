@@ -16,8 +16,9 @@ export const AssuranceTier = Object.freeze({
   SAME_CHANNEL_OPERATOR_CONFIRMATION: "same_channel_operator_confirmation",
   // A token signed by a key held in host/OS custody outside the agent's scope,
   // keyring-verified. THE v1 target tier for "a human really approved this".
-  TRUSTED_HOST_USER_PRESENCE: "trusted_host_user_presence"
-  // (deferred slot: webauthn_hardware — a hardware-attested tier above this.)
+  TRUSTED_HOST_USER_PRESENCE: "trusted_host_user_presence",
+  // A WebAuthn/passkey assertion verified against a pinned hardware credential.
+  WEBAUTHN_HARDWARE: "webauthn_hardware"
 } as const);
 
 export type AssuranceTier = (typeof AssuranceTier)[keyof typeof AssuranceTier];
@@ -25,7 +26,8 @@ export type AssuranceTier = (typeof AssuranceTier)[keyof typeof AssuranceTier];
 export const AssuranceMethod = Object.freeze({
   AUTOMATION: "automation",
   SAME_CHANNEL: "same_channel",
-  OS_PRESENCE: "os_presence"
+  OS_PRESENCE: "os_presence",
+  WEBAUTHN: "webauthn"
 } as const);
 
 export type AssuranceMethod = (typeof AssuranceMethod)[keyof typeof AssuranceMethod];
@@ -33,15 +35,16 @@ export type AssuranceMethod = (typeof AssuranceMethod)[keyof typeof AssuranceMet
 export const ASSURANCE_METHOD_TO_TIER: Record<AssuranceMethod, AssuranceTier> = Object.freeze({
   [AssuranceMethod.AUTOMATION]: AssuranceTier.UNTRUSTED_AUTOMATION,
   [AssuranceMethod.SAME_CHANNEL]: AssuranceTier.SAME_CHANNEL_OPERATOR_CONFIRMATION,
-  [AssuranceMethod.OS_PRESENCE]: AssuranceTier.TRUSTED_HOST_USER_PRESENCE
+  [AssuranceMethod.OS_PRESENCE]: AssuranceTier.TRUSTED_HOST_USER_PRESENCE,
+  [AssuranceMethod.WEBAUTHN]: AssuranceTier.WEBAUTHN_HARDWARE
 });
 
-// Ordered weakest -> strongest. Index is the ladder rank; a higher (deferred)
-// hardware tier would append here.
+// Ordered weakest -> strongest. Index is the ladder rank.
 const LADDER: AssuranceTier[] = [
   AssuranceTier.UNTRUSTED_AUTOMATION,
   AssuranceTier.SAME_CHANNEL_OPERATOR_CONFIRMATION,
-  AssuranceTier.TRUSTED_HOST_USER_PRESENCE
+  AssuranceTier.TRUSTED_HOST_USER_PRESENCE,
+  AssuranceTier.WEBAUTHN_HARDWARE
 ];
 
 // Fail-closed: anything unrecognised (including undefined / a bogus string) is

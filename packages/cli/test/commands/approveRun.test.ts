@@ -6,7 +6,7 @@
 // KEY CUSTODY is the whole guarantee: a signer with NO access to the key cannot
 // mint a token. This suite proves the signer round-trips with a key AND fails
 // closed without one.
-import { generateKeyPairSync } from "node:crypto";
+import { createHash, generateKeyPairSync, sign } from "node:crypto";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -14,13 +14,16 @@ import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { approveRunCommand } from "../../src/commands/approveRun.js";
 import {
   keyringAssuranceTierResolver,
+  keyringWebAuthnCredentialResolver,
   keyringResolver,
   mintApprovalRequest,
   verifyApprovalToken,
   type ApprovalRequestBinding,
+  type ApprovalRequest,
   type ApprovalToken,
   type Keyring
 } from "@adammcarter/use-cases-core";
+import { canonicalJson } from "../../../core/src/markers/canonicalJson.js";
 
 let dir: string;
 
@@ -49,6 +52,31 @@ const KEYRING: Keyring = {
 
 const AT = Date.parse("2026-06-28T12:05:00.000Z");
 
+const WEBAUTHN_CREDENTIAL = (() => {
+  const { publicKey, privateKey } = generateKeyPairSync("ed25519");
+  return {
+    credentialId: "approve-run-webauthn-ed25519",
+    publicKeySpki: publicKey.export({ type: "spki", format: "der" }).toString("base64url"),
+    privateKey
+  };
+})();
+
+const WEBAUTHN_KEYRING: Keyring = {
+  keyring_schema_id: "ucase-public-key-registry-v1",
+  keys: [
+    {
+      algorithm: "webauthn",
+      credential_id: WEBAUTHN_CREDENTIAL.credentialId,
+      credential_public_key_alg: -8,
+      credential_public_key_spki: WEBAUTHN_CREDENTIAL.publicKeySpki,
+      valid_from: "2026-01-01T00:00:00Z",
+      valid_until: null,
+      status: "active",
+      max_assurance_tier: "webauthn_hardware"
+    }
+  ]
+};
+
 function binding(): ApprovalRequestBinding {
   return {
     run_id: "run.alpha",
@@ -66,6 +94,38 @@ function writeRequest(): string {
   const path = join(dir, "request.json");
   writeFileSync(path, JSON.stringify(request), "utf8");
   return path;
+}
+
+function writeWebAuthnAssertion(request: ApprovalRequest): string {
+  const clientDataJson = Buffer.from(
+    JSON.stringify({
+      type: "webauthn.get",
+      challenge: createHash("sha256").update(canonicalJson(request.binding)).digest().toString("base64url"),
+      origin: "https://use-cases.dev"
+    }),
+    "utf8"
+  );
+  const authenticatorData = Buffer.concat([
+    createHash("sha256").update("use-cases.dev").digest(),
+    Buffer.from([0x05]),
+    Buffer.from([0, 0, 0, 1])
+  ]);
+  const signatureBase = Buffer.concat([
+    authenticatorData,
+    createHash("sha256").update(clientDataJson).digest()
+  ]);
+  const assertionPath = join(dir, "webauthn-assertion.json");
+  writeFileSync(
+    assertionPath,
+    JSON.stringify({
+      credential_id: WEBAUTHN_CREDENTIAL.credentialId,
+      authenticator_data: authenticatorData.toString("base64url"),
+      client_data_json: clientDataJson.toString("base64url"),
+      signature: sign(null, signatureBase, WEBAUTHN_CREDENTIAL.privateKey).toString("base64url")
+    }),
+    "utf8"
+  );
+  return assertionPath;
 }
 
 function extractToken(envelope: unknown): ApprovalToken {
@@ -153,6 +213,39 @@ describe("uc approve-run — out-of-band human signer", () => {
     const token = JSON.parse(readFileSync(outPath, "utf8")) as ApprovalToken;
     expect(token.approval_token_schema).toBe("ucase-approval-token-v1");
     expect(token.signature.alg).toBe("ed25519");
+  });
+
+  test("--webauthn-assertion builds a verifiable WebAuthn token without a private key", () => {
+    const request = mintApprovalRequest({ binding: binding(), nowMs: AT, ttlMinutes: 15 });
+    const requestPath = join(dir, "request.json");
+    writeFileSync(requestPath, JSON.stringify(request), "utf8");
+    const assertionPath = writeWebAuthnAssertion(request);
+
+    const result = approveRunCommand.handler({
+      argv: [],
+      json: true,
+      flags: {
+        request: requestPath,
+        webauthnAssertion: assertionPath,
+        decision: "approved"
+      }
+    });
+    expect(result.exitCode).toBe(0);
+    const token = extractToken(result.envelope);
+    expect(token.signature.alg).toBe("webauthn");
+
+    const verification = verifyApprovalToken({
+      token,
+      resolver: keyringResolver(WEBAUTHN_KEYRING),
+      tierResolver: keyringAssuranceTierResolver(WEBAUTHN_KEYRING),
+      webauthnCredentialResolver: keyringWebAuthnCredentialResolver(WEBAUTHN_KEYRING),
+      liveBinding: binding(),
+      isNonceBurned: () => false,
+      nowMs: AT,
+      assuranceFloor: "webauthn_hardware"
+    });
+    expect(verification.ok).toBe(true);
+    expect(verification.ok === true && verification.assurance_tier).toBe("webauthn_hardware");
   });
 
   test("(l) KEY CUSTODY: with NO key (neither --key-file nor --key-env) it fails closed — no token minted", () => {

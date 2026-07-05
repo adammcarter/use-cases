@@ -8,13 +8,15 @@
 // field, the nonce, the expiry, and the key's assurance tier.
 //
 // These are the MUST-REJECT / MUST-ACCEPT cases from the F3 TDD matrix.
-import { generateKeyPairSync } from "node:crypto";
+import { createHash, generateKeyPairSync, sign } from "node:crypto";
 import { describe, expect, test } from "vitest";
 import {
   keyringAssuranceTierResolver,
+  keyringWebAuthnCredentialResolver,
   keyringResolver,
   type Keyring
 } from "../../src/markers/index.js";
+import { canonicalJson } from "../../src/markers/canonicalJson.js";
 import {
   mintApprovalRequest,
   signApprovalToken,
@@ -24,6 +26,7 @@ import {
 } from "../../src/showcase/approvalToken.js";
 
 type TestAssuranceMethod = "automation" | "same_channel" | "os_presence";
+type TestWebAuthnAlg = -7 | -8;
 
 // ---------------------------------------------------------------------------
 // Fixtures: two keys. TRUSTED = a host_signed_approval_token tier key (the human
@@ -82,6 +85,111 @@ function liveBinding(overrides: Partial<ApprovalRequestBinding> = {}): ApprovalR
     git_commit: "0123456789abcdef0123456789abcdef01234567",
     ci_freshness_digest: "sha256:ci-alpha",
     ...overrides
+  };
+}
+
+function b64url(bytes: Buffer): string {
+  return bytes.toString("base64url");
+}
+
+function sha256(bytes: Buffer | string): Buffer {
+  return createHash("sha256").update(bytes).digest();
+}
+
+function webAuthnChallenge(binding: ApprovalRequestBinding): string {
+  return b64url(sha256(canonicalJson(binding)));
+}
+
+function webAuthnCredential(alg: TestWebAuthnAlg): {
+  alg: TestWebAuthnAlg;
+  credentialId: string;
+  publicKeySpki: string;
+  privateKey: ReturnType<typeof generateKeyPairSync>["privateKey"];
+} {
+  const pair =
+    alg === -7
+      ? generateKeyPairSync("ec", { namedCurve: "P-256" })
+      : generateKeyPairSync("ed25519");
+  return {
+    alg,
+    credentialId: alg === -7 ? "credential-es256" : "credential-ed25519",
+    publicKeySpki: b64url(pair.publicKey.export({ type: "spki", format: "der" })),
+    privateKey: pair.privateKey
+  };
+}
+
+function webAuthnKeyring(credential: ReturnType<typeof webAuthnCredential>): Keyring {
+  return {
+    keyring_schema_id: "ucase-public-key-registry-v1",
+    keys: [
+      {
+        algorithm: "webauthn",
+        credential_id: credential.credentialId,
+        credential_public_key_alg: credential.alg,
+        credential_public_key_spki: credential.publicKeySpki,
+        valid_from: "2026-01-01T00:00:00Z",
+        valid_until: null,
+        status: "active",
+        max_assurance_tier: "webauthn_hardware"
+      }
+    ]
+  };
+}
+
+function webAuthnToken(options: {
+  credential: ReturnType<typeof webAuthnCredential>;
+  binding?: ApprovalRequestBinding;
+  challenge?: string;
+  flags?: number;
+  tamperSignature?: boolean;
+  tamperAuthenticatorData?: boolean;
+}): ApprovalToken {
+  const binding = options.binding ?? liveBinding();
+  const request = mintApprovalRequest({ binding, nowMs: Date.parse(IN_WINDOW), ttlMinutes: 15 });
+  const flags = options.flags ?? 0x05; // UP + UV
+  const authenticatorData = Buffer.concat([
+    sha256("use-cases.dev"),
+    Buffer.from([flags]),
+    Buffer.from([0, 0, 0, 1])
+  ]);
+  const clientDataJson = Buffer.from(
+    JSON.stringify({
+      type: "webauthn.get",
+      challenge: options.challenge ?? webAuthnChallenge(binding),
+      origin: "https://use-cases.dev"
+    }),
+    "utf8"
+  );
+  const signatureBase = Buffer.concat([authenticatorData, sha256(clientDataJson)]);
+  const signatureValue =
+    options.credential.alg === -7
+      ? sign("SHA256", signatureBase, options.credential.privateKey)
+      : sign(null, signatureBase, options.credential.privateKey);
+  const signatureBytes = Buffer.from(signatureValue);
+  if (options.tamperSignature) {
+    signatureBytes[0] ^= 0xff;
+  }
+  const authenticatorDataBytes = Buffer.from(authenticatorData);
+  if (options.tamperAuthenticatorData) {
+    authenticatorDataBytes[0] ^= 0xff;
+  }
+  return {
+    approval_token_schema: "ucase-approval-token-v1",
+    binding,
+    jti: request.jti,
+    iat: request.iat,
+    exp: request.exp,
+    created_at: request.iat,
+    decision: "approved",
+    assurance_method: "webauthn",
+    assurance_tier: "webauthn_hardware",
+    signature: {
+      alg: "webauthn",
+      credential_id: options.credential.credentialId,
+      authenticator_data: b64url(authenticatorDataBytes),
+      client_data_json: b64url(clientDataJson),
+      signature: b64url(signatureBytes)
+    }
   };
 }
 
@@ -221,6 +329,114 @@ describe("Part 2 assurance method + keyring cap", () => {
 
     expect(result.ok).toBe(true);
     expect(result.ok === true && result.assurance_tier).toBe("same_channel_operator_confirmation");
+  });
+});
+
+describe("Part 3 WebAuthn hardware approval assertions", () => {
+  function verifyWebAuthn(
+    token: ApprovalToken,
+    keyringValue: Keyring,
+    floor: "same_channel_operator_confirmation" | "trusted_host_user_presence" | "webauthn_hardware" = "webauthn_hardware"
+  ) {
+    return verifyApprovalToken({
+      token,
+      resolver: keyringResolver(keyringValue),
+      tierResolver: keyringAssuranceTierResolver(keyringValue),
+      webauthnCredentialResolver: keyringWebAuthnCredentialResolver(keyringValue),
+      liveBinding: liveBinding(),
+      isNonceBurned: () => false,
+      nowMs: Date.parse(IN_WINDOW),
+      assuranceFloor: floor
+    });
+  }
+
+  test("valid ES256 and Ed25519 WebAuthn assertions verify at webauthn_hardware", () => {
+    for (const credential of [webAuthnCredential(-7), webAuthnCredential(-8)]) {
+      const token = webAuthnToken({ credential });
+      const result = verifyWebAuthn(token, webAuthnKeyring(credential));
+
+      expect(result.ok).toBe(true);
+      expect(result.ok === true && result.key_id).toBe(credential.credentialId);
+      expect(result.ok === true && result.assurance_tier).toBe("webauthn_hardware");
+    }
+  });
+
+  test("a WebAuthn assertion with the wrong binding challenge is rejected", () => {
+    const credential = webAuthnCredential(-7);
+    const token = webAuthnToken({ credential, challenge: b64url(sha256("wrong-run")) });
+    const result = verifyWebAuthn(token, webAuthnKeyring(credential));
+
+    expect(result.ok).toBe(false);
+    expect(result.ok === false && result.code).toBe("WEBAUTHN_CHALLENGE_MISMATCH");
+  });
+
+  test("a WebAuthn assertion without UP or UV is rejected fail-closed", () => {
+    const credential = webAuthnCredential(-7);
+
+    const noUserPresence = verifyWebAuthn(
+      webAuthnToken({ credential, flags: 0x04 }),
+      webAuthnKeyring(credential)
+    );
+    expect(noUserPresence.ok).toBe(false);
+    expect(noUserPresence.ok === false && noUserPresence.code).toBe("WEBAUTHN_USER_NOT_PRESENT");
+
+    const noUserVerification = verifyWebAuthn(
+      webAuthnToken({ credential, flags: 0x01 }),
+      webAuthnKeyring(credential)
+    );
+    expect(noUserVerification.ok).toBe(false);
+    expect(noUserVerification.ok === false && noUserVerification.code).toBe("WEBAUTHN_USER_NOT_VERIFIED");
+  });
+
+  test("tampered WebAuthn signature or authenticatorData is rejected", () => {
+    const credential = webAuthnCredential(-8);
+
+    const badSignature = verifyWebAuthn(
+      webAuthnToken({ credential, tamperSignature: true }),
+      webAuthnKeyring(credential)
+    );
+    expect(badSignature.ok).toBe(false);
+    expect(badSignature.ok === false && badSignature.code).toBe("WEBAUTHN_BAD_SIGNATURE");
+
+    const badAuthenticatorData = verifyWebAuthn(
+      webAuthnToken({ credential, tamperAuthenticatorData: true }),
+      webAuthnKeyring(credential)
+    );
+    expect(badAuthenticatorData.ok).toBe(false);
+    expect(badAuthenticatorData.ok === false && badAuthenticatorData.code).toBe("WEBAUTHN_BAD_SIGNATURE");
+  });
+
+  test("a WebAuthn credential that is not pinned in the keyring is rejected", () => {
+    const credential = webAuthnCredential(-7);
+    const otherCredential = { ...webAuthnCredential(-7), credentialId: "other-credential-es256" };
+    const token = webAuthnToken({ credential });
+    const result = verifyWebAuthn(token, webAuthnKeyring(otherCredential));
+
+    expect(result.ok).toBe(false);
+    expect(result.ok === false && result.code).toBe("WEBAUTHN_CREDENTIAL_UNKNOWN");
+  });
+
+  test("a WebAuthn token still passes through max cap and approval floor checks", () => {
+    const credential = webAuthnCredential(-7);
+    const keyringValue = webAuthnKeyring(credential);
+    const underHardwareFloor = verifyWebAuthn(webAuthnToken({ credential }), keyringValue, "trusted_host_user_presence");
+
+    expect(underHardwareFloor.ok).toBe(true);
+    expect(underHardwareFloor.ok === true && underHardwareFloor.assurance_tier).toBe("webauthn_hardware");
+
+    const cappedTooLow: Keyring = {
+      ...keyringValue,
+      keys: [
+        {
+          ...keyringValue.keys[0],
+          max_assurance_tier: "trusted_host_user_presence"
+        }
+      ]
+    };
+    const overClaim = verifyWebAuthn(webAuthnToken({ credential }), cappedTooLow);
+
+    expect(overClaim.ok).toBe(false);
+    expect(overClaim.ok === false && overClaim.code).toBe("ASSURANCE_OVER_CLAIM");
   });
 });
 

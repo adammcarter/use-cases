@@ -270,7 +270,8 @@
       "enum": [
         "untrusted_automation",
         "same_channel_operator_confirmation",
-        "trusted_host_user_presence"
+        "trusted_host_user_presence",
+        "webauthn_hardware"
       ]
     },
     "extensions": {

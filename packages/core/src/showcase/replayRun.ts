@@ -8,7 +8,7 @@ import {
   type ApprovalTrustContext
 } from "./approvalAuthority.js";
 import type { PublicKeyResolver } from "../markers/proofSignature.js";
-import type { AssuranceTierResolver } from "../markers/keyring.js";
+import type { AssuranceTierResolver, WebAuthnCredentialResolver } from "../markers/keyring.js";
 import type { AssuranceTier } from "./approvalTiers.js";
 import { approvalAssuranceFloorForPlan } from "./approvalPolicy.js";
 
@@ -17,6 +17,7 @@ import { approvalAssuranceFloorForPlan } from "./approvalPolicy.js";
 export interface ReplayTrustOptions {
   trustResolver?: PublicKeyResolver;
   trustTierResolver?: AssuranceTierResolver;
+  trustWebAuthnCredentialResolver?: WebAuthnCredentialResolver;
   assuranceFloor?: AssuranceTier;
 }
 
@@ -33,7 +34,8 @@ export function replayShowcaseEvents(
 ): ShowcaseRunStatus {
   const trust: ApprovalTrustContext = {
     resolver: trustOptions.trustResolver,
-    tierResolver: trustOptions.trustTierResolver
+    tierResolver: trustOptions.trustTierResolver,
+    webauthnCredentialResolver: trustOptions.trustWebAuthnCredentialResolver
   };
   const ordered = events.slice().sort((left, right) => left.sequence - right.sequence);
   const start = ordered.find((event) => event.event_type === "run_started");

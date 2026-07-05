@@ -16,6 +16,7 @@ import {
   finishShowcaseRun,
   isValidId,
   keyringAssuranceTierResolver,
+  keyringWebAuthnCredentialResolver,
   keyringResolver,
   loadKeyring,
   loadPresentationPlanFile,
@@ -45,6 +46,7 @@ import { workspaceFlags } from "./common.js";
 interface TrustResolvers {
   resolver: ReturnType<typeof singleKeyResolver>;
   tierResolver: ReturnType<typeof keyringAssuranceTierResolver>;
+  webauthnCredentialResolver: ReturnType<typeof keyringWebAuthnCredentialResolver>;
   diagnostics: CliDiagnostic[];
   pinnedKeyIds?: Set<string>;
 }
@@ -86,13 +88,16 @@ function keyringFromKeys(keys: KeyringKey[], sourcePath: string | null = null): 
 }
 
 function keyIds(keyring: Keyring): Set<string> {
-  return new Set(keyring.keys.map((key) => key.key_id));
+  return new Set(
+    keyring.keys.map((key) => key.algorithm === "webauthn" ? key.credential_id : key.key_id)
+  );
 }
 
 function resolversForKeyring(keyring: Keyring, diagnostics: CliDiagnostic[] = [], pinnedKeyIds?: Set<string>): TrustResolvers {
   return {
     resolver: keyringResolver(keyring),
     tierResolver: keyringAssuranceTierResolver(keyring),
+    webauthnCredentialResolver: keyringWebAuthnCredentialResolver(keyring),
     diagnostics,
     ...(pinnedKeyIds ? { pinnedKeyIds } : {})
   };
@@ -102,6 +107,7 @@ function emptyTrustResolvers(pinnedKeyIds: Set<string>): TrustResolvers {
   return {
     resolver: () => undefined,
     tierResolver: () => undefined,
+    webauthnCredentialResolver: () => undefined,
     diagnostics: [],
     pinnedKeyIds
   };
@@ -174,7 +180,9 @@ function selectPinnedTrustResolvers(pinnedKeyring: Keyring, flags: ParsedFlags):
       );
     }
     const requestedIds = keyIds(requested);
-    const selected = pinnedKeyring.keys.filter((key) => requestedIds.has(key.key_id));
+    const selected = pinnedKeyring.keys.filter((key) =>
+      requestedIds.has(key.algorithm === "webauthn" ? key.credential_id : key.key_id)
+    );
     return selected.length > 0
       ? resolversForKeyring(keyringFromKeys(selected, keyringPath), [], pinnedKeyIds)
       : emptyTrustResolvers(pinnedKeyIds);
@@ -183,7 +191,7 @@ function selectPinnedTrustResolvers(pinnedKeyring: Keyring, flags: ParsedFlags):
   const publicKeyPath = flags.publicKey as string | undefined;
   if (publicKeyPath) {
     const { pem } = readPublicKeyFlag(publicKeyPath);
-    const selected = pinnedKeyring.keys.filter((key) => samePublicKey(key.public_key, pem));
+    const selected = pinnedKeyring.keys.filter((key) => key.algorithm === "ed25519" && samePublicKey(key.public_key, pem));
     return selected.length > 0
       ? resolversForKeyring(keyringFromKeys(selected, publicKeyPath), [], pinnedKeyIds)
       : emptyTrustResolvers(pinnedKeyIds);
@@ -218,6 +226,7 @@ function loadTrustResolvers(flags: ParsedFlags, context: ResolvedContext): Trust
     return {
       resolver: keyringResolver(keyring),
       tierResolver: keyringAssuranceTierResolver(keyring),
+      webauthnCredentialResolver: keyringWebAuthnCredentialResolver(keyring),
       diagnostics: [callerSuppliedTrustDiagnostic()]
     };
   }
@@ -232,13 +241,23 @@ function loadTrustResolvers(flags: ParsedFlags, context: ResolvedContext): Trust
     // treat it as trusted_host_user_presence so the floor is met. (The keyring
     // path is where per-key downgrades/revocations live.)
     tierResolver: () => AssuranceTier.TRUSTED_HOST_USER_PRESENCE,
+    webauthnCredentialResolver: () => undefined,
     diagnostics: [callerSuppliedTrustDiagnostic()]
   };
 }
 
-function approvalTokenKeyId(token: unknown): string | null {
-  const keyId = (token as { signature?: { key_id?: unknown } } | null)?.signature?.key_id;
-  return typeof keyId === "string" ? keyId : null;
+function approvalTokenAnchorId(token: unknown): string | null {
+  const signature = (token as { signature?: { key_id?: unknown; credential_id?: unknown } } | null)?.signature;
+  const keyId = signature?.key_id;
+  if (typeof keyId === "string") {
+    return keyId;
+  }
+  const credentialId = signature?.credential_id;
+  return typeof credentialId === "string" ? credentialId : null;
+}
+
+function approvalTokenUsesWebAuthn(token: unknown): boolean {
+  return (token as { signature?: { alg?: unknown } } | null)?.signature?.alg === "webauthn";
 }
 
 function loadApprovalTokenBundle(flags: ParsedFlags, context: ResolvedContext): ApprovalTokenBundle | null {
@@ -264,7 +283,13 @@ function loadApprovalTokenBundle(flags: ParsedFlags, context: ResolvedContext): 
       "showcase.approval_key_required"
     );
   }
-  const tokenKeyId = approvalTokenKeyId(approvalToken);
+  if (approvalTokenUsesWebAuthn(approvalToken) && !trust.pinnedKeyIds) {
+    throw keyMaterialError(
+      "webauthn approval tokens require a workspace-pinned approval_trust credential; caller-supplied keyrings cannot introduce WebAuthn trust.",
+      "showcase.approval_webauthn_unpinned"
+    );
+  }
+  const tokenKeyId = approvalTokenAnchorId(approvalToken);
   if (tokenKeyId && trust.pinnedKeyIds && !trust.pinnedKeyIds.has(tokenKeyId)) {
     throw keyMaterialError(
       `approval token signer '${tokenKeyId}' is not in pinned approval_trust.`,
@@ -781,7 +806,11 @@ export const showcaseStatusCommand: CliCommand = {
       context: contextResult,
       runId,
       ...(trust
-        ? { trustResolver: trust.resolver, trustTierResolver: trust.tierResolver }
+        ? {
+            trustResolver: trust.resolver,
+            trustTierResolver: trust.tierResolver,
+            trustWebAuthnCredentialResolver: trust.webauthnCredentialResolver
+          }
         : {})
     });
     return {
@@ -911,7 +940,8 @@ export const showcaseApproveCommand: CliCommand = {
           ? {
               approvalToken: approvalBundle.approvalToken as Parameters<typeof appendShowcaseApproval>[0]["approvalToken"],
               resolver: approvalBundle.resolver,
-              tierResolver: approvalBundle.tierResolver
+              tierResolver: approvalBundle.tierResolver,
+              webauthnCredentialResolver: approvalBundle.webauthnCredentialResolver
             }
           : {})
       });

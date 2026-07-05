@@ -13,7 +13,7 @@ import { verifyApprovalToken, type ApprovalToken } from "./approvalToken.js";
 import type { AssuranceTier } from "./approvalTiers.js";
 import { approvalAssuranceFloorForPlan } from "./approvalPolicy.js";
 import type { PublicKeyResolver } from "../markers/proofSignature.js";
-import type { AssuranceTierResolver } from "../markers/keyring.js";
+import type { AssuranceTierResolver, WebAuthnCredentialResolver } from "../markers/keyring.js";
 import type {
   ShowcaseActorType,
   ShowcaseAppendResult,
@@ -295,6 +295,7 @@ export interface ApprovalVerificationOptions {
   approvalToken?: ApprovalToken;
   resolver?: PublicKeyResolver;
   tierResolver?: AssuranceTierResolver;
+  webauthnCredentialResolver?: WebAuthnCredentialResolver;
   assuranceFloor?: AssuranceTier;
   nowMs?: number;
 }
@@ -394,6 +395,7 @@ function recordApprovalDecision(
         token: options.approvalToken,
         resolver: options.resolver ?? (() => undefined),
         tierResolver: options.tierResolver,
+        webauthnCredentialResolver: options.webauthnCredentialResolver,
         liveBinding,
         isNonceBurned: (jti) => burnedNonces.has(jti),
         nowMs: options.nowMs,
@@ -467,7 +469,8 @@ function recordApprovalDecision(
   // resolver so the embedded token is re-verified and the run reads as approved.
   return appendResult(options.context, event, {
     trustResolver: options.resolver,
-    trustTierResolver: options.tierResolver
+    trustTierResolver: options.tierResolver,
+    trustWebAuthnCredentialResolver: options.webauthnCredentialResolver
   });
 }
 

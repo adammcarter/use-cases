@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://use-cases.dev/schemas/v1/keyring.schema.json",
   "title": "ucase-public-key-registry-v1",
-  "description": "The public-key registry (keyring) for verifying trusted-CI proof-event signatures. Documents the intended key-management shape: a keyId resolves to an ed25519 public key with a validity window and a status. v1 trusts a single active key (see proofSignature.ts verifyEvent + singleKeyResolver in markers/cli/shared.ts); this keyring generalises that to a registry of keys.",
+  "description": "The public-key registry (keyring) for verifying trusted-CI proof-event signatures and pinned WebAuthn approval credentials. Documents the intended key-management shape: a keyId or credential_id resolves to a public key with a validity window and a status. v1 trusts a single active key (see proofSignature.ts verifyEvent + singleKeyResolver in markers/cli/shared.ts); this keyring generalises that to a registry of keys.",
   "type": "object",
   "additionalProperties": false,
   "$defs": {
@@ -16,13 +16,29 @@
           "description": "Stable identifier referenced by a proof-event signature's key_id."
         },
         "algorithm": {
-          "const": "ed25519",
-          "description": "Only ed25519 is supported (matches proofSignature.ts)."
+          "enum": ["ed25519", "webauthn"],
+          "description": "ed25519 entries verify proof/approval-token signatures; webauthn entries verify passkey assertions."
         },
         "public_key": {
           "type": "string",
           "minLength": 1,
           "description": "The PEM-encoded ed25519 public key."
+        },
+        "credential_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "description": "Base64url WebAuthn credential id referenced by a webauthn approval-token signature."
+        },
+        "credential_public_key_alg": {
+          "enum": [-7, -8],
+          "description": "COSE algorithm declared by the WebAuthn credential public key: ES256 (-7) or EdDSA/Ed25519 (-8)."
+        },
+        "credential_public_key_spki": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "description": "Base64url DER SPKI public key, the node:crypto-verifiable equivalent of the credential public key."
         },
         "valid_from": { "$ref": "common.schema.json#/$defs/timestamp" },
         "valid_until": {
@@ -40,7 +56,8 @@
           "enum": [
             "untrusted_automation",
             "same_channel_operator_confirmation",
-            "trusted_host_user_presence"
+            "trusted_host_user_presence",
+            "webauthn_hardware"
           ],
           "description": "F3 human-approval assurance CAP bound to the key by whoever curates the keyring. A signed approval token may claim only this tier or lower. Absent => untrusted_automation (fail-closed default)."
         },
@@ -48,12 +65,90 @@
           "enum": [
             "untrusted_automation",
             "same_channel_operator_confirmation",
-            "trusted_host_user_presence"
+            "trusted_host_user_presence",
+            "webauthn_hardware"
           ],
           "description": "Legacy alias for max_assurance_tier. New keyrings should use max_assurance_tier; verifiers prefer max_assurance_tier when both are present."
         }
       },
-      "required": ["key_id", "algorithm", "public_key", "valid_from", "valid_until", "status"]
+      "required": ["algorithm", "valid_from", "valid_until", "status"],
+      "allOf": [
+        {
+          "if": {
+            "properties": { "algorithm": { "const": "ed25519" } },
+            "required": ["algorithm"]
+          },
+          "then": {
+            "properties": {
+              "key_id": true,
+              "public_key": true,
+              "max_assurance_tier": {
+                "enum": [
+                  "untrusted_automation",
+                  "same_channel_operator_confirmation",
+                  "trusted_host_user_presence"
+                ]
+              },
+              "assurance_tier": {
+                "enum": [
+                  "untrusted_automation",
+                  "same_channel_operator_confirmation",
+                  "trusted_host_user_presence"
+                ]
+              }
+            },
+            "required": ["key_id", "public_key"],
+            "not": {
+              "anyOf": [
+                {
+                  "properties": { "credential_id": true },
+                  "required": ["credential_id"]
+                },
+                {
+                  "properties": { "credential_public_key_alg": true },
+                  "required": ["credential_public_key_alg"]
+                },
+                {
+                  "properties": { "credential_public_key_spki": true },
+                  "required": ["credential_public_key_spki"]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "algorithm": { "const": "webauthn" } },
+            "required": ["algorithm"]
+          },
+          "then": {
+            "properties": {
+              "credential_id": true,
+              "credential_public_key_alg": true,
+              "credential_public_key_spki": true,
+              "max_assurance_tier": { "const": "webauthn_hardware" }
+            },
+            "required": [
+              "credential_id",
+              "credential_public_key_alg",
+              "credential_public_key_spki",
+              "max_assurance_tier"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "properties": { "key_id": true },
+                  "required": ["key_id"]
+                },
+                {
+                  "properties": { "public_key": true },
+                  "required": ["public_key"]
+                }
+              ]
+            }
+          }
+        }
+      ]
     }
   },
   "properties": {

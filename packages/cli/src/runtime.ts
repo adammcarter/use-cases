@@ -54,6 +54,7 @@ export const {
   keyringPublicKeyResolverFromFile,
   keyringResolver,
   keyringAssuranceTierResolver,
+  keyringWebAuthnCredentialResolver,
   loadKeyring,
   parseKeyring,
   AssuranceTier,
@@ -73,7 +74,8 @@ export const {
   pauseShowcaseRun,
   resumeShowcaseRun,
   mintApprovalRequest,
-  signApprovalToken
+  signApprovalToken,
+  buildWebAuthnApprovalToken
 } = core;
 
 // Hosts the CLI supports (mirrors the legacy SUPPORTED_HOSTS constant).
