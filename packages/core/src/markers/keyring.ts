@@ -24,22 +24,31 @@ export interface KeyringKey {
   valid_from: string; // ISO-8601 timestamp
   valid_until: string | null; // ISO-8601 timestamp, or null for open-ended
   status: "active" | "revoked";
-  // F3: human-approval assurance tier BOUND to the key by the keyring curator
-  // (never declared by the token caller). Absent => untrusted_automation.
+  // F3: human-approval assurance tier CAP bound to the key by the keyring
+  // curator. The signed token claims the actual method/tier; this value is only
+  // the highest tier this key may assert. Absent => untrusted_automation.
+  max_assurance_tier?:
+    | "untrusted_automation"
+    | "same_channel_operator_confirmation"
+    | "trusted_host_user_presence";
+  // Legacy alias accepted for old keyrings. New keyrings should use
+  // max_assurance_tier; when both are present, max_assurance_tier wins.
   assurance_tier?:
     | "untrusted_automation"
     | "same_channel_operator_confirmation"
     | "trusted_host_user_presence";
 }
 
-// F3: resolve a key_id to the assurance tier the KEYRING binds to it, but ONLY
-// when the key is active and in-window at `createdAt` (same fail-closed gate as
-// the public-key resolver). A key that would not verify a signature must never
-// lend its tier either. Returns undefined when the key does not resolve.
-export type AssuranceTierResolver = (
+// F3: resolve a key_id to the maximum assurance tier the KEYRING lets it assert,
+// but ONLY when the key is active and in-window at `createdAt` (same fail-closed
+// gate as the public-key resolver). A key that would not verify a signature must
+// never lend its cap either. Returns undefined when the key does not resolve.
+export type MaxAssuranceTierResolver = (
   keyId: string,
   createdAt?: string
-) => KeyringKey["assurance_tier"] | undefined;
+) => KeyringKey["max_assurance_tier"] | undefined;
+
+export type AssuranceTierResolver = MaxAssuranceTierResolver;
 
 export interface Keyring {
   keyring_schema_id: "ucase-public-key-registry-v1";
@@ -140,19 +149,25 @@ export function keyringResolver(keyring: Keyring): PublicKeyResolver {
     resolveActiveInWindowKey(byId, keyId, createdAt)?.public_key;
 }
 
-// F3: build a fail-closed assurance-tier resolver over the SAME keyring. It
-// gates identically to keyringResolver, then returns the key's bound tier
+function keyMaxAssuranceTier(key: KeyringKey): KeyringKey["max_assurance_tier"] {
+  return key.max_assurance_tier ?? key.assurance_tier ?? "untrusted_automation";
+}
+
+// F3: build a fail-closed max-assurance-tier resolver over the SAME keyring. It
+// gates identically to keyringResolver, then returns the key's cap
 // (defaulting an absent tier to untrusted_automation — never trust by omission).
-export function keyringAssuranceTierResolver(keyring: Keyring): AssuranceTierResolver {
+export function keyringMaxAssuranceTierResolver(keyring: Keyring): MaxAssuranceTierResolver {
   const byId = keyIndex(keyring);
   return (keyId: string, createdAt?: string) => {
     const key = resolveActiveInWindowKey(byId, keyId, createdAt);
     if (!key) {
       return undefined;
     }
-    return key.assurance_tier ?? "untrusted_automation";
+    return keyMaxAssuranceTier(key);
   };
 }
+
+export const keyringAssuranceTierResolver = keyringMaxAssuranceTierResolver;
 
 // Convenience used by the CLI: load a keyring file and build its resolver.
 export function keyringPublicKeyResolverFromFile(filePath: string): PublicKeyResolver {

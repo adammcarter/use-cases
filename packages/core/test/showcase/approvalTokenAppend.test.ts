@@ -53,7 +53,7 @@ function keyring(): Keyring {
         valid_from: "2026-01-01T00:00:00Z",
         valid_until: null,
         status: "active",
-        assurance_tier: "trusted_host_user_presence"
+        max_assurance_tier: "trusted_host_user_presence"
       },
       {
         key_id: "operator-key-1",
@@ -62,7 +62,7 @@ function keyring(): Keyring {
         valid_from: "2026-01-01T00:00:00Z",
         valid_until: null,
         status: "active",
-        assurance_tier: "same_channel_operator_confirmation"
+        max_assurance_tier: "same_channel_operator_confirmation"
       },
       {
         key_id: "agent-key-1",
@@ -71,7 +71,7 @@ function keyring(): Keyring {
         valid_from: "2026-01-01T00:00:00Z",
         valid_until: null,
         status: "active",
-        assurance_tier: "untrusted_automation"
+        max_assurance_tier: "untrusted_automation"
       }
     ]
   };

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://use-cases.dev/schemas/v1/approval-token.schema.json",
   "title": "ucase-approval-token-v1",
-  "description": "F3 trusted human approval. A REQUEST is minted by the plugin (single-use nonce + run binding + expiry) and carries a PLUGIN-minted jti the caller never chooses. A TOKEN is the request signed OUT-OF-BAND by a real human with an ed25519 key held outside the in-session agent's scope (verified via proofSignature.ts verifyEvent + the keyring). The plugin then re-checks every bound field against the live run, the nonce (single-use), the expiry, and the key's keyring-bound assurance_tier before appending an approval. Trust is COMPUTED from the signature; it is never a caller-asserted boolean.",
+  "description": "F3 trusted human approval. A REQUEST is minted by the plugin (single-use nonce + run binding + expiry) and carries a PLUGIN-minted jti the caller never chooses. A TOKEN is the request signed OUT-OF-BAND by a real human with an ed25519 key held outside the in-session agent's scope (verified via proofSignature.ts verifyEvent + the keyring). The plugin then re-checks every bound field against the live run, the nonce (single-use), the expiry, the token's signed assurance method/tier claim, and the key's keyring-bound max_assurance_tier before appending an approval. Trust is COMPUTED from the signature; it is never a caller-asserted boolean.",
   "type": "object",
   "$defs": {
     "binding": {
@@ -39,6 +39,10 @@
       },
       "required": ["alg", "key_id", "value"]
     },
+    "assurance_method": {
+      "enum": ["automation", "same_channel", "os_presence"],
+      "description": "The signed method by which the human approval was gated."
+    },
     "request": {
       "type": "object",
       "additionalProperties": false,
@@ -64,7 +68,13 @@
         "exp": { "$ref": "common.schema.json#/$defs/timestamp" },
         "created_at": { "$ref": "common.schema.json#/$defs/timestamp" },
         "decision": { "enum": ["approved", "approved_with_known_gaps", "rejected"] },
+        "assurance_method": { "$ref": "#/$defs/assurance_method" },
+        "assurance_tier": { "$ref": "common.schema.json#/$defs/approval_assurance_tier" },
         "signature": { "$ref": "#/$defs/signature" }
+      },
+      "dependentRequired": {
+        "assurance_method": ["assurance_tier"],
+        "assurance_tier": ["assurance_method"]
       },
       "required": [
         "approval_token_schema",
@@ -114,6 +124,8 @@
       "exp": "2026-06-28T12:20:00.000Z",
       "created_at": "2026-06-28T12:05:00.000Z",
       "decision": "approved",
+      "assurance_method": "os_presence",
+      "assurance_tier": "trusted_host_user_presence",
       "signature": {
         "alg": "ed25519",
         "key_id": "human-key-1",

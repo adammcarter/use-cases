@@ -90,7 +90,7 @@ function workspaceWithApprovalTrust(): string {
       "      valid_from: 2026-01-01T00:00:00Z",
       "      valid_until: null",
       "      status: active",
-      "      assurance_tier: trusted_host_user_presence",
+      "      max_assurance_tier: trusted_host_user_presence",
       ""
     ].join("\n"),
     "utf8"

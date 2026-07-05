@@ -59,6 +59,8 @@ const ROGUE_KEY = ed25519Pem();
 // within the TTL). So a genuine, unexpired token is minted at "now"; the expired
 // negative below deliberately signs in the distant past.
 
+type TestAssuranceMethod = "automation" | "same_channel" | "os_presence";
+
 function keyring(): Keyring {
   return {
     keyring_schema_id: "ucase-public-key-registry-v1",
@@ -70,7 +72,7 @@ function keyring(): Keyring {
         valid_from: "2026-01-01T00:00:00Z",
         valid_until: null,
         status: "active",
-        assurance_tier: "trusted_host_user_presence"
+        max_assurance_tier: "trusted_host_user_presence"
       },
       {
         key_id: "operator-key-1",
@@ -79,7 +81,7 @@ function keyring(): Keyring {
         valid_from: "2026-01-01T00:00:00Z",
         valid_until: null,
         status: "active",
-        assurance_tier: "same_channel_operator_confirmation"
+        max_assurance_tier: "same_channel_operator_confirmation"
       },
       {
         key_id: "agent-key-1",
@@ -88,7 +90,7 @@ function keyring(): Keyring {
         valid_from: "2026-01-01T00:00:00Z",
         valid_until: null,
         status: "active",
-        assurance_tier: "untrusted_automation"
+        max_assurance_tier: "untrusted_automation"
       }
     ]
   };
@@ -102,7 +104,7 @@ function trustedKey(keyId: string, publicKey: string): Keyring["keys"][number] {
     valid_from: "2026-01-01T00:00:00Z",
     valid_until: null,
     status: "active",
-    assurance_tier: "trusted_host_user_presence"
+    max_assurance_tier: "trusted_host_user_presence"
   };
 }
 
@@ -301,7 +303,11 @@ function humanSignsFor(runId: string, keyId = "human-key-1", privateKeyPem = HUM
   return signApprovalToken({ request, decision: "approved", privateKey: privateKeyPem, keyId });
 }
 
-function approveRunSignsFor(runId: string, decision: ApprovalToken["decision"] = "approved"): ApprovalToken {
+function approveRunSignsFor(
+  runId: string,
+  decision: ApprovalToken["decision"] = "approved",
+  assuranceMethod?: TestAssuranceMethod
+): ApprovalToken {
   const request = showcaseRequestApprovalCommand.handler({
     argv: ["showcase", "request-approval", "--run", runId, "--repo", workspaceRoot],
     json: true,
@@ -322,10 +328,17 @@ function approveRunSignsFor(runId: string, decision: ApprovalToken["decision"] =
       "--key-id",
       "human-key-1",
       "--decision",
-      decision
+      decision,
+      ...(assuranceMethod ? ["--assurance-method", assuranceMethod] : [])
     ],
     json: true,
-    flags: { request: requestPath, keyFile: privateKeyPath, keyId: "human-key-1", decision }
+    flags: {
+      request: requestPath,
+      keyFile: privateKeyPath,
+      keyId: "human-key-1",
+      decision,
+      ...(assuranceMethod ? { assuranceMethod } : {})
+    }
   });
   expect(signed.exitCode).toBe(0);
   const token = (signed.envelope as { data?: { approval_token?: ApprovalToken } }).data?.approval_token;
@@ -396,6 +409,15 @@ function recordedDecision(runId: string, eventType: "approval_recorded" | "appro
     throw new Error(`no ${eventType} decision in ledger for ${runId}`);
   }
   return event.payload.decision;
+}
+
+function approvalMetadata(runId: string, trustFlags: Record<string, string> = {}): unknown {
+  const status = showcaseStatusCommand.handler({
+    argv: ["showcase", "status", "--run", runId, "--repo", workspaceRoot],
+    json: true,
+    flags: { run: runId, ...trustFlags }
+  });
+  return (status.envelope as { data?: { approval?: unknown } }).data?.approval;
 }
 
 beforeEach(() => {
@@ -566,6 +588,34 @@ describe("BLOCKER 1 — showcase approve --approval-token: trusted submit path",
     expect(result.exitCode).toBe(0);
     expect(recordedDecision(runId)).toBe("approved");
     expect(approvalState(runId, { keyring: keyringPath })).toBe("approved");
+  });
+
+  test("approve-run --assurance-method same_channel records the claimed tier under a trusted-host key cap", () => {
+    setApprovalPolicyMinimumTier("same_channel_operator_confirmation");
+    const runId = completePassingRun("method-same-channel");
+    const token = approveRunSignsFor(runId, "approved", "same_channel");
+    expect(token.assurance_method).toBe("same_channel");
+    expect(token.assurance_tier).toBe("same_channel_operator_confirmation");
+    const tokenPath = writeToken(token);
+    const keyringPath = writeKeyring();
+
+    const result = showcaseApproveCommand.handler({
+      argv: ["showcase", "approve", "--run", runId, "--repo", workspaceRoot],
+      json: true,
+      flags: {
+        run: runId,
+        statement: "Same-channel method under a host-presence-capable key.",
+        actor: "user",
+        approvalToken: tokenPath,
+        keyring: keyringPath
+      }
+    });
+
+    expect(result.exitCode).toBe(0);
+    expect(approvalMetadata(runId, { keyring: keyringPath })).toEqual({
+      actor_type: "user",
+      assurance_tier: "same_channel_operator_confirmation"
+    });
   });
 
   test("(a) the single --public-key form also verifies a genuine token -> approved", () => {

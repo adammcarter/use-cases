@@ -499,6 +499,9 @@ function approvalFailureCode(code: string): string {
   if (code === "ASSURANCE_TOO_LOW") {
     return "showcase.approval_assurance_too_low";
   }
+  if (code === "ASSURANCE_OVER_CLAIM") {
+    return "showcase.approval_assurance_over_claim";
+  }
   return "showcase.trusted_user_confirmation_required";
 }
 

@@ -23,6 +23,8 @@ import {
   type ApprovalToken
 } from "../../src/showcase/approvalToken.js";
 
+type TestAssuranceMethod = "automation" | "same_channel" | "os_presence";
+
 // ---------------------------------------------------------------------------
 // Fixtures: two keys. TRUSTED = a host_signed_approval_token tier key (the human
 // custody key, out of the agent's scope). AGENT = a key the in-session agent
@@ -41,7 +43,7 @@ const OTHER_KEY = ed25519Pem();
 
 const IN_WINDOW = "2026-06-28T12:05:00.000Z";
 
-// A keyring where the trusted human key carries assurance_tier
+// A keyring where the trusted human key carries max_assurance_tier
 // trusted_host_user_presence, and a second key carries only untrusted_automation.
 function keyring(): Keyring {
   return {
@@ -54,7 +56,7 @@ function keyring(): Keyring {
         valid_from: "2026-01-01T00:00:00Z",
         valid_until: null,
         status: "active",
-        assurance_tier: "trusted_host_user_presence"
+        max_assurance_tier: "trusted_host_user_presence"
       },
       {
         key_id: "automation-key-1",
@@ -63,7 +65,7 @@ function keyring(): Keyring {
         valid_from: "2026-01-01T00:00:00Z",
         valid_until: null,
         status: "active",
-        assurance_tier: "untrusted_automation"
+        max_assurance_tier: "untrusted_automation"
       }
     ]
   };
@@ -90,6 +92,7 @@ function mintAndSign(options: {
   privateKeyPem?: string;
   keyId?: string;
   decision?: ApprovalToken["decision"];
+  assuranceMethod?: TestAssuranceMethod;
   nowMs?: number;
   ttlMinutes?: number;
 } = {}): ApprovalToken {
@@ -103,7 +106,8 @@ function mintAndSign(options: {
     request,
     decision: options.decision ?? "approved",
     privateKey: options.privateKeyPem ?? TRUSTED_KEY.privateKeyPem,
-    keyId: options.keyId ?? "human-key-1"
+    keyId: options.keyId ?? "human-key-1",
+    assuranceMethod: options.assuranceMethod
   });
 }
 
@@ -126,6 +130,97 @@ describe("F3 verifyApprovalToken — MUST ACCEPT (j)", () => {
     expect(result.ok === true && result.decision).toBe("approved");
     expect(result.ok === true && result.jti).toBe(token.jti);
     expect(result.ok === true && result.assurance_tier).toBe("trusted_host_user_presence");
+  });
+});
+
+describe("Part 2 assurance method + keyring cap", () => {
+  function cappedKeyring(
+    keyId: string,
+    publicKeyPem: string,
+    maxTier: NonNullable<Keyring["keys"][number]["max_assurance_tier"]>
+  ): Keyring {
+    return {
+      keyring_schema_id: "ucase-public-key-registry-v1",
+      keys: [
+        {
+          key_id: keyId,
+          algorithm: "ed25519",
+          public_key: publicKeyPem,
+          valid_from: "2026-01-01T00:00:00Z",
+          valid_until: null,
+          status: "active",
+          max_assurance_tier: maxTier
+        }
+      ]
+    };
+  }
+
+  test("method=same_channel on a trusted-host capped key verifies at the claimed same-channel tier", () => {
+    const token = mintAndSign({ assuranceMethod: "same_channel" });
+    const cap = cappedKeyring("human-key-1", TRUSTED_KEY.publicKeyPem, "trusted_host_user_presence");
+    const result = verifyApprovalToken({
+      token,
+      resolver: keyringResolver(cap),
+      tierResolver: keyringAssuranceTierResolver(cap),
+      liveBinding: liveBinding(),
+      isNonceBurned: () => false,
+      nowMs: Date.parse(IN_WINDOW),
+      assuranceFloor: "same_channel_operator_confirmation"
+    });
+
+    expect(result.ok).toBe(true);
+    expect(result.ok === true && result.assurance_tier).toBe("same_channel_operator_confirmation");
+  });
+
+  test("method=os_presence over a same-channel capped key is rejected as ASSURANCE_OVER_CLAIM", () => {
+    const token = mintAndSign({ assuranceMethod: "os_presence" });
+    const cap = cappedKeyring("human-key-1", TRUSTED_KEY.publicKeyPem, "same_channel_operator_confirmation");
+    const result = verifyApprovalToken({
+      token,
+      resolver: keyringResolver(cap),
+      tierResolver: keyringAssuranceTierResolver(cap),
+      liveBinding: liveBinding(),
+      isNonceBurned: () => false,
+      nowMs: Date.parse(IN_WINDOW),
+      assuranceFloor: "same_channel_operator_confirmation"
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.ok === false && result.code).toBe("ASSURANCE_OVER_CLAIM");
+  });
+
+  test("approval floor is enforced against the token's claimed tier, not the key cap", () => {
+    const token = mintAndSign({ assuranceMethod: "same_channel" });
+    const cap = cappedKeyring("human-key-1", TRUSTED_KEY.publicKeyPem, "trusted_host_user_presence");
+    const result = verifyApprovalToken({
+      token,
+      resolver: keyringResolver(cap),
+      tierResolver: keyringAssuranceTierResolver(cap),
+      liveBinding: liveBinding(),
+      isNonceBurned: () => false,
+      nowMs: Date.parse(IN_WINDOW),
+      assuranceFloor: "trusted_host_user_presence"
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.ok === false && result.code).toBe("ASSURANCE_TOO_LOW");
+  });
+
+  test("legacy tokens without assurance_method verify at the signing key's cap tier", () => {
+    const token = mintAndSign();
+    const cap = cappedKeyring("human-key-1", TRUSTED_KEY.publicKeyPem, "same_channel_operator_confirmation");
+    const result = verifyApprovalToken({
+      token,
+      resolver: keyringResolver(cap),
+      tierResolver: keyringAssuranceTierResolver(cap),
+      liveBinding: liveBinding(),
+      isNonceBurned: () => false,
+      nowMs: Date.parse(IN_WINDOW),
+      assuranceFloor: "same_channel_operator_confirmation"
+    });
+
+    expect(result.ok).toBe(true);
+    expect(result.ok === true && result.assurance_tier).toBe("same_channel_operator_confirmation");
   });
 });
 

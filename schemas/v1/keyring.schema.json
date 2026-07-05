@@ -36,13 +36,21 @@
           "enum": ["active", "revoked"],
           "description": "active keys may verify new proofs; revoked keys must not."
         },
+        "max_assurance_tier": {
+          "enum": [
+            "untrusted_automation",
+            "same_channel_operator_confirmation",
+            "trusted_host_user_presence"
+          ],
+          "description": "F3 human-approval assurance CAP bound to the key by whoever curates the keyring. A signed approval token may claim only this tier or lower. Absent => untrusted_automation (fail-closed default)."
+        },
         "assurance_tier": {
           "enum": [
             "untrusted_automation",
             "same_channel_operator_confirmation",
             "trusted_host_user_presence"
           ],
-          "description": "F3 human-approval assurance tier BOUND to the key by whoever curates the keyring — NOT declarable by the token caller. Governs whether a signed approval token from this key satisfies a human-sign-off policy floor. Absent => untrusted_automation (fail-closed default)."
+          "description": "Legacy alias for max_assurance_tier. New keyrings should use max_assurance_tier; verifiers prefer max_assurance_tier when both are present."
         }
       },
       "required": ["key_id", "algorithm", "public_key", "valid_from", "valid_until", "status"]

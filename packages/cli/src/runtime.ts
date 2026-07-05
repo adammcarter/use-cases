@@ -57,6 +57,8 @@ export const {
   loadKeyring,
   parseKeyring,
   AssuranceTier,
+  AssuranceMethod,
+  isAssuranceMethod,
   generateSigningKeypair,
   replayShowcaseRun,
   startShowcaseRun,

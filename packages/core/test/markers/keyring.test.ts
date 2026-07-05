@@ -237,10 +237,10 @@ describe("keyringAssuranceTierResolver: fail-closed, same window gate (F3)", () 
           valid_from: "2026-01-01T00:00:00Z",
           valid_until: null,
           status: "active",
-          assurance_tier: "trusted_host_user_presence"
+          max_assurance_tier: "trusted_host_user_presence"
         },
         {
-          // Active but with NO assurance_tier -> must default to untrusted.
+          // Active but with NO max_assurance_tier -> must default to untrusted.
           key_id: "no-tier-key",
           algorithm: "ed25519",
           public_key: KEY_B.publicKeyPem,
@@ -255,18 +255,18 @@ describe("keyringAssuranceTierResolver: fail-closed, same window gate (F3)", () 
           valid_from: "2026-01-01T00:00:00Z",
           valid_until: null,
           status: "revoked",
-          assurance_tier: "trusted_host_user_presence"
+          max_assurance_tier: "trusted_host_user_presence"
         }
       ]
     };
   }
 
-  test("an active, in-window key yields its bound tier", () => {
+  test("an active, in-window key yields its max tier", () => {
     const tiers = keyringAssuranceTierResolver(tierKeyring());
     expect(tiers("human-key-1", IN_WINDOW)).toBe("trusted_host_user_presence");
   });
 
-  test("a key with no assurance_tier defaults to untrusted_automation (never trust by omission)", () => {
+  test("a key with no max_assurance_tier defaults to untrusted_automation (never trust by omission)", () => {
     const tiers = keyringAssuranceTierResolver(tierKeyring());
     expect(tiers("no-tier-key", IN_WINDOW)).toBe("untrusted_automation");
   });
@@ -292,7 +292,7 @@ describe("keyringAssuranceTierResolver: fail-closed, same window gate (F3)", () 
             valid_from: "2026-12-01T00:00:00Z",
             valid_until: null,
             status: "active",
-            assurance_tier: "trusted_host_user_presence"
+            max_assurance_tier: "trusted_host_user_presence"
           }
         ]
       })

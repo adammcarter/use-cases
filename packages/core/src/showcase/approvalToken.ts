@@ -19,8 +19,12 @@ import {
 } from "../markers/proofSignature.js";
 import type { AssuranceTierResolver } from "../markers/keyring.js";
 import {
+  assuranceTierForMethod,
+  isAssuranceMethod,
+  isAssuranceTier,
   normalizeAssuranceTier,
   tierMeetsFloor,
+  type AssuranceMethod,
   type AssuranceTier
 } from "./approvalTiers.js";
 
@@ -58,6 +62,8 @@ export interface ApprovalToken {
   exp: string;
   created_at: string;
   decision: ApprovalDecision;
+  assurance_method?: AssuranceMethod;
+  assurance_tier?: AssuranceTier;
   signature: ProofSignatureBlock;
 }
 
@@ -69,6 +75,7 @@ export type ApprovalTokenFailureCode =
   | "BINDING_MISMATCH"
   | "TOKEN_EXPIRED"
   | "NONCE_BURNED"
+  | "ASSURANCE_OVER_CLAIM"
   | "ASSURANCE_TOO_LOW"
   | "MALFORMED_TOKEN";
 
@@ -110,7 +117,15 @@ export function signApprovalToken(options: {
   decision: ApprovalDecision;
   privateKey: PemOrKeyObject;
   keyId: string;
+  assuranceMethod?: AssuranceMethod;
 }): ApprovalToken {
+  const assurance =
+    options.assuranceMethod === undefined
+      ? {}
+      : {
+          assurance_method: options.assuranceMethod,
+          assurance_tier: assuranceTierForMethod(options.assuranceMethod)
+        };
   const unsigned = {
     approval_token_schema: "ucase-approval-token-v1" as const,
     binding: { ...options.request.binding },
@@ -120,7 +135,8 @@ export function signApprovalToken(options: {
     // created_at drives the keyring window; it must equal iat so the moment of
     // signing is what the window is checked against.
     created_at: options.request.iat,
-    decision: options.decision
+    decision: options.decision,
+    ...assurance
   };
   return signEvent(unsigned, options.privateKey, options.keyId) as ApprovalToken;
 }
@@ -134,6 +150,29 @@ const BINDING_FIELDS: (keyof ApprovalRequestBinding)[] = [
   "git_commit",
   "ci_freshness_digest"
 ];
+
+function claimedAssuranceTier(
+  token: ApprovalToken,
+  maxTier: AssuranceTier
+): { ok: true; tier: AssuranceTier } | { ok: false; message: string } {
+  if (token.assurance_method === undefined) {
+    return { ok: true, tier: maxTier };
+  }
+  if (!isAssuranceMethod(token.assurance_method)) {
+    return { ok: false, message: `unsupported assurance_method ${String(token.assurance_method)}` };
+  }
+  if (!isAssuranceTier(token.assurance_tier)) {
+    return { ok: false, message: "approval token assurance_tier is missing or unsupported" };
+  }
+  const derivedTier = assuranceTierForMethod(token.assurance_method);
+  if (token.assurance_tier !== derivedTier) {
+    return {
+      ok: false,
+      message: `approval token assurance_tier ${token.assurance_tier} does not match method ${token.assurance_method}`
+    };
+  }
+  return { ok: true, tier: token.assurance_tier };
+}
 
 // Plugin-side VERIFY: the whole gate. Order is deliberate — signature/key first
 // (so a tampered payload or an unknown key surfaces as a crypto failure), then
@@ -188,16 +227,28 @@ export function verifyApprovalToken(options: {
     return { ok: false, code: "NONCE_BURNED", message: "approval token nonce already burned (replay)" };
   }
 
-  // 5) Assurance tier: taken from the KEYRING binding for this key_id (never the
-  // caller). Must meet the policy floor. A tier resolver that cannot place the
-  // key fails closed at untrusted_automation.
-  const boundTier = options.tierResolver?.(signatureResult.key_id, token.created_at);
-  const tier = normalizeAssuranceTier(boundTier);
+  // 5) Assurance tier: the keyring supplies only the key's MAX cap. New tokens
+  // carry the signed method + claimed tier; legacy tokens with no method retain
+  // the old behavior by claiming the key cap. A tier resolver that cannot place
+  // the key fails closed at untrusted_automation.
+  const maxTier = normalizeAssuranceTier(options.tierResolver?.(signatureResult.key_id, token.created_at));
+  const claimed = claimedAssuranceTier(token, maxTier);
+  if (!claimed.ok) {
+    return { ok: false, code: "MALFORMED_TOKEN", message: claimed.message };
+  }
+  const tier = claimed.tier;
+  if (!tierMeetsFloor(maxTier, tier)) {
+    return {
+      ok: false,
+      code: "ASSURANCE_OVER_CLAIM",
+      message: `approval token claims assurance tier ${tier} above key ${signatureResult.key_id} cap ${maxTier}`
+    };
+  }
   if (!tierMeetsFloor(tier, options.assuranceFloor)) {
     return {
       ok: false,
       code: "ASSURANCE_TOO_LOW",
-      message: `key ${signatureResult.key_id} assurance tier ${tier} does not meet floor ${options.assuranceFloor}`
+      message: `approval token assurance tier ${tier} does not meet floor ${options.assuranceFloor}`
     };
   }
 

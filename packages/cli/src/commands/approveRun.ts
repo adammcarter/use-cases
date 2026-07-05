@@ -13,10 +13,11 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { CliCommand } from "../command/types.js";
-import { createCliResult, errorEnvelope, signApprovalToken } from "../runtime.js";
+import { AssuranceMethod, createCliResult, errorEnvelope, isAssuranceMethod, signApprovalToken } from "../runtime.js";
 
 const DECISIONS = ["approved", "approved_with_known_gaps", "rejected"] as const;
 type Decision = (typeof DECISIONS)[number];
+const ASSURANCE_METHODS = Object.values(AssuranceMethod);
 
 function loadPrivateKey(flags: {
   keyFile?: string;
@@ -63,6 +64,7 @@ export const approveRunCommand: CliCommand = {
     { key: "keyEnv", name: "--key-env", kind: "string", valueName: "<VAR>", summary: "Env var holding the ed25519 private key PEM (alternative to --key-file)." },
     { key: "keyId", name: "--key-id", kind: "string", required: true, valueName: "<id>", summary: "Keyring key_id the plugin verifies the token against." },
     { key: "decision", name: "--decision", kind: "string", valueName: "<decision>", summary: "approved | approved_with_known_gaps | rejected (default approved)." },
+    { key: "assuranceMethod", name: "--assurance-method", kind: "string", valueName: "<method>", summary: "automation | same_channel | os_presence (default os_presence)." },
     { key: "out", name: "--out", kind: "string", valueName: "<file>", summary: "Write the token to <file> instead of printing it inline." },
     { key: "json", name: "--json", kind: "boolean", summary: "Emit the machine-readable JSON result envelope." }
   ],
@@ -88,6 +90,18 @@ export const approveRunCommand: CliCommand = {
       };
     }
     const decision = decisionRaw as Decision;
+
+    const assuranceMethodRaw = (flags.assuranceMethod as string | undefined) ?? AssuranceMethod.OS_PRESENCE;
+    if (!isAssuranceMethod(assuranceMethodRaw)) {
+      return {
+        envelope: errorEnvelope(
+          "showcase.approve_run",
+          "cli_invalid_arguments",
+          `Unsupported --assurance-method: ${assuranceMethodRaw} (allowed: ${ASSURANCE_METHODS.join(", ")}).`
+        ),
+        exitCode: 2
+      };
+    }
 
     // Read + parse the request.
     let request: unknown;
@@ -130,7 +144,8 @@ export const approveRunCommand: CliCommand = {
         request: request as Parameters<typeof signApprovalToken>[0]["request"],
         decision,
         privateKey: key.pem,
-        keyId
+        keyId,
+        assuranceMethod: assuranceMethodRaw
       });
     } catch (error) {
       return {
@@ -150,7 +165,14 @@ export const approveRunCommand: CliCommand = {
       return {
         envelope: createCliResult(
           "showcase.approve_run",
-          { approval_token_path: outPath, jti: token.jti, decision, key_id: keyId },
+          {
+            approval_token_path: outPath,
+            jti: token.jti,
+            decision,
+            key_id: keyId,
+            assurance_method: token.assurance_method,
+            assurance_tier: token.assurance_tier
+          },
           { ok: true, complete: true, workspaceRoot: process.cwd() }
         ),
         exitCode: 0
@@ -160,7 +182,14 @@ export const approveRunCommand: CliCommand = {
     return {
       envelope: createCliResult(
         "showcase.approve_run",
-        { approval_token: token, jti: token.jti, decision, key_id: keyId },
+        {
+          approval_token: token,
+          jti: token.jti,
+          decision,
+          key_id: keyId,
+          assurance_method: token.assurance_method,
+          assurance_tier: token.assurance_tier
+        },
         { ok: true, complete: true, workspaceRoot: process.cwd() }
       ),
       exitCode: 0

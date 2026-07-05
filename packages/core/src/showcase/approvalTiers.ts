@@ -1,9 +1,9 @@
 // F3 — assurance tiers for human approval.
 //
 // A tier answers ONE question: does an approval carrying this tier count as a
-// real human's out-of-band sign-off? The tier is BOUND to the signing key in the
-// keyring by whoever curates it — it is NEVER declarable by the token's caller
-// (that is the whole point: an agent cannot up-rank itself).
+// real human's out-of-band sign-off? The keyring binds only the MAXIMUM tier a
+// key may assert. A signed token records the method that was actually used and
+// the tier claimed from that method.
 //
 // Policy picks a FLOOR; an approval satisfies the policy only when its key's
 // tier is at or above that floor on the ordered ladder below.
@@ -22,6 +22,20 @@ export const AssuranceTier = Object.freeze({
 
 export type AssuranceTier = (typeof AssuranceTier)[keyof typeof AssuranceTier];
 
+export const AssuranceMethod = Object.freeze({
+  AUTOMATION: "automation",
+  SAME_CHANNEL: "same_channel",
+  OS_PRESENCE: "os_presence"
+} as const);
+
+export type AssuranceMethod = (typeof AssuranceMethod)[keyof typeof AssuranceMethod];
+
+export const ASSURANCE_METHOD_TO_TIER: Record<AssuranceMethod, AssuranceTier> = Object.freeze({
+  [AssuranceMethod.AUTOMATION]: AssuranceTier.UNTRUSTED_AUTOMATION,
+  [AssuranceMethod.SAME_CHANNEL]: AssuranceTier.SAME_CHANNEL_OPERATOR_CONFIRMATION,
+  [AssuranceMethod.OS_PRESENCE]: AssuranceTier.TRUSTED_HOST_USER_PRESENCE
+});
+
 // Ordered weakest -> strongest. Index is the ladder rank; a higher (deferred)
 // hardware tier would append here.
 const LADDER: AssuranceTier[] = [
@@ -38,6 +52,14 @@ export function normalizeAssuranceTier(value: unknown): AssuranceTier {
 
 export function isAssuranceTier(value: unknown): value is AssuranceTier {
   return LADDER.some((tier) => tier === value);
+}
+
+export function isAssuranceMethod(value: unknown): value is AssuranceMethod {
+  return Object.values(AssuranceMethod).some((method) => method === value);
+}
+
+export function assuranceTierForMethod(method: AssuranceMethod): AssuranceTier {
+  return ASSURANCE_METHOD_TO_TIER[method];
 }
 
 // Is `tier` at or above `floor` on the ladder?
