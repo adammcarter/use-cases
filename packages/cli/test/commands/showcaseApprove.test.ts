@@ -52,6 +52,7 @@ function ed25519Pem() {
 }
 
 const HUMAN_KEY = ed25519Pem();
+const OPERATOR_KEY = ed25519Pem();
 const AGENT_KEY = ed25519Pem();
 // The CLI verifies a token against the REAL wall clock (a human signs and submits
 // within the TTL). So a genuine, unexpired token is minted at "now"; the expired
@@ -69,6 +70,15 @@ function keyring(): Keyring {
         valid_until: null,
         status: "active",
         assurance_tier: "trusted_host_user_presence"
+      },
+      {
+        key_id: "operator-key-1",
+        algorithm: "ed25519",
+        public_key: OPERATOR_KEY.publicKeyPem,
+        valid_from: "2026-01-01T00:00:00Z",
+        valid_until: null,
+        status: "active",
+        assurance_tier: "same_channel_operator_confirmation"
       },
       {
         key_id: "agent-key-1",
@@ -89,6 +99,19 @@ function fixtureWorkspace(name: string): string {
   const root = mkdtempSync(join(tmpdir(), "ucm-b1-"));
   cpSync(join(fixturesRoot, name), root, { recursive: true });
   return root;
+}
+
+function setApprovalPolicyMinimumTier(tier: string): void {
+  const path = join(workspaceRoot, "use-cases/showcase-live.yml");
+  const text = readFileSync(path, "utf8");
+  writeFileSync(
+    path,
+    text.replace(
+      "    approval_policy:\n      mode: predefined\n",
+      `    approval_policy:\n      mode: predefined\n      minimum_assurance_tier: ${tier}\n`
+    ),
+    "utf8"
+  );
 }
 
 function context() {
@@ -439,6 +462,30 @@ describe("BLOCKER 1 — showcase approve --approval-token: trusted submit path",
     expect(approvalState(runId, { keyring: keyringPath })).toBe("approved");
     // Fail-closed: status WITHOUT the trusted key material still reads pending.
     expect(approvalState(runId)).toBe("pending");
+  });
+
+  test("approval policy minimum_assurance_tier lowers the keyring floor for approve and status", () => {
+    setApprovalPolicyMinimumTier("same_channel_operator_confirmation");
+    const runId = completePassingRun("same-channel");
+    const token = humanSignsFor(runId, "operator-key-1", OPERATOR_KEY.privateKeyPem);
+    const tokenPath = writeToken(token);
+    const keyringPath = writeKeyring();
+
+    const result = showcaseApproveCommand.handler({
+      argv: ["showcase", "approve", "--run", runId, "--repo", workspaceRoot],
+      json: true,
+      flags: {
+        run: runId,
+        statement: "Same-channel sign-off is allowed by this row.",
+        actor: "user",
+        approvalToken: tokenPath,
+        keyring: keyringPath
+      }
+    });
+
+    expect(result.exitCode).toBe(0);
+    expect((result.envelope as { ok?: boolean }).ok).toBe(true);
+    expect(approvalState(runId, { keyring: keyringPath })).toBe("approved");
   });
 
   test("(a) approve-run --decision approved_with_known_gaps records and replays that verified token decision", () => {

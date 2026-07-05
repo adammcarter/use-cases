@@ -35,7 +35,7 @@ import {
 import { workspaceFlags } from "./common.js";
 
 // F3 trusted approval submit path (BLOCKER 1): build the (approvalToken,
-// publicKeyResolver, tierResolver, assuranceFloor) bundle a trusted human
+// publicKeyResolver, tierResolver) bundle a trusted human
 // sign-off requires from the CLI's key flags. Returns null when no
 // --approval-token was supplied (the additive, backward-compatible default:
 // untrusted_automation, user-required plans stay pending). Throws a coded error
@@ -43,7 +43,6 @@ import { workspaceFlags } from "./common.js";
 interface TrustResolvers {
   resolver: ReturnType<typeof singleKeyResolver>;
   tierResolver: ReturnType<typeof keyringAssuranceTierResolver>;
-  assuranceFloor: typeof AssuranceTier.TRUSTED_HOST_USER_PRESENCE;
 }
 
 interface ApprovalTokenBundle extends TrustResolvers {
@@ -56,7 +55,7 @@ function keyMaterialError(message: string, code: string): Error {
   return error;
 }
 
-// Build the (resolver, tierResolver, floor) that VERIFY a signed approval token —
+// Build the (resolver, tierResolver) that VERIFY a signed approval token —
 // used both to SUBMIT one (`showcase approve --approval-token`) and to READ an
 // already-embedded one (`showcase status`). --keyring keeps per-key assurance
 // tiers (the real multi-key security model); --public-key nominates a single key
@@ -76,8 +75,7 @@ function loadTrustResolvers(flags: ParsedFlags): TrustResolvers | null {
     }
     return {
       resolver: keyringResolver(keyring),
-      tierResolver: keyringAssuranceTierResolver(keyring),
-      assuranceFloor: AssuranceTier.TRUSTED_HOST_USER_PRESENCE
+      tierResolver: keyringAssuranceTierResolver(keyring)
     };
   }
   const publicKeyPath = flags.publicKey as string | undefined;
@@ -98,8 +96,7 @@ function loadTrustResolvers(flags: ParsedFlags): TrustResolvers | null {
     // Operator explicitly nominated this single key as the trusted human signer:
     // treat it as trusted_host_user_presence so the floor is met. (The keyring
     // path is where per-key downgrades/revocations live.)
-    tierResolver: () => AssuranceTier.TRUSTED_HOST_USER_PRESENCE,
-    assuranceFloor: AssuranceTier.TRUSTED_HOST_USER_PRESENCE
+    tierResolver: () => AssuranceTier.TRUSTED_HOST_USER_PRESENCE
   };
 }
 
@@ -634,7 +631,7 @@ export const showcaseStatusCommand: CliCommand = {
       context: contextResult,
       runId,
       ...(trust
-        ? { trustResolver: trust.resolver, trustTierResolver: trust.tierResolver, assuranceFloor: trust.assuranceFloor }
+        ? { trustResolver: trust.resolver, trustTierResolver: trust.tierResolver }
         : {})
     });
     return {
@@ -756,14 +753,13 @@ export const showcaseApproveCommand: CliCommand = {
         // CLI path carries no signed token — an agent driving `uc showcase
         // approve` still gets untrusted_automation and a user-required plan stays
         // pending. WITH --approval-token, the (token, resolver, tierResolver,
-        // floor) bundle drives the existing verify+append gate; the trusted key
+        // policy-derived floor) bundle drives the existing verify+append gate; the trusted key
         // material lives OUTSIDE the run ledger (in --keyring / --public-key).
         ...(approvalBundle
           ? {
               approvalToken: approvalBundle.approvalToken as Parameters<typeof appendShowcaseApproval>[0]["approvalToken"],
               resolver: approvalBundle.resolver,
-              tierResolver: approvalBundle.tierResolver,
-              assuranceFloor: approvalBundle.assuranceFloor
+              tierResolver: approvalBundle.tierResolver
             }
           : {})
       });

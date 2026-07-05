@@ -9,7 +9,8 @@ import {
 } from "./approvalAuthority.js";
 import type { PublicKeyResolver } from "../markers/proofSignature.js";
 import type { AssuranceTierResolver } from "../markers/keyring.js";
-import { AssuranceTier } from "./approvalTiers.js";
+import type { AssuranceTier } from "./approvalTiers.js";
+import { approvalAssuranceFloorForPlan } from "./approvalPolicy.js";
 
 // F3: replay recomputes user-approval trust from the embedded signed token via
 // this resolver. Omitted => user approvals are untrusted (fail-closed).
@@ -32,12 +33,12 @@ export function replayShowcaseEvents(
 ): ShowcaseRunStatus {
   const trust: ApprovalTrustContext = {
     resolver: trustOptions.trustResolver,
-    tierResolver: trustOptions.trustTierResolver,
-    assuranceFloor: trustOptions.assuranceFloor ?? AssuranceTier.TRUSTED_HOST_USER_PRESENCE
+    tierResolver: trustOptions.trustTierResolver
   };
   const ordered = events.slice().sort((left, right) => left.sequence - right.sequence);
   const start = ordered.find((event) => event.event_type === "run_started");
   const plan = start?.payload.plan as { selected_items?: PresentationPlanItem[]; known_gaps?: Record<string, unknown>[] } | undefined;
+  trust.assuranceFloor = approvalAssuranceFloorForPlan(plan);
   const items = (plan?.selected_items ?? []).map((item) => initialItem(item.plan_item_id));
   const byItem = new Map(items.map((item) => [item.plan_item_id, item]));
   const unresolvedFailures = new Set<string>();

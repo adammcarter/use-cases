@@ -3,7 +3,7 @@
 // (no token, caller-supplied flag, capture_method string, replay, forged key)
 // stays pending / untrusted.
 import { generateKeyPairSync } from "node:crypto";
-import { appendFileSync, cpSync, mkdtempSync, readFileSync } from "node:fs";
+import { appendFileSync, cpSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { describe, expect, test } from "vitest";
@@ -39,6 +39,7 @@ function ed25519Pem() {
   };
 }
 const HUMAN_KEY = ed25519Pem();
+const OPERATOR_KEY = ed25519Pem();
 const AGENT_KEY = ed25519Pem();
 
 function keyring(): Keyring {
@@ -53,6 +54,15 @@ function keyring(): Keyring {
         valid_until: null,
         status: "active",
         assurance_tier: "trusted_host_user_presence"
+      },
+      {
+        key_id: "operator-key-1",
+        algorithm: "ed25519",
+        public_key: OPERATOR_KEY.publicKeyPem,
+        valid_from: "2026-01-01T00:00:00Z",
+        valid_until: null,
+        status: "active",
+        assurance_tier: "same_channel_operator_confirmation"
       },
       {
         key_id: "agent-key-1",
@@ -75,6 +85,19 @@ function fixtureWorkspace(name: string): string {
   const workspaceRoot = mkdtempSync(join(tmpdir(), "ucm-f3-"));
   cpSync(join(fixturesRoot, name), workspaceRoot, { recursive: true });
   return workspaceRoot;
+}
+
+function setApprovalPolicyMinimumTier(workspaceRoot: string, tier: string): void {
+  const path = join(workspaceRoot, "use-cases/showcase-live.yml");
+  const text = readFileSync(path, "utf8");
+  writeFileSync(
+    path,
+    text.replace(
+      "    approval_policy:\n      mode: predefined\n",
+      `    approval_policy:\n      mode: predefined\n      minimum_assurance_tier: ${tier}\n`
+    ),
+    "utf8"
+  );
 }
 
 function planFor(context: ReturnType<typeof resolveWorkspaceContext>) {
@@ -144,11 +167,21 @@ function completePassingRun(context: ReturnType<typeof resolveWorkspaceContext>)
 function humanSignsFor(
   context: ReturnType<typeof resolveWorkspaceContext>,
   runId: string,
-  decision: ApprovalToken["decision"] = "approved"
+  decision: ApprovalToken["decision"] = "approved",
+  keyId = "human-key-1",
+  privateKeyPem = HUMAN_KEY.privateKeyPem
 ): ApprovalToken {
   const binding = computeRunApprovalBinding({ context, runId });
   const request = mintApprovalRequest({ binding, nowMs: Date.parse(AT), ttlMinutes: 15 });
-  return signApprovalToken({ request, decision, privateKey: HUMAN_KEY.privateKeyPem, keyId: "human-key-1" });
+  return signApprovalToken({ request, decision, privateKey: privateKeyPem, keyId });
+}
+
+function operatorSignsFor(context: ReturnType<typeof resolveWorkspaceContext>, runId: string): ApprovalToken {
+  return humanSignsFor(context, runId, "approved", "operator-key-1", OPERATOR_KEY.privateKeyPem);
+}
+
+function automationSignsFor(context: ReturnType<typeof resolveWorkspaceContext>, runId: string): ApprovalToken {
+  return humanSignsFor(context, runId, "approved", "agent-key-1", AGENT_KEY.privateKeyPem);
 }
 
 const verifyOpts = () => ({
@@ -382,6 +415,104 @@ describe("F3 append — MUST REJECT", () => {
 });
 
 describe("F3 append — MUST ACCEPT + idempotency", () => {
+  test("approval_policy.minimum_assurance_tier lets same_channel key record and replay a positive approval", () => {
+    const workspaceRoot = fixtureWorkspace("evidence-basic");
+    setApprovalPolicyMinimumTier(workspaceRoot, "same_channel_operator_confirmation");
+    const context = resolveWorkspaceContext({ workspaceRoot });
+    const run = completePassingRun(context);
+    const token = operatorSignsFor(context, run.run_id);
+
+    const result = appendShowcaseApproval({
+      context,
+      runId: run.run_id,
+      decision: "approved",
+      actorType: "user",
+      hostSurface: "codex.cli",
+      statement: "Same-channel operator sign-off is enough for this row.",
+      idempotencyKey: "policy-floor-same-channel",
+      recordedAt: AT,
+      approvalToken: token,
+      resolver: resolver(),
+      tierResolver: tierResolver(),
+      nowMs: Date.parse(AT)
+    });
+
+    expect(result.status.approval_state).toBe("approved");
+    expect(
+      replayShowcaseRun({
+        context,
+        runId: run.run_id,
+        trustResolver: resolver(),
+        trustTierResolver: tierResolver()
+      }).approval_state
+    ).toBe("approved");
+  });
+
+  test("default approval policy still rejects a same_channel key as ASSURANCE_TOO_LOW", () => {
+    const workspaceRoot = fixtureWorkspace("evidence-basic");
+    const context = resolveWorkspaceContext({ workspaceRoot });
+    const run = completePassingRun(context);
+    const token = operatorSignsFor(context, run.run_id);
+
+    expect(() =>
+      appendShowcaseApproval({
+        context,
+        runId: run.run_id,
+        decision: "approved",
+        actorType: "user",
+        hostSurface: "codex.cli",
+        statement: "Default policy should still require trusted host presence.",
+        idempotencyKey: "policy-floor-default-rejects-same-channel",
+        recordedAt: AT,
+        approvalToken: token,
+        resolver: resolver(),
+        tierResolver: tierResolver(),
+        nowMs: Date.parse(AT)
+      })
+    ).toThrow(/ASSURANCE_TOO_LOW/i);
+    expect(
+      replayShowcaseRun({
+        context,
+        runId: run.run_id,
+        trustResolver: resolver(),
+        trustTierResolver: tierResolver()
+      }).approval_state
+    ).toBe("pending");
+  });
+
+  test("a key below approval_policy.minimum_assurance_tier is rejected", () => {
+    const workspaceRoot = fixtureWorkspace("evidence-basic");
+    setApprovalPolicyMinimumTier(workspaceRoot, "same_channel_operator_confirmation");
+    const context = resolveWorkspaceContext({ workspaceRoot });
+    const run = completePassingRun(context);
+    const token = automationSignsFor(context, run.run_id);
+
+    expect(() =>
+      appendShowcaseApproval({
+        context,
+        runId: run.run_id,
+        decision: "approved",
+        actorType: "user",
+        hostSurface: "codex.cli",
+        statement: "Automation should stay below the configured floor.",
+        idempotencyKey: "policy-floor-rejects-automation",
+        recordedAt: AT,
+        approvalToken: token,
+        resolver: resolver(),
+        tierResolver: tierResolver(),
+        nowMs: Date.parse(AT)
+      })
+    ).toThrow(/ASSURANCE_TOO_LOW/i);
+    expect(
+      replayShowcaseRun({
+        context,
+        runId: run.run_id,
+        trustResolver: resolver(),
+        trustTierResolver: tierResolver()
+      }).approval_state
+    ).toBe("pending");
+  });
+
   test("(j) genuine human token bound to the run + fresh nonce + unexpired -> nonce burned, approved for THAT run", () => {
     const workspaceRoot = fixtureWorkspace("evidence-basic");
     const context = resolveWorkspaceContext({ workspaceRoot });

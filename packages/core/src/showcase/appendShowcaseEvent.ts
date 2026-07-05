@@ -10,7 +10,8 @@ import { replayShowcaseEvents, replayShowcaseRun, type ReplayTrustOptions } from
 import { assertPresentationPlanHash } from "./planBinding.js";
 import { computeApprovalBindingFromEvents } from "./approvalBinding.js";
 import { verifyApprovalToken, type ApprovalToken } from "./approvalToken.js";
-import { AssuranceTier } from "./approvalTiers.js";
+import type { AssuranceTier } from "./approvalTiers.js";
+import { approvalAssuranceFloorForPlan } from "./approvalPolicy.js";
 import type { PublicKeyResolver } from "../markers/proofSignature.js";
 import type { AssuranceTierResolver } from "../markers/keyring.js";
 import type {
@@ -353,6 +354,7 @@ function recordApprovalDecision(
   const start = read.events.find((event) => event.event_type === "run_started");
   const plan = start?.payload.plan as PresentationPlan | undefined;
   const userRequired = planRequiresUserApproval(plan);
+  const assuranceFloor = approvalAssuranceFloorForPlan(plan);
 
   // A non-user actor may never stand in for a user-required approval.
   if (options.actorType !== "user") {
@@ -395,7 +397,7 @@ function recordApprovalDecision(
         liveBinding,
         isNonceBurned: (jti) => burnedNonces.has(jti),
         nowMs: options.nowMs,
-        assuranceFloor: options.assuranceFloor ?? AssuranceTier.TRUSTED_HOST_USER_PRESENCE
+        assuranceFloor
       });
       if (!verification.ok) {
         throw new UseCasesPluginError(
@@ -465,8 +467,7 @@ function recordApprovalDecision(
   // resolver so the embedded token is re-verified and the run reads as approved.
   return appendResult(options.context, event, {
     trustResolver: options.resolver,
-    trustTierResolver: options.tierResolver,
-    assuranceFloor: options.assuranceFloor
+    trustTierResolver: options.tierResolver
   });
 }
 

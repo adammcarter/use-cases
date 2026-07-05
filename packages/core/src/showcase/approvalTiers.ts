@@ -36,6 +36,10 @@ export function normalizeAssuranceTier(value: unknown): AssuranceTier {
   return LADDER.find((tier) => tier === value) ?? AssuranceTier.UNTRUSTED_AUTOMATION;
 }
 
+export function isAssuranceTier(value: unknown): value is AssuranceTier {
+  return LADDER.some((tier) => tier === value);
+}
+
 // Is `tier` at or above `floor` on the ladder?
 export function tierMeetsFloor(tier: AssuranceTier, floor: AssuranceTier): boolean {
   return LADDER.indexOf(tier) >= LADDER.indexOf(floor);

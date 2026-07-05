@@ -225,7 +225,8 @@
           "additionalProperties": false,
           "properties": {
             "mode": { "const": "none" },
-            "required_for_release": { "type": "boolean" }
+            "required_for_release": { "type": "boolean" },
+            "minimum_assurance_tier": { "$ref": "#/$defs/approval_assurance_tier" }
           },
           "required": ["mode"]
         },
@@ -234,7 +235,8 @@
           "additionalProperties": false,
           "properties": {
             "mode": { "const": "ask" },
-            "required_for_release": { "type": "boolean" }
+            "required_for_release": { "type": "boolean" },
+            "minimum_assurance_tier": { "$ref": "#/$defs/approval_assurance_tier" }
           },
           "required": ["mode"]
         },
@@ -244,6 +246,7 @@
           "properties": {
             "mode": { "const": "predefined" },
             "required_for_release": { "type": "boolean" },
+            "minimum_assurance_tier": { "$ref": "#/$defs/approval_assurance_tier" },
             "requirements": {
               "type": "array",
               "minItems": 1,
@@ -261,6 +264,13 @@
           },
           "required": ["mode", "requirements", "statement"]
         }
+      ]
+    },
+    "approval_assurance_tier": {
+      "enum": [
+        "untrusted_automation",
+        "same_channel_operator_confirmation",
+        "trusted_host_user_presence"
       ]
     },
     "extensions": {

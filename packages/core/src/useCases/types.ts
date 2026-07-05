@@ -24,6 +24,33 @@ export type HostSurface =
   | "opencode.cli"
   | "unknown";
 
+export type ApprovalPolicyMinimumAssuranceTier =
+  | "untrusted_automation"
+  | "same_channel_operator_confirmation"
+  | "trusted_host_user_presence";
+
+export type ApprovalPolicyV1 =
+  | {
+      mode: "none";
+      required_for_release?: boolean;
+      minimum_assurance_tier?: ApprovalPolicyMinimumAssuranceTier;
+    }
+  | {
+      mode: "ask";
+      required_for_release?: boolean;
+      minimum_assurance_tier?: ApprovalPolicyMinimumAssuranceTier;
+    }
+  | {
+      mode: "predefined";
+      required_for_release?: boolean;
+      minimum_assurance_tier?: ApprovalPolicyMinimumAssuranceTier;
+      requirements: Array<{
+        approver_type: "user" | "agent";
+        minimum_count: number;
+      }>;
+      statement: string;
+    };
+
 export type UseCaseV1 = {
   id: string;
   title: string;
@@ -40,6 +67,7 @@ export type UseCaseV1 = {
     supported: boolean;
     notes?: string;
   }>;
+  approval_policy?: ApprovalPolicyV1;
   [key: string]: unknown;
 };
 
