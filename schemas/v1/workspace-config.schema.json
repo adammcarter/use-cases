@@ -17,10 +17,33 @@
     },
     "verifiers": { "$ref": "#/$defs/verifiers_config" },
     "release_gate": { "$ref": "#/$defs/release_gate" },
+    "approval_trust": { "$ref": "#/$defs/approval_trust" },
     "extensions": { "$ref": "common.schema.json#/$defs/extensions" }
   },
   "required": ["schema_version", "workspace_id", "data_root", "use_cases_dir", "evidence_dir", "demo_capsules_dir", "showcase_runs_dir", "component_id"],
   "$defs": {
+    "approval_trust": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "description": "OPTIONAL workspace-pinned trust anchor for verifying signed showcase approval tokens. When present, this anchor is authoritative: CLI --keyring/--public-key flags may select or narrow these keys, but cannot introduce a new verifying root.",
+      "properties": {
+        "keyring_path": {
+          "$ref": "#/$defs/relative_path",
+          "description": "Repo-relative path to a committed ucase-public-key-registry-v1 keyring."
+        },
+        "keyring": {
+          "$ref": "keyring.schema.json",
+          "description": "Inline ucase-public-key-registry-v1 keyring."
+        },
+        "public_keys": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "keyring.schema.json#/$defs/key" },
+          "description": "Inline trusted public keys, using the same key shape as keyring entries."
+        }
+      }
+    },
     "release_gate": {
       "type": "object",
       "additionalProperties": false,

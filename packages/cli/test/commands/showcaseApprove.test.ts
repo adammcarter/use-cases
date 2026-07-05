@@ -54,6 +54,7 @@ function ed25519Pem() {
 const HUMAN_KEY = ed25519Pem();
 const OPERATOR_KEY = ed25519Pem();
 const AGENT_KEY = ed25519Pem();
+const ROGUE_KEY = ed25519Pem();
 // The CLI verifies a token against the REAL wall clock (a human signs and submits
 // within the TTL). So a genuine, unexpired token is minted at "now"; the expired
 // negative below deliberately signs in the distant past.
@@ -90,6 +91,25 @@ function keyring(): Keyring {
         assurance_tier: "untrusted_automation"
       }
     ]
+  };
+}
+
+function trustedKey(keyId: string, publicKey: string): Keyring["keys"][number] {
+  return {
+    key_id: keyId,
+    algorithm: "ed25519",
+    public_key: publicKey,
+    valid_from: "2026-01-01T00:00:00Z",
+    valid_until: null,
+    status: "active",
+    assurance_tier: "trusted_host_user_presence"
+  };
+}
+
+function keyringWith(keys: Keyring["keys"]): Keyring {
+  return {
+    keyring_schema_id: "ucase-public-key-registry-v1",
+    keys
   };
 }
 
@@ -321,9 +341,21 @@ function writeToken(token: ApprovalToken): string {
   return path;
 }
 
-function writeKeyring(): string {
-  const path = join(workspaceRoot, "keyring.json");
-  writeFileSync(path, JSON.stringify(keyring(), null, 2), "utf8");
+function writeKeyring(value: Keyring = keyring(), name = "keyring.json"): string {
+  const path = join(workspaceRoot, name);
+  writeFileSync(path, JSON.stringify(value, null, 2), "utf8");
+  return path;
+}
+
+function pinApprovalTrustToKeyring(value: Keyring, name = "approval-keyring.json"): string {
+  const path = writeKeyring(value, name);
+  const configPath = join(workspaceRoot, "use-cases.yml");
+  const text = readFileSync(configPath, "utf8");
+  writeFileSync(
+    configPath,
+    `${text.trimEnd()}\napproval_trust:\n  keyring_path: ${name}\n`,
+    "utf8"
+  );
   return path;
 }
 
@@ -556,6 +588,115 @@ describe("BLOCKER 1 — showcase approve --approval-token: trusted submit path",
 
     expect(result.exitCode).toBe(0);
     expect(approvalState(runId, { publicKey: pubPath })).toBe("approved");
+  });
+
+  test("pinned approval_trust keyring verifies approve and status without caller-nominated trust flags", () => {
+    pinApprovalTrustToKeyring(keyringWith([trustedKey("human-key-1", HUMAN_KEY.publicKeyPem)]));
+    const runId = completePassingRun("pinned");
+    const token = humanSignsFor(runId);
+    const tokenPath = writeToken(token);
+
+    const result = showcaseApproveCommand.handler({
+      argv: ["showcase", "approve", "--run", runId, "--repo", workspaceRoot],
+      json: true,
+      flags: {
+        run: runId,
+        statement: "Pinned workspace trust anchor verified this sign-off.",
+        actor: "user",
+        approvalToken: tokenPath
+      }
+    });
+
+    expect(result.exitCode).toBe(0);
+    expect(approvalState(runId)).toBe("approved");
+  });
+
+  test("pinned approval_trust rejects a non-pinned signer even when --keyring nominates it", () => {
+    pinApprovalTrustToKeyring(keyringWith([trustedKey("human-key-1", HUMAN_KEY.publicKeyPem)]));
+    const runId = completePassingRun("unpinned");
+    const rogueToken = humanSignsFor(runId, "rogue-key-1", ROGUE_KEY.privateKeyPem);
+    const tokenPath = writeToken(rogueToken);
+    const rogueKeyringPath = writeKeyring(
+      keyringWith([trustedKey("rogue-key-1", ROGUE_KEY.publicKeyPem)]),
+      "rogue-keyring.json"
+    );
+
+    const result = showcaseApproveCommand.handler({
+      argv: ["showcase", "approve", "--run", runId, "--repo", workspaceRoot],
+      json: true,
+      flags: {
+        run: runId,
+        statement: "A caller-supplied rogue keyring must not override workspace trust.",
+        actor: "user",
+        approvalToken: tokenPath,
+        keyring: rogueKeyringPath
+      }
+    });
+
+    expect(result.exitCode).not.toBe(0);
+    expect((result.envelope as { diagnostics?: Array<{ code?: string }> }).diagnostics?.[0]?.code).toBe(
+      "showcase.approval_trust_anchor_unpinned"
+    );
+    expect(approvalState(runId)).toBe("pending");
+  });
+
+  test("--keyring can narrow a pinned approval_trust keyring to a pinned subset", () => {
+    pinApprovalTrustToKeyring(
+      keyringWith([
+        trustedKey("human-key-1", HUMAN_KEY.publicKeyPem),
+        trustedKey("operator-key-1", OPERATOR_KEY.publicKeyPem)
+      ])
+    );
+    const runId = completePassingRun("narrowed");
+    const token = humanSignsFor(runId, "operator-key-1", OPERATOR_KEY.privateKeyPem);
+    const tokenPath = writeToken(token);
+    const narrowedKeyringPath = writeKeyring(
+      keyringWith([trustedKey("operator-key-1", OPERATOR_KEY.publicKeyPem)]),
+      "operator-only-keyring.json"
+    );
+
+    const result = showcaseApproveCommand.handler({
+      argv: ["showcase", "approve", "--run", runId, "--repo", workspaceRoot],
+      json: true,
+      flags: {
+        run: runId,
+        statement: "A caller can select a pinned subset.",
+        actor: "user",
+        approvalToken: tokenPath,
+        keyring: narrowedKeyringPath
+      }
+    });
+
+    expect(result.exitCode).toBe(0);
+    expect(approvalState(runId, { keyring: narrowedKeyringPath })).toBe("approved");
+  });
+
+  test("unpinned approval-token verification keeps flag-based behavior but warns that trust is caller-supplied", () => {
+    const runId = completePassingRun("caller-supplied");
+    const token = humanSignsFor(runId);
+    const tokenPath = writeToken(token);
+    const keyringPath = writeKeyring();
+
+    const result = showcaseApproveCommand.handler({
+      argv: ["showcase", "approve", "--run", runId, "--repo", workspaceRoot],
+      json: true,
+      flags: {
+        run: runId,
+        statement: "Legacy caller-supplied trust material remains accepted.",
+        actor: "user",
+        approvalToken: tokenPath,
+        keyring: keyringPath
+      }
+    });
+
+    expect(result.exitCode).toBe(0);
+    expect((result.envelope as { diagnostics?: Array<{ code?: string; severity?: string }> }).diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "showcase.approval_trust_anchor_caller_supplied",
+        severity: "warning"
+      })
+    );
+    expect(approvalState(runId, { keyring: keyringPath })).toBe("approved");
   });
 
   test("(b) NO token on a user-required plan -> rejected NON-ZERO, stays pending", () => {

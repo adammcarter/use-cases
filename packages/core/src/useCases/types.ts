@@ -136,6 +136,7 @@ export type MatrixSnapshot = {
   ambiguousUseCaseIds: AmbiguousIdGroup[];
   diagnostics: Diagnostic[];
   counts: MatrixStructuralCounts;
+  approvalTrust?: ResolvedWorkspaceContext["approval_trust"];
   resolveUseCase(id: string): UseCaseResolution;
   resolveScenario(useCaseId: string, scenarioId: string): ScenarioResolution;
 };

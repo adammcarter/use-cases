@@ -94,7 +94,8 @@ export function buildMatrixSnapshot(input: {
     addressableUseCases,
     ambiguousUseCaseIds,
     diagnostics,
-    counts
+    counts,
+    approvalTrust: input.context.approval_trust
   } satisfies Omit<MatrixSnapshot, "resolveUseCase" | "resolveScenario">;
 
   return {

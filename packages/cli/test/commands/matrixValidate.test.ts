@@ -69,9 +69,51 @@ function workspaceWithMinimumAssuranceTier(): string {
   return root;
 }
 
+function workspaceWithApprovalTrust(): string {
+  const root = workspaceWithMinimumAssuranceTier();
+  writeFileSync(
+    join(root, "use-cases.yml"),
+    [
+      "schema_version: 1",
+      "workspace_id: matrix-validate.fixture",
+      "data_root: .",
+      "use_cases_dir: use-cases",
+      "evidence_dir: evidence",
+      "demo_capsules_dir: demo-capsules",
+      "showcase_runs_dir: showcase-runs",
+      "component_id: matrix-validate",
+      "approval_trust:",
+      "  public_keys:",
+      "    - key_id: human-key-1",
+      "      algorithm: ed25519",
+      "      public_key: pinned-public-key",
+      "      valid_from: 2026-01-01T00:00:00Z",
+      "      valid_until: null",
+      "      status: active",
+      "      assurance_tier: trusted_host_user_presence",
+      ""
+    ].join("\n"),
+    "utf8"
+  );
+  return root;
+}
+
 describe("matrix validate", () => {
   test("accepts approval_policy.minimum_assurance_tier", () => {
     const workspaceRoot = workspaceWithMinimumAssuranceTier();
+
+    const result = matrixValidateCommand.handler({
+      argv: ["matrix", "validate", "--repo", workspaceRoot],
+      json: true,
+      flags: { repo: workspaceRoot }
+    });
+
+    expect(result.exitCode).toBe(0);
+    expect((result.envelope as { complete?: boolean }).complete).toBe(true);
+  });
+
+  test("accepts workspace approval_trust config", () => {
+    const workspaceRoot = workspaceWithApprovalTrust();
 
     const result = matrixValidateCommand.handler({
       argv: ["matrix", "validate", "--repo", workspaceRoot],

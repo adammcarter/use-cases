@@ -21,6 +21,7 @@ import {
   loadPresentationPlanFile,
   loadUseCaseMatrix,
   mintApprovalRequest,
+  parseKeyring,
   pauseShowcaseRun,
   rejectShowcaseApproval,
   replayEvidence,
@@ -35,19 +36,26 @@ import {
 import { workspaceFlags } from "./common.js";
 
 // F3 trusted approval submit path (BLOCKER 1): build the (approvalToken,
-// publicKeyResolver, tierResolver) bundle a trusted human
-// sign-off requires from the CLI's key flags. Returns null when no
-// --approval-token was supplied (the additive, backward-compatible default:
-// untrusted_automation, user-required plans stay pending). Throws a coded error
-// (rendered as ok:false, exit 1) when the token/key material is unreadable.
+// publicKeyResolver, tierResolver) bundle a trusted human sign-off requires.
+// A workspace-pinned approval_trust anchor wins; flags can only narrow it.
+// Returns null when no --approval-token was supplied (the additive,
+// backward-compatible default: untrusted_automation, user-required plans stay
+// pending). Throws a coded error (rendered as ok:false, exit 1) when the
+// token/key material is unreadable.
 interface TrustResolvers {
   resolver: ReturnType<typeof singleKeyResolver>;
   tierResolver: ReturnType<typeof keyringAssuranceTierResolver>;
+  diagnostics: CliDiagnostic[];
+  pinnedKeyIds?: Set<string>;
 }
 
 interface ApprovalTokenBundle extends TrustResolvers {
   approvalToken: unknown;
 }
+
+type Keyring = ReturnType<typeof loadKeyring>;
+type KeyringKey = Keyring["keys"][number];
+type CliDiagnostic = ReturnType<typeof createCliResult>["diagnostics"][number];
 
 function keyMaterialError(message: string, code: string): Error {
   const error = new Error(message);
@@ -55,13 +63,147 @@ function keyMaterialError(message: string, code: string): Error {
   return error;
 }
 
+function callerSuppliedTrustDiagnostic(): CliDiagnostic {
+  return {
+    code: "showcase.approval_trust_anchor_caller_supplied",
+    severity: "warning",
+    message: "Approval-token verification is using caller-supplied trust material because use-cases.yml has no approval_trust pin.",
+    source_path: null,
+    json_pointer: null,
+    entity_id: null,
+    related_ids: []
+  };
+}
+
+function keyringFromKeys(keys: KeyringKey[], sourcePath: string | null = null): Keyring {
+  return parseKeyring(
+    {
+      keyring_schema_id: "ucase-public-key-registry-v1",
+      keys
+    },
+    sourcePath
+  );
+}
+
+function keyIds(keyring: Keyring): Set<string> {
+  return new Set(keyring.keys.map((key) => key.key_id));
+}
+
+function resolversForKeyring(keyring: Keyring, diagnostics: CliDiagnostic[] = [], pinnedKeyIds?: Set<string>): TrustResolvers {
+  return {
+    resolver: keyringResolver(keyring),
+    tierResolver: keyringAssuranceTierResolver(keyring),
+    diagnostics,
+    ...(pinnedKeyIds ? { pinnedKeyIds } : {})
+  };
+}
+
+function emptyTrustResolvers(pinnedKeyIds: Set<string>): TrustResolvers {
+  return {
+    resolver: () => undefined,
+    tierResolver: () => undefined,
+    diagnostics: [],
+    pinnedKeyIds
+  };
+}
+
+function loadPinnedApprovalTrustKeyring(context: ResolvedContext): Keyring | null {
+  const pinned = context.approval_trust;
+  if (!pinned) {
+    return null;
+  }
+  const keys: KeyringKey[] = [];
+  if (pinned.keyring_path) {
+    try {
+      keys.push(...loadKeyring(resolve(context.workspace_root, pinned.keyring_path)).keys);
+    } catch (error) {
+      throw keyMaterialError(
+        `could not read approval_trust.keyring_path: ${error instanceof Error ? error.message : String(error)}`,
+        "showcase.approval_trust_keyring_unreadable"
+      );
+    }
+  }
+  if (pinned.keyring) {
+    keys.push(...pinned.keyring.keys);
+  }
+  if (pinned.public_keys) {
+    keys.push(...pinned.public_keys);
+  }
+  if (keys.length === 0) {
+    return null;
+  }
+  return keyringFromKeys(keys, "use-cases.yml#/approval_trust");
+}
+
+function readPublicKeyFlag(publicKeyPath: string): { publicKey: ReturnType<typeof createPublicKey>; pem: string } {
+  try {
+    const pem = readFileSync(resolve(process.cwd(), publicKeyPath), "utf8");
+    return { publicKey: createPublicKey(pem), pem };
+  } catch (error) {
+    throw keyMaterialError(
+      `could not read/parse --public-key: ${error instanceof Error ? error.message : String(error)}`,
+      "public_key.invalid"
+    );
+  }
+}
+
+function samePublicKey(left: string, right: string): boolean {
+  if (left === right) {
+    return true;
+  }
+  try {
+    const canonicalLeft = createPublicKey(left).export({ type: "spki", format: "pem" }).toString();
+    const canonicalRight = createPublicKey(right).export({ type: "spki", format: "pem" }).toString();
+    return canonicalLeft === canonicalRight;
+  } catch {
+    return false;
+  }
+}
+
+function selectPinnedTrustResolvers(pinnedKeyring: Keyring, flags: ParsedFlags): TrustResolvers {
+  const pinnedKeyIds = keyIds(pinnedKeyring);
+  const keyringPath = flags.keyring as string | undefined;
+  if (keyringPath) {
+    let requested: Keyring;
+    try {
+      requested = loadKeyring(resolve(process.cwd(), keyringPath));
+    } catch (error) {
+      throw keyMaterialError(
+        `could not read --keyring: ${error instanceof Error ? error.message : String(error)}`,
+        "showcase.approval_keyring_unreadable"
+      );
+    }
+    const requestedIds = keyIds(requested);
+    const selected = pinnedKeyring.keys.filter((key) => requestedIds.has(key.key_id));
+    return selected.length > 0
+      ? resolversForKeyring(keyringFromKeys(selected, keyringPath), [], pinnedKeyIds)
+      : emptyTrustResolvers(pinnedKeyIds);
+  }
+
+  const publicKeyPath = flags.publicKey as string | undefined;
+  if (publicKeyPath) {
+    const { pem } = readPublicKeyFlag(publicKeyPath);
+    const selected = pinnedKeyring.keys.filter((key) => samePublicKey(key.public_key, pem));
+    return selected.length > 0
+      ? resolversForKeyring(keyringFromKeys(selected, publicKeyPath), [], pinnedKeyIds)
+      : emptyTrustResolvers(pinnedKeyIds);
+  }
+
+  return resolversForKeyring(pinnedKeyring, [], pinnedKeyIds);
+}
+
 // Build the (resolver, tierResolver) that VERIFY a signed approval token —
 // used both to SUBMIT one (`showcase approve --approval-token`) and to READ an
-// already-embedded one (`showcase status`). --keyring keeps per-key assurance
-// tiers (the real multi-key security model); --public-key nominates a single key
-// as the trusted human signer, so its floor is met by construction. Returns null
-// when neither flag is present (no trust material configured).
-function loadTrustResolvers(flags: ParsedFlags): TrustResolvers | null {
+// already-embedded one (`showcase status`). When use-cases.yml pins
+// approval_trust, that anchor is authoritative and flags only narrow it. Without
+// a pin, legacy flag-based trust remains supported but is surfaced as an
+// advisory diagnostic.
+function loadTrustResolvers(flags: ParsedFlags, context: ResolvedContext): TrustResolvers | null {
+  const pinnedKeyring = loadPinnedApprovalTrustKeyring(context);
+  if (pinnedKeyring) {
+    return selectPinnedTrustResolvers(pinnedKeyring, flags);
+  }
+
   const keyringPath = flags.keyring as string | undefined;
   if (keyringPath) {
     let keyring;
@@ -75,32 +217,31 @@ function loadTrustResolvers(flags: ParsedFlags): TrustResolvers | null {
     }
     return {
       resolver: keyringResolver(keyring),
-      tierResolver: keyringAssuranceTierResolver(keyring)
+      tierResolver: keyringAssuranceTierResolver(keyring),
+      diagnostics: [callerSuppliedTrustDiagnostic()]
     };
   }
   const publicKeyPath = flags.publicKey as string | undefined;
   if (!publicKeyPath) {
     return null;
   }
-  let publicKey;
-  try {
-    publicKey = createPublicKey(readFileSync(resolve(process.cwd(), publicKeyPath), "utf8"));
-  } catch (error) {
-    throw keyMaterialError(
-      `could not read/parse --public-key: ${error instanceof Error ? error.message : String(error)}`,
-      "public_key.invalid"
-    );
-  }
+  const { publicKey } = readPublicKeyFlag(publicKeyPath);
   return {
     resolver: singleKeyResolver(publicKey),
     // Operator explicitly nominated this single key as the trusted human signer:
     // treat it as trusted_host_user_presence so the floor is met. (The keyring
     // path is where per-key downgrades/revocations live.)
-    tierResolver: () => AssuranceTier.TRUSTED_HOST_USER_PRESENCE
+    tierResolver: () => AssuranceTier.TRUSTED_HOST_USER_PRESENCE,
+    diagnostics: [callerSuppliedTrustDiagnostic()]
   };
 }
 
-function loadApprovalTokenBundle(flags: ParsedFlags): ApprovalTokenBundle | null {
+function approvalTokenKeyId(token: unknown): string | null {
+  const keyId = (token as { signature?: { key_id?: unknown } } | null)?.signature?.key_id;
+  return typeof keyId === "string" ? keyId : null;
+}
+
+function loadApprovalTokenBundle(flags: ParsedFlags, context: ResolvedContext): ApprovalTokenBundle | null {
   const tokenPath = flags.approvalToken as string | undefined;
   if (!tokenPath) {
     return null;
@@ -116,11 +257,18 @@ function loadApprovalTokenBundle(flags: ParsedFlags): ApprovalTokenBundle | null
     );
   }
 
-  const trust = loadTrustResolvers(flags);
+  const trust = loadTrustResolvers(flags, context);
   if (!trust) {
     throw keyMaterialError(
-      "verifying --approval-token needs trusted key material: pass --keyring <path> or --public-key <path>.",
+      "verifying --approval-token needs trusted key material: pin approval_trust in use-cases.yml or pass --keyring <path> / --public-key <path>.",
       "showcase.approval_key_required"
+    );
+  }
+  const tokenKeyId = approvalTokenKeyId(approvalToken);
+  if (tokenKeyId && trust.pinnedKeyIds && !trust.pinnedKeyIds.has(tokenKeyId)) {
+    throw keyMaterialError(
+      `approval token signer '${tokenKeyId}' is not in pinned approval_trust.`,
+      "showcase.approval_trust_anchor_unpinned"
     );
   }
   return { approvalToken, ...trust };
@@ -157,12 +305,14 @@ function showcaseResultOutput(
   // envelope is byte-identical; approve passes (exitCode === 0) so a non-zero
   // (rejected/incomplete) approval reads ok:false in --json too, matching the
   // non-zero process exit.
-  ok = true
+  ok = true,
+  diagnostics: CliDiagnostic[] = []
 ): CommandOutput {
   return {
     envelope: createCliResult(command, result, {
       ok,
       complete: result.status.complete,
+      diagnostics,
       workspaceRoot: context.workspace_root,
       dataRoot: context.data_root,
       componentId: context.component_id
@@ -598,8 +748,8 @@ export const showcaseStatusCommand: CliCommand = {
   flags: [
     ...workspaceFlags,
     { key: "run", name: "--run", kind: "string", required: true, valueName: "<id>", summary: "Showcase run id." },
-    { key: "keyring", name: "--keyring", kind: "string", valueName: "<path>", summary: "Keyring to verify an embedded approval token (else a signed approval reads pending, fail-closed)." },
-    { key: "publicKey", name: "--public-key", kind: "string", valueName: "<path>", summary: "Single trusted public key to verify an embedded approval token (alternative to --keyring)." }
+    { key: "keyring", name: "--keyring", kind: "string", valueName: "<path>", summary: "Keyring to verify an embedded approval token, or narrow pinned approval_trust." },
+    { key: "publicKey", name: "--public-key", kind: "string", valueName: "<path>", summary: "Single public key to verify an embedded approval token, or narrow pinned approval_trust." }
   ],
   handler: ({ argv, flags }) => {
     const context = resolveContextOrError(argv, "showcase.status");
@@ -618,12 +768,12 @@ export const showcaseStatusCommand: CliCommand = {
     if (invalidStatusId !== null) {
       return invalidStatusId;
     }
-    // Verifying an embedded signed approval token needs the trusted key material.
-    // WITHOUT a key, replay fails closed (a signed approval reads pending) — the
-    // same fail-closed default the append path and MCP use.
+    // Verifying an embedded signed approval token needs trusted key material.
+    // A pinned approval_trust block supplies it without flags. Without either,
+    // replay fails closed (a signed approval reads pending).
     let trust: TrustResolvers | null;
     try {
-      trust = loadTrustResolvers(flags);
+      trust = loadTrustResolvers(flags, contextResult);
     } catch (error) {
       return showcaseCaughtError("showcase.status", error);
     }
@@ -638,6 +788,7 @@ export const showcaseStatusCommand: CliCommand = {
       envelope: createCliResult("showcase.status", status, {
         ok: true,
         complete: status.complete,
+        diagnostics: trust?.diagnostics ?? [],
         workspaceRoot: contextResult.workspace_root,
         dataRoot: contextResult.data_root,
         componentId: contextResult.component_id
@@ -692,8 +843,8 @@ export const showcaseApproveCommand: CliCommand = {
     { key: "statement", name: "--statement", kind: "string", required: true, valueName: "<text>", summary: "Approval statement." },
     { key: "actor", name: "--actor", kind: "string", valueName: "<type>", summary: "Actor type (defaults to agent; --approval-token forces user)." },
     { key: "approvalToken", name: "--approval-token", kind: "string", valueName: "<path>", summary: "Signed approval token JSON from `uc approve-run` — the ONLY trusted human sign-off path (F3)." },
-    { key: "keyring", name: "--keyring", kind: "string", valueName: "<path>", summary: "Public-key keyring that verifies --approval-token (per-key assurance tiers)." },
-    { key: "publicKey", name: "--public-key", kind: "string", valueName: "<path>", summary: "Single trusted public key that verifies --approval-token (alternative to --keyring)." },
+    { key: "keyring", name: "--keyring", kind: "string", valueName: "<path>", summary: "Public-key keyring that verifies --approval-token, or narrows pinned approval_trust." },
+    { key: "publicKey", name: "--public-key", kind: "string", valueName: "<path>", summary: "Single public key that verifies --approval-token, or narrows pinned approval_trust." },
     { key: "idempotencyKey", name: "--idempotency-key", kind: "string", valueName: "<key>", summary: "Idempotency key (defaults to a derived cli: key)." },
     { key: "recordedAt", name: "--recorded-at", kind: "string", valueName: "<iso>", summary: "Recorded-at timestamp for the approval event." }
   ],
@@ -732,7 +883,7 @@ export const showcaseApproveCommand: CliCommand = {
     // signed token is by definition a USER sign-off, so it forces actorType=user.
     let approvalBundle: ApprovalTokenBundle | null;
     try {
-      approvalBundle = loadApprovalTokenBundle(flags);
+      approvalBundle = loadApprovalTokenBundle(flags, contextResult);
     } catch (error) {
       return showcaseCaughtError("showcase.approve", error);
     }
@@ -754,7 +905,8 @@ export const showcaseApproveCommand: CliCommand = {
         // approve` still gets untrusted_automation and a user-required plan stays
         // pending. WITH --approval-token, the (token, resolver, tierResolver,
         // policy-derived floor) bundle drives the existing verify+append gate; the trusted key
-        // material lives OUTSIDE the run ledger (in --keyring / --public-key).
+        // material lives OUTSIDE the run ledger (pinned approval_trust, or
+        // legacy --keyring / --public-key when no pin exists).
         ...(approvalBundle
           ? {
               approvalToken: approvalBundle.approvalToken as Parameters<typeof appendShowcaseApproval>[0]["approvalToken"],
@@ -766,7 +918,14 @@ export const showcaseApproveCommand: CliCommand = {
       // EXIT PARITY: derive the exit from the recorded run state — a rejected,
       // still-pending, stale, failed, or incomplete run is NOT an exit-0 success.
       const exitCode = approvalExitCode(result.status);
-      return showcaseResultOutput("showcase.approve", result, contextResult, exitCode, exitCode === 0);
+      return showcaseResultOutput(
+        "showcase.approve",
+        result,
+        contextResult,
+        exitCode,
+        exitCode === 0,
+        approvalBundle?.diagnostics ?? []
+      );
     } catch (error) {
       return showcaseCaughtError("showcase.approve", error);
     }

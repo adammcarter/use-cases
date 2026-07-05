@@ -9,6 +9,7 @@ import {
   type Diagnostic
 } from "./schema/index.js";
 import { DEFAULT_COMPONENT_ID } from "./version.js";
+import type { Keyring, KeyringKey } from "./markers/keyring.js";
 
 export type ResolveWorkspaceContextOptions = {
   workspaceRoot?: string;
@@ -33,6 +34,10 @@ export type ResolvedWorkspaceContext = {
   // FRESH proof was minted with insufficient provenance authority is policy-
   // blocked in RELEASE mode. Undefined => no requirement (behaviour unchanged).
   release_gate?: WorkspaceReleaseGate;
+  // OPTIONAL workspace-pinned approval trust anchor. When present, showcase
+  // approval-token verification must resolve from this anchor; caller flags may
+  // only narrow it.
+  approval_trust?: WorkspaceApprovalTrust;
   provenance: {
     workspace_root: "explicit" | "cwd";
     data_root: "override" | "workspace_config" | "default";
@@ -84,12 +89,19 @@ export type WorkspaceReleaseGate = {
   require_protected_ref?: boolean;
 };
 
+export type WorkspaceApprovalTrust = {
+  keyring_path?: string;
+  keyring?: Keyring;
+  public_keys?: KeyringKey[];
+};
+
 type WorkspaceConfig = {
   data_root?: string;
   use_cases_dir?: string;
   component_id?: string;
   verifiers?: WorkspaceVerifiersConfig;
   release_gate?: WorkspaceReleaseGate;
+  approval_trust?: WorkspaceApprovalTrust;
 };
 
 export function resolveWorkspaceContext(
@@ -125,6 +137,7 @@ export function resolveWorkspaceContext(
     config_path: existsSync(configPath) ? "use-cases.yml" : null,
     verifiers: normalizeWorkspaceVerifiers(config?.value.verifiers),
     release_gate: normalizeReleaseGate(config?.value.release_gate),
+    approval_trust: normalizeApprovalTrust(config?.value.approval_trust),
     provenance: {
       workspace_root: options.workspaceRoot ? "explicit" : "cwd",
       data_root: options.dataRootOverride ? "override" : config?.value.data_root ? "workspace_config" : "default",
@@ -186,6 +199,9 @@ function readWorkspaceConfig(
       ensureRelativeSafe(value);
     }
   }
+  if (config.approval_trust?.keyring_path) {
+    ensureRelativeSafe(config.approval_trust.keyring_path);
+  }
 
   return {
     value: config,
@@ -239,6 +255,20 @@ function normalizeReleaseGate(
   return gate.required_authority !== undefined || gate.require_protected_ref !== undefined
     ? gate
     : undefined;
+}
+
+function normalizeApprovalTrust(
+  raw: WorkspaceApprovalTrust | undefined
+): WorkspaceApprovalTrust | undefined {
+  if (!isRecord(raw)) {
+    return undefined;
+  }
+  const trust: WorkspaceApprovalTrust = {
+    keyring_path: typeof raw.keyring_path === "string" ? raw.keyring_path : undefined,
+    keyring: isRecord(raw.keyring) ? (raw.keyring as Keyring) : undefined,
+    public_keys: Array.isArray(raw.public_keys) ? (raw.public_keys as KeyringKey[]) : undefined
+  };
+  return trust.keyring_path || trust.keyring || trust.public_keys ? trust : undefined;
 }
 
 function resolveRelative(root: string, value: string): string {

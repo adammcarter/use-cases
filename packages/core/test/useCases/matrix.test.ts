@@ -47,6 +47,57 @@ describe("P2 use-case matrix loader", () => {
     expect(snapshot.addressableUseCases[0]).not.toHaveProperty("verified");
   });
 
+  test("loads pinned workspace approval_trust from use-cases.yml", () => {
+    const workspaceRoot = mkdtempSync(join(tmpdir(), "use-cases-approval-trust-"));
+    const useCasesRoot = join(workspaceRoot, "use-cases");
+    mkdirSync(useCasesRoot, { recursive: true });
+    writeFileSync(
+      join(workspaceRoot, "use-cases.yml"),
+      [
+        "schema_version: 1",
+        "workspace_id: approval.trust.fixture",
+        "data_root: .",
+        "use_cases_dir: use-cases",
+        "evidence_dir: evidence",
+        "demo_capsules_dir: demo-capsules",
+        "showcase_runs_dir: showcase-runs",
+        "component_id: approval-trust",
+        "approval_trust:",
+        "  public_keys:",
+        "    - key_id: human-key-1",
+        "      algorithm: ed25519",
+        "      public_key: pinned-public-key",
+        "      valid_from: 2026-01-01T00:00:00Z",
+        "      valid_until: null",
+        "      status: active",
+        "      assurance_tier: trusted_host_user_presence",
+        ""
+      ].join("\n"),
+      "utf8"
+    );
+    writeFileSync(join(useCasesRoot, "valid.yml"), validUseCaseYaml("auth.login.approval_trust"));
+
+    const snapshot = loadUseCaseMatrix({
+      context: resolveWorkspaceContext({ workspaceRoot })
+    });
+
+    expect(snapshot.approvalTrust).toEqual({
+      keyring_path: undefined,
+      keyring: undefined,
+      public_keys: [
+        {
+          key_id: "human-key-1",
+          algorithm: "ed25519",
+          public_key: "pinned-public-key",
+          valid_from: "2026-01-01T00:00:00Z",
+          valid_until: null,
+          status: "active",
+          assurance_tier: "trusted_host_user_presence"
+        }
+      ]
+    });
+  });
+
   test("keeps valid siblings loaded when another use-case YAML file is damaged", () => {
     const snapshot = loadUseCaseMatrix({
       context: resolveWorkspaceContext({
