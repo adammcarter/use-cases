@@ -14,6 +14,14 @@ follows [Semantic Versioning](https://semver.org) (see docs/release.md). This is
   `//: @use-case:end checkout.apply_coupon`). A single space is still tolerated on
   input for compatibility, but the canonical/emitted form is spaceless. Every
   in-repo marker was migrated.
+- **Refactor-tolerant span hashing (canon `ucase-span-lines-v2`).** The span
+  canonicalizer now ignores cosmetic reformatting before hashing: it strips the
+  common leading-whitespace prefix (so shifting a whole block in/out an indent
+  level no longer flags drift) and collapses blank-line runs (plus the existing
+  trailing-whitespace strip). Relative indentation and real content edits still
+  change the hash — including Python nesting, since only the *shared* indent is
+  stripped. Combined with `@use-case:ignore` regions, cosmetic edits stop
+  producing false drift. (Greenfield canon bump — no existing proofs to migrate.)
 
 ### Added
 
