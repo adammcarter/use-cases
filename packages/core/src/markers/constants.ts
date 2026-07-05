@@ -6,7 +6,7 @@ export const BINDING_REGISTRY_SCHEMA_ID = "ucase-binding-registry-event-v1";
 export const EVIDENCE_SCHEMA_ID = "ucase-proof-event-v1";
 export const STATUS_SCHEMA_ID = "ucase-freshness-status-v1";
 
-export const SPAN_CANON_ID = "ucase-span-lines-v1";
+export const SPAN_CANON_ID = "ucase-span-lines-v2";
 export const EXPLICIT_RECOGNIZER_ID = "explicit-span-v1";
 export const SWIFT_FUNC_RECOGNIZER_ID = "swift-func-inferred-v1";
 export const BINDING_SET_HASH_ID = "ucase-binding-set-v1";
