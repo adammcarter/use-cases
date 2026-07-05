@@ -321,7 +321,7 @@ function realpathOfExistingPrefix(target: string): string {
  * never reads file contents — so an escaping path is rejected before it can be opened.
  */
 export function isPathContained(root: string, target: string): boolean {
-  const realRoot = realpathIfExists(root);
+  const realRoot = realpathOfExistingPrefix(resolve(root));
   const realTarget = realpathOfExistingPrefix(resolve(target));
   const realRelative = relative(realRoot, realTarget);
   return realRelative === "" || (!realRelative.startsWith("..") && !isAbsolute(realRelative));
