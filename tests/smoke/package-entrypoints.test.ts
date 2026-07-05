@@ -60,7 +60,7 @@ describe("P0 package entrypoints", () => {
 
     expect(core.getVersionInfo()).toEqual({
       name: "@adammcarter/use-cases",
-      version: "0.2.0"
+      version: "0.3.0"
     });
   });
 
@@ -82,7 +82,7 @@ describe("P0 package entrypoints", () => {
       complete: true,
       data: {
         name: "@adammcarter/use-cases",
-        version: "0.2.0"
+        version: "0.3.0"
       },
       diagnostics: []
     });
@@ -116,9 +116,9 @@ describe("P0 package entrypoints", () => {
     );
 
     const tarballs = [
-      "adammcarter-use-cases-core-0.2.0.tgz",
-      "adammcarter-use-cases-cli-0.2.0.tgz",
-      "adammcarter-use-cases-mcp-0.2.0.tgz"
+      "adammcarter-use-cases-core-0.3.0.tgz",
+      "adammcarter-use-cases-cli-0.3.0.tgz",
+      "adammcarter-use-cases-mcp-0.3.0.tgz"
     ].map((name) => join(packDir, name));
     requireSuccess(run("npm", ["install", "--cache", npmCacheDir(), "--no-audit", "--no-fund", ...tarballs], consumer));
 
@@ -127,7 +127,7 @@ describe("P0 package entrypoints", () => {
       [
         "import { getVersionInfo } from '@adammcarter/use-cases-core';",
         "const info = getVersionInfo();",
-        "if (info.name !== '@adammcarter/use-cases' || info.version !== '0.2.0') throw new Error('bad version export');"
+        "if (info.name !== '@adammcarter/use-cases' || info.version !== '0.3.0') throw new Error('bad version export');"
       ].join("\n")
     );
     requireSuccess(run("node", ["check.mjs"], consumer));
@@ -135,7 +135,7 @@ describe("P0 package entrypoints", () => {
     const binDir = join(consumer, "node_modules/.bin");
     const cli = run(join(binDir, "uc"), ["--version", "--json"], consumer);
     requireSuccess(cli);
-    expect(JSON.parse(cli.stdout).data.version).toBe("0.2.0");
+    expect(JSON.parse(cli.stdout).data.version).toBe("0.3.0");
 
     const mcp = runWithInput(
       join(binDir, "uc-mcp"),
@@ -170,7 +170,7 @@ describe("P0 package entrypoints", () => {
       expect.objectContaining({
         id: 1,
         result: expect.objectContaining({
-          serverInfo: { name: "@adammcarter/use-cases", version: "0.2.0" }
+          serverInfo: { name: "@adammcarter/use-cases", version: "0.3.0" }
         })
       }),
       expect.objectContaining({

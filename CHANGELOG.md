@@ -5,7 +5,7 @@ All notable changes to this project are documented here. The format is based on
 follows [Semantic Versioning](https://semver.org) (see docs/release.md). This is
 **pre-1.0 (beta) software**: anything MAY change before `1.0.0`.
 
-## 0.3.0 - unreleased
+## 0.3.0 - 2026-07-05
 
 ### Changed
 
