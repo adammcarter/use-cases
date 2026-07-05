@@ -106,7 +106,7 @@ function unprovenInputs(): { registry: MaterializedRegistry; scan: ScanResult } 
     comment_prefix: "//",
     extent_kind: "swift_func_inferred",
     recognizer_id: "swift-func-inferred-v1",
-    span_canon_id: "ucase-span-lines-v1",
+    span_canon_id: "ucase-span-lines-v2",
     start_marker: { line: 3, column: 1 },
     end_marker: null,
     span: { start_line: 4, end_line: 7, start_byte: 30, end_byte: 110, sha256: `sha256:${"a".repeat(64)}` },

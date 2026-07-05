@@ -101,7 +101,7 @@ function makeBinding(
     comment_prefix: "//",
     extent_kind: "swift_func_inferred",
     recognizer_id: "swift-func-inferred-v1",
-    span_canon_id: "ucase-span-lines-v1",
+    span_canon_id: "ucase-span-lines-v2",
     start_marker: { line: 12, column: 1 },
     end_marker: null,
     span: { start_line: 13, end_line: 27, start_byte: 355, end_byte: 849, sha256: overrides.span_sha256 ?? SPAN_A },
@@ -164,7 +164,7 @@ function makeProof(
     bindings: {
       binding_set_hash_id: "ucase-binding-set-v1",
       binding_set_hash: computeBindingSetHash(row.row_id, items),
-      span_canon_id: "ucase-span-lines-v1",
+      span_canon_id: "ucase-span-lines-v2",
       items
     },
     verification: {
@@ -493,7 +493,7 @@ describe("11.4 evidence laundering -> validate-ledger fails / test fails", () =>
         file_path: "Sources/Checkout/CouponService.swift",
         extent_kind: "swift_func_inferred",
         recognizer_id: "swift-func-inferred-v1",
-        span_canon_id: "ucase-span-lines-v1",
+        span_canon_id: "ucase-span-lines-v2",
         span_sha256: SPAN_A,
         span_start_line: 13,
         span_end_line: 27
@@ -525,7 +525,7 @@ describe("11.4 evidence laundering -> validate-ledger fails / test fails", () =>
       bindings: {
         binding_set_hash_id: "ucase-binding-set-v1",
         binding_set_hash: computeBindingSetHash(ROW_ID, items),
-        span_canon_id: "ucase-span-lines-v1",
+        span_canon_id: "ucase-span-lines-v2",
         items
       },
       verification: {
@@ -722,7 +722,7 @@ describe("11.4 evidence laundering -> validate-ledger fails / test fails", () =>
           file_path: "Sources/Checkout/CouponService.swift",
           extent_kind: "swift_func_inferred",
           recognizer_id: "swift-func-inferred-v1",
-          span_canon_id: "ucase-span-lines-v1",
+          span_canon_id: "ucase-span-lines-v2",
           span_sha256: scannedSpan as string
         }
       ])
@@ -904,7 +904,7 @@ describe("CAPSTONE: no fabricated/unsigned proof can mint FRESH", () => {
         file_path: "Sources/Checkout/CouponService.swift",
         extent_kind: "swift_func_inferred",
         recognizer_id: "swift-func-inferred-v1",
-        span_canon_id: "ucase-span-lines-v1",
+        span_canon_id: "ucase-span-lines-v2",
         span_sha256: span,
         span_start_line: scanned.bindings[0].span.start_line,
         span_end_line: scanned.bindings[0].span.end_line
@@ -926,7 +926,7 @@ describe("CAPSTONE: no fabricated/unsigned proof can mint FRESH", () => {
       bindings: {
         binding_set_hash_id: "ucase-binding-set-v1",
         binding_set_hash: computeBindingSetHash(ROW_ID, items),
-        span_canon_id: "ucase-span-lines-v1",
+        span_canon_id: "ucase-span-lines-v2",
         items
       },
       verification: {

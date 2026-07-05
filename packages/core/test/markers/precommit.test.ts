@@ -120,7 +120,7 @@ const SWIFT_BINDING: CurrentBindingOut = {
   file_path: "Sources/Checkout/CouponService.swift",
   extent_kind: "swift_func_inferred",
   recognizer_id: "swift-func-inferred-v1",
-  span_canon_id: "ucase-span-lines-v1",
+  span_canon_id: "ucase-span-lines-v2",
   span_sha256: "sha256:abc",
   span_start_line: 13,
   span_end_line: 27

@@ -65,7 +65,7 @@ function makeBinding(): CurrentBindingRecord {
     comment_prefix: "//",
     extent_kind: "explicit",
     recognizer_id: "explicit-span-v1",
-    span_canon_id: "ucase-span-lines-v1",
+    span_canon_id: "ucase-span-lines-v2",
     start_marker: { line: 12, column: 1 },
     end_marker: { line: 20, column: 1 },
     span: {
@@ -125,7 +125,7 @@ function makeProof(row: FreshnessInputRow, bindings: CurrentBindingRecord[], con
     bindings: {
       binding_set_hash_id: "ucase-binding-set-v1",
       binding_set_hash: computeBindingSetHash(row.row_id, items),
-      span_canon_id: "ucase-span-lines-v1",
+      span_canon_id: "ucase-span-lines-v2",
       items
     },
     verification: {

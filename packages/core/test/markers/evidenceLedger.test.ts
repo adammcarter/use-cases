@@ -32,7 +32,7 @@ function bindingItem(overrides: Partial<ProofBindingItem> = {}): ProofBindingIte
     file_path: "Sources/Checkout/CouponService.swift",
     extent_kind: "swift_func_inferred",
     recognizer_id: "swift-func-inferred-v1",
-    span_canon_id: "ucase-span-lines-v1",
+    span_canon_id: "ucase-span-lines-v2",
     span_sha256: `sha256:${"a".repeat(64)}`,
     span_start_line: 13,
     span_end_line: 27,
@@ -71,7 +71,7 @@ function unsignedEvent(
     bindings: {
       binding_set_hash_id: "ucase-binding-set-v1",
       binding_set_hash: bindingSetHash,
-      span_canon_id: "ucase-span-lines-v1",
+      span_canon_id: "ucase-span-lines-v2",
       items
     },
     verification: {

@@ -189,7 +189,7 @@ describe("marker-line parser (spec 1.2/1.3)", () => {
   });
 });
 
-describe("span canonicalizer ucase-span-lines-v1 (spec 3)", () => {
+describe("span canonicalizer ucase-span-lines-v2 (spec 3)", () => {
   test("strips trailing ws, preserves leading ws / blanks, single trailing LF", () => {
     const canonical = canonicalizeSpanLines(["  keep_indent()  ", "", "\ttabbed\t"]);
     expect(canonical).toBe("  keep_indent()\n\n\ttabbed\n");

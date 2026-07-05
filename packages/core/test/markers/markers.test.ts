@@ -28,7 +28,7 @@ function bindingMember(
     file_path: "Sources/Checkout/CouponService.swift",
     extent_kind: "swift_func_inferred",
     recognizer_id: "swift-func-inferred-v1",
-    span_canon_id: "ucase-span-lines-v1",
+    span_canon_id: "ucase-span-lines-v2",
     span_sha256: `sha256:${"a".repeat(64)}`,
     ...overrides
   };
@@ -225,7 +225,7 @@ describe("proof event schema", () => {
       bindings: {
         binding_set_hash_id: "ucase-binding-set-v1",
         binding_set_hash: ZERO_HASH,
-        span_canon_id: "ucase-span-lines-v1",
+        span_canon_id: "ucase-span-lines-v2",
         items: [
           {
             binding_slug: "checkout.apply_coupon#handler",
@@ -233,7 +233,7 @@ describe("proof event schema", () => {
             file_path: "Sources/Checkout/CouponService.swift",
             extent_kind: "swift_func_inferred",
             recognizer_id: "swift-func-inferred-v1",
-            span_canon_id: "ucase-span-lines-v1",
+            span_canon_id: "ucase-span-lines-v2",
             span_sha256: ZERO_HASH,
             span_start_line: 13,
             span_end_line: 27
@@ -321,7 +321,7 @@ describe("freshness status schema", () => {
               file_path: "Sources/Checkout/CouponService.swift",
               extent_kind: "swift_func_inferred",
               recognizer_id: "swift-func-inferred-v1",
-              span_canon_id: "ucase-span-lines-v1",
+              span_canon_id: "ucase-span-lines-v2",
               span_sha256: ZERO_HASH,
               span_start_line: 13,
               span_end_line: 27
