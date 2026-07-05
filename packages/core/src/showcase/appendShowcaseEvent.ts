@@ -374,6 +374,7 @@ function recordApprovalDecision(
   let captureMethod = options.actorType === "user" ? "same_channel_operator_confirmation" : "command_handler";
   let embeddedToken: ApprovalToken | undefined;
   let recordedDecision = decision;
+  let verifiedAssuranceTier: AssuranceTier | undefined;
 
   if (options.actorType === "user") {
     if (options.approvalToken) {
@@ -420,6 +421,7 @@ function recordApprovalDecision(
         );
       }
       recordedDecision = verification.decision;
+      verifiedAssuranceTier = verification.assurance_tier;
       // Burn the nonce ATOMICALLY before the approval, so a concurrent replay of
       // the same token sees it burned and cannot double-spend.
       appendEvent(options.context, options.runId, {
@@ -443,7 +445,9 @@ function recordApprovalDecision(
 
   const payload: Record<string, unknown> = {
     decision: recordedDecision,
-    approver: { type: options.actorType },
+    approver: verifiedAssuranceTier
+      ? { type: options.actorType, actor_type: options.actorType, assurance_tier: verifiedAssuranceTier }
+      : { type: options.actorType },
     capture_method: captureMethod,
     [statementKey]: options.statement,
     scope: {

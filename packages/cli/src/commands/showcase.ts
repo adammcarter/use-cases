@@ -971,6 +971,9 @@ export const showcaseRejectCommand: CliCommand = {
     { key: "run", name: "--run", kind: "string", required: true, valueName: "<id>", summary: "Showcase run id." },
     { key: "statement", name: "--statement", kind: "string", required: true, valueName: "<text>", summary: "Rejection statement." },
     { key: "actor", name: "--actor", kind: "string", valueName: "<type>", summary: "Actor type (defaults to user)." },
+    { key: "approvalToken", name: "--approval-token", kind: "string", valueName: "<path>", summary: "Signed approval token JSON from `uc approve-run` — the ONLY trusted human sign-off path (F3)." },
+    { key: "keyring", name: "--keyring", kind: "string", valueName: "<path>", summary: "Public-key keyring that verifies --approval-token, or narrows pinned approval_trust." },
+    { key: "publicKey", name: "--public-key", kind: "string", valueName: "<path>", summary: "Single public key that verifies --approval-token, or narrows pinned approval_trust." },
     { key: "idempotencyKey", name: "--idempotency-key", kind: "string", valueName: "<key>", summary: "Idempotency key (defaults to a derived cli: key)." },
     { key: "recordedAt", name: "--recorded-at", kind: "string", valueName: "<iso>", summary: "Recorded-at timestamp for the rejection event." }
   ],
@@ -992,19 +995,34 @@ export const showcaseRejectCommand: CliCommand = {
     if (invalidRejectId !== null) {
       return invalidRejectId;
     }
+    let approvalBundle: ApprovalTokenBundle | null;
+    try {
+      approvalBundle = loadApprovalTokenBundle(flags, contextResult);
+    } catch (error) {
+      return showcaseCaughtError("showcase.reject", error);
+    }
+    const actorType = (
+      approvalBundle ? "user" : ((flags.actor as string | undefined) ?? "user")
+    ) as Parameters<typeof rejectShowcaseApproval>[0]["actorType"];
     try {
       const result = rejectShowcaseApproval({
         context: contextResult,
         runId,
-        actorType: ((flags.actor as string | undefined) ?? "user") as Parameters<typeof rejectShowcaseApproval>[0]["actorType"],
+        actorType,
         hostSurface: "codex.cli",
         statement,
         idempotencyKey: (flags.idempotencyKey as string | undefined) ?? `cli:reject:${runId}:${statement}`,
-        recordedAt: (flags.recordedAt as string | undefined) ?? "2026-06-25T12:04:30.000Z"
-        // SECURITY (F3): no signed token on this path -> untrusted_automation.
-        // Trusted human sign-off comes ONLY from `uc approve-run`.
+        recordedAt: (flags.recordedAt as string | undefined) ?? "2026-06-25T12:04:30.000Z",
+        ...(approvalBundle
+          ? {
+              approvalToken: approvalBundle.approvalToken as Parameters<typeof rejectShowcaseApproval>[0]["approvalToken"],
+              resolver: approvalBundle.resolver,
+              tierResolver: approvalBundle.tierResolver,
+              webauthnCredentialResolver: approvalBundle.webauthnCredentialResolver
+            }
+          : {})
       });
-      return showcaseResultOutput("showcase.reject", result, contextResult, 1);
+      return showcaseResultOutput("showcase.reject", result, contextResult, 1, true, approvalBundle?.diagnostics ?? []);
     } catch (error) {
       return showcaseCaughtError("showcase.reject", error);
     }

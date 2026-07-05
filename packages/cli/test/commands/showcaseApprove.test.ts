@@ -19,6 +19,7 @@ import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { approveRunCommand } from "../../src/commands/approveRun.js";
 import {
   showcaseApproveCommand,
+  showcaseRejectCommand,
   showcaseRequestApprovalCommand,
   showcaseStatusCommand
 } from "../../src/commands/showcase.js";
@@ -306,7 +307,9 @@ function humanSignsFor(runId: string, keyId = "human-key-1", privateKeyPem = HUM
 function approveRunSignsFor(
   runId: string,
   decision: ApprovalToken["decision"] = "approved",
-  assuranceMethod?: TestAssuranceMethod
+  assuranceMethod?: TestAssuranceMethod,
+  keyId = "human-key-1",
+  privateKeyPem = HUMAN_KEY.privateKeyPem
 ): ApprovalToken {
   const request = showcaseRequestApprovalCommand.handler({
     argv: ["showcase", "request-approval", "--run", runId, "--repo", workspaceRoot],
@@ -317,7 +320,7 @@ function approveRunSignsFor(
 
   const requestPath = join(workspaceRoot, `approval-request-${decision}.json`);
   writeFileSync(requestPath, `${JSON.stringify(request.envelope, null, 2)}\n`, "utf8");
-  const privateKeyPath = writePrivateKey();
+  const privateKeyPath = writePrivateKey(privateKeyPem);
   const signed = approveRunCommand.handler({
     argv: [
       "approve-run",
@@ -326,7 +329,7 @@ function approveRunSignsFor(
       "--key-file",
       privateKeyPath,
       "--key-id",
-      "human-key-1",
+      keyId,
       "--decision",
       decision,
       ...(assuranceMethod ? ["--assurance-method", assuranceMethod] : [])
@@ -335,7 +338,7 @@ function approveRunSignsFor(
     flags: {
       request: requestPath,
       keyFile: privateKeyPath,
-      keyId: "human-key-1",
+      keyId,
       decision,
       ...(assuranceMethod ? { assuranceMethod } : {})
     }
@@ -378,9 +381,9 @@ function writePublicKey(): string {
   return path;
 }
 
-function writePrivateKey(): string {
+function writePrivateKey(privateKeyPem = HUMAN_KEY.privateKeyPem): string {
   const path = join(workspaceRoot, "human.key");
-  writeFileSync(path, HUMAN_KEY.privateKeyPem, "utf8");
+  writeFileSync(path, privateKeyPem, "utf8");
   return path;
 }
 
@@ -747,6 +750,183 @@ describe("BLOCKER 1 — showcase approve --approval-token: trusted submit path",
       })
     );
     expect(approvalState(runId, { keyring: keyringPath })).toBe("approved");
+  });
+
+  test("approve-run --decision rejected then reject --approval-token --keyring records a trusted rejection", () => {
+    const runId = completePassingRun("reject-token");
+    expect(approvalState(runId)).toBe("pending");
+    const token = approveRunSignsFor(runId, "rejected");
+    expect(token.decision).toBe("rejected");
+    const tokenPath = writeToken(token);
+    const keyringPath = writeKeyring();
+
+    const result = showcaseRejectCommand.handler({
+      argv: ["showcase", "reject", "--run", runId, "--repo", workspaceRoot],
+      json: true,
+      flags: {
+        run: runId,
+        statement: "Genuine human rejection.",
+        approvalToken: tokenPath,
+        keyring: keyringPath
+      }
+    });
+
+    expect(result.exitCode).not.toBe(0);
+    expect(recordedDecision(runId, "approval_rejected")).toBe("rejected");
+    expect(approvalState(runId, { keyring: keyringPath })).toBe("rejected");
+    expect(approvalMetadata(runId, { keyring: keyringPath })).toEqual({
+      actor_type: "user",
+      assurance_tier: "trusted_host_user_presence"
+    });
+    expect(approvalState(runId)).toBe("pending");
+  });
+
+  test("approved-decision token via showcase reject is rejected as DECISION_MISMATCH", () => {
+    const runId = completePassingRun("reject-mismatch");
+    const token = approveRunSignsFor(runId, "approved");
+    const tokenPath = writeToken(token);
+    const keyringPath = writeKeyring();
+
+    const result = showcaseRejectCommand.handler({
+      argv: ["showcase", "reject", "--run", runId, "--repo", workspaceRoot],
+      json: true,
+      flags: {
+        run: runId,
+        statement: "This should not be accepted as a rejection.",
+        approvalToken: tokenPath,
+        keyring: keyringPath
+      }
+    });
+
+    expect(result.exitCode).not.toBe(0);
+    expect((result.envelope as { diagnostics?: Array<{ code?: string }> }).diagnostics?.[0]?.code).toBe(
+      "showcase.approval_decision_mismatch"
+    );
+    expect(approvalState(runId, { keyring: keyringPath })).toBe("pending");
+  });
+
+  test("tokenless showcase reject still fails closed on a user-required plan", () => {
+    const runId = completePassingRun("reject-tokenless");
+
+    const result = showcaseRejectCommand.handler({
+      argv: ["showcase", "reject", "--run", runId, "--repo", workspaceRoot],
+      json: true,
+      flags: {
+        run: runId,
+        statement: "No signed token."
+      }
+    });
+
+    expect(result.exitCode).not.toBe(0);
+    expect((result.envelope as { diagnostics?: Array<{ code?: string }> }).diagnostics?.[0]?.code).toBe(
+      "showcase.trusted_user_confirmation_required"
+    );
+    expect(approvalState(runId)).toBe("pending");
+  });
+
+  test("pinned approval_trust keyring verifies reject without caller-nominated trust flags", () => {
+    pinApprovalTrustToKeyring(keyringWith([trustedKey("human-key-1", HUMAN_KEY.publicKeyPem)]));
+    const runId = completePassingRun("reject-pinned");
+    const token = approveRunSignsFor(runId, "rejected");
+    const tokenPath = writeToken(token);
+
+    const result = showcaseRejectCommand.handler({
+      argv: ["showcase", "reject", "--run", runId, "--repo", workspaceRoot],
+      json: true,
+      flags: {
+        run: runId,
+        statement: "Pinned workspace trust anchor verified this rejection.",
+        approvalToken: tokenPath
+      }
+    });
+
+    expect(result.exitCode).not.toBe(0);
+    expect(approvalState(runId)).toBe("rejected");
+    expect(approvalMetadata(runId)).toEqual({
+      actor_type: "user",
+      assurance_tier: "trusted_host_user_presence"
+    });
+  });
+
+  test("approval policy minimum_assurance_tier lowers the floor for signed rejection", () => {
+    setApprovalPolicyMinimumTier("same_channel_operator_confirmation");
+    const runId = completePassingRun("reject-same-channel");
+    const token = approveRunSignsFor(runId, "rejected", "same_channel");
+    expect(token.assurance_tier).toBe("same_channel_operator_confirmation");
+    const tokenPath = writeToken(token);
+    const keyringPath = writeKeyring();
+
+    const result = showcaseRejectCommand.handler({
+      argv: ["showcase", "reject", "--run", runId, "--repo", workspaceRoot],
+      json: true,
+      flags: {
+        run: runId,
+        statement: "Same-channel rejection is allowed by this row.",
+        approvalToken: tokenPath,
+        keyring: keyringPath
+      }
+    });
+
+    expect(result.exitCode).not.toBe(0);
+    expect(approvalState(runId, { keyring: keyringPath })).toBe("rejected");
+    expect(approvalMetadata(runId, { keyring: keyringPath })).toEqual({
+      actor_type: "user",
+      assurance_tier: "same_channel_operator_confirmation"
+    });
+  });
+
+  test("same_channel rejection token stays below the default approval floor", () => {
+    const runId = completePassingRun("reject-same-channel-floor");
+    const token = approveRunSignsFor(runId, "rejected", "same_channel");
+    const tokenPath = writeToken(token);
+    const keyringPath = writeKeyring();
+
+    const result = showcaseRejectCommand.handler({
+      argv: ["showcase", "reject", "--run", runId, "--repo", workspaceRoot],
+      json: true,
+      flags: {
+        run: runId,
+        statement: "Default floor still requires host user presence.",
+        approvalToken: tokenPath,
+        keyring: keyringPath
+      }
+    });
+
+    expect(result.exitCode).not.toBe(0);
+    expect((result.envelope as { diagnostics?: Array<{ code?: string }> }).diagnostics?.[0]?.code).toBe(
+      "showcase.approval_assurance_too_low"
+    );
+    expect(approvalState(runId, { keyring: keyringPath })).toBe("pending");
+  });
+
+  test("keyring cap rejects over-claimed rejection assurance", () => {
+    const runId = completePassingRun("reject-over-claim");
+    const token = approveRunSignsFor(
+      runId,
+      "rejected",
+      "os_presence",
+      "operator-key-1",
+      OPERATOR_KEY.privateKeyPem
+    );
+    const tokenPath = writeToken(token);
+    const keyringPath = writeKeyring();
+
+    const result = showcaseRejectCommand.handler({
+      argv: ["showcase", "reject", "--run", runId, "--repo", workspaceRoot],
+      json: true,
+      flags: {
+        run: runId,
+        statement: "Operator key is capped below host user presence.",
+        approvalToken: tokenPath,
+        keyring: keyringPath
+      }
+    });
+
+    expect(result.exitCode).not.toBe(0);
+    expect((result.envelope as { diagnostics?: Array<{ code?: string }> }).diagnostics?.[0]?.code).toBe(
+      "showcase.approval_assurance_over_claim"
+    );
+    expect(approvalState(runId, { keyring: keyringPath })).toBe("pending");
   });
 
   test("(b) NO token on a user-required plan -> rejected NON-ZERO, stays pending", () => {

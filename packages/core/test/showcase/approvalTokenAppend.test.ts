@@ -176,12 +176,20 @@ function humanSignsFor(
   return signApprovalToken({ request, decision, privateKey: privateKeyPem, keyId });
 }
 
-function operatorSignsFor(context: ReturnType<typeof resolveWorkspaceContext>, runId: string): ApprovalToken {
-  return humanSignsFor(context, runId, "approved", "operator-key-1", OPERATOR_KEY.privateKeyPem);
+function operatorSignsFor(
+  context: ReturnType<typeof resolveWorkspaceContext>,
+  runId: string,
+  decision: ApprovalToken["decision"] = "approved"
+): ApprovalToken {
+  return humanSignsFor(context, runId, decision, "operator-key-1", OPERATOR_KEY.privateKeyPem);
 }
 
-function automationSignsFor(context: ReturnType<typeof resolveWorkspaceContext>, runId: string): ApprovalToken {
-  return humanSignsFor(context, runId, "approved", "agent-key-1", AGENT_KEY.privateKeyPem);
+function automationSignsFor(
+  context: ReturnType<typeof resolveWorkspaceContext>,
+  runId: string,
+  decision: ApprovalToken["decision"] = "approved"
+): ApprovalToken {
+  return humanSignsFor(context, runId, decision, "agent-key-1", AGENT_KEY.privateKeyPem);
 }
 
 const verifyOpts = () => ({
@@ -513,6 +521,76 @@ describe("F3 append — MUST ACCEPT + idempotency", () => {
     ).toBe("pending");
   });
 
+  test("approval_policy.minimum_assurance_tier lets same_channel key record and replay a rejection", () => {
+    const workspaceRoot = fixtureWorkspace("evidence-basic");
+    setApprovalPolicyMinimumTier(workspaceRoot, "same_channel_operator_confirmation");
+    const context = resolveWorkspaceContext({ workspaceRoot });
+    const run = completePassingRun(context);
+    const token = operatorSignsFor(context, run.run_id, "rejected");
+
+    const result = rejectShowcaseApproval({
+      context,
+      runId: run.run_id,
+      actorType: "user",
+      hostSurface: "codex.cli",
+      statement: "Same-channel operator rejection is enough for this row.",
+      idempotencyKey: "policy-floor-same-channel-reject",
+      recordedAt: AT,
+      approvalToken: token,
+      resolver: resolver(),
+      tierResolver: tierResolver(),
+      nowMs: Date.parse(AT)
+    });
+
+    expect(result.status.approval_state).toBe("rejected");
+    expect(result.status.approval).toEqual({
+      actor_type: "user",
+      assurance_tier: "same_channel_operator_confirmation"
+    });
+    expect(
+      replayShowcaseRun({
+        context,
+        runId: run.run_id,
+        trustResolver: resolver(),
+        trustTierResolver: tierResolver()
+      }).approval
+    ).toEqual({
+      actor_type: "user",
+      assurance_tier: "same_channel_operator_confirmation"
+    });
+  });
+
+  test("default approval policy still rejects a same_channel rejection token as ASSURANCE_TOO_LOW", () => {
+    const workspaceRoot = fixtureWorkspace("evidence-basic");
+    const context = resolveWorkspaceContext({ workspaceRoot });
+    const run = completePassingRun(context);
+    const token = operatorSignsFor(context, run.run_id, "rejected");
+
+    expect(() =>
+      rejectShowcaseApproval({
+        context,
+        runId: run.run_id,
+        actorType: "user",
+        hostSurface: "codex.cli",
+        statement: "Default policy should still require trusted host presence for rejection.",
+        idempotencyKey: "policy-floor-default-rejects-same-channel-reject",
+        recordedAt: AT,
+        approvalToken: token,
+        resolver: resolver(),
+        tierResolver: tierResolver(),
+        nowMs: Date.parse(AT)
+      })
+    ).toThrow(/ASSURANCE_TOO_LOW/i);
+    expect(
+      replayShowcaseRun({
+        context,
+        runId: run.run_id,
+        trustResolver: resolver(),
+        trustTierResolver: tierResolver()
+      }).approval_state
+    ).toBe("pending");
+  });
+
   test("(j) genuine human token bound to the run + fresh nonce + unexpired -> nonce burned, approved for THAT run", () => {
     const workspaceRoot = fixtureWorkspace("evidence-basic");
     const context = resolveWorkspaceContext({ workspaceRoot });
@@ -564,8 +642,28 @@ describe("F3 append — MUST ACCEPT + idempotency", () => {
 
     expect(result.event.event_type).toBe("approval_rejected");
     expect((result.event.payload as { decision?: string }).decision).toBe("rejected");
+    expect((result.event.payload as { approver?: unknown }).approver).toEqual({
+      type: "user",
+      actor_type: "user",
+      assurance_tier: "trusted_host_user_presence"
+    });
     expect(result.status.approval_state).toBe("rejected");
-    expect(replayShowcaseRun({ context, runId: run.run_id, trustResolver: resolver() }).approval_state).toBe("rejected");
+    expect(result.status.approval).toEqual({
+      actor_type: "user",
+      assurance_tier: "trusted_host_user_presence"
+    });
+    const replayed = replayShowcaseRun({
+      context,
+      runId: run.run_id,
+      trustResolver: resolver(),
+      trustTierResolver: tierResolver()
+    });
+    expect(replayed.approval_state).toBe("rejected");
+    expect(replayed.approval).toEqual({
+      actor_type: "user",
+      assurance_tier: "trusted_host_user_presence"
+    });
+    expect(replayShowcaseRun({ context, runId: run.run_id }).approval_state).toBe("pending");
   });
 
   test("(k) IDEMPOTENCY: re-submitting the SAME accepted token under the same idempotency key -> single ApprovalGranted, no double-append", () => {

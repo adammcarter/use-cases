@@ -144,7 +144,15 @@ export function replayShowcaseEvents(
       }
     }
     if (event.event_type === "approval_rejected") {
-      if (isTrustedUserDecisionEvent(event, trust)) {
+      const verified = trustedUserDecisionMetadata(event, trust);
+      if (verified) {
+        approvalState = "rejected";
+        approvedSequence = event.sequence;
+        approval = {
+          actor_type: verified.actor_type,
+          assurance_tier: verified.assurance_tier
+        };
+      } else if (isTrustedUserDecisionEvent(event, trust)) {
         approvalState = "rejected";
         approvedSequence = event.sequence;
         approval = undefined;
