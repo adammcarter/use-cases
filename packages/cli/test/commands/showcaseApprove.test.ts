@@ -12,7 +12,7 @@
 // key material and assert `showcaseStatusCommand.handler` reads approved. The
 // negatives prove F3 stayed intact: every spoof exits NON-ZERO and stays pending.
 import { generateKeyPairSync } from "node:crypto";
-import { cpSync, mkdtempSync, writeFileSync } from "node:fs";
+import { cpSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
@@ -258,6 +258,40 @@ function humanSignsFor(runId: string, keyId = "human-key-1", privateKeyPem = HUM
   return signApprovalToken({ request, decision: "approved", privateKey: privateKeyPem, keyId });
 }
 
+function approveRunSignsFor(runId: string, decision: ApprovalToken["decision"] = "approved"): ApprovalToken {
+  const request = showcaseRequestApprovalCommand.handler({
+    argv: ["showcase", "request-approval", "--run", runId, "--repo", workspaceRoot],
+    json: true,
+    flags: { run: runId }
+  });
+  expect(request.exitCode).toBe(0);
+
+  const requestPath = join(workspaceRoot, `approval-request-${decision}.json`);
+  writeFileSync(requestPath, `${JSON.stringify(request.envelope, null, 2)}\n`, "utf8");
+  const privateKeyPath = writePrivateKey();
+  const signed = approveRunCommand.handler({
+    argv: [
+      "approve-run",
+      "--request",
+      requestPath,
+      "--key-file",
+      privateKeyPath,
+      "--key-id",
+      "human-key-1",
+      "--decision",
+      decision
+    ],
+    json: true,
+    flags: { request: requestPath, keyFile: privateKeyPath, keyId: "human-key-1", decision }
+  });
+  expect(signed.exitCode).toBe(0);
+  const token = (signed.envelope as { data?: { approval_token?: ApprovalToken } }).data?.approval_token;
+  if (!token) {
+    throw new Error(`no approval_token in envelope: ${JSON.stringify(signed.envelope)}`);
+  }
+  return token;
+}
+
 function writeToken(token: ApprovalToken): string {
   const path = join(workspaceRoot, "approval-token.json");
   writeFileSync(path, `${JSON.stringify(token, null, 2)}\n`, "utf8");
@@ -293,6 +327,20 @@ function approvalState(runId: string, trustFlags: Record<string, string> = {}): 
     flags: { run: runId, ...trustFlags }
   });
   return (status.envelope as { data?: { approval_state?: string } }).data?.approval_state ?? "(missing)";
+}
+
+function recordedDecision(runId: string, eventType: "approval_recorded" | "approval_rejected" = "approval_recorded"): string {
+  const ledger = readFileSync(join(workspaceRoot, "showcase-runs", runId, "events.jsonl"), "utf8");
+  const events = ledger
+    .trim()
+    .split("\n")
+    .map((line) => JSON.parse(line) as { event_type?: string; payload?: { decision?: string } })
+    .filter((event) => event.event_type === eventType);
+  const event = events[events.length - 1];
+  if (!event?.payload?.decision) {
+    throw new Error(`no ${eventType} decision in ledger for ${runId}`);
+  }
+  return event.payload.decision;
 }
 
 beforeEach(() => {
@@ -391,6 +439,54 @@ describe("BLOCKER 1 — showcase approve --approval-token: trusted submit path",
     expect(approvalState(runId, { keyring: keyringPath })).toBe("approved");
     // Fail-closed: status WITHOUT the trusted key material still reads pending.
     expect(approvalState(runId)).toBe("pending");
+  });
+
+  test("(a) approve-run --decision approved_with_known_gaps records and replays that verified token decision", () => {
+    const runId = completePassingRun("known-gaps");
+    const token = approveRunSignsFor(runId, "approved_with_known_gaps");
+    expect(token.decision).toBe("approved_with_known_gaps");
+    const tokenPath = writeToken(token);
+    const keyringPath = writeKeyring();
+
+    const result = showcaseApproveCommand.handler({
+      argv: ["showcase", "approve", "--run", runId, "--repo", workspaceRoot],
+      json: true,
+      flags: {
+        run: runId,
+        statement: "Genuine human sign-off with known gaps.",
+        actor: "user",
+        approvalToken: tokenPath,
+        keyring: keyringPath
+      }
+    });
+
+    expect(result.exitCode).toBe(0);
+    expect(recordedDecision(runId)).toBe("approved_with_known_gaps");
+    expect(approvalState(runId, { keyring: keyringPath })).toBe("approved_with_known_gaps");
+  });
+
+  test("(a) approve-run --decision approved still records and replays approved", () => {
+    const runId = completePassingRun("approved-token");
+    const token = approveRunSignsFor(runId, "approved");
+    expect(token.decision).toBe("approved");
+    const tokenPath = writeToken(token);
+    const keyringPath = writeKeyring();
+
+    const result = showcaseApproveCommand.handler({
+      argv: ["showcase", "approve", "--run", runId, "--repo", workspaceRoot],
+      json: true,
+      flags: {
+        run: runId,
+        statement: "Genuine human sign-off.",
+        actor: "user",
+        approvalToken: tokenPath,
+        keyring: keyringPath
+      }
+    });
+
+    expect(result.exitCode).toBe(0);
+    expect(recordedDecision(runId)).toBe("approved");
+    expect(approvalState(runId, { keyring: keyringPath })).toBe("approved");
   });
 
   test("(a) the single --public-key form also verifies a genuine token -> approved", () => {

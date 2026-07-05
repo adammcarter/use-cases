@@ -370,6 +370,7 @@ function recordApprovalDecision(
   // Decide capture method + optionally verify & burn a signed token.
   let captureMethod = options.actorType === "user" ? "same_channel_operator_confirmation" : "command_handler";
   let embeddedToken: ApprovalToken | undefined;
+  let recordedDecision = decision;
 
   if (options.actorType === "user") {
     if (options.approvalToken) {
@@ -402,6 +403,19 @@ function recordApprovalDecision(
           approvalFailureCode(verification.code)
         );
       }
+      if (eventType === "approval_recorded" && verification.decision === "rejected") {
+        throw new UseCasesPluginError(
+          "User approval token rejected: DECISION_MISMATCH (rejected token cannot record approval)",
+          "showcase.approval_decision_mismatch"
+        );
+      }
+      if (eventType === "approval_rejected" && verification.decision !== "rejected") {
+        throw new UseCasesPluginError(
+          "User approval token rejected: DECISION_MISMATCH (approval token cannot record rejection)",
+          "showcase.approval_decision_mismatch"
+        );
+      }
+      recordedDecision = verification.decision;
       // Burn the nonce ATOMICALLY before the approval, so a concurrent replay of
       // the same token sees it burned and cannot double-spend.
       appendEvent(options.context, options.runId, {
@@ -424,7 +438,7 @@ function recordApprovalDecision(
   }
 
   const payload: Record<string, unknown> = {
-    decision,
+    decision: recordedDecision,
     approver: { type: options.actorType },
     capture_method: captureMethod,
     [statementKey]: options.statement,

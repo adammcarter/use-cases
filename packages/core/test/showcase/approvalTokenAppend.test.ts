@@ -18,6 +18,7 @@ import {
   computeRunApprovalBinding,
   finishShowcaseRun,
   mintApprovalRequest,
+  rejectShowcaseApproval,
   readShowcaseEvents,
   replayShowcaseRun,
   signApprovalToken,
@@ -411,6 +412,29 @@ describe("F3 append — MUST ACCEPT + idempotency", () => {
     expect(replayShowcaseRun({ context, runId: run.run_id, trustResolver: resolver() }).approval_state).toBe("approved");
     // Without a resolver, replay fails closed to untrusted -> pending.
     expect(replayShowcaseRun({ context, runId: run.run_id }).approval_state).toBe("pending");
+  });
+
+  test("(j) genuine human rejection token records and replays rejected", () => {
+    const workspaceRoot = fixtureWorkspace("evidence-basic");
+    const context = resolveWorkspaceContext({ workspaceRoot });
+    const run = completePassingRun(context);
+    const token = humanSignsFor(context, run.run_id, "rejected");
+    const result = rejectShowcaseApproval({
+      context,
+      runId: run.run_id,
+      actorType: "user",
+      hostSurface: "codex.cli",
+      statement: "Genuine human rejection.",
+      idempotencyKey: "f3-reject-token",
+      recordedAt: AT,
+      approvalToken: token,
+      ...verifyOpts()
+    });
+
+    expect(result.event.event_type).toBe("approval_rejected");
+    expect((result.event.payload as { decision?: string }).decision).toBe("rejected");
+    expect(result.status.approval_state).toBe("rejected");
+    expect(replayShowcaseRun({ context, runId: run.run_id, trustResolver: resolver() }).approval_state).toBe("rejected");
   });
 
   test("(k) IDEMPOTENCY: re-submitting the SAME accepted token under the same idempotency key -> single ApprovalGranted, no double-append", () => {
