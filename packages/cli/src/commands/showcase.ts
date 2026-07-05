@@ -708,9 +708,19 @@ export const showcaseApproveCommand: CliCommand = {
     const contextResult = context.context;
     const runId = flags.run as string | undefined;
     const statement = flags.statement as string | undefined;
-    if (!runId || !statement) {
+    if (!runId) {
       return {
-        envelope: errorEnvelope("showcase.approve", "cli_invalid_arguments", "Missing --run or --statement."),
+        envelope: errorEnvelope("showcase.approve", "cli_invalid_arguments", "Missing --run."),
+        exitCode: 2
+      };
+    }
+    if (!statement) {
+      return {
+        envelope: errorEnvelope(
+          "showcase.approve",
+          "cli_invalid_arguments",
+          "Missing --statement (required: the human-readable approval statement)."
+        ),
         exitCode: 2
       };
     }
