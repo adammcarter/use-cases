@@ -13,6 +13,7 @@ const requiredRootArtifactPaths = [
   ".claude-plugin/plugin.json",
   ".codex-plugin/plugin.json",
   ".mcp.json",
+  ".opencode/plugin/use-cases.js",
   "bootstrap/use-cases.md",
   "docs/release.md",
   "docs/security.md",
@@ -28,6 +29,7 @@ const requiredRootArtifactPaths = [
   "README.md",
   "CHANGELOG.md",
   "schemas/v1/use-case-file.schema.json",
+  "scripts/install-agent-hooks.mjs",
   "use-cases/showcase/live.yml"
 ];
 
@@ -143,7 +145,7 @@ describe("P13 installable root package artifact", () => {
       expect.objectContaining({
         id: 1,
         result: expect.objectContaining({
-          serverInfo: { name: "@adammcarter/use-cases", version: "0.3.0" }
+          serverInfo: { name: "@adammcarter/use-cases", version: "0.4.0" }
         })
       }),
       expect.objectContaining({
@@ -157,6 +159,28 @@ describe("P13 installable root package artifact", () => {
         }
       })
     ]);
+
+    const hookHome = mkdtempSync(join(tmpdir(), "use-cases-installed-hooks-"));
+    const hookInstall = spawnSync(process.execPath, [join(installedRoot, "scripts/install-agent-hooks.mjs")], {
+      cwd: installed.consumer,
+      encoding: "utf8",
+      env: { ...childEnv(), HOME: hookHome, AGENT_HOOKS_INSTALL: "1" }
+    });
+    requireSuccess(hookInstall);
+
+    const codexHooks = JSON.parse(readFileSync(join(hookHome, ".codex/hooks.json"), "utf8")) as Record<string, unknown>;
+    const command = sessionCommands(codexHooks).find((candidate) =>
+      candidate.includes("@adammcarter/use-cases/hooks/session-start")
+    ) ?? "";
+    expect(command).toContain(" bash ");
+
+    const hookSmoke = spawnSync("bash", ["-lc", command], {
+      cwd: installed.consumer,
+      encoding: "utf8",
+      env: { ...childEnv(), HOME: hookHome }
+    });
+    requireSuccess(hookSmoke);
+    expect(JSON.parse(hookSmoke.stdout).hookSpecificOutput.additionalContext).toContain("<EXTREMELY_IMPORTANT>");
   });
 
   test("doctor package inspects explicit tarball and installed-root targets", () => {
@@ -217,6 +241,34 @@ function tarEntries(tarball: string): string[] {
   const result = run("tar", ["-tf", tarball]);
   requireSuccess(result);
   return result.stdout.trim().split("\n").filter(Boolean);
+}
+
+function sessionCommands(config: Record<string, unknown>): string[] {
+  const hooks = config["hooks"] as Record<string, unknown> | undefined;
+  const sessionStart = hooks?.["SessionStart"];
+  if (!Array.isArray(sessionStart)) {
+    return [];
+  }
+
+  return sessionStart.flatMap((entry) => {
+    if (typeof entry !== "object" || entry === null) {
+      return [];
+    }
+
+    const entryHooks = (entry as Record<string, unknown>)["hooks"];
+    if (!Array.isArray(entryHooks)) {
+      return [];
+    }
+
+    return entryHooks.flatMap((hook) => {
+      if (typeof hook !== "object" || hook === null) {
+        return [];
+      }
+
+      const command = (hook as Record<string, unknown>)["command"];
+      return typeof command === "string" ? [command] : [];
+    });
+  });
 }
 
 function extractPackageRoot(tarball: string): string {

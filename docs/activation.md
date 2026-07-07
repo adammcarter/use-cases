@@ -13,9 +13,9 @@ mechanism is never copied onto another):
 | Host | Mechanism | Shape |
 |---|---|---|
 | Claude Code | `hooks/hooks.json` SessionStart (`startup\|clear\|compact`) runs `hooks/session-start` | `hookSpecificOutput.additionalContext` |
-| Copilot CLI | same `hooks/session-start` script (detected via `COPILOT_CLI`) | top-level `additionalContext` |
-| Codex | `hooks/hooks-codex.json` SessionStart (`startup\|resume\|clear`) runs `hooks/session-start` | `hookSpecificOutput.additionalContext` |
-| OpenCode | `.opencode/plugin/use-cases.js` `session.started` | `{ context }` |
+| Copilot CLI | package-owned user hook at `~/.copilot/hooks/use-cases.json` runs `hooks/session-start` with `COPILOT_CLI=1` | top-level `additionalContext` |
+| Codex | `hooks/hooks-codex.json` SessionStart (`startup\|resume\|clear\|compact`) runs `hooks/session-start` | `hookSpecificOutput.additionalContext` |
+| OpenCode | `.opencode/plugin/use-cases.js` message transform; `session.started` compatibility | injected first user message context; `{ context }` compatibility |
 
 The injected content is exactly the trusted `<EXTREMELY_IMPORTANT>` bootstrap
 block — never repo data, tool output, or generated material. Auto-injection is a

@@ -5,6 +5,15 @@ All notable changes to this project are documented here. The format is based on
 follows [Semantic Versioning](https://semver.org) (see docs/release.md). This is
 **pre-1.0 (beta) software**: anything MAY change before `1.0.0`.
 
+## 0.4.0 - 2026-07-08
+
+### Added
+
+- Global npm installs now register the trusted session-start bootstrap for
+  Claude Code, Codex, Copilot CLI, and OpenCode.
+- OpenCode activation now uses the native message-transform plugin path while
+  preserving `session.started` compatibility.
+
 ## 0.3.0 - 2026-07-05
 
 ### Changed

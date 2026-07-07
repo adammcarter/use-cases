@@ -21,8 +21,8 @@ function runHook(env: Record<string, string>) {
 describe("session-start bootstrap delivery", () => {
   test("the polyglot hook script is shipped and executable", () => {
     expect(existsSync(hookScript)).toBe(true);
-    // The hooks.json command invokes the script directly, so the executable bit
-    // must survive (placing a marker via `uc bind` once stripped it).
+    // Keep the executable bit for direct/manual use; host commands also invoke
+    // through bash so packed install paths do not depend on tar mode preservation.
     expect(statSync(hookScript).mode & 0o111).not.toBe(0);
   });
 
@@ -70,6 +70,7 @@ describe("session-start bootstrap delivery", () => {
       expect(Array.isArray(sessionStart)).toBe(true);
       expect(sessionStart[0].matcher).toContain(matcherIncludes);
       expect(JSON.stringify(sessionStart[0].hooks)).toContain("session-start");
+      expect(JSON.stringify(sessionStart[0].hooks)).toContain("bash");
     }
   });
 
@@ -83,5 +84,30 @@ describe("session-start bootstrap delivery", () => {
     const out = await plugin["session.started"]();
     expect(out.context).toContain(BOOTSTRAP_MARKER);
     expect(out.context).toContain("<EXTREMELY_IMPORTANT>");
+  });
+
+  test("OpenCode plugin injects the bootstrap through message transform without duplicates", async () => {
+    const modPath = resolve(repoRoot, ".opencode/plugin/use-cases.js");
+    const mod = await import(`${modPath}?test=${Date.now()}`);
+    const factory = mod.UseCasesPlugin ?? mod.default;
+    const plugin = await factory({ directory: repoRoot });
+    const transform = plugin["experimental.chat.messages.transform"];
+    expect(typeof transform).toBe("function");
+
+    const output = {
+      messages: [
+        {
+          info: { role: "user" },
+          parts: [{ type: "text", text: "start" }]
+        }
+      ]
+    };
+
+    await transform({}, output);
+    await transform({}, output);
+
+    const texts = output.messages[0]!.parts.map((part) => part.text).join("\n");
+    expect(texts.match(/<EXTREMELY_IMPORTANT>/gu)).toHaveLength(1);
+    expect(output.messages[0]!.parts[0]!.text).toContain(BOOTSTRAP_MARKER);
   });
 });

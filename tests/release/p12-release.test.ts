@@ -48,12 +48,14 @@ describe("P12 release hardening", () => {
       ".agents/skills/use-cases/SKILL.md",
       ".codex-plugin/plugin.json",
       ".mcp.json",
+      ".opencode/plugin/use-cases.js",
       "packages/cli/dist/index.js",
       "packages/core/dist/schemas/v1/use-case-file.schema.json",
       "packages/mcp/dist/index.js",
       "README.md",
       "docs/release.md",
-      "CHANGELOG.md"
+      "CHANGELOG.md",
+      "scripts/install-agent-hooks.mjs"
     ]) {
       expect(result.stdout).toContain(included);
     }
