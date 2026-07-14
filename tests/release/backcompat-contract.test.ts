@@ -25,7 +25,7 @@
 //   node scripts/capture-cli-contract.mjs "$PWD/packages/cli/dist/index.js" \
 //     > tests/fixtures/backcompat/contract-<version>.json
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { beforeAll, describe, expect, test } from "vitest";
 
@@ -80,13 +80,19 @@ let golden: Snapshot;
 let current: Snapshot;
 
 beforeAll(() => {
-  const build = spawnSync("corepack", ["pnpm", "build"], {
-    cwd: repoRoot,
-    encoding: "utf8",
-    env: { ...process.env, COREPACK_ENABLE_DOWNLOAD_PROMPT: "0" }
-  });
-  if (build.status !== 0) {
-    throw new Error(build.stderr || build.stdout);
+  // Build ONLY when dist is absent. CI (and any sane local run) builds before the
+  // suite, and vitest runs files in parallel — so an unconditional `pnpm build`
+  // here races other suites' builds on the same dist/ output, and a momentarily
+  // half-written CLI makes UNRELATED tests fail. Build defensively, not eagerly.
+  if (!existsSync(cliBin)) {
+    const build = spawnSync("corepack", ["pnpm", "build"], {
+      cwd: repoRoot,
+      encoding: "utf8",
+      env: { ...process.env, COREPACK_ENABLE_DOWNLOAD_PROMPT: "0" }
+    });
+    if (build.status !== 0) {
+      throw new Error(build.stderr || build.stdout);
+    }
   }
 
   const result = spawnSync("node", [capture, cliBin], {

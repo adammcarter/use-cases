@@ -11,7 +11,7 @@
 //      of them, so a broken registry was invisible unless you reached for --json.
 //      They must render, and each must carry a runnable remediation.
 import { spawnSync } from "node:child_process";
-import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
@@ -44,6 +44,12 @@ function bind(dir: string, ...extra: string[]) {
 }
 
 beforeAll(() => {
+  // Build ONLY when dist is absent — an unconditional build here races the other
+  // suites' builds on the same dist/ output (vitest runs files in parallel), and a
+  // momentarily half-written CLI makes UNRELATED tests fail.
+  if (existsSync(cliBin)) {
+    return;
+  }
   const build = spawnSync("corepack", ["pnpm", "build"], {
     cwd: repoRoot,
     encoding: "utf8",
