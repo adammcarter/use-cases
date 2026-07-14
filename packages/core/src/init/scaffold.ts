@@ -11,7 +11,7 @@
 // `force` is set (a `blocked` result, never a silent clobber). All writes are
 // path-contained inside the repo root.
 
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { diagnostic, type Diagnostic } from "../schema/index.js";
 import { isValidId, resolveContainedPath } from "../roots.js";
@@ -66,6 +66,53 @@ const PACKAGE_MANAGER_LOCKFILES: { packageManager: InitPackageManager; lockfile:
 
 // A template-specific extra file to write (relative path + rendered body).
 type TemplateFile = { relPath: string; body: string };
+
+// Transient output the tool itself produces. Neither is durable evidence — the
+// signed ledger is — so both must stay out of git. Left untracked and unignored,
+// they dirty the adopter's working tree and trip their own clean-tree gates.
+const GITIGNORE_FILE = ".gitignore";
+const GITIGNORE_ENTRIES: { pattern: string; comment: string }[] = [
+  {
+    pattern: "showcase-runs/",
+    comment: "# use-cases: transient showcase run output (not durable evidence)."
+  },
+  {
+    pattern: ".use-cases/verification-results.jsonl",
+    comment: "# use-cases: transient local verification results (the verify -> prove handoff)."
+  }
+];
+
+// Ensure every entry is present in .gitignore. APPEND-ONLY: an adopter's file is
+// never rewritten or reordered, and an entry they already wrote is left alone.
+// Returns true when the file was created or modified.
+function ensureGitignoreEntries(repoRoot: string): boolean {
+  const gitignorePath = join(repoRoot, GITIGNORE_FILE);
+  const existing = existsSync(gitignorePath) ? readFileSync(gitignorePath, "utf8") : null;
+  const present = new Set(
+    (existing ?? "").split("\n").map((line) => line.trim())
+  );
+
+  const missing = GITIGNORE_ENTRIES.filter((entry) => !present.has(entry.pattern));
+  if (missing.length === 0) {
+    return false;
+  }
+
+  const additions = missing.flatMap((entry) => [entry.comment, entry.pattern]);
+  if (existing === null) {
+    writeFileSync(gitignorePath, `${additions.join("\n")}\n`, "utf8");
+    return true;
+  }
+
+  // Separate our block from whatever the adopter already had, without reflowing it.
+  const separator = existing === "" || existing.endsWith("\n") ? "" : "\n";
+  const spacer = existing.trim() === "" ? "" : "\n";
+  writeFileSync(
+    gitignorePath,
+    `${existing}${separator}${spacer}${additions.join("\n")}\n`,
+    "utf8"
+  );
+  return true;
+}
 
 export function scaffoldWorkspace(options: ScaffoldWorkspaceOptions): ScaffoldWorkspaceResult {
   const template: InitTemplate = options.template ?? "generic";
@@ -133,6 +180,8 @@ export function scaffoldWorkspace(options: ScaffoldWorkspaceOptions): ScaffoldWo
     writeFileSync(file.absPath, file.body, "utf8");
   }
 
+  const gitignoreTouched = ensureGitignoreEntries(repoRoot);
+
   return {
     schema_version: 1,
     status: "created",
@@ -142,7 +191,8 @@ export function scaffoldWorkspace(options: ScaffoldWorkspaceOptions): ScaffoldWo
     created_files: [
       toPosix(relative(repoRoot, configPath)),
       toPosix(relative(repoRoot, useCasePath)),
-      ...templatePaths.map((file) => toPosix(relative(repoRoot, file.absPath)))
+      ...templatePaths.map((file) => toPosix(relative(repoRoot, file.absPath))),
+      ...(gitignoreTouched ? [GITIGNORE_FILE] : [])
     ],
     next_steps: nextSteps(),
     diagnostics: []
