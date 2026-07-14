@@ -222,8 +222,8 @@ beforeAll(() => {
       `pack ${filter}`
     );
   }
-  coreTarball = join(packDir, "adammcarter-use-cases-core-0.4.0.tgz");
-  cliTarball = join(packDir, "adammcarter-use-cases-cli-0.4.0.tgz");
+  coreTarball = join(packDir, "adammcarter-use-cases-core-0.4.1.tgz");
+  cliTarball = join(packDir, "adammcarter-use-cases-cli-0.4.1.tgz");
 }, 180_000);
 
 afterAll(() => {

@@ -5,6 +5,73 @@ All notable changes to this project are documented here. The format is based on
 follows [Semantic Versioning](https://semver.org) (see docs/release.md). This is
 **pre-1.0 (beta) software**: anything MAY change before `1.0.0`.
 
+## 0.4.1 - 2026-07-14
+
+Field-feedback patch, from two agents who used `use-cases` hard on a real
+codebase and wrote up where it hurt. Their through-line: *the tool's green lights
+are green when they shouldn't be, and an agent under pressure only looks at the
+green light.* Everything here is a bug fix or a purely additive field — no
+command, field, or output shape that existed in 0.4.0 has changed or been
+removed.
+
+### Fixed
+
+- **`uc verify --row X` no longer destroys every other row's evidence.** The
+  results ledger (`--out`, which `scan` auto-discovers) was written with a
+  *truncating* write containing only the rows that run had targeted — so
+  verifying one row erased the rest from disk and silently dropped them to
+  `UNVERIFIED_LOCAL`. This punished the incremental `--row` flow the docs
+  recommend and made `--all` the only safe option. `verify` now merges: rows it
+  did not target keep their prior record, rows it did verify are replaced, and
+  the ledger is sorted by `row_id` so it is deterministic. Staleness is still
+  decided by re-checking each retained record's hashes against the current code,
+  so a stale result is demoted, never trusted. `uc recover --row` inherits the fix.
+- **Validation errors say where they are.** `✗ enum.invalid_value: must be equal
+  to one of the allowed values` named no file, no row, and no *field* — though
+  the JSON pointer already held it. The message now leads with the field name
+  (`value_tier: …`), the diagnostic resolves its `entity_id` to the offending row
+  id, and the human renderer prints the file/pointer/row it had been discarding.
+
+### Added
+
+- **`acceptance_claim` on `uc scan`** — `{ proven, total, claimable, statement }`.
+  `guard_ok` answers a narrower question than its name suggests ("is any policy
+  blocking?") and is `true` on a matrix where *nothing is proven*; both field
+  reports record an agent nearly claiming acceptance off it. `guard_ok` keeps its
+  meaning — existing gates do not flip — and scan now states the conclusion
+  outright instead: `⚠ acceptance: NOT_SUPPORTED — 0 of 88 behaviours verified —
+  do NOT claim acceptance`. A row counts as proven if either tier vouches for it
+  (signed `FRESH`, or a current `VERIFIED_LOCAL` run); an `UNBOUND` row never does.
+- **The summary counts the local axis** — `verified_local`, `stale_local`,
+  `unverified_local`. It carried only the *signed* axis, which is `UNPROVEN` by
+  design on every local run, so a fully green keyless matrix still read
+  `fresh: 0, unproven: N` and looked like a disaster.
+- **`remediation` on integrity errors, and the human view now shows them at all.**
+  Integrity errors were JSON-only, and described the wreckage but not the cure.
+  `ROW_NOT_FOUND` (what a renamed row produces) now names renaming as the likely
+  cause and gives the re-register command; `UNREGISTERED_BINDING` gives the
+  `--register-existing` command; `LEDGER_INTEGRITY_ERROR` points at
+  `uc validate-ledger`. An `UNBOUND` row's `required_action` was `null` in the
+  core — the status most likely to need a next command — and now carries the bind
+  command.
+- **`uc init` writes a `.gitignore`** covering `showcase-runs/` and
+  `.use-cases/verification-results.jsonl`. Transient run output was left untracked
+  and unignored, dirtying the adopter's tree and tripping their own clean-tree
+  gates. Append-only and idempotent: an existing `.gitignore` is never rewritten
+  or reordered, and an entry the adopter already wrote is left alone.
+
+### Changed
+
+- **`uc impact` leads with the union of span-hit and file-touched rows.** It
+  counted span overlaps only, so it announced `0 behaviours impacted — nothing
+  impacted` directly above a list of rows sitting on files the change had edited,
+  and an agent that reads the headline and stops skipped re-verifying exactly the
+  rows that needed it. Span overlap is a weak proxy for behavioural impact — you
+  can gut a function's semantics from a helper below the bound span. Touched rows
+  are now treated as impacted-until-proven-otherwise and carry the same runnable
+  re-verify command. A false positive costs one re-verify; a false negative ships
+  a regression under a green badge.
+
 ## 0.4.0 - 2026-07-08
 
 ### Added
