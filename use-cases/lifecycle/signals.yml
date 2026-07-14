@@ -1,0 +1,421 @@
+schema_version: 1
+feature:
+  id: lifecycle.signals
+  name: Honest signals in the daily loop
+  summary: >-
+    The signals an agent reads during the keyless loop must mean what they say:
+    verifying one row must not destroy another's evidence, a green light must not
+    appear while nothing is proven, an impact headline must not claim nothing is
+    affected, and every error must hand back the command that actually fixes it.
+    These behaviours exist because agents using the tool in the field acted on
+    signals that were technically true and practically misleading.
+use_cases:
+  - id: lifecycle.signals.verify_preserves_other_rows
+    title: Verifying one row never destroys another row's evidence
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    tags:
+      - verify
+      - evidence
+      - data-loss
+    source_refs:
+      - kind: file
+        path: packages/core/src/markers/cli/verify.ts
+      - kind: file
+        path: packages/core/test/markers/verify.test.ts
+    actor: agent
+    intent: >-
+      Re-verify a single changed behaviour without losing the evidence for every
+      other behaviour, so the incremental loop the docs recommend is safe to use.
+    preconditions:
+      - Several rows are bound and have passing local verification results.
+    trigger: An agent runs `uc verify --row <id>` after changing one behaviour.
+    scenarios:
+      - id: lifecycle.signals.verify_preserves_other_rows.single_row
+        kind: steps
+        steps:
+          - Verify every bound row, so the results ledger holds a record for each.
+          - Verify only ONE row against the same ledger.
+          - Scan and read each row's local status.
+      - id: lifecycle.signals.verify_preserves_other_rows.no_targets
+        kind: steps
+        steps:
+          - Verify a row that is UNBOUND, so the run targets nothing at all.
+          - Confirm the ledger is untouched rather than emptied.
+    observable_outcomes:
+      - Rows the run did not target keep their local evidence and stay VERIFIED_LOCAL.
+      - A re-verified row's prior record is replaced, never duplicated.
+      - A run that targets no rows writes nothing away.
+      - Retained evidence is still re-checked against the current code, so a row whose code changed is demoted to STALE_LOCAL rather than left falsely green.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - packages/core/test/markers/verify.test.ts
+          inputs:
+            - packages/core/test/markers/verify.test.ts
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  - id: lifecycle.signals.acceptance_claim_is_honest
+    title: Scan states whether acceptance can honestly be claimed
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    tags:
+      - scan
+      - acceptance
+      - trust
+    source_refs:
+      - kind: file
+        path: packages/core/src/markers/freshness.ts
+      - kind: file
+        path: packages/core/test/markers/freshness-local.test.ts
+    actor: agent
+    intent: >-
+      Give an agent a single field it can quote that says whether acceptance is
+      actually supported, so a green policy flag is never mistaken for proof.
+    preconditions:
+      - A matrix exists with at least one row.
+    trigger: An agent runs `uc scan` and looks for a signal to report against.
+    scenarios:
+      - id: lifecycle.signals.acceptance_claim_is_honest.nothing_proven
+        kind: steps
+        steps:
+          - Scan a matrix where no row has been verified.
+          - Read the acceptance claim rather than the policy guard.
+      - id: lifecycle.signals.acceptance_claim_is_honest.all_proven
+        kind: steps
+        steps:
+          - Verify every row locally.
+          - Scan and read the acceptance claim.
+    observable_outcomes:
+      - With nothing proven, acceptance is reported NOT_SUPPORTED and is not claimable, even though the policy guard is green because nothing is blocking.
+      - With every row proven by either tier, acceptance is claimable and names how many behaviours back it.
+      - An UNBOUND row is never counted as proven, so a matrix with unbound rows cannot claim acceptance.
+      - The summary counts the local axis (verified / stale / unverified) alongside the signed axis, so a green keyless matrix does not read as a failing one.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - packages/core/test/markers/freshness-local.test.ts
+          inputs:
+            - packages/core/test/markers/freshness-local.test.ts
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  - id: lifecycle.signals.impact_leads_with_the_union
+    title: Impact never claims nothing is affected while a bound file was touched
+    lifecycle: active
+    value_tier: core
+    journey_role: golden
+    usage_frequency: common
+    tags:
+      - impact
+      - trust
+    source_refs:
+      - kind: file
+        path: packages/cli/src/trustRender.ts
+      - kind: file
+        path: tests/cli/impact.test.ts
+    actor: agent
+    intent: >-
+      Make the impact headline conservative, so an agent that reads it and stops
+      does not skip re-verifying the rows its change may have broken.
+    preconditions:
+      - A row is bound and its file is under version control.
+    trigger: An agent runs `uc impact` after editing code.
+    scenarios:
+      - id: lifecycle.signals.impact_leads_with_the_union.touched_not_hit
+        kind: steps
+        steps:
+          - Edit a bound file BELOW the bound span, so the span is not hit.
+          - Run impact and read the headline, not the detail.
+    observable_outcomes:
+      - The headline counts span-hit and file-touched rows together and tells the reader to re-verify them.
+      - It never reports that nothing is impacted while a bound file was touched.
+      - A touched row carries the same runnable verify command as a span-hit row, because being conservative costs one re-verify while being wrong ships a regression.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/cli/impact.test.ts
+          inputs:
+            - tests/cli/impact.test.ts
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  - id: lifecycle.signals.errors_hand_back_the_cure
+    title: Errors name the cause and the command that fixes it
+    lifecycle: active
+    value_tier: core
+    journey_role: golden
+    usage_frequency: common
+    tags:
+      - errors
+      - rename
+      - remediation
+    source_refs:
+      - kind: file
+        path: packages/core/src/markers/freshness.ts
+      - kind: file
+        path: tests/cli/actionable-output.test.ts
+    actor: agent
+    intent: >-
+      Turn a broken registry from a dead end into a recoverable state, by naming
+      the likely cause (a rename) and the sequence that actually restores it.
+    preconditions:
+      - A row is bound, then renamed in both the matrix and the source marker.
+    trigger: An agent renames a bound behaviour and runs `uc scan`.
+    scenarios:
+      - id: lifecycle.signals.errors_hand_back_the_cure.rename
+        kind: steps
+        steps:
+          - Bind a row, then rename it in the matrix and in the source marker.
+          - Scan, and read the integrity errors in the human output.
+          - Follow the remediation exactly as written.
+    observable_outcomes:
+      - Integrity errors are shown in the human output, not only in JSON.
+      - "Both halves of a rename name it: the orphaned registration says what it was renamed to, and the new marker says what it was renamed from."
+      - "The remediation is truthful about the append-only registry: it says to remove the stale registration before re-registering, because bind validates the registry first and would otherwise fail closed."
+      - Following the remediation exactly leaves the matrix with zero integrity errors.
+      - A rename is only asserted when one candidate is clearly the best; an ambiguous or unrelated case is not blamed on a rename.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/cli/actionable-output.test.ts
+            - packages/core/test/markers/renameHint.test.ts
+          inputs:
+            - tests/cli/actionable-output.test.ts
+            - packages/core/test/markers/renameHint.test.ts
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  - id: lifecycle.signals.verify_can_be_previewed
+    title: Verify can be previewed before paying for it
+    lifecycle: active
+    value_tier: supporting
+    journey_role: edge
+    usage_frequency: occasional
+    tags:
+      - verify
+      - cost
+    source_refs:
+      - kind: file
+        path: packages/core/src/markers/cli/verify.ts
+    actor: agent
+    intent: >-
+      Let an agent see which verifiers a run would execute before running them, so
+      an expensive acceptance build is a decision rather than a surprise.
+    preconditions:
+      - At least one row is bound and declares a verifier.
+    trigger: An agent wants to know the cost of `uc verify` before running it.
+    scenarios:
+      - id: lifecycle.signals.verify_can_be_previewed.dry_run
+        kind: steps
+        steps:
+          - Run verify with --dry-run against the bound rows.
+          - Inspect the reported plan, then check nothing was executed or written.
+    observable_outcomes:
+      - The plan names each targeted row and the exact verifier command that would run.
+      - A row with no runnable verifier is reported as blocked rather than silently skipped.
+      - Nothing is executed, no results ledger is written, and no verification record is minted — a plan is never evidence.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - packages/core/test/markers/verify.test.ts
+          inputs:
+            - packages/core/test/markers/verify.test.ts
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  - id: lifecycle.signals.bind_names_the_next_step
+    title: Binding a row says the row is not yet proven
+    lifecycle: active
+    value_tier: supporting
+    journey_role: golden
+    usage_frequency: common
+    tags:
+      - bind
+      - onboarding
+    source_refs:
+      - kind: file
+        path: packages/core/src/markers/cli/bind.ts
+      - kind: file
+        path: tests/cli/actionable-output.test.ts
+    actor: agent
+    intent: >-
+      Stop rows being bound and then abandoned, by ending a successful bind with
+      the command that actually proves the behaviour.
+    preconditions:
+      - A row exists in the matrix and a marker can be placed in its code.
+    trigger: An agent binds a behaviour to code.
+    scenarios:
+      - id: lifecycle.signals.bind_names_the_next_step.after_bind
+        kind: steps
+        steps:
+          - Bind a row to its code.
+          - Read the command the tool hands back.
+    observable_outcomes:
+      - A successful bind reports the verify command for that row, in both the human and JSON output.
+      - Binding alone never moves a row to a proven state.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/cli/actionable-output.test.ts
+          inputs:
+            - tests/cli/actionable-output.test.ts
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  - id: lifecycle.signals.transient_output_stays_out_of_git
+    title: The tool's own transient output never dirties the working tree
+    lifecycle: active
+    value_tier: supporting
+    journey_role: edge
+    usage_frequency: occasional
+    tags:
+      - init
+      - adoption
+    source_refs:
+      - kind: file
+        path: packages/core/src/init/scaffold.ts
+      - kind: file
+        path: packages/core/test/init/scaffold-gitignore.test.ts
+    actor: adopter
+    intent: >-
+      Keep showcase runs and the local verification ledger out of git, so the tool
+      does not break the adopter's own clean-working-tree gates.
+    preconditions:
+      - A repository that does not yet use the tool.
+    trigger: An adopter runs `uc init`.
+    scenarios:
+      - id: lifecycle.signals.transient_output_stays_out_of_git.fresh
+        kind: steps
+        steps:
+          - Run init in a repo with no .gitignore, then in one that already has entries.
+          - Run init twice, to confirm it does not accumulate duplicates.
+    observable_outcomes:
+      - Transient showcase runs and the local verification ledger are gitignored after init.
+      - An existing .gitignore is appended to, never rewritten or reordered.
+      - Re-running init does not duplicate an entry, and an entry the adopter wrote themselves is left alone.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - packages/core/test/init/scaffold-gitignore.test.ts
+          inputs:
+            - packages/core/test/init/scaffold-gitignore.test.ts
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none

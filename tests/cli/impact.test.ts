@@ -120,6 +120,36 @@ describe("uc impact: change-impact map", () => {
     expect((r.data.touched as unknown[]).length).toBe(0);
   });
 
+  // Field report: impact announced "0 behaviours impacted — nothing impacted"
+  // directly above a list of rows sitting on files the change had edited. An agent
+  // that reads the headline and stops skipped re-verifying exactly the rows that
+  // needed it. Span overlap is a weak proxy for behavioural impact — you can gut a
+  // function's semantics from a helper below the bound span. The headline must
+  // lead with the UNION, and a touched row must carry a runnable next command.
+  test("editing a bound file OUTSIDE its span: the headline never claims nothing is impacted", () => {
+    const dir = setupBoundRepo("touched");
+    // Append a helper BELOW the bound span: same file, span not hit.
+    const p = couponPath(dir);
+    writeFileSync(p, `${readFileSync(p, "utf8")}\n\ndef unrelated_helper():\n    return 0\n`);
+
+    const r = ucJson(dir, "impact", "--repo", dir, "--json");
+    expect(r.status).toBe(0);
+    // The span was not hit...
+    expect((r.data.impacted as unknown[]).length).toBe(0);
+    // ...but the bound file WAS touched.
+    const touched = (r.data.touched as Array<{ row_id: string }>).map((t) => t.row_id);
+    expect(touched).toContain(ROW_ID);
+
+    // The human headline is the thing that used to lie. It must not say the change
+    // impacted nothing while a bound file was touched.
+    const human = uc(dir, "impact", "--repo", dir).stdout;
+    expect(human).toContain("1 behaviour may be impacted");
+    expect(human).toContain("0 span-hit, 1 file-touched");
+    expect(human).not.toContain("nothing impacted");
+    // And the touched row gets a runnable command, not just a mention.
+    expect(human).toContain(`uc verify --row ${ROW_ID}`);
+  });
+
   test("--base compares against a ref", () => {
     const dir = setupBoundRepo("base");
     // Commit an in-span change, then impact vs the PRE-change baseline (HEAD~1).

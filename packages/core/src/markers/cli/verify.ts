@@ -233,6 +233,7 @@ export function runVerifyCommand(options: VerifyCommandOptions): VerifyCommandRe
   // --dry-run: resolve exactly what a real run WOULD execute, then stop. Nothing
   // is spawned, no ledger is written, and no result record is minted — a plan is
   // not evidence.
+//: @use-case:lifecycle.signals.verify_can_be_previewed
   if (options.dryRun) {
     const planned: VerifyPlannedRow[] = [];
     for (const rowId of targetRowIds) {
@@ -277,6 +278,7 @@ export function runVerifyCommand(options: VerifyCommandOptions): VerifyCommandRe
       errors: []
     });
   }
+//: @use-case:end lifecycle.signals.verify_can_be_previewed
 
   const results: VerificationResultRecord[] = [];
   for (const rowId of targetRowIds) {
@@ -401,6 +403,7 @@ export function runVerifyCommand(options: VerifyCommandOptions): VerifyCommandRe
   // Staleness is NOT our call here — deriveFreshness re-checks each retained record's
   // hashes against the current code and demotes it if it no longer matches.
   let outPath: string | null = null;
+//: @use-case:lifecycle.signals.verify_preserves_other_rows
   if (options.outPath) {
     const supersededRowIds = new Set(results.map((record) => record.row_id));
     const merged: { rowId: string; line: string }[] = [];
@@ -440,6 +443,7 @@ export function runVerifyCommand(options: VerifyCommandOptions): VerifyCommandRe
     fs.writeText(options.outPath, body === "" ? "" : `${body}\n`);
     outPath = options.outPath;
   }
+//: @use-case:end lifecycle.signals.verify_preserves_other_rows
 
   // Exit 0 only if every targeted row passed; any fail/blocked is nonzero.
   const allPass = results.every((record) => record.status === "pass");

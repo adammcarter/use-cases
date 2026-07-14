@@ -338,6 +338,7 @@ interface ImpactData {
   broken_bindings?: BrokenBinding[];
 }
 
+//: @use-case:lifecycle.signals.impact_leads_with_the_union
 function renderImpact(data: ImpactData): string[] {
   const impacted = data.impacted ?? [];
   const touched = data.touched ?? [];
@@ -399,6 +400,7 @@ function renderImpact(data: ImpactData): string[] {
 
   return lines;
 }
+//: @use-case:end lifecycle.signals.impact_leads_with_the_union
 
 // --- recover ------------------------------------------------------------------
 

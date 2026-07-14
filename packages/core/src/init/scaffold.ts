@@ -85,6 +85,7 @@ const GITIGNORE_ENTRIES: { pattern: string; comment: string }[] = [
 // Ensure every entry is present in .gitignore. APPEND-ONLY: an adopter's file is
 // never rewritten or reordered, and an entry they already wrote is left alone.
 // Returns true when the file was created or modified.
+//: @use-case:lifecycle.signals.transient_output_stays_out_of_git
 function ensureGitignoreEntries(repoRoot: string): boolean {
   const gitignorePath = join(repoRoot, GITIGNORE_FILE);
   const existing = existsSync(gitignorePath) ? readFileSync(gitignorePath, "utf8") : null;
@@ -113,6 +114,7 @@ function ensureGitignoreEntries(repoRoot: string): boolean {
   );
   return true;
 }
+//: @use-case:end lifecycle.signals.transient_output_stays_out_of_git
 
 export function scaffoldWorkspace(options: ScaffoldWorkspaceOptions): ScaffoldWorkspaceResult {
   const template: InitTemplate = options.template ?? "generic";

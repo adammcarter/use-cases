@@ -281,6 +281,7 @@ function similarity(left: string, right: string): number {
 // FROM. Conservative on purpose: a candidate must clear the threshold AND be
 // strictly better than every other candidate. An ambiguous rename says nothing,
 // because a confidently wrong suggestion is worse than none.
+//: @use-case:lifecycle.signals.errors_hand_back_the_cure
 function inferRenames(
   unregistered: { binding_slug: string; row_id: string }[],
   missing: { binding_slug: string; row_id: string }[]
@@ -310,6 +311,7 @@ function inferRenames(
   }
   return result;
 }
+//: @use-case:end lifecycle.signals.errors_hand_back_the_cure
 
 function rowIdOfSlug(slug: string | undefined): string | undefined {
   if (slug === undefined) {
@@ -1084,6 +1086,7 @@ export function deriveFreshness(input: DeriveFreshnessInput): FreshnessStatus {
   // `acceptance_claim` below is the field that answers the proof question.
   const guardOk = summary.invalid === 0 && globalIntegrity.length === 0;
 
+//: @use-case:lifecycle.signals.acceptance_claim_is_honest
   const totalRows = outRows.length;
   // Acceptance is claimable only when every row is proven by some tier AND no
   // policy/integrity error is outstanding. An UNBOUND row is never proven, so a
@@ -1092,6 +1095,7 @@ export function deriveFreshness(input: DeriveFreshnessInput): FreshnessStatus {
   const statement = claimable
     ? `SUPPORTED — ${provenRows} of ${totalRows} behaviours verified`
     : `NOT_SUPPORTED — ${provenRows} of ${totalRows} behaviours verified`;
+//: @use-case:end lifecycle.signals.acceptance_claim_is_honest
 
   return {
     schema: STATUS_SCHEMA_ID,
