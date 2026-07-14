@@ -115,6 +115,17 @@
     "product_root": { "type": "string", "minLength": 1 },
     "policy_mode": { "enum": ["feature", "release", "custom"] },
     "guard_ok": { "type": "boolean" },
+    "acceptance_claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["proven", "total", "claimable", "statement"],
+      "properties": {
+        "proven": { "type": "integer", "minimum": 0 },
+        "total": { "type": "integer", "minimum": 0 },
+        "claimable": { "type": "boolean" },
+        "statement": { "type": "string", "minLength": 1 }
+      }
+    },
     "summary": {
       "type": "object",
       "additionalProperties": false,
@@ -125,7 +136,10 @@
         "unproven": { "type": "integer", "minimum": 0 },
         "unbound": { "type": "integer", "minimum": 0 },
         "invalid": { "type": "integer", "minimum": 0 },
-        "policy_blocked": { "type": "integer", "minimum": 0 }
+        "policy_blocked": { "type": "integer", "minimum": 0 },
+        "verified_local": { "type": "integer", "minimum": 0 },
+        "stale_local": { "type": "integer", "minimum": 0 },
+        "unverified_local": { "type": "integer", "minimum": 0 }
       }
     },
     "integrity_errors": { "type": "array", "items": { "type": "object" } },

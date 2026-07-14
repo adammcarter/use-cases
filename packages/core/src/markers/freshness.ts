@@ -202,6 +202,28 @@ export interface FreshnessSummary {
   unbound: number;
   invalid: number;
   policy_blocked: number;
+  // The KEYLESS LOCAL axis. The four counts above describe the *signed* tier,
+  // which is UNPROVEN by design on every local run — so a fully green keyless
+  // matrix still reported `fresh: 0, unproven: N` and read like a disaster.
+  // These count the axis the daily loop actually gates on.
+  verified_local: number;
+  stale_local: number;
+  unverified_local: number;
+}
+
+// The acceptance conclusion, stated outright.
+//
+// `guard_ok` answers a narrower question than its name suggests ("is any policy
+// blocking?"), and reads `true` on a matrix where nothing is proven at all. It
+// keeps that meaning — CI gates depend on it — so this states the claim that
+// `guard_ok` does not: how many behaviours are actually proven, and whether
+// acceptance can honestly be claimed. Agents quote conclusions; give them a true one.
+export interface AcceptanceClaim {
+  // Rows proven by EITHER tier: a signed FRESH proof, or a current VERIFIED_LOCAL run.
+  proven: number;
+  total: number;
+  claimable: boolean;
+  statement: string;
 }
 
 export interface FreshnessStatus {
@@ -211,6 +233,7 @@ export interface FreshnessStatus {
   product_root: string;
   policy_mode: PolicyMode;
   guard_ok: boolean;
+  acceptance_claim: AcceptanceClaim;
   summary: FreshnessSummary;
   integrity_errors: IntegrityErrorOut[];
   rows: FreshnessRowOut[];
@@ -629,8 +652,14 @@ export function deriveFreshness(input: DeriveFreshnessInput): FreshnessStatus {
     unproven: 0,
     unbound: 0,
     invalid: 0,
-    policy_blocked: 0
+    policy_blocked: 0,
+    verified_local: 0,
+    stale_local: 0,
+    unverified_local: 0
   };
+  // A row is PROVEN if either tier vouches for it: a signed FRESH proof, or a
+  // current passing local run. This is what acceptance is actually claimed on.
+  let provenRows = 0;
 
   for (const rowId of [...rowIds].sort()) {
     const inputRow = rowById.get(rowId);
@@ -878,10 +907,38 @@ export function deriveFreshness(input: DeriveFreshnessInput): FreshnessStatus {
     if (policyBlock) {
       summary.policy_blocked += 1;
     }
+
+    switch (localStatus) {
+      case "VERIFIED_LOCAL":
+        summary.verified_local += 1;
+        break;
+      case "STALE_LOCAL":
+        summary.stale_local += 1;
+        break;
+      case "UNVERIFIED_LOCAL":
+        summary.unverified_local += 1;
+        break;
+    }
+
+    if (status === "FRESH" || localStatus === "VERIFIED_LOCAL") {
+      provenRows += 1;
+    }
   }
 
   // guard_ok is false iff any INVALID row or any global integrity error exists.
+  // NOTE: this deliberately says nothing about whether anything is PROVEN — it is
+  // a policy-block check, and changing that would flip every existing CI gate.
+  // `acceptance_claim` below is the field that answers the proof question.
   const guardOk = summary.invalid === 0 && globalIntegrity.length === 0;
+
+  const totalRows = outRows.length;
+  // Acceptance is claimable only when every row is proven by some tier AND no
+  // policy/integrity error is outstanding. An UNBOUND row is never proven, so a
+  // matrix with unbound rows can never claim acceptance — which is the point.
+  const claimable = totalRows > 0 && provenRows === totalRows && guardOk;
+  const statement = claimable
+    ? `SUPPORTED — ${provenRows} of ${totalRows} behaviours verified`
+    : `NOT_SUPPORTED — ${provenRows} of ${totalRows} behaviours verified`;
 
   return {
     schema: STATUS_SCHEMA_ID,
@@ -890,6 +947,12 @@ export function deriveFreshness(input: DeriveFreshnessInput): FreshnessStatus {
     product_root: input.product_root ?? ".",
     policy_mode: input.policy_mode,
     guard_ok: guardOk,
+    acceptance_claim: {
+      proven: provenRows,
+      total: totalRows,
+      claimable,
+      statement
+    },
     summary,
     integrity_errors: allIntegrity,
     rows: outRows

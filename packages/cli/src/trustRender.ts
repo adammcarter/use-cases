@@ -84,6 +84,12 @@ interface ScanGate {
 interface ScanData {
   status: {
     summary: { fresh: number; suspect: number; unproven: number; unbound: number; invalid: number };
+    acceptance_claim?: {
+      proven: number;
+      total: number;
+      claimable: boolean;
+      statement: string;
+    };
     rows: FreshnessRow[];
   };
   gate?: ScanGate;
@@ -132,6 +138,19 @@ function renderScan(data: ScanData): string[] {
   if (summary.invalid > 0) parts.push(`${summary.invalid} invalid`);
   const behaviourWord = total === 1 ? "behaviour" : "behaviours";
   lines.push(parts.length > 0 ? `${total} ${behaviourWord}: ${parts.join(", ")}` : `${total} ${behaviourWord}`);
+
+  // State the acceptance conclusion outright, right under the counts. `guard_ok`
+  // only means "no policy is blocking" and is green on a matrix where NOTHING is
+  // proven — agents have read that as "acceptance green" and nearly claimed it.
+  // Say the true thing where they cannot miss it.
+  const claim = data.status?.acceptance_claim;
+  if (claim) {
+    lines.push(
+      claim.claimable
+        ? `✓ acceptance: ${claim.statement}`
+        : `⚠ acceptance: ${claim.statement} — do NOT claim acceptance`
+    );
+  }
   lines.push("");
 
   // Per-row line: glyph + status word + row id, then the required action when
@@ -253,27 +272,48 @@ function renderImpact(data: ImpactData): string[] {
   const broken = data.broken_bindings ?? [];
   const lines: string[] = [];
 
-  const word = impacted.length === 1 ? "behaviour" : "behaviours";
-  lines.push(`${impacted.length} ${word} impacted by your change`);
+  // Lead with the UNION of span-hit and file-touched.
+  //
+  // The headline used to count span overlaps ONLY, so it announced "0 behaviours
+  // impacted — nothing impacted" directly above a list of rows sitting on files
+  // the change had edited. An agent that reads the headline and stops (which is
+  // what headlines are for) skipped re-verifying exactly the rows that needed it.
+  // Line-span overlap is a weak proxy for behavioural impact: you can gut a
+  // function's semantics from a helper twenty lines below the bound span. Being
+  // conservative is the whole job — a false positive costs one re-verify, a false
+  // negative ships a regression under a green badge.
+  const affected = impacted.length + touched.length;
+  const word = affected === 1 ? "behaviour" : "behaviours";
+  if (affected === 0) {
+    lines.push("0 behaviours impacted by your change");
+  } else {
+    lines.push(
+      `${affected} ${word} may be impacted by your change ` +
+        `(${impacted.length} span-hit, ${touched.length} file-touched) — re-verify these`
+    );
+  }
   if (data.base) {
     lines.push(`(diff base: ${data.base})`);
   }
   lines.push("");
 
-  if (impacted.length === 0) {
-    lines.push("  · nothing impacted — no bound span overlaps your change");
-  } else {
-    for (const binding of impacted) {
-      lines.push(`  ✗ ${binding.row_id}`);
-      lines.push(`      → re-verify (span in ${binding.file}); run \`uc verify --row ${binding.row_id}\``);
-    }
+  if (affected === 0) {
+    lines.push("  · nothing impacted — no bound span overlaps your change, and no bound file was touched");
   }
 
+  for (const binding of impacted) {
+    lines.push(`  ✗ ${binding.row_id}`);
+    lines.push(`      → re-verify (span in ${binding.file}); run \`uc verify --row ${binding.row_id}\``);
+  }
+
+  // Touched rows are impacted-until-proven-otherwise, so they get the same
+  // runnable next command rather than being listed as trivia.
   if (touched.length > 0) {
     lines.push("");
-    lines.push(`touched (file changed, span not hit) — ${touched.length}:`);
+    lines.push(`touched (file changed, span not hit) — ${touched.length}, treat as affected until re-verified:`);
     for (const binding of touched) {
-      lines.push(`  · ${binding.row_id} (${binding.file})`);
+      lines.push(`  ? ${binding.row_id} (${binding.file})`);
+      lines.push(`      → re-verify to be sure; run \`uc verify --row ${binding.row_id}\``);
     }
   }
 

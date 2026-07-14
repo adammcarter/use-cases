@@ -346,3 +346,120 @@ describe("deriveFreshness local_status", () => {
     expect(validateFreshnessStatus(status).ok).toBe(true);
   });
 });
+
+// ---------------------------------------------------------------------------
+// The summary carried only the SIGNED axis (fresh/suspect/unproven/unbound), so
+// a fully-green keyless matrix still read `fresh: 0, unproven: N` — the local
+// axis it actually gates on day to day was invisible, and agents "fixed" rows
+// that were never broken. Counts for the local axis are additive; nothing that
+// already existed moves or changes meaning.
+// ---------------------------------------------------------------------------
+describe("summary carries the local axis", () => {
+  test("counts verified_local / stale_local / unverified_local alongside the signed axis", () => {
+    const rowA = makeRow({ row_id: "checkout.apply_coupon" });
+    const rowB = makeRow({ row_id: "checkout.refund_order" });
+    const rowC = makeRow({ row_id: "checkout.void_order" });
+    const slugA = "checkout.apply_coupon#handler";
+    const slugB = "checkout.refund_order#handler";
+    const slugC = "checkout.void_order#handler";
+    const bindA = makeBinding(slugA);
+    const bindB = makeBinding(slugB);
+    const bindC = makeBinding(slugC);
+
+    const status = run({
+      rows: [rowA, rowB, rowC],
+      registry: makeRegistry([
+        [rowA.row_id, slugA],
+        [rowB.row_id, slugB],
+        [rowC.row_id, slugC]
+      ]),
+      scan: makeScan([bindA, bindB, bindC]),
+      current_context_hashes: new Map([
+        [rowA.row_id, CONTEXT_HASH],
+        [rowB.row_id, CONTEXT_HASH],
+        [rowC.row_id, CONTEXT_HASH]
+      ]),
+      local_results: [
+        // A: current -> VERIFIED_LOCAL. B: context drifted -> STALE_LOCAL.
+        // C: no result at all -> UNVERIFIED_LOCAL.
+        makeLocalResult(rowA, [bindA]),
+        makeLocalResult(rowB, [bindB], { context_hash: OTHER_CONTEXT_HASH })
+      ]
+    });
+
+    expect(status.summary.verified_local).toBe(1);
+    expect(status.summary.stale_local).toBe(1);
+    expect(status.summary.unverified_local).toBe(1);
+    // The signed axis is untouched: no proofs, so every row is still UNPROVEN.
+    expect(status.summary.fresh).toBe(0);
+    expect(status.summary.unproven).toBe(3);
+    expect(validateFreshnessStatus(status).ok).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// `guard_ok` answers "is any policy blocking?", NOT "is anything proven?" — so it
+// reads `true` on a matrix where zero rows are verified. Two independent field
+// reports record agents nearly claiming acceptance off that green boolean.
+// `guard_ok` KEEPS its meaning (existing gates must not flip); we add a field
+// that states the acceptance conclusion outright, so an agent has a true thing
+// to quote.
+// ---------------------------------------------------------------------------
+describe("acceptance_claim states the conclusion guard_ok does not", () => {
+  test("nothing proven => claimable false, even though guard_ok is true", () => {
+    const row = makeRow();
+    const binding = makeBinding(SLUG);
+    const status = run({
+      rows: [row],
+      registry: makeRegistry([[row.row_id, SLUG]]),
+      scan: makeScan([binding]),
+      current_context_hashes: new Map([[row.row_id, CONTEXT_HASH]]),
+      local_results: []
+    });
+
+    // The pre-existing gate is unchanged — nothing is INVALID, so it stays green.
+    expect(status.guard_ok).toBe(true);
+    // …but the acceptance conclusion is the honest one.
+    expect(status.acceptance_claim.proven).toBe(0);
+    expect(status.acceptance_claim.total).toBe(1);
+    expect(status.acceptance_claim.claimable).toBe(false);
+    expect(status.acceptance_claim.statement).toContain("NOT_SUPPORTED");
+    expect(validateFreshnessStatus(status).ok).toBe(true);
+  });
+
+  test("every row locally verified => claimable true with no signed proof", () => {
+    const row = makeRow();
+    const binding = makeBinding(SLUG);
+    const status = run({
+      rows: [row],
+      registry: makeRegistry([[row.row_id, SLUG]]),
+      scan: makeScan([binding]),
+      current_context_hashes: new Map([[row.row_id, CONTEXT_HASH]]),
+      local_results: [makeLocalResult(row, [binding])]
+    });
+
+    expect(status.acceptance_claim.proven).toBe(1);
+    expect(status.acceptance_claim.total).toBe(1);
+    expect(status.acceptance_claim.claimable).toBe(true);
+    expect(validateFreshnessStatus(status).ok).toBe(true);
+  });
+
+  test("an UNBOUND row is never proven, so it blocks the claim", () => {
+    const bound = makeRow({ row_id: "checkout.apply_coupon" });
+    const unbound = makeRow({ row_id: "checkout.orphan" });
+    const binding = makeBinding(SLUG);
+    const status = run({
+      rows: [bound, unbound],
+      registry: makeRegistry([[bound.row_id, SLUG]]),
+      scan: makeScan([binding]),
+      current_context_hashes: new Map([[bound.row_id, CONTEXT_HASH]]),
+      local_results: [makeLocalResult(bound, [binding])]
+    });
+
+    expect(status.summary.unbound).toBe(1);
+    expect(status.acceptance_claim.proven).toBe(1);
+    expect(status.acceptance_claim.total).toBe(2);
+    expect(status.acceptance_claim.claimable).toBe(false);
+    expect(validateFreshnessStatus(status).ok).toBe(true);
+  });
+});
