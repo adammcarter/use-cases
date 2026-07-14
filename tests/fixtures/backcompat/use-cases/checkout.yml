@@ -1,0 +1,124 @@
+schema_version: 1
+feature:
+  id: checkout
+  name: Checkout
+  summary: A tiny, hermetic fixture used to freeze the CLI's JSON contract across versions.
+use_cases:
+  # Bound + verifiable with a trivial `echo` verifier: no pytest, no network, no build.
+  - id: checkout.apply_coupon
+    title: Apply a valid coupon
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    actor: shopper
+    intent: Apply a valid coupon to a cart.
+    preconditions:
+      - A cart exists.
+    trigger: The shopper submits a coupon code.
+    scenarios:
+      - id: checkout.apply_coupon.web
+        kind: steps
+        steps:
+          - The shopper submits a coupon code.
+    observable_outcomes:
+      - The cart total reflects the discount.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        coupon_check:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - echo
+            - coupon-ok
+          inputs: []
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - coupon_check
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  - id: checkout.refund_order
+    title: Refund an order
+    lifecycle: active
+    value_tier: core
+    journey_role: edge
+    usage_frequency: occasional
+    actor: shopper
+    intent: Refund a completed order.
+    preconditions:
+      - An order exists.
+    trigger: The shopper requests a refund.
+    scenarios:
+      - id: checkout.refund_order.web
+        kind: steps
+        steps:
+          - The shopper requests a refund.
+    observable_outcomes:
+      - The order total is refunded.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        refund_check:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - echo
+            - refund-ok
+          inputs: []
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - refund_check
+          minimum_count: 1
+    approval_policy:
+      mode: none
+
+  # Deliberately never bound, so the UNBOUND branch of every command is exercised.
+  - id: checkout.never_bound
+    title: A behaviour nobody has bound yet
+    lifecycle: active
+    value_tier: supporting
+    journey_role: edge
+    usage_frequency: rare
+    actor: shopper
+    intent: Exercise the UNBOUND status.
+    preconditions:
+      - Nothing.
+    trigger: Never.
+    scenarios:
+      - id: checkout.never_bound.web
+        kind: steps
+        steps:
+          - Nothing happens.
+    observable_outcomes:
+      - Nothing observable happens.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        noop_check:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - echo
+            - noop-ok
+          inputs: []
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - noop_check
+          minimum_count: 1
+    approval_policy:
+      mode: none
