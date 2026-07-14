@@ -538,6 +538,31 @@ describe("verify command", () => {
     expect(planned[0].command).toBeNull();
   });
 
+  // The nastiest shape of the truncation bug: targeting a row that is UNBOUND
+  // resolves to ZERO target rows, so the old truncating write emptied the ledger
+  // completely — one command, every row's evidence gone. A run that verifies
+  // nothing must write nothing away.
+  test("verifying an UNBOUND row targets nothing and leaves the ledger intact", () => {
+    const ws = makeWorkspace();
+    bind(ws, ROW_A, "Sources/Checkout/CouponService.swift");
+    bind(ws, ROW_B, "Sources/Checkout/RefundService.swift");
+    const outPath = join(ws.productRoot, "verify-results.jsonl");
+    runVerifyCommand({ ...verifyBase(ws), all: true, outPath, spawnRunner: passSpawn });
+    const before = readFileSync(outPath, "utf8");
+
+    // ROW_C was never bound, so it is not a verify target.
+    const result = runVerifyCommand({
+      ...verifyBase(ws),
+      rowId: ROW_C,
+      outPath,
+      spawnRunner: passSpawn
+    });
+    expect(result.results).toHaveLength(0);
+
+    // Both other rows' evidence survives, byte for byte.
+    expect(readFileSync(outPath, "utf8")).toBe(before);
+  });
+
   // The merge must REPLACE a row's prior record rather than append a duplicate,
   // so a re-verified row has exactly one (current) result in the ledger.
   test("re-verifying a row replaces its prior record instead of duplicating it", () => {
