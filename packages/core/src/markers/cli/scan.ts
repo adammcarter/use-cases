@@ -195,7 +195,11 @@ export function prepareScan(options: ScanCommandOptions): ScanPreparation {
       code: error.code,
       line: error.line ?? undefined,
       message: error.message,
-      binding_slug: error.binding_slug
+      binding_slug: error.binding_slug,
+      // Carry the row id through. It was dropped here, which left every
+      // registry-level error unable to say WHICH row it was about — and made a
+      // renamed row impossible to pair with the marker that replaced it.
+      row_id: error.row_id
     })),
     ...evidenceIntegrityErrors.map((error) => ({
       code: error.code,

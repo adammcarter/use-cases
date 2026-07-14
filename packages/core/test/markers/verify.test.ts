@@ -1,5 +1,5 @@
 import { generateKeyPairSync, type KeyObject } from "node:crypto";
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
@@ -478,6 +478,64 @@ describe("verify command", () => {
       .split("\n")
       .map((line) => JSON.parse(line));
     expect(records.map((record) => record.row_id).sort()).toEqual([ROW_A, ROW_B]);
+  });
+
+  // `acceptance` verifiers are often a full build, and an agent cannot tell what a
+  // verify will cost before paying for it — the single biggest reason evidence is
+  // left to rot. --dry-run says what WOULD run. A plan is never evidence: it must
+  // spawn nothing and write nothing.
+  test("--dry-run reports what would run, spawns nothing, and writes no ledger", () => {
+    const ws = makeWorkspace();
+    bind(ws, ROW_A, "Sources/Checkout/CouponService.swift");
+    bind(ws, ROW_B, "Sources/Checkout/RefundService.swift");
+    const outPath = join(ws.productRoot, "verify-results.jsonl");
+
+    let spawned = 0;
+    const countingSpawn: VerifySpawnRunner = (request) => {
+      spawned += 1;
+      return passSpawn(request);
+    };
+
+    const result = runVerifyCommand({
+      ...verifyBase(ws),
+      all: true,
+      outPath,
+      dryRun: true,
+      spawnRunner: countingSpawn
+    });
+
+    expect(result.exit_code).toBe(0);
+    expect(result.dry_run).toBe(true);
+    // Nothing ran.
+    expect(spawned).toBe(0);
+    // Nothing was written — a dry run must not touch the ledger scan reads.
+    expect(result.out_path).toBeNull();
+    expect(existsSync(outPath)).toBe(false);
+    // No result records: a plan is not evidence.
+    expect(result.results).toHaveLength(0);
+
+    // …but it says exactly what a real run would execute.
+    const planned = result.planned ?? [];
+    expect(planned.map((entry) => entry.row_id).sort()).toEqual([ROW_A, ROW_B]);
+    expect(planned.every((entry) => entry.disposition === "run")).toBe(true);
+    expect(planned.find((entry) => entry.row_id === ROW_A)?.command).toEqual(["echo", "coupon-ok"]);
+  });
+
+  test("--dry-run reports a row whose verifier cannot be resolved as blocked", () => {
+    const ws = makeWorkspace();
+    bind(ws, ROW_C, "Sources/Checkout/ThingService.swift");
+    const result = runVerifyCommand({
+      ...verifyBase(ws),
+      all: true,
+      dryRun: true,
+      spawnRunner: passSpawn
+    });
+
+    const planned = result.planned ?? [];
+    expect(planned).toHaveLength(1);
+    expect(planned[0].disposition).toBe("blocked");
+    expect(planned[0].verifier_id).toBe("no_such_verifier");
+    expect(planned[0].command).toBeNull();
   });
 
   // The merge must REPLACE a row's prior record rather than append a duplicate,

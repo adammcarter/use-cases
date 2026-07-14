@@ -470,6 +470,7 @@ export const markersVerifyCommand: CliCommand = {
     { key: "row", name: "--row", kind: "string", valueName: "<id>", summary: "Target row id." },
     { key: "all", name: "--all", kind: "boolean", summary: "Target every bound row." },
     { key: "out", name: "--out", kind: "string", valueName: "<path>", summary: "Write the unsigned results ledger (feed this to `prove --verification-results`). Keep it OUTSIDE the evidence dir." },
+    { key: "dryRun", name: "--dry-run", kind: "boolean", summary: "Show which verifiers WOULD run for the targeted rows. Runs nothing, writes nothing." },
     ...trustedKeyFlags,
     { key: "generatedAt", name: "--generated-at", kind: "string", valueName: "<iso>", summary: "Override the generated-at timestamp." },
     { key: "baseRef", name: "--base-ref", kind: "string", valueName: "<ref>", summary: "Diff base for the append-only check." }
@@ -506,6 +507,7 @@ export const markersVerifyCommand: CliCommand = {
       all,
       rowId,
       outPath,
+      dryRun: flags.dryRun as boolean | undefined,
       generatedAt: (flags.generatedAt as string | undefined) ?? new Date().toISOString(),
       baseRef: flags.baseRef as string | undefined,
       repoCwd: ctx.workspace_root

@@ -238,8 +238,17 @@ interface VerifyResult {
   status: "pass" | "fail" | "blocked";
 }
 
+interface VerifyPlanned {
+  row_id: string;
+  verifier_id: string | null;
+  command: string[] | null;
+  disposition: "run" | "blocked" | "invalid";
+}
+
 interface VerifyData {
   results: VerifyResult[];
+  planned?: VerifyPlanned[];
+  dry_run?: boolean;
 }
 
 function verifyBadge(status: VerifyResult["status"]): string {
@@ -250,6 +259,36 @@ function verifyBadge(status: VerifyResult["status"]): string {
 function renderVerify(data: VerifyData): string[] {
   const results = data.results ?? [];
   const lines: string[] = [];
+
+  // A dry run has no results by design — it ran nothing. Render the PLAN instead,
+  // or the human view would report "no bound behaviours to verify", which is a lie.
+  if (data.dry_run) {
+    const planned = data.planned ?? [];
+    const willRun = planned.filter((entry) => entry.disposition === "run");
+    const behaviourWord = planned.length === 1 ? "behaviour" : "behaviours";
+    lines.push(
+      planned.length === 0
+        ? "verify --dry-run: no bound behaviours to verify"
+        : `verify --dry-run: ${planned.length} ${behaviourWord} — ${willRun.length} would run. Nothing was executed; nothing was written.`
+    );
+    lines.push("");
+    for (const entry of planned) {
+      if (entry.disposition === "run") {
+        lines.push(`  · ${entry.row_id}`);
+        lines.push(`      would run [${entry.verifier_id}]: ${(entry.command ?? []).join(" ")}`);
+      } else {
+        lines.push(`  ✗ ${entry.row_id} — ${entry.disposition.toUpperCase()}`);
+        lines.push(
+          entry.disposition === "blocked"
+            ? `      no runnable verifier${entry.verifier_id ? ` (${entry.verifier_id} is not declared)` : ""}`
+            : "      resolve the binding integrity errors first (`uc scan`)"
+        );
+      }
+    }
+    lines.push("");
+    lines.push("Re-run without --dry-run to actually verify.");
+    return lines;
+  }
 
   const passed = results.filter((r) => r.status === "pass").length;
   const failed = results.filter((r) => r.status === "fail").length;

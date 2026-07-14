@@ -54,6 +54,28 @@ removed.
   `uc validate-ledger`. An `UNBOUND` row's `required_action` was `null` in the
   core — the status most likely to need a next command — and now carries the bind
   command.
+- **Scan detects a likely rename.** Renaming a bound row produced `REGISTRY_ROW_MISSING`
+  + `UNREGISTERED_BINDING` — "both messages are true and useless." The tool could
+  see both halves (a registered row that vanished, a near-identical unregistered
+  marker that appeared) and made you work it out. It now pairs them and names the
+  rename in both errors. Conservative: it suggests a rename only when exactly one
+  candidate is plausible, and stays silent rather than guess wrong.
+  **It also tells the truth about the cure.** The binding registry is append-only
+  with no retract event, and `uc bind` validates the registry first — so it fails
+  *closed* on this very error. The only sequence that actually works today is to
+  delete the stale line from `.use-cases/bindings.jsonl` and then re-register, and
+  that is what the remediation says. (A first-class `uc bind --rename` needs a new
+  registry event type, which would break mixed-version teams — so it is 0.5.0 work,
+  not a patch.)
+- **`uc verify --dry-run`** — show which verifiers would run for the targeted rows,
+  run nothing, write nothing. `bind` and `prove` both had one; `verify`, the
+  expensive command, did not. An `acceptance` verifier is often a full build, and
+  not being able to see the cost before paying it is a leading reason evidence is
+  left to rot. A plan is never evidence: it spawns nothing and mints no record.
+- **`uc bind` ends by telling you the row proves nothing yet** — a new `next_command`
+  (`uc verify --row <id>`). Binding succeeds and *feels* like progress, so rows get
+  bound and left `UNPROVEN` forever ("all 7 of my rows are in exactly that state
+  right now").
 - **`uc init` writes a `.gitignore`** covering `showcase-runs/` and
   `.use-cases/verification-results.jsonl`. Transient run output was left untracked
   and unignored, dirtying the adopter's tree and tripping their own clean-tree

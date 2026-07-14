@@ -68,6 +68,10 @@ export interface BindCommandResult {
     span_end_line: number;
     span_sha256: string;
   };
+  // Binding succeeds and FEELS like progress, so rows get bound and then left
+  // UNPROVEN forever ("all 7 of my rows are in exactly that state right now").
+  // A successful bind now ends by naming the command that actually proves the row.
+  next_command?: string;
   errors: BindCommandError[];
 }
 
@@ -226,6 +230,7 @@ export function runBindCommand(options: BindCommandOptions): BindCommandResult {
     ok: true,
     registry_event_appended: true,
     scan_result: scanResult,
+    next_command: `uc verify --row ${options.rowId}`,
     errors: []
   };
 }

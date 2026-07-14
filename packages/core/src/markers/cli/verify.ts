@@ -84,6 +84,10 @@ export interface VerifyCommandOptions {
   rowId?: string;
   // When set, the results ledger is written here (one JSONL line per row).
   outPath?: string;
+  // Show WHAT would run, run nothing, write nothing. `acceptance` verifiers are
+  // often a full build — the single biggest reason an agent lets evidence go
+  // stale is that it cannot tell what a verify will cost before paying for it.
+  dryRun?: boolean;
   // Injected runner; defaults to spawnSync in the repo cwd.
   spawnRunner?: VerifySpawnRunner;
   fs?: MarkerFs;
@@ -93,12 +97,25 @@ export interface VerifyCommandOptions {
   repoCwd?: string;
 }
 
+// What a --dry-run says it WOULD do for one row: nothing is run and nothing is
+// written, so this is a plan, never evidence.
+export interface VerifyPlannedRow {
+  row_id: string;
+  verifier_id: string | null;
+  command: string[] | null;
+  // "run" | "blocked" (no resolvable verifier) | "invalid" (binding integrity).
+  disposition: "run" | "blocked" | "invalid";
+}
+
 export interface VerifyCommandResult {
   exit_code: number;
   ok: boolean;
   command: "verify";
   results: VerificationResultRecord[];
   out_path: string | null;
+  // Only populated by --dry-run. Empty on a real run.
+  planned?: VerifyPlannedRow[];
+  dry_run?: boolean;
   errors: Array<{ code: string; message: string }>;
 }
 
@@ -211,6 +228,54 @@ export function runVerifyCommand(options: VerifyCommandOptions): VerifyCommandRe
       .filter((row) => row.status !== "UNBOUND")
       .map((row) => row.row_id)
       .sort((left, right) => (left < right ? -1 : left > right ? 1 : 0));
+  }
+
+  // --dry-run: resolve exactly what a real run WOULD execute, then stop. Nothing
+  // is spawned, no ledger is written, and no result record is minted — a plan is
+  // not evidence.
+  if (options.dryRun) {
+    const planned: VerifyPlannedRow[] = [];
+    for (const rowId of targetRowIds) {
+      const statusRow = prepared.status.rows.find((row) => row.row_id === rowId);
+      const loadedRow = prepared.loaded.rows.find((row) => row.row_id === rowId);
+      if (!statusRow || !loadedRow) {
+        continue;
+      }
+      if (statusRow.status === "INVALID") {
+        planned.push({ row_id: rowId, verifier_id: null, command: null, disposition: "invalid" });
+        continue;
+      }
+      const verifiers = resolveRowVerifiers(
+        { slug: rowId, verification_policy: loadedRow.verification_policy },
+        options.context.verifiers
+      );
+      const blocked = verifiers.find((verifier) => verifier.status === "blocked");
+      if (verifiers.length === 0 || blocked) {
+        planned.push({
+          row_id: rowId,
+          verifier_id: blocked ? blocked.verifier_id : null,
+          command: null,
+          disposition: "blocked"
+        });
+        continue;
+      }
+      for (const verifier of verifiers as ResolvedVerifier[]) {
+        planned.push({
+          row_id: rowId,
+          verifier_id: verifier.verifier_id,
+          command: verifier.command,
+          disposition: "run"
+        });
+      }
+    }
+    return fail({
+      exit_code: 0,
+      results: [],
+      out_path: null,
+      planned,
+      dry_run: true,
+      errors: []
+    });
   }
 
   const results: VerificationResultRecord[] = [];

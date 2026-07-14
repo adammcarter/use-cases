@@ -246,6 +246,71 @@ export interface FreshnessStatus {
 
 const DEFAULT_TOOL = { name: PRODUCT_NAME, version: UCM_VERSION };
 
+// A rename is only suggested well above chance similarity. Tuned so that a real
+// rename (mcp_whiteboard -> mcp_stage, which shares its whole namespace prefix)
+// is caught, while an unrelated new row in a different feature is not.
+const RENAME_SIMILARITY_THRESHOLD = 0.6;
+
+// Sørensen–Dice over character bigrams: cheap, no dependency, and forgiving of
+// the insert/delete edits a rename actually makes.
+function bigrams(value: string): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (let index = 0; index < value.length - 1; index += 1) {
+    const gram = value.slice(index, index + 2);
+    counts.set(gram, (counts.get(gram) ?? 0) + 1);
+  }
+  return counts;
+}
+
+function similarity(left: string, right: string): number {
+  if (left === right) {
+    return 1;
+  }
+  const leftGrams = bigrams(left);
+  const rightGrams = bigrams(right);
+  let shared = 0;
+  for (const [gram, count] of leftGrams) {
+    shared += Math.min(count, rightGrams.get(gram) ?? 0);
+  }
+  const total = [...leftGrams.values()].reduce((sum, n) => sum + n, 0) +
+    [...rightGrams.values()].reduce((sum, n) => sum + n, 0);
+  return total === 0 ? 0 : (2 * shared) / total;
+}
+
+// Map each unregistered binding slug -> the row id it was most likely renamed
+// FROM. Conservative on purpose: a candidate must clear the threshold AND be
+// strictly better than every other candidate. An ambiguous rename says nothing,
+// because a confidently wrong suggestion is worse than none.
+function inferRenames(
+  unregistered: { binding_slug: string; row_id: string }[],
+  missing: { binding_slug: string; row_id: string }[]
+): Map<string, string> {
+  const result = new Map<string, string>();
+  if (missing.length === 0) {
+    return result;
+  }
+
+  for (const detection of unregistered) {
+    const scored = missing
+      .map((candidate) => ({
+        rowId: candidate.row_id,
+        score: similarity(detection.row_id, candidate.row_id)
+      }))
+      .filter((candidate) => candidate.score >= RENAME_SIMILARITY_THRESHOLD)
+      .sort((left, right) => right.score - left.score);
+
+    if (scored.length === 0) {
+      continue;
+    }
+    // Ambiguous: two candidates fit equally well. Refuse to guess.
+    if (scored.length > 1 && scored[0].score === scored[1].score) {
+      continue;
+    }
+    result.set(detection.binding_slug, scored[0].rowId);
+  }
+  return result;
+}
+
 function rowIdOfSlug(slug: string | undefined): string | undefined {
   if (slug === undefined) {
     return undefined;
@@ -584,12 +649,7 @@ export function deriveFreshness(input: DeriveFreshnessInput): FreshnessStatus {
   const scanErrorsByRow = new Map<string, MarkerError[]>();
   const globalIntegrity: IntegrityErrorOut[] = [
     ...(input.global_integrity_errors ?? []).map(
-      (raw) =>
-        ({
-          code: "LEDGER_INTEGRITY_ERROR",
-          remediation: "inspect the ledger with `uc validate-ledger` — a proof/binding ledger entry is malformed or out of order",
-          ...raw
-        }) as IntegrityErrorOut
+      (raw) => ({ code: "LEDGER_INTEGRITY_ERROR", ...raw }) as IntegrityErrorOut
     )
   ];
   for (const error of input.scan.errors) {
@@ -614,6 +674,64 @@ export function deriveFreshness(input: DeriveFreshnessInput): FreshnessStatus {
     const list = unregisteredByRow.get(detection.row_id) ?? [];
     list.push(detection);
     unregisteredByRow.set(detection.row_id, list);
+  }
+
+  // Likely renames. A rename leaves two halves the tool can already see: the OLD
+  // row, which no longer exists, and an UNREGISTERED marker carrying a
+  // near-identical NEW id. Pair them so the error names the cause instead of only
+  // the wreckage. Advisory: changes no status and no trust verdict — remediation
+  // text only.
+  //
+  // The old half arrives by TWO routes, and a real rename uses the second:
+  //   - reconciliation.missing — the row still exists in YAML but its marker is gone.
+  //   - REGISTRY_ROW_MISSING   — the row id is no longer in YAML at all, so registry
+  //     materialization rejects its binding outright and it never reaches the
+  //     registry map. Renaming a row in the matrix lands here, NOT in `missing`.
+  const orphanedRegistryRows = globalIntegrity
+    .filter((error) => error.code === "REGISTRY_ROW_MISSING" && error.row_id)
+    .map((error) => ({ binding_slug: error.binding_slug ?? "", row_id: error.row_id as string }));
+  const renamedFrom = inferRenames(reconciliation.unregistered, [
+    ...reconciliation.missing,
+    ...orphanedRegistryRows
+  ]);
+
+  // The reverse view: old row id -> the new id it was probably renamed TO. This is
+  // what the OLD half of the rename (REGISTRY_ROW_MISSING) needs to explain itself.
+  const renamedTo = new Map<string, string>();
+  for (const [bindingSlug, previousRowId] of renamedFrom) {
+    const detection = reconciliation.unregistered.find(
+      (entry) => entry.binding_slug === bindingSlug
+    );
+    if (detection) {
+      renamedTo.set(previousRowId, detection.row_id);
+    }
+  }
+
+  // Give each global error the cure for ITS code, not a blanket one.
+  for (const error of globalIntegrity) {
+    if (error.remediation) {
+      continue;
+    }
+    if (error.code === "REGISTRY_ROW_MISSING") {
+      const newRowId = error.row_id ? renamedTo.get(error.row_id) : undefined;
+      // Tell the truth about the cure. The registry is append-only and has NO
+      // retract event, so the stale registration cannot be superseded — and
+      // `uc bind` validates the registry first, so it fails closed on this very
+      // error. The only sequence that actually works today is: drop the stale
+      // line, then re-register. Verified end-to-end; do not "simplify" this to a
+      // bare `uc bind`, which cannot succeed while this error stands.
+      error.remediation = newRowId
+        ? `looks like ${error.row_id} was renamed to ${newRowId}. The binding registry is ` +
+          `append-only with no retract event, so \`uc bind\` will fail closed until the stale ` +
+          `registration is gone: delete the ${error.row_id} line from .use-cases/bindings.jsonl, ` +
+          `then run \`uc bind --row ${newRowId} --file <file> --register-existing\``
+        : `the registry still binds ${error.row_id ?? "a row"}, which no longer exists in the ` +
+          `matrix. Restore the row to the matrix, or delete its line from ` +
+          `.use-cases/bindings.jsonl and re-register the binding against the row that replaced it`;
+    } else if (error.code === "LEDGER_INTEGRITY_ERROR") {
+      error.remediation =
+        "inspect the ledger with `uc validate-ledger` — a proof/binding ledger entry is malformed or out of order";
+    }
   }
 
   // Trusted passing proof events grouped by row (newest first).
@@ -697,6 +815,7 @@ export function deriveFreshness(input: DeriveFreshnessInput): FreshnessStatus {
       });
     }
     for (const detection of unregisteredByRow.get(rowId) ?? []) {
+      const previousId = renamedFrom.get(detection.binding_slug);
       rowIntegrity.push({
         code: "UNREGISTERED_BINDING",
         row_id: rowId,
@@ -704,24 +823,35 @@ export function deriveFreshness(input: DeriveFreshnessInput): FreshnessStatus {
         file_path: detection.file_path,
         line: detection.start_line,
         message: `current marker ${detection.binding_slug} is not registered in the binding registry`,
-        remediation:
-          `register the marker already in the source with ` +
-          `\`uc bind --row ${rowId} --file ${detection.file_path} --register-existing\`` +
-          `, or delete the marker if it is not wanted`
+        remediation: previousId
+          ? `looks like ${rowId} was renamed from ${previousId}. Delete the ${previousId} line ` +
+            `from .use-cases/bindings.jsonl (the registry is append-only and cannot retract it, ` +
+            `so bind fails closed until it is gone), then run ` +
+            `\`uc bind --row ${rowId} --file ${detection.file_path} --register-existing\``
+          : `register the marker already in the source with ` +
+            `\`uc bind --row ${rowId} --file ${detection.file_path} --register-existing\`` +
+            `, or delete the marker if it is not wanted`
       });
     }
     if (!inputRow) {
       // A marker/registry references a row that does not exist in the loaded
       // rows (spec 7.1 "marker row id does not exist" / "registry row id does
       // not exist").
+      const renamedSlug = (unregisteredByRow.get(rowId) ?? []).find((detection) =>
+        renamedFrom.has(detection.binding_slug)
+      );
+      const previousId = renamedSlug ? renamedFrom.get(renamedSlug.binding_slug) : undefined;
       rowIntegrity.push({
         code: "ROW_NOT_FOUND",
         row_id: rowId,
         message: `row ${rowId} is bound or registered but is not a known use-case row`,
-        remediation:
-          `add the row to the matrix, or — if the row id was RENAMED — update the ` +
-          `\`@use-case:\` marker(s) in source to the new id and re-register with ` +
-          `\`uc bind --row <new-id> --file <file> --register-existing\``
+        remediation: previousId
+          ? `looks like ${previousId} was renamed to ${rowId} — add the renamed row to the ` +
+            `matrix (or rename it back), then re-register with ` +
+            `\`uc bind --row ${rowId} --file <file> --register-existing\``
+          : `add the row to the matrix, or — if the row id was RENAMED — update the ` +
+            `\`@use-case:\` marker(s) in source to the new id and re-register with ` +
+            `\`uc bind --row <new-id> --file <file> --register-existing\``
       });
     }
 
