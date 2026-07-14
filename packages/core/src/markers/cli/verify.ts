@@ -327,9 +327,51 @@ export function runVerifyCommand(options: VerifyCommandOptions): VerifyCommandRe
 
   // Write the results ledger (one JSONL line per row) if requested. This is an
   // unsigned per-run snapshot — NOT the append-only trusted evidence ledger.
+  //
+  // MERGE, never truncate. This run only targeted `targetRowIds`; a row it did not
+  // touch still has a valid prior result, and blowing that away would silently drop
+  // every other row to UNVERIFIED_LOCAL (scan reads exactly this file). So: keep the
+  // rows this run did not verify, replace the ones it did. Retained rows are kept as
+  // their original line text so fields this version does not model survive a merge.
+  // Staleness is NOT our call here — deriveFreshness re-checks each retained record's
+  // hashes against the current code and demotes it if it no longer matches.
   let outPath: string | null = null;
   if (options.outPath) {
-    const body = results.map((record) => JSON.stringify(record)).join("\n");
+    const supersededRowIds = new Set(results.map((record) => record.row_id));
+    const merged: { rowId: string; line: string }[] = [];
+
+    for (const raw of (fs.readText(options.outPath) ?? "").split("\n")) {
+      const line = raw.trim();
+      if (line === "") {
+        continue;
+      }
+      let record: unknown;
+      try {
+        record = JSON.parse(line);
+      } catch {
+        continue; // drop a malformed line rather than propagating corruption
+      }
+      if (typeof record !== "object" || record === null) {
+        continue;
+      }
+      const rowId = (record as Record<string, unknown>).row_id;
+      if (typeof rowId !== "string" || supersededRowIds.has(rowId)) {
+        continue; // this run re-verified the row: its fresh record wins
+      }
+      merged.push({ rowId, line });
+    }
+
+    for (const record of results) {
+      merged.push({ rowId: record.row_id, line: JSON.stringify(record) });
+    }
+
+    // Sort by row_id so the ledger is deterministic (and diffs/merges stay sane)
+    // regardless of the order rows happened to be verified in.
+    merged.sort((left, right) =>
+      left.rowId < right.rowId ? -1 : left.rowId > right.rowId ? 1 : 0
+    );
+
+    const body = merged.map((entry) => entry.line).join("\n");
     fs.writeText(options.outPath, body === "" ? "" : `${body}\n`);
     outPath = options.outPath;
   }

@@ -447,6 +447,58 @@ describe("verify command", () => {
     expect(records.map((record) => record.row_id)).toEqual([ROW_A, ROW_B]);
     expect(records.every((record) => record.schema === "ucase-verification-result-v1")).toBe(true);
   });
+
+  // Data loss (field report, 0.4.0): --out was written with a truncating write of
+  // ONLY the targeted rows, so `verify --row A` erased row B's result from the
+  // ledger scan auto-discovers -> every OTHER row silently fell back to
+  // UNVERIFIED_LOCAL. Verifying one row must never destroy another row's evidence.
+  test("--row merges into the existing ledger and preserves other rows' results", () => {
+    const ws = makeWorkspace();
+    bind(ws, ROW_A, "Sources/Checkout/CouponService.swift");
+    bind(ws, ROW_B, "Sources/Checkout/RefundService.swift");
+    const outPath = join(ws.productRoot, "verify-results.jsonl");
+
+    // Both rows verified: the ledger holds A and B.
+    runVerifyCommand({ ...verifyBase(ws), all: true, outPath, spawnRunner: passSpawn });
+    expect(readFileSync(outPath, "utf8").trim().split("\n")).toHaveLength(2);
+
+    // Now verify ONLY row A against the same ledger.
+    const single = runVerifyCommand({
+      ...verifyBase(ws),
+      rowId: ROW_A,
+      outPath,
+      spawnRunner: passSpawn
+    });
+    expect(single.exit_code).toBe(0);
+
+    // Row B's result MUST still be on disk — it was never re-run, and nothing
+    // about it changed.
+    const records = readFileSync(outPath, "utf8")
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line));
+    expect(records.map((record) => record.row_id).sort()).toEqual([ROW_A, ROW_B]);
+  });
+
+  // The merge must REPLACE a row's prior record rather than append a duplicate,
+  // so a re-verified row has exactly one (current) result in the ledger.
+  test("re-verifying a row replaces its prior record instead of duplicating it", () => {
+    const ws = makeWorkspace();
+    bind(ws, ROW_A, "Sources/Checkout/CouponService.swift");
+    const outPath = join(ws.productRoot, "verify-results.jsonl");
+
+    runVerifyCommand({ ...verifyBase(ws), rowId: ROW_A, outPath, spawnRunner: passSpawn });
+    runVerifyCommand({ ...verifyBase(ws), rowId: ROW_A, outPath, spawnRunner: failSpawn });
+
+    const records = readFileSync(outPath, "utf8")
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line));
+    expect(records).toHaveLength(1);
+    // The LATEST run wins: the fail result replaced the earlier pass.
+    expect(records[0].row_id).toBe(ROW_A);
+    expect(records[0].status).toBe("fail");
+  });
 });
 
 // ---------------------------------------------------------------------------
