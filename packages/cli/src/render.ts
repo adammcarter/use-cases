@@ -15,7 +15,14 @@ interface RenderableEnvelope {
   ok?: boolean;
   complete?: boolean;
   data?: unknown;
-  diagnostics?: Array<{ code: string; severity?: string; message: string }>;
+  diagnostics?: Array<{
+    code: string;
+    severity?: string;
+    message: string;
+    source_path?: string | null;
+    json_pointer?: string | null;
+    entity_id?: string | null;
+  }>;
 }
 
 export function renderEnvelope(envelope: unknown, json: boolean): string {
@@ -69,6 +76,22 @@ function renderHumanEnvelope(record: RenderableEnvelope): string {
       const severity = diagnostic.severity ?? "info";
       const glyph = severity === "error" ? "✗" : severity === "warning" ? "!" : "·";
       lines.push(`  ${glyph} ${diagnostic.code}: ${diagnostic.message}`);
+      // Say WHERE. The diagnostic already carries the file, the JSON pointer, and
+      // (for a use-case row) the row id — the renderer used to drop all three,
+      // leaving the reader to hunt for the offending field across every file.
+      const where: string[] = [];
+      if (diagnostic.source_path) {
+        where.push(diagnostic.source_path);
+      }
+      if (diagnostic.json_pointer) {
+        where.push(diagnostic.json_pointer);
+      }
+      if (diagnostic.entity_id) {
+        where.push(`(row ${diagnostic.entity_id})`);
+      }
+      if (where.length > 0) {
+        lines.push(`      at ${where.join(" ")}`);
+      }
     }
   }
   lines.push("");

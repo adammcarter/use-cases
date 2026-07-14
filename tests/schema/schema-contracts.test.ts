@@ -239,4 +239,41 @@ describe("P2 enum diagnostics list allowed values", () => {
 
     expect(enumDiagnostic?.message).toContain("allowed: critical, core, supporting, long_tail");
   });
+
+  // Field report: "✗ enum.invalid_value: must be equal to one of the allowed
+  // values (allowed: critical, core, supporting, long_tail)" — no file, no row,
+  // no FIELD NAME. In a 36-row matrix across 3 files that is a scavenger hunt.
+  // The offending field was `value_tier`, and the error never said so, even though
+  // the json_pointer already carried it.
+  test("the message names the offending field, and the diagnostic carries the row id", () => {
+    const result = validateBySchemaId(
+      "https://use-cases.dev/schemas/v1/use-case-file.schema.json",
+      {
+        schema_version: 1,
+        use_cases: [
+          {
+            id: "checkout.apply_coupon",
+            title: "T",
+            lifecycle: "active",
+            value_tier: "nope",
+            journey_role: "primary",
+            usage_frequency: "daily",
+            observable_outcomes: ["x"],
+            approval_policy: { required: false }
+          }
+        ]
+      }
+    );
+
+    const enumDiagnostic = result.diagnostics.find(
+      (diagnostic) => diagnostic.code === "enum.invalid_value"
+    );
+
+    // Name the field in the message itself — that is what the reader is hunting for.
+    expect(enumDiagnostic?.message).toContain("value_tier");
+    // And say WHICH row it belongs to, rather than leaving entity_id null.
+    expect(enumDiagnostic?.entity_id).toBe("checkout.apply_coupon");
+    // The pointer that made both possible is still there.
+    expect(enumDiagnostic?.json_pointer).toBe("/use_cases/0/value_tier");
+  });
 });

@@ -165,6 +165,11 @@ export interface IntegrityErrorOut {
   file_path?: string;
   line?: number;
   message?: string;
+  // The runnable way OUT. Integrity messages described the wreckage
+  // ("marker X is not registered") but never the cure, leaving the reader to
+  // work out a fix the tool already knew. Every error class that HAS a
+  // mechanical remedy now carries it.
+  remediation?: string;
 }
 
 export interface FreshnessRowOut {
@@ -579,7 +584,12 @@ export function deriveFreshness(input: DeriveFreshnessInput): FreshnessStatus {
   const scanErrorsByRow = new Map<string, MarkerError[]>();
   const globalIntegrity: IntegrityErrorOut[] = [
     ...(input.global_integrity_errors ?? []).map(
-      (raw) => ({ code: "LEDGER_INTEGRITY_ERROR", ...raw }) as IntegrityErrorOut
+      (raw) =>
+        ({
+          code: "LEDGER_INTEGRITY_ERROR",
+          remediation: "inspect the ledger with `uc validate-ledger` — a proof/binding ledger entry is malformed or out of order",
+          ...raw
+        }) as IntegrityErrorOut
     )
   ];
   for (const error of input.scan.errors) {
@@ -693,7 +703,11 @@ export function deriveFreshness(input: DeriveFreshnessInput): FreshnessStatus {
         binding_slug: detection.binding_slug,
         file_path: detection.file_path,
         line: detection.start_line,
-        message: `current marker ${detection.binding_slug} is not registered in the binding registry`
+        message: `current marker ${detection.binding_slug} is not registered in the binding registry`,
+        remediation:
+          `register the marker already in the source with ` +
+          `\`uc bind --row ${rowId} --file ${detection.file_path} --register-existing\`` +
+          `, or delete the marker if it is not wanted`
       });
     }
     if (!inputRow) {
@@ -703,7 +717,11 @@ export function deriveFreshness(input: DeriveFreshnessInput): FreshnessStatus {
       rowIntegrity.push({
         code: "ROW_NOT_FOUND",
         row_id: rowId,
-        message: `row ${rowId} is bound or registered but is not a known use-case row`
+        message: `row ${rowId} is bound or registered but is not a known use-case row`,
+        remediation:
+          `add the row to the matrix, or — if the row id was RENAMED — update the ` +
+          `\`@use-case:\` marker(s) in source to the new id and re-register with ` +
+          `\`uc bind --row <new-id> --file <file> --register-existing\``
       });
     }
 
@@ -824,6 +842,11 @@ export function deriveFreshness(input: DeriveFreshnessInput): FreshnessStatus {
       requiredAction = `uc prove --row ${rowId}`;
     } else if (status === "INVALID") {
       requiredAction = "uc scan (resolve binding integrity errors)";
+    } else if (status === "UNBOUND") {
+      // Was null: an UNBOUND row is the single most common thing a reader needs a
+      // next command for, and the core knew it but only the pre-commit formatter
+      // ever said it.
+      requiredAction = `uc bind --row ${rowId} --file <file> --mode <explicit|swift-func>`;
     }
 
     // Keyless local tier (0.1.0). Only emitted when the caller supplied

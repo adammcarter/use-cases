@@ -117,7 +117,7 @@ export function validateBySchemaId(schemaId: string, value: unknown, sourcePath:
   const ok = validator(value);
   return {
     ok,
-    diagnostics: ok ? [] : mapAjvErrors(validator.errors ?? [], sourcePath)
+    diagnostics: ok ? [] : mapAjvErrors(validator.errors ?? [], sourcePath, value)
   };
 }
 
@@ -186,17 +186,69 @@ function findSchemasDir(): string {
   return found;
 }
 
-function mapAjvErrors(errors: ErrorObject[], sourcePath: string | null): Diagnostic[] {
+function mapAjvErrors(
+  errors: ErrorObject[],
+  sourcePath: string | null,
+  data?: unknown
+): Diagnostic[] {
   return errors.map((error) => {
     const missingProperty =
       error.keyword === "required" && isRecord(error.params)
         ? String(error.params.missingProperty)
         : null;
     return {
-      ...diagnostic(diagnosticCode(error, missingProperty), enumMessage(error), sourcePath),
+      ...diagnostic(
+        diagnosticCode(error, missingProperty),
+        locatedMessage(error, missingProperty),
+        sourcePath,
+        entityIdFor(error, data)
+      ),
       json_pointer: error.instancePath || null
     };
   });
+}
+
+// Name the offending FIELD in the message. AJV's raw message ("must be equal to
+// one of the allowed values") describes the rule, not the thing that broke it —
+// so a reader with 36 rows across 3 files gets a scavenger hunt. The field name
+// is already sitting in the instancePath; put it where it will be read.
+function locatedMessage(error: ErrorObject, missingProperty: string | null): string {
+  const base = enumMessage(error);
+  // `required` errors already name the property in AJV's own message.
+  const field = missingProperty ?? fieldNameOf(error.instancePath);
+  return field === null ? base : `${field}: ${base}`;
+}
+
+// The last non-numeric segment of a JSON pointer — `/use_cases/3/value_tier`
+// yields `value_tier`. Array indices are skipped: they are position, not field.
+function fieldNameOf(instancePath: string): string | null {
+  const segments = instancePath.split("/").filter((segment) => segment !== "");
+  for (let index = segments.length - 1; index >= 0; index -= 1) {
+    const segment = segments[index];
+    if (!/^\d+$/.test(segment)) {
+      return segment;
+    }
+  }
+  return null;
+}
+
+// Resolve the use-case row a diagnostic belongs to, so the reader is told WHICH
+// row is broken instead of being handed a bare pointer. Best-effort by design: a
+// document that does not have `/use_cases/<n>/id` simply yields null.
+function entityIdFor(error: ErrorObject, data: unknown): string | null {
+  const match = /^\/use_cases\/(\d+)(\/|$)/.exec(error.instancePath);
+  if (!match || !isRecord(data)) {
+    return null;
+  }
+  const rows = data.use_cases;
+  if (!Array.isArray(rows)) {
+    return null;
+  }
+  const row = rows[Number(match[1])];
+  if (!isRecord(row) || typeof row.id !== "string") {
+    return null;
+  }
+  return row.id;
 }
 
 function enumMessage(error: ErrorObject): string {

@@ -81,6 +81,16 @@ interface ScanGate {
   ungated_below_bar?: Array<{ row_id: string; status?: string; local_status?: string | null }>;
 }
 
+interface IntegrityError {
+  code: string;
+  row_id?: string;
+  binding_slug?: string;
+  file_path?: string;
+  line?: number;
+  message?: string;
+  remediation?: string;
+}
+
 interface ScanData {
   status: {
     summary: { fresh: number; suspect: number; unproven: number; unbound: number; invalid: number };
@@ -90,6 +100,7 @@ interface ScanData {
       claimable: boolean;
       statement: string;
     };
+    integrity_errors?: IntegrityError[];
     rows: FreshnessRow[];
   };
   gate?: ScanGate;
@@ -161,6 +172,28 @@ function renderScan(data: ScanData): string[] {
     const action = scanRowAction(row);
     if (action) {
       lines.push(`      → ${action}`);
+    }
+  }
+
+  // Integrity errors were JSON-only — the human view never showed them, so a
+  // broken registry (a renamed marker, an orphaned row) was invisible unless you
+  // reached for --json. Show them, each with the runnable way out.
+  const integrityErrors = data.status?.integrity_errors ?? [];
+  if (integrityErrors.length > 0) {
+    lines.push("");
+    const errorWord = integrityErrors.length === 1 ? "error" : "errors";
+    lines.push(`integrity ${errorWord} — ${integrityErrors.length}:`);
+    for (const error of integrityErrors) {
+      const where = [error.file_path, error.line == null ? null : `line ${error.line}`]
+        .filter(Boolean)
+        .join(" ");
+      lines.push(`  ✗ ${error.code}${error.message ? `: ${error.message}` : ""}`);
+      if (where) {
+        lines.push(`      at ${where}`);
+      }
+      if (error.remediation) {
+        lines.push(`      → ${error.remediation}`);
+      }
     }
   }
 
