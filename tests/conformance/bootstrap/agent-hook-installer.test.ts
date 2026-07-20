@@ -73,6 +73,91 @@ afterEach(() => {
   }
 });
 
+// A SessionStart hook delivers the bootstrap text, and nothing else. It does
+// not make the package a plugin, so the skills it ships stayed unreachable no
+// matter what the plugin manifest declared. Registering the plugin is the step
+// that was missing entirely.
+describe("agent plugin registration", () => {
+  // BOUNDARY: ~/.claude/plugins is Claude's own state and agent-setup converges
+  // it through the `claude plugin` CLI. We must go through the same door, so
+  // these assert the commands we issue — never the internal JSON, which we are
+  // not entitled to write.
+  function fakeClaudeCli(home: string): { env: Record<string, string>; calls: () => string[] } {
+    const binDir = join(home, "fake-bin");
+    const logPath = join(home, "claude-calls.log");
+    mkdirSync(binDir, { recursive: true });
+    writeFileSync(join(binDir, "claude"), `#!/bin/sh\necho "$@" >> ${JSON.stringify(logPath)}\n`, { mode: 0o755 });
+    return {
+      env: { PATH: `${binDir}:${process.env.PATH ?? ""}` },
+      calls: () => (existsSync(logPath) ? readFileSync(logPath, "utf8").trim().split("\n").filter(Boolean) : [])
+    };
+  }
+
+  test("a global install adds the marketplace and installs the plugin via the host CLI", () => {
+    const home = makeHome();
+    const claude = fakeClaudeCli(home);
+
+    expect(runInstaller(home, claude.env).status).toBe(0);
+
+    expect(claude.calls()).toEqual([
+      `plugin marketplace add ${repoRoot} --scope user`,
+      "plugin install use-cases@use-cases --scope user"
+    ]);
+  });
+
+  test("the installer never hand-writes Claude's plugin state", () => {
+    const home = makeHome();
+    runInstaller(home, fakeClaudeCli(home).env);
+
+    expect(existsSync(join(home, ".claude", "plugins", "known_marketplaces.json"))).toBe(false);
+    expect(existsSync(join(home, ".claude", "plugins", "installed_plugins.json"))).toBe(false);
+  });
+
+  test("a missing host CLI warns without failing the package install", () => {
+    const home = makeHome();
+    const emptyBin = join(home, "empty-bin");
+    mkdirSync(emptyBin, { recursive: true });
+
+    const result = runInstaller(home, { PATH: emptyBin });
+
+    expect(result.status).toBe(0);
+    expect(result.stderr).toContain("claude CLI is not on PATH");
+    // The bootstrap hook is independent of plugin registration and must survive.
+    expect(existsSync(join(home, ".claude/settings.json"))).toBe(true);
+  });
+
+  test("a failing marketplace add does not go on to attempt the install", () => {
+    const home = makeHome();
+    const binDir = join(home, "failing-bin");
+    mkdirSync(binDir, { recursive: true });
+    writeFileSync(join(binDir, "claude"), "#!/bin/sh\necho 'marketplace unreachable' >&2\nexit 1\n", { mode: 0o755 });
+
+    const result = runInstaller(home, { PATH: `${binDir}:${process.env.PATH ?? ""}` });
+
+    expect(result.status).toBe(0);
+    expect(result.stderr).toContain("could not register the plugin marketplace");
+    expect(result.stderr).not.toContain("could not install the plugin");
+  });
+
+  test("a local install registers nothing", () => {
+    const home = makeHome();
+    const claude = fakeClaudeCli(home);
+
+    runInstaller(home, { ...claude.env, npm_config_global: "false", npm_config_location: "project" });
+
+    expect(claude.calls()).toEqual([]);
+  });
+
+  test("excluding the claude host skips plugin registration", () => {
+    const home = makeHome();
+    const claude = fakeClaudeCli(home);
+
+    expect(runInstaller(home, { ...claude.env, AGENT_HOOK_HOSTS: "codex,opencode" }).status).toBe(0);
+
+    expect(claude.calls()).toEqual([]);
+  });
+});
+
 describe("agent hook installer", () => {
   test("package manifest publishes the installer and runs it on postinstall", () => {
     const pkg = JSON.parse(readFileSync(resolve(repoRoot, "package.json"), "utf8")) as {

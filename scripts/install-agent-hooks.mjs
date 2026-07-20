@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, resolve } from "node:path";
@@ -127,6 +128,45 @@ function installOpenCodePlugin(path) {
   writeJson(path, config);
 }
 
+// The SessionStart hook only injects bootstrap text. Claude loads SKILLS from
+// installed plugins, so without this the four skills we ship are present on
+// disk and reachable by nobody. Registering the package as its own single-plugin
+// marketplace is what makes .claude-plugin/plugin.json get read at all.
+const marketplaceName = "use-cases";
+const pluginKey = `${marketplaceName}@${marketplaceName}`;
+
+// BOUNDARY: `~/.claude/plugins/*.json` is Claude's own state, and other tools
+// (agent-setup's ensure-claude-plugins.sh) converge it through the supported
+// `claude plugin` CLI. We go through the same door rather than hand-writing that
+// state, so a second writer can never disagree with the host about what is
+// installed. We own only the artifact — .claude-plugin/{plugin,marketplace}.json.
+function registerClaudePlugin() {
+  const marketplace = runClaude(["plugin", "marketplace", "add", packageRoot, "--scope", "user"]);
+  if (!marketplace.ok) {
+    // Non-fatal by design: a package install must not fail because the host CLI
+    // is absent or busy. The skills stay unreachable until the next install, and
+    // `uc doctor skills` is what reports that.
+    console.error(`[${packageName}] could not register the plugin marketplace: ${marketplace.reason}`);
+    return;
+  }
+
+  const install = runClaude(["plugin", "install", pluginKey, "--scope", "user"]);
+  if (!install.ok) {
+    console.error(`[${packageName}] could not install the plugin: ${install.reason}`);
+  }
+}
+
+function runClaude(args) {
+  const result = spawnSync("claude", args, { encoding: "utf8", timeout: 60_000 });
+  if (result.error) {
+    return { ok: false, reason: result.error.code === "ENOENT" ? "the claude CLI is not on PATH" : result.error.message };
+  }
+  if (result.status !== 0) {
+    return { ok: false, reason: (result.stderr || result.stdout || `exit ${result.status}`).trim().split("\n")[0] };
+  }
+  return { ok: true, reason: "" };
+}
+
 function copilotHooksRoot(home) {
   const copilotHome = env.COPILOT_HOME;
   return copilotHome ? resolve(copilotHome, "hooks") : resolve(home, ".copilot/hooks");
@@ -159,6 +199,7 @@ function main() {
       "startup|clear|compact",
       `Loading ${packageName} bootstrap`,
     );
+    registerClaudePlugin();
   }
 
   if (hosts.has("codex")) {
