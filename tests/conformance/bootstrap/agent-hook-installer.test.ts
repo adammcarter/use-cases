@@ -73,6 +73,21 @@ afterEach(() => {
   }
 });
 
+// Every installer test must pin the host CLI, present or absent. Inheriting the
+// real PATH makes the result depend on whether the developer happens to have
+// `claude` installed: the suite passed locally and failed in CI, where the
+// absent CLI made the installer warn to stderr.
+function fakeClaudeCli(home: string): { env: Record<string, string>; calls: () => string[] } {
+  const binDir = join(home, "fake-bin");
+  const logPath = join(home, "claude-calls.log");
+  mkdirSync(binDir, { recursive: true });
+  writeFileSync(join(binDir, "claude"), `#!/bin/sh\necho "$@" >> ${JSON.stringify(logPath)}\n`, { mode: 0o755 });
+  return {
+    env: { PATH: `${binDir}:${process.env.PATH ?? ""}` },
+    calls: () => (existsSync(logPath) ? readFileSync(logPath, "utf8").trim().split("\n").filter(Boolean) : [])
+  };
+}
+
 // A SessionStart hook delivers the bootstrap text, and nothing else. It does
 // not make the package a plugin, so the skills it ships stayed unreachable no
 // matter what the plugin manifest declared. Registering the plugin is the step
@@ -82,17 +97,6 @@ describe("agent plugin registration", () => {
   // it through the `claude plugin` CLI. We must go through the same door, so
   // these assert the commands we issue — never the internal JSON, which we are
   // not entitled to write.
-  function fakeClaudeCli(home: string): { env: Record<string, string>; calls: () => string[] } {
-    const binDir = join(home, "fake-bin");
-    const logPath = join(home, "claude-calls.log");
-    mkdirSync(binDir, { recursive: true });
-    writeFileSync(join(binDir, "claude"), `#!/bin/sh\necho "$@" >> ${JSON.stringify(logPath)}\n`, { mode: 0o755 });
-    return {
-      env: { PATH: `${binDir}:${process.env.PATH ?? ""}` },
-      calls: () => (existsSync(logPath) ? readFileSync(logPath, "utf8").trim().split("\n").filter(Boolean) : [])
-    };
-  }
-
   test("a global install adds the marketplace and installs the plugin via the host CLI", () => {
     const home = makeHome();
     const claude = fakeClaudeCli(home);
@@ -207,8 +211,12 @@ describe("agent hook installer", () => {
 
   test("global installs add Claude, Codex, OpenCode, and Copilot activation once", () => {
     const home = makeHome();
-    const first = runInstaller(home);
-    const second = runInstaller(home);
+    // Stub the host CLI so this asserts hook installation only. Without it the
+    // absent-CLI warning from plugin registration lands on stderr and this
+    // test's "no warnings" assertion turns into a check of the dev's machine.
+    const { env } = fakeClaudeCli(home);
+    const first = runInstaller(home, env);
+    const second = runInstaller(home, env);
 
     expect(first.status).toBe(0);
     expect(first.stderr).toBe("");
