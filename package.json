@@ -21,6 +21,7 @@
   "files": [
     ".agents/skills",
     ".claude-plugin/plugin.json",
+    ".claude-plugin/marketplace.json",
     ".codex-plugin/plugin.json",
     ".mcp.json",
     ".opencode/plugin/use-cases.js",

@@ -1,0 +1,14 @@
+{
+  "name": "use-cases",
+  "description": "Use-case, evidence, and live showcase infrastructure for agent work.",
+  "owner": {
+    "name": "Use Cases"
+  },
+  "plugins": [
+    {
+      "name": "use-cases",
+      "description": "Plan, prove, and showcase agent work. Ships the use-cases, showcase, walkthrough, and migration skills.",
+      "source": "./"
+    }
+  ]
+}

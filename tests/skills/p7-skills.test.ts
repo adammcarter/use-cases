@@ -141,6 +141,40 @@ describe("P7 canonical skills and activation bootstrap", () => {
   });
 });
 
+// The skills used to exist on disk and be invisible to every host: nothing
+// declared `.agents/skills` to Claude, and the package was never installable as
+// a plugin, so no agent could ever load the showcase protocol. These pin the
+// two manifest facts that make the skills discoverable.
+describe("P7 skills are declared to the Claude host", () => {
+  const claudeManifest = JSON.parse(readFileSync(join(repoRoot, ".claude-plugin", "plugin.json"), "utf8")) as {
+    skills?: string | string[];
+  };
+
+  test("the Claude plugin manifest declares the non-default skills directory", () => {
+    const declared = typeof claudeManifest.skills === "string" ? [claudeManifest.skills] : (claudeManifest.skills ?? []);
+    // Claude only auto-scans `skills/` at plugin root. Ours live in
+    // `.agents/skills`, so without an explicit entry they are never loaded.
+    expect(declared.map((entry) => entry.replace(/\/$/, ""))).toContain("./.agents/skills");
+  });
+
+  test("the package ships a marketplace manifest so it can be installed as a plugin", () => {
+    const marketplacePath = join(repoRoot, ".claude-plugin", "marketplace.json");
+    expect(existsSync(marketplacePath)).toBe(true);
+    const marketplace = JSON.parse(readFileSync(marketplacePath, "utf8")) as {
+      name?: string;
+      plugins?: Array<{ name?: string; source?: string }>;
+    };
+    expect(marketplace.name).toBe("use-cases");
+    expect(marketplace.plugins?.map((plugin) => plugin.name)).toContain("use-cases");
+  });
+
+  test("both shipped manifests stay on the same version", () => {
+    const codex = JSON.parse(readFileSync(join(repoRoot, ".codex-plugin", "plugin.json"), "utf8")) as { version?: string };
+    const claude = claudeManifest as unknown as { version?: string };
+    expect(claude.version).toBe(codex.version);
+  });
+});
+
 function parseFrontmatter(source: string, path: string): { name: string; description: string } {
   const match = source.match(/^---\n([\s\S]*?)\n---\n/);
   if (!match) {

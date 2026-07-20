@@ -5,6 +5,7 @@
   "author": {
     "name": "Use Cases"
   },
+  "skills": ["./.agents/skills/"],
   "mcpServers": {
     "use-cases": {
       "command": "node",
