@@ -25,6 +25,7 @@ import { generateKeyPairSync } from "node:crypto";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
+import { packedTarball } from "../helpers/package-version";
 
 const repoRoot = resolve(import.meta.dirname, "../..");
 const exampleDir = join(repoRoot, "examples/python-pytest");
@@ -222,8 +223,8 @@ beforeAll(() => {
       `pack ${filter}`
     );
   }
-  coreTarball = join(packDir, "adammcarter-use-cases-core-0.4.2.tgz");
-  cliTarball = join(packDir, "adammcarter-use-cases-cli-0.4.2.tgz");
+  coreTarball = packedTarball(packDir, "core");
+  cliTarball = packedTarball(packDir, "cli");
 }, 180_000);
 
 afterAll(() => {
@@ -234,7 +235,7 @@ afterAll(() => {
       /* the OS reaps tmp regardless */
     }
   }
-});
+}, 120_000);
 
 describe("uc recover: drive a drifted / unproven row back to green", () => {
   test("STALE_LOCAL -> recover --row -> VERIFIED_LOCAL (exit 0), no key", () => {

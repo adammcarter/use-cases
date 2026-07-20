@@ -3,6 +3,7 @@ import { cpSync, existsSync, mkdtempSync, readFileSync, realpathSync, readdirSyn
 import { tmpdir } from "node:os";
 import { basename, join, resolve } from "node:path";
 import { beforeAll, describe, expect, test } from "vitest";
+import { PACKAGE_VERSION } from "../helpers/package-version";
 
 const repoRoot = resolve(import.meta.dirname, "../..");
 
@@ -145,7 +146,7 @@ describe("P13 installable root package artifact", () => {
       expect.objectContaining({
         id: 1,
         result: expect.objectContaining({
-          serverInfo: { name: "@adammcarter/use-cases", version: "0.4.2" }
+          serverInfo: { name: "@adammcarter/use-cases", version: PACKAGE_VERSION }
         })
       }),
       expect.objectContaining({

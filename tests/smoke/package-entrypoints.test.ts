@@ -3,6 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { describe, expect, test } from "vitest";
+import { PACKAGE_VERSION } from "../helpers/package-version";
 
 const repoRoot = resolve(import.meta.dirname, "../..");
 
@@ -60,7 +61,7 @@ describe("P0 package entrypoints", () => {
 
     expect(core.getVersionInfo()).toEqual({
       name: "@adammcarter/use-cases",
-      version: "0.4.2"
+      version: PACKAGE_VERSION
     });
   });
 
@@ -82,7 +83,7 @@ describe("P0 package entrypoints", () => {
       complete: true,
       data: {
         name: "@adammcarter/use-cases",
-        version: "0.4.2"
+        version: PACKAGE_VERSION
       },
       diagnostics: []
     });
@@ -116,9 +117,9 @@ describe("P0 package entrypoints", () => {
     );
 
     const tarballs = [
-      "adammcarter-use-cases-core-0.4.2.tgz",
-      "adammcarter-use-cases-cli-0.4.2.tgz",
-      "adammcarter-use-cases-mcp-0.4.2.tgz"
+      `adammcarter-use-cases-core-${PACKAGE_VERSION}.tgz`,
+      `adammcarter-use-cases-cli-${PACKAGE_VERSION}.tgz`,
+      `adammcarter-use-cases-mcp-${PACKAGE_VERSION}.tgz`
     ].map((name) => join(packDir, name));
     requireSuccess(run("npm", ["install", "--cache", npmCacheDir(), "--no-audit", "--no-fund", ...tarballs], consumer));
 
@@ -127,7 +128,7 @@ describe("P0 package entrypoints", () => {
       [
         "import { getVersionInfo } from '@adammcarter/use-cases-core';",
         "const info = getVersionInfo();",
-        "if (info.name !== '@adammcarter/use-cases' || info.version !== '0.4.2') throw new Error('bad version export');"
+        `if (info.name !== '@adammcarter/use-cases' || info.version !== '${PACKAGE_VERSION}') throw new Error('bad version export');`
       ].join("\n")
     );
     requireSuccess(run("node", ["check.mjs"], consumer));
@@ -135,7 +136,7 @@ describe("P0 package entrypoints", () => {
     const binDir = join(consumer, "node_modules/.bin");
     const cli = run(join(binDir, "uc"), ["--version", "--json"], consumer);
     requireSuccess(cli);
-    expect(JSON.parse(cli.stdout).data.version).toBe("0.4.2");
+    expect(JSON.parse(cli.stdout).data.version).toBe(PACKAGE_VERSION);
 
     const mcp = runWithInput(
       join(binDir, "uc-mcp"),
@@ -170,7 +171,7 @@ describe("P0 package entrypoints", () => {
       expect.objectContaining({
         id: 1,
         result: expect.objectContaining({
-          serverInfo: { name: "@adammcarter/use-cases", version: "0.4.2" }
+          serverInfo: { name: "@adammcarter/use-cases", version: PACKAGE_VERSION }
         })
       }),
       expect.objectContaining({

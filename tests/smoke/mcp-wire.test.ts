@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import { once } from "node:events";
 import { resolve } from "node:path";
 import { describe, expect, test } from "vitest";
+import { PACKAGE_VERSION } from "../helpers/package-version";
 
 const repoRoot = resolve(import.meta.dirname, "../..");
 
@@ -63,7 +64,7 @@ describe("P0 MCP wire contract", () => {
       result: {
         serverInfo: {
           name: "@adammcarter/use-cases",
-          version: "0.4.2"
+          version: PACKAGE_VERSION
         }
       }
     });
