@@ -1,8 +1,14 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import type { ResolvedWorkspaceContext } from "../roots.js";
+import { isPathContained, type ResolvedWorkspaceContext } from "../roots.js";
 import { diagnostic, parseYamlToJson, type Diagnostic } from "../schema/index.js";
-import type { SkillAssetSummary, SkillAssetValidationResult, SkillCommandReference } from "./types.js";
+import type {
+  SkillAssetSummary,
+  SkillAssetValidationResult,
+  SkillCommandReference,
+  SkillHostRegistrationResult,
+  SkillHostRegistrationSummary
+} from "./types.js";
 import { CANONICAL_SKILLS } from "./canonicalSkills.js";
 
 const BOOTSTRAP_SECTIONS = [
@@ -175,11 +181,14 @@ export function validateSkillAssets(options: { context: ResolvedWorkspaceContext
     }
   }
 
+  const hostRegistration = validateHostRegistration(root, diagnostics);
+
   return {
     schema_version: 1,
     complete: diagnostics.every((item) => item.severity !== "error"),
     skill_count: skills.length,
     skills,
+    host_registration: hostRegistration,
     bootstrap: {
       path: bootstrapPath,
       complete: BOOTSTRAP_SECTIONS.every((section) => bootstrapSections.includes(section)),
@@ -188,6 +197,83 @@ export function validateSkillAssets(options: { context: ResolvedWorkspaceContext
     command_references: commandReferences,
     diagnostics
   };
+}
+
+const CLAUDE_MANIFEST_PATH = ".claude-plugin/plugin.json";
+const CLAUDE_MARKETPLACE_PATH = ".claude-plugin/marketplace.json";
+const PLUGIN_NAME = "use-cases";
+// Claude always scans `skills/` at plugin root on top of anything the manifest
+// declares, so it is part of the candidate set even when unlisted.
+const IMPLICIT_SKILL_ROOTS = ["./skills"];
+
+// Asset validation answers "do the SKILL.md files exist and read correctly?".
+// This answers the question that actually matters to an agent: "can the host
+// reach them?" Both must hold, and only the first one used to be checked.
+function validateHostRegistration(root: string, diagnostics: Diagnostic[]): SkillHostRegistrationResult {
+  const hosts: SkillHostRegistrationSummary[] = [];
+  const manifestFullPath = join(root, CLAUDE_MANIFEST_PATH);
+
+  if (!existsSync(manifestFullPath)) {
+    diagnostics.push(diagnostic("skills.host_manifest_missing", "Missing Claude plugin manifest.", CLAUDE_MANIFEST_PATH));
+    return { complete: false, hosts };
+  }
+
+  const declaresSkillRoot = declaredSkillRoots(root, manifestFullPath).some((candidate) =>
+    // A declared path only counts when the canonical skills are genuinely
+    // beneath it. A manifest can point anywhere; the host will not find skills
+    // that are not there.
+    CANONICAL_SKILLS.every((skill) => existsSync(join(root, candidate, skill, "SKILL.md")))
+  );
+  if (!declaresSkillRoot) {
+    diagnostics.push(
+      diagnostic(
+        "skills.host_not_declared",
+        "Claude plugin manifest does not declare a directory containing the canonical skills.",
+        CLAUDE_MANIFEST_PATH
+      )
+    );
+  }
+
+  const installable = marketplaceListsPlugin(join(root, CLAUDE_MARKETPLACE_PATH));
+  if (!installable) {
+    diagnostics.push(
+      diagnostic(
+        "skills.host_not_installable",
+        `Marketplace manifest does not offer '${PLUGIN_NAME}', so the plugin manifest is never read.`,
+        CLAUDE_MARKETPLACE_PATH
+      )
+    );
+  }
+
+  hosts.push({ host: "claude", manifest_path: CLAUDE_MANIFEST_PATH, declares_skill_root: declaresSkillRoot, installable });
+  return { complete: declaresSkillRoot && installable, hosts };
+}
+
+function declaredSkillRoots(root: string, manifestFullPath: string): string[] {
+  const manifest = readJsonOrNull(manifestFullPath) as { skills?: unknown } | null;
+  const declared = manifest?.skills;
+  const entries = typeof declared === "string" ? [declared] : Array.isArray(declared) ? declared : [];
+  const paths = [...entries.filter((entry): entry is string => typeof entry === "string"), ...IMPLICIT_SKILL_ROOTS];
+  return paths.map((entry) => entry.replace(/^\.\//, "").replace(/\/+$/, "")).filter((entry) => entry.length > 0 && isPathContained(root, join(root, entry)));
+}
+
+function marketplaceListsPlugin(marketplaceFullPath: string): boolean {
+  const marketplace = readJsonOrNull(marketplaceFullPath) as { plugins?: unknown } | null;
+  if (!Array.isArray(marketplace?.plugins)) {
+    return false;
+  }
+  return marketplace.plugins.some((plugin) => (plugin as { name?: unknown } | null)?.name === PLUGIN_NAME);
+}
+
+function readJsonOrNull(path: string): unknown {
+  if (!existsSync(path)) {
+    return null;
+  }
+  try {
+    return JSON.parse(readFileSync(path, "utf8"));
+  } catch {
+    return null;
+  }
 }
 
 function parseFrontmatter(
