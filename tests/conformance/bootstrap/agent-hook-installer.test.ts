@@ -139,6 +139,27 @@ describe("agent plugin registration", () => {
     expect(result.stderr).not.toContain("could not install the plugin");
   });
 
+  test("an already-added marketplace still proceeds to install the plugin", () => {
+    const home = makeHome();
+    const binDir = join(home, "already-bin");
+    const logPath = join(home, "already.log");
+    mkdirSync(binDir, { recursive: true });
+    // Reinstall shape: the host rejects a duplicate marketplace non-zero, but
+    // the plugin still needs installing. Treating that as a failure would leave
+    // every upgrade after the first with unregistered skills.
+    writeFileSync(
+      join(binDir, "claude"),
+      `#!/bin/sh\necho "$@" >> ${JSON.stringify(logPath)}\ncase "$2" in marketplace) echo 'marketplace already exists' >&2; exit 1 ;; esac\n`,
+      { mode: 0o755 }
+    );
+
+    const result = runInstaller(home, { PATH: `${binDir}:${process.env.PATH ?? ""}` });
+
+    expect(result.status).toBe(0);
+    expect(result.stderr).not.toContain("could not register");
+    expect(readFileSync(logPath, "utf8")).toContain("plugin install use-cases@use-cases --scope user");
+  });
+
   test("a local install registers nothing", () => {
     const home = makeHome();
     const claude = fakeClaudeCli(home);

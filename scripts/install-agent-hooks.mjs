@@ -140,6 +140,7 @@ const pluginKey = `${marketplaceName}@${marketplaceName}`;
 // `claude plugin` CLI. We go through the same door rather than hand-writing that
 // state, so a second writer can never disagree with the host about what is
 // installed. We own only the artifact — .claude-plugin/{plugin,marketplace}.json.
+//: @use-case:hosts.profiles.plugin_registration
 function registerClaudePlugin() {
   const marketplace = runClaude(["plugin", "marketplace", "add", packageRoot, "--scope", "user"]);
   if (!marketplace.ok) {
@@ -155,17 +156,27 @@ function registerClaudePlugin() {
     console.error(`[${packageName}] could not install the plugin: ${install.reason}`);
   }
 }
+//: @use-case:end hosts.profiles.plugin_registration
 
+//: @use-case:hosts.profiles.plugin_state_ownership#state-ownership
 function runClaude(args) {
   const result = spawnSync("claude", args, { encoding: "utf8", timeout: 60_000 });
   if (result.error) {
     return { ok: false, reason: result.error.code === "ENOENT" ? "the claude CLI is not on PATH" : result.error.message };
   }
   if (result.status !== 0) {
-    return { ok: false, reason: (result.stderr || result.stdout || `exit ${result.status}`).trim().split("\n")[0] };
+    const output = (result.stderr || result.stdout || `exit ${result.status}`).trim();
+    // Reinstalling is the common case, and the host reports "already added" as a
+    // failure. Treating it as one would abort before the install step, so every
+    // upgrade after the first would quietly leave the skills unregistered.
+    if (/already|exists|duplicate/i.test(output)) {
+      return { ok: true, reason: "" };
+    }
+    return { ok: false, reason: output.split("\n")[0] };
   }
   return { ok: true, reason: "" };
 }
+//: @use-case:end hosts.profiles.plugin_state_ownership#state-ownership
 
 function copilotHooksRoot(home) {
   const copilotHome = env.COPILOT_HOME;

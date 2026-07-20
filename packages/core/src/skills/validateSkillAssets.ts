@@ -209,6 +209,7 @@ const IMPLICIT_SKILL_ROOTS = ["./skills"];
 // Asset validation answers "do the SKILL.md files exist and read correctly?".
 // This answers the question that actually matters to an agent: "can the host
 // reach them?" Both must hold, and only the first one used to be checked.
+//: @use-case:skills.assets.unreachable_skills_fail_doctor
 function validateHostRegistration(root: string, diagnostics: Diagnostic[]): SkillHostRegistrationResult {
   const hosts: SkillHostRegistrationSummary[] = [];
   const manifestFullPath = join(root, CLAUDE_MANIFEST_PATH);
@@ -248,6 +249,7 @@ function validateHostRegistration(root: string, diagnostics: Diagnostic[]): Skil
   hosts.push({ host: "claude", manifest_path: CLAUDE_MANIFEST_PATH, declares_skill_root: declaresSkillRoot, installable });
   return { complete: declaresSkillRoot && installable, hosts };
 }
+//: @use-case:end skills.assets.unreachable_skills_fail_doctor
 
 function declaredSkillRoots(root: string, manifestFullPath: string): string[] {
   const manifest = readJsonOrNull(manifestFullPath) as { skills?: unknown } | null;

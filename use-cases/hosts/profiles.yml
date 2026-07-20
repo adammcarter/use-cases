@@ -363,3 +363,136 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
+  - id: hosts.profiles.plugin_registration
+    title: A global install registers the plugin through the host's own CLI
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    tags:
+      - hosts
+      - claude
+      - activation
+      - install
+    source_refs:
+      - kind: file
+        path: scripts/install-agent-hooks.mjs
+      - kind: file
+        path: .claude-plugin/marketplace.json
+      - kind: file
+        path: tests/conformance/bootstrap/agent-hook-installer.test.ts
+    actor: script
+    intent: Make the shipped skills reachable after a global npm install by registering the package as its own single-plugin marketplace through the supported claude plugin CLI, since the session-start hook only injects bootstrap text and never loads skills.
+    preconditions:
+      - The package is installed globally and the claude host is not excluded from AGENT_HOOK_HOSTS.
+    trigger: npm runs the package's install hook during a global install or upgrade.
+    scenarios:
+      - id: hosts.profiles.plugin_registration.global_install
+        kind: steps
+        steps:
+          - Run the installer with a stub claude CLI on PATH.
+          - Confirm it issues plugin marketplace add for the package root at user scope.
+          - Confirm it then issues plugin install use-cases@use-cases at user scope.
+      - id: hosts.profiles.plugin_registration.reinstall
+        kind: steps
+        steps:
+          - Run the installer against a host that rejects an already-added marketplace non-zero.
+          - Confirm the installer still proceeds to install the plugin and reports no failure.
+      - id: hosts.profiles.plugin_registration.non_fatal
+        kind: steps
+        steps:
+          - Run the installer with no claude CLI on PATH, and again with a host CLI that fails.
+          - Confirm the package install still exits zero and only warns.
+          - Confirm a failing marketplace add does not go on to attempt the install.
+          - Confirm the bootstrap session-start hook is installed regardless.
+      - id: hosts.profiles.plugin_registration.skipped
+        kind: steps
+        steps:
+          - Run the installer as a local (non-global) install.
+          - Run the installer with AGENT_HOOK_HOSTS excluding claude.
+          - Confirm no host CLI command is issued in either case.
+    observable_outcomes:
+      - A global install leaves the plugin registered with the host, so the shipped skills are loadable rather than present-but-unreachable.
+      - An upgrade over an existing marketplace still registers the plugin, so skills do not silently go unregistered after the first install.
+      - Registration failure warns and never fails the package install, and never blocks the bootstrap hook.
+      - Local installs and an excluded claude host register nothing.
+    host_applicability:
+      - host_surface: claude.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/conformance/bootstrap/agent-hook-installer.test.ts
+          inputs:
+            - tests/conformance/bootstrap/agent-hook-installer.test.ts
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none
+  - id: hosts.profiles.plugin_state_ownership
+    title: The installer never hand-writes the host's plugin state
+    lifecycle: active
+    value_tier: core
+    journey_role: negative
+    usage_frequency: common
+    tags:
+      - hosts
+      - claude
+      - boundary
+      - install
+    source_refs:
+      - kind: file
+        path: scripts/install-agent-hooks.mjs
+      - kind: file
+        path: tests/conformance/bootstrap/agent-hook-installer.test.ts
+    actor: script
+    intent: Record the deliberate boundary that writing ~/.claude/plugins/*.json directly is unsupported, because that state belongs to Claude and other tools converge it through the same plugin CLI.
+    preconditions:
+      - The installer is registering the plugin with the claude host.
+    trigger: A global install registers the plugin.
+    scenarios:
+      - id: hosts.profiles.plugin_state_ownership.no_direct_writes
+        kind: steps
+        steps:
+          - Run the installer against an isolated home directory.
+          - Confirm known_marketplaces.json was not written by us.
+          - Confirm installed_plugins.json was not written by us.
+    observable_outcomes:
+      - Registration goes through the host's supported CLI door only; the host's own plugin state files are never authored by this package.
+      - A second writer such as agent-setup can never disagree with the host about what is installed.
+      - This package owns only its own artifacts, .claude-plugin/plugin.json and .claude-plugin/marketplace.json.
+    host_applicability:
+      - host_surface: claude.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/conformance/bootstrap/agent-hook-installer.test.ts
+          inputs:
+            - tests/conformance/bootstrap/agent-hook-installer.test.ts
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none

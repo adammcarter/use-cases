@@ -90,3 +90,132 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
+  - id: skills.assets.host_declaration
+    title: Shipped skills are declared to the Claude host
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    tags:
+      - skills
+      - claude
+      - activation
+    source_refs:
+      - kind: file
+        path: .claude-plugin/plugin.json
+      - kind: file
+        path: .claude-plugin/marketplace.json
+      - kind: file
+        path: tests/skills/p7-skills.test.ts
+    actor: agent
+    intent: Make the shipped skills reachable by the Claude host, which only auto-scans skills/ at plugin root while ours live in .agents/skills.
+    preconditions:
+      - The package ships its skills under .agents/skills rather than the host's default skills/ directory.
+    trigger: The Claude host reads the plugin manifests while installing or loading the plugin.
+    scenarios:
+      - id: skills.assets.host_declaration.manifests
+        kind: steps
+        steps:
+          - Read the Claude plugin manifest and confirm it declares ./.agents/skills.
+          - Read the marketplace manifest and confirm it offers the use-cases plugin.
+          - Confirm the Claude and Codex plugin manifests carry the same version.
+    observable_outcomes:
+      - The non-default skills directory is declared explicitly, so the host loads skills it would otherwise never scan.
+      - A marketplace manifest ships, so the plugin can be installed at all and its plugin manifest is read.
+      - The two shipped plugin manifests cannot drift to different versions.
+    host_applicability:
+      - host_surface: claude.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/skills/p7-skills.test.ts
+          inputs:
+            - tests/skills/p7-skills.test.ts
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none
+  - id: skills.assets.unreachable_skills_fail_doctor
+    title: Unreachable skills fail doctor instead of passing green
+    lifecycle: active
+    value_tier: critical
+    journey_role: negative
+    usage_frequency: occasional
+    tags:
+      - skills
+      - doctor
+      - diagnostics
+    source_refs:
+      - kind: file
+        path: packages/core/src/skills/validateSkillAssets.ts
+      - kind: file
+        path: packages/core/src/skills/types.ts
+      - kind: file
+        path: packages/core/test/skills/hostRegistration.test.ts
+    actor: script
+    intent: Answer the question that matters to an agent — can a host actually reach these skills? — instead of only checking that the SKILL.md files exist and parse.
+    preconditions:
+      - Skill assets are present on disk and structurally valid.
+    trigger: Agent or release gate runs doctor skills against a checkout whose host registration is broken.
+    scenarios:
+      - id: skills.assets.unreachable_skills_fail_doctor.undeclared
+        kind: steps
+        steps:
+          - Remove the skills key from the Claude plugin manifest.
+          - Run skill asset validation.
+          - Confirm skills.host_not_declared is reported and the result is not complete.
+      - id: skills.assets.unreachable_skills_fail_doctor.misdirected
+        kind: steps
+        steps:
+          - Point the manifest skills key at a directory that does not hold the canonical skills.
+          - Confirm skills.host_not_declared is still reported.
+      - id: skills.assets.unreachable_skills_fail_doctor.uninstallable
+        kind: steps
+        steps:
+          - Remove the marketplace manifest, or list a different plugin in it.
+          - Confirm skills.host_not_installable is reported.
+      - id: skills.assets.unreachable_skills_fail_doctor.manifest_missing
+        kind: steps
+        steps:
+          - Run validation against a checkout with no Claude plugin manifest.
+          - Confirm skills.host_manifest_missing is reported.
+    observable_outcomes:
+      - Skills that exist on disk but that no host can load are an error, not a pass.
+      - The result carries a host_registration field naming the host, its manifest path, and whether the skill root is declared and installable.
+      - A manifest that declares a directory not actually holding the canonical skills does not count as declared.
+    host_applicability:
+      - host_surface: claude.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - packages/core/test/skills/hostRegistration.test.ts
+          inputs:
+            - packages/core/test/skills/hostRegistration.test.ts
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none

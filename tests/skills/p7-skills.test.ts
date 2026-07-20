@@ -145,6 +145,7 @@ describe("P7 canonical skills and activation bootstrap", () => {
 // declared `.agents/skills` to Claude, and the package was never installable as
 // a plugin, so no agent could ever load the showcase protocol. These pin the
 // two manifest facts that make the skills discoverable.
+//: @use-case:skills.assets.host_declaration
 describe("P7 skills are declared to the Claude host", () => {
   const claudeManifest = JSON.parse(readFileSync(join(repoRoot, ".claude-plugin", "plugin.json"), "utf8")) as {
     skills?: string | string[];
@@ -174,6 +175,7 @@ describe("P7 skills are declared to the Claude host", () => {
     expect(claude.version).toBe(codex.version);
   });
 });
+//: @use-case:end skills.assets.host_declaration
 
 function parseFrontmatter(source: string, path: string): { name: string; description: string } {
   const match = source.match(/^---\n([\s\S]*?)\n---\n/);
