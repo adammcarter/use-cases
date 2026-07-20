@@ -3,6 +3,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join, resolve } from "node:path";
 import { beforeAll, describe, expect, test } from "vitest";
+import { PACKAGE_VERSION } from "../helpers/package-version";
 
 const repoRoot = resolve(import.meta.dirname, "../..");
 
@@ -25,7 +26,7 @@ interface PackageSpec {
 const packages: PackageSpec[] = [
   {
     filter: "@adammcarter/use-cases-core",
-    tarball: "adammcarter-use-cases-core-0.4.2.tgz",
+    tarball: `adammcarter-use-cases-core-${PACKAGE_VERSION}.tgz`,
     requiredIncludes: [
       "dist/index.js",
       "dist/index.d.ts",
@@ -37,7 +38,7 @@ const packages: PackageSpec[] = [
   },
   {
     filter: "@adammcarter/use-cases-cli",
-    tarball: "adammcarter-use-cases-cli-0.4.2.tgz",
+    tarball: `adammcarter-use-cases-cli-${PACKAGE_VERSION}.tgz`,
     requiredIncludes: [
       "dist/index.js",
       "dist/index.d.ts",
@@ -48,7 +49,7 @@ const packages: PackageSpec[] = [
   },
   {
     filter: "@adammcarter/use-cases-mcp",
-    tarball: "adammcarter-use-cases-mcp-0.4.2.tgz",
+    tarball: `adammcarter-use-cases-mcp-${PACKAGE_VERSION}.tgz`,
     requiredIncludes: [
       "dist/index.js",
       "dist/index.d.ts",

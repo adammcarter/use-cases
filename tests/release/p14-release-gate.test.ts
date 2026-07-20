@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
+import { PACKAGE_VERSION } from "../helpers/package-version";
 
 describe("P14 production release gate", () => {
   test("CI runs the same sequential release gate used locally", () => {
@@ -32,7 +33,7 @@ describe("P14 production release gate", () => {
       files: string[];
     };
 
-    expect(manifest.version).toBe("0.4.2");
+    expect(manifest.version).toBe(PACKAGE_VERSION);
     expect(manifest.private).toBe(false);
     expect(manifest.files).toContain("packages/cli/dist");
     expect(manifest.files).toContain("packages/mcp/dist");
@@ -51,15 +52,15 @@ describe("P14 production release gate", () => {
     const hostProjection = readFileSync("packages/core/src/hosts/projectHostFiles.ts", "utf8");
     const changelog = readFileSync("CHANGELOG.md", "utf8");
 
-    expect(rootManifest.version).toBe("0.4.2");
+    expect(rootManifest.version).toBe(PACKAGE_VERSION);
     expect(cliManifest.version).toBe(rootManifest.version);
     expect(coreManifest.version).toBe(rootManifest.version);
     expect(mcpManifest.version).toBe(rootManifest.version);
     expect(rootPlugin.version).toBe(rootManifest.version);
     expect(codexPlugin.version).toBe(rootManifest.version);
     expect(claudePlugin.version).toBe(rootManifest.version);
-    expect(versionSource).toContain('UCM_VERSION = "0.4.2"');
+    expect(versionSource).toContain(`UCM_VERSION = "${PACKAGE_VERSION}"`);
     expect(hostProjection).toContain("plugin_version: UCM_VERSION");
-    expect(changelog).toContain("## 0.4.2");
+    expect(changelog).toContain(`## ${PACKAGE_VERSION}`);
   });
 });
