@@ -38,7 +38,7 @@ jobs:
       # Node 24 ships an npm that clears Trusted Publishing's floors
       # (npm >= 11.5.1, Node >= 22.14.0); upgrade npm to latest to be safe.
       # Corepack puts the repo-pinned pnpm on PATH for the build/test steps.
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org"
