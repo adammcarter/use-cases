@@ -5,7 +5,34 @@ All notable changes to this project are documented here. The format is based on
 follows [Semantic Versioning](https://semver.org) (see docs/release.md). This is
 **pre-1.0 (beta) software**: anything MAY change before `1.0.0`.
 
-## 0.4.2 - 2026-07-20
+## 0.4.3 - 2026-07-20
+
+0.4.2 was prepared but never tagged, so it never reached npm — `latest` stayed
+on 0.4.1 and no installer ever saw the skill-discoverability fix. 0.4.3 is that
+release plus the two fixes that landed after it. Everything listed under 0.4.2
+below ships here for the first time. No command, field, or output shape from
+0.4.1 changes.
+
+### Fixed
+
+- **A nested workspace's markers are no longer charged to its parent.** A
+  workspace containing another workspace counted the child's markers as its own,
+  so the parent's scan reported coverage it did not have. Marker collection now
+  stops at a nested workspace boundary.
+- **The installer test suite no longer depends on a locally installed host.**
+  The agent-hook installer tests assumed a `claude` binary was on PATH and
+  failed on machines without one, making the suite unrunnable in a clean
+  environment.
+
+### Changed
+
+- **Version-parity tests derive the version instead of hardcoding it.** The
+  release-gate, smoke, and pack tests pinned `0.4.2` in string literals and in
+  packed tarball filenames, so every version bump broke them and the break was
+  only discovered mid-release. They now read the root `package.json` version via
+  `tests/helpers/package-version.ts`.
+
+## 0.4.2 - 2026-07-20 (never published)
 
 The skills this package ships have never been loadable. A general agent asked to
 run a live showcase built a throwaway script instead — exactly the failure
