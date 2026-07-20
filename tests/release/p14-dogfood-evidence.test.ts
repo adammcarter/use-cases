@@ -44,6 +44,8 @@ describe("P14 v1 release dogfood evidence", () => {
       "hosts.profiles.bootstrap_visibility",
       "hosts.profiles.first_class_profile_set",
       "hosts.profiles.live_activation_caveat",
+      "hosts.profiles.plugin_registration",
+      "hosts.profiles.plugin_state_ownership",
       "hosts.profiles.projection_checksum_integrity",
       "hosts.profiles.smoke_signal_resilience",
       "hosts.profiles.surface_limitations",
@@ -116,7 +118,9 @@ describe("P14 v1 release dogfood evidence", () => {
       "showcase.flow.status_separation",
       "showcase.live.user_signoff",
       "skills.assets.asset_validation",
-      "skills.assets.degraded_assets"
+      "skills.assets.degraded_assets",
+      "skills.assets.host_declaration",
+      "skills.assets.unreachable_skills_fail_doctor"
     ]);
   });
 

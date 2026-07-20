@@ -63,7 +63,7 @@ describe("P0 MCP wire contract", () => {
       result: {
         serverInfo: {
           name: "@adammcarter/use-cases",
-          version: "0.4.1"
+          version: "0.4.2"
         }
       }
     });

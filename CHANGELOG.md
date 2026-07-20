@@ -5,6 +5,46 @@ All notable changes to this project are documented here. The format is based on
 follows [Semantic Versioning](https://semver.org) (see docs/release.md). This is
 **pre-1.0 (beta) software**: anything MAY change before `1.0.0`.
 
+## 0.4.2 - 2026-07-20
+
+The skills this package ships have never been loadable. A general agent asked to
+run a live showcase built a throwaway script instead — exactly the failure
+`showcase/SKILL.md` exists to prevent — because it had no way to reach that file.
+This release makes the four skills reachable and stops the tooling from calling
+that state healthy. No command, field, or output shape from 0.4.1 changes.
+
+### Fixed
+
+- **The shipped skills are now discoverable by an agent.** `.agents/skills`
+  contains `use-cases`, `showcase`, `walkthrough`, and `migration`, but nothing
+  told a host they were there, and the package was never installable as a plugin
+  in the first place — so it reached Claude only through the SessionStart hook,
+  which delivers bootstrap text and cannot load skills. The plugin manifest now
+  declares the directory (hosts only auto-scan `skills/` at plugin root), a
+  marketplace manifest ships so the package can be added at all, and a global
+  install registers the plugin through the host's own
+  `claude plugin marketplace add` / `install`. Verified on a real host:
+  `claude plugin details` reports `Skills (4)`.
+- **A reinstall no longer silently skips registration.** Hosts report an
+  already-added marketplace as a non-zero failure, which would have aborted
+  before the install step — leaving every upgrade after the first with
+  unregistered skills.
+- **`uc doctor skills` no longer passes on skills nobody can load.** It checked
+  only that the `SKILL.md` files existed and parsed, and stayed green through the
+  entire period the skills were unreachable. It now also fails when no host
+  declares a directory containing them (`skills.host_not_declared`) or the
+  package is not installable (`skills.host_not_installable`), and reports a
+  `host_registration` summary. This is additive: `complete` can now be `false`
+  for a checkout that is missing host registration.
+
+### Notes
+
+- Registration goes through the host CLI only. This package never writes
+  `~/.claude/plugins/*.json` itself — that state belongs to the host, and other
+  installers converge it through the same CLI, so a second writer would disagree
+  with the host about what is installed. `docs/hosts.md` records the boundary.
+- Registration failure warns; it never fails the package install.
+
 ## 0.4.1 - 2026-07-14
 
 Field-feedback patch, from two agents who used `use-cases` hard on a real

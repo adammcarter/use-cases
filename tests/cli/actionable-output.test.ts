@@ -1,7 +1,7 @@
-// 0.4.1 — the tool must hand you the NEXT COMMAND, not just a verdict.
+// 0.4.2 — the tool must hand you the NEXT COMMAND, not just a verdict.
 //
 // Two field reports, same complaint: the tool describes state and leaves the
-// reader to work out the cure. This pins the two places 0.4.1 fixed that, at the
+// reader to work out the cure. This pins the two places 0.4.2 fixed that, at the
 // CLI level (the surface an agent actually sees):
 //
 //   1. `uc bind` succeeds and FEELS like progress, so rows get bound and left
