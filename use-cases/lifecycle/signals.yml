@@ -419,3 +419,74 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
+
+  - id: lifecycle.signals.nested_workspace_is_not_scanned
+    title: A nested workspace's markers are never read as the parent's
+    lifecycle: active
+    value_tier: critical
+    journey_role: edge
+    usage_frequency: common
+    tags:
+      - scan
+      - markers
+      - integrity
+    source_refs:
+      - kind: file
+        path: packages/core/src/markers/cli/shared.ts
+      - kind: file
+        path: packages/core/test/markers/skipBuildDirs.test.ts
+    actor: agent
+    intent: >-
+      Scan a repository that contains a nested workspace — a shipped example, a
+      test fixture, a vendored sample app — without the nested workspace's own
+      `@use-case:` markers being charged against the parent's matrix and failing
+      the integrity gate.
+    preconditions:
+      - A repository whose subtree contains a directory carrying its own use-cases.yml.
+    trigger: An agent or CI runs `uc scan` from the parent repository root.
+    scenarios:
+      - id: lifecycle.signals.nested_workspace_is_not_scanned.fixture
+        kind: steps
+        steps:
+          - Place a nested workspace config plus a marked source file under a test-fixture path.
+          - Scan from the parent root and read which files were collected.
+      - id: lifecycle.signals.nested_workspace_is_not_scanned.any_name
+        kind: steps
+        steps:
+          - Repeat with the nested workspace under a directory with no blessed name, such as vendor/demo-app.
+          - Confirm it is skipped because of its config, not its name.
+      - id: lifecycle.signals.nested_workspace_is_not_scanned.root_config
+        kind: steps
+        steps:
+          - Scan a repository whose OWN product root carries a use-cases.yml.
+          - Confirm the root's config does not skip the entire repository.
+    observable_outcomes:
+      - A directory carrying its own use-cases.yml or use-cases.yaml is not walked by the parent's scan.
+      - The rule keys on the workspace config file, so a newly added nested workspace needs no hardcoded skip entry.
+      - The check applies to child directories only; the product root's own config still scans the whole repository.
+      - The parent scan no longer emits UNREGISTERED_BINDING or ROW_NOT_FOUND for markers that belong to a nested workspace.
+      - A nested workspace's own `scan --repo <dir>` is unaffected, because its config sits at its product root rather than below it.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - packages/core/test/markers/skipBuildDirs.test.ts
+          inputs:
+            - packages/core/test/markers/skipBuildDirs.test.ts
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none

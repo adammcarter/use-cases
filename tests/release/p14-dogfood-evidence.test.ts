@@ -60,6 +60,7 @@ describe("P14 v1 release dogfood evidence", () => {
       "lifecycle.signals.bind_names_the_next_step",
       "lifecycle.signals.errors_hand_back_the_cure",
       "lifecycle.signals.impact_leads_with_the_union",
+      "lifecycle.signals.nested_workspace_is_not_scanned",
       "lifecycle.signals.transient_output_stays_out_of_git",
       "lifecycle.signals.verify_can_be_previewed",
       "lifecycle.signals.verify_preserves_other_rows",

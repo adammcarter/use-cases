@@ -62,14 +62,22 @@ const DEFAULT_SKIP_DIRS = new Set([
   "coverage",
   ".next",
   ".turbo",
-  ".svelte-kit",
-  // Sample/nested example projects ship their OWN matrix + markers (a nested
-  // workspace). Their markers reference the example's rows, not the parent's, so
-  // scanning them from the parent repo would read as INVALID. Skip by default;
-  // the example's own `scan --repo examples/<name>` has no `examples/` subtree
-  // and is unaffected. (examples/ is not part of the published package either.)
-  "examples"
+  ".svelte-kit"
 ]);
+
+// A directory carrying its own workspace config IS its own workspace: its markers
+// name ITS rows, so reading them from the parent reports them as ROW_NOT_FOUND.
+// This subsumes the old hardcoded `examples` skip — that was one instance of the
+// rule — and covers test fixtures and vendored sample apps, which hit the same
+// wall. The nested workspace's own `scan --repo <dir>` is unaffected, since that
+// config sits at ITS product root rather than below it.
+//: @use-case:lifecycle.signals.nested_workspace_is_not_scanned
+const WORKSPACE_CONFIG_FILES = ["use-cases.yml", "use-cases.yaml"];
+
+function isNestedWorkspace(fs: MarkerFs, dir: string): boolean {
+  return WORKSPACE_CONFIG_FILES.some((name) => fs.readText(join(dir, name)) !== null);
+}
+//: @use-case:end lifecycle.signals.nested_workspace_is_not_scanned
 
 export interface CollectSourceOptions {
   fs?: MarkerFs;
@@ -101,6 +109,11 @@ export function collectSourceInputs(productRoot: string, options: CollectSourceO
       const full = join(dir, entry.name);
       if (entry.isDirectory) {
         if (DEFAULT_SKIP_DIRS.has(entry.name) || skip.has(full)) {
+          continue;
+        }
+        // Checked on the child, never the product root itself — otherwise the
+        // repo's own config would skip the entire scan.
+        if (isNestedWorkspace(fs, full)) {
           continue;
         }
         walk(full);
