@@ -198,6 +198,10 @@ export interface FreshnessRowOut {
   // never changes the headline `status`.
   local_status?: LocalStatus | null;
   local_reason?: string | null;
+  // For a variant family only: the per-variant keyless local status breakdown, in
+  // stable key order. The family's own `local_status` is VERIFIED_LOCAL iff every
+  // entry here is VERIFIED_LOCAL. Additive/optional — absent for ordinary rows.
+  variant_local_status?: Array<{ key: string; local_status: LocalStatus }>;
 }
 
 export interface FreshnessSummary {
@@ -987,10 +991,41 @@ export function deriveFreshness(input: DeriveFreshnessInput): FreshnessStatus {
     // reports null. Never influences the signed `status` above.
     let localStatus: LocalStatus | null | undefined;
     let localReason: string | null | undefined;
+    let variantLocalStatus: Array<{ key: string; local_status: LocalStatus }> | undefined;
+    // A variant family: its keyless local tier is derived from ITS VARIANTS' results,
+    // which verify records under `<family>::<key>` (never the family id). The family
+    // is VERIFIED_LOCAL iff every declared variant is; otherwise it takes the weakest
+    // variant status (STALE over UNVERIFIED). Each variant's binding-set hash mixes in
+    // its own record id over the shared family span, matching what verify wrote.
+    const familyVariantKeys = Array.isArray((inputRow as { variants?: unknown })?.variants)
+      ? [...((inputRow as { variants?: Array<{ key: string }> }).variants ?? [])]
+          .map((variant) => variant.key)
+          .sort((left, right) => (left < right ? -1 : left > right ? 1 : 0))
+      : [];
     if (localResultsProvided) {
       const bound =
         status !== "INVALID" && status !== "UNBOUND" && currentRegistered.length > 0;
-      if (bound && status === "FRESH") {
+      if (bound && familyVariantKeys.length > 0 && status !== "FRESH") {
+        const setMembers = currentRegistered.map(bindingToSetMember);
+        const contextHash = input.current_context_hashes?.get(rowId);
+        const breakdown = familyVariantKeys.map((key) => {
+          const variantRowId = `${rowId}::${key}`;
+          const derived = deriveLocalStatus(
+            localResultsByRow.get(variantRowId) ?? [],
+            contextHash,
+            computeBindingSetHash(variantRowId, setMembers)
+          );
+          return { key, local_status: derived.local_status };
+        });
+        variantLocalStatus = breakdown;
+        const allVerified = breakdown.every((entry) => entry.local_status === "VERIFIED_LOCAL");
+        const anyStale = breakdown.some((entry) => entry.local_status === "STALE_LOCAL");
+        localStatus = allVerified ? "VERIFIED_LOCAL" : anyStale ? "STALE_LOCAL" : "UNVERIFIED_LOCAL";
+        const failing = breakdown.filter((entry) => entry.local_status !== "VERIFIED_LOCAL");
+        localReason = allVerified
+          ? null
+          : `variant(s) not VERIFIED_LOCAL: ${failing.map((entry) => entry.key).join(", ")}`;
+      } else if (bound && status === "FRESH") {
         // FRESH precedence: a trusted signed proof is a strictly stronger
         // guarantee than an unsigned local run, so it always satisfies the
         // keyless daily light — even when the throwaway verify-results ledger
@@ -1034,6 +1069,9 @@ export function deriveFreshness(input: DeriveFreshnessInput): FreshnessStatus {
     if (localStatus !== undefined) {
       rowOut.local_status = localStatus;
       rowOut.local_reason = localReason ?? null;
+    }
+    if (variantLocalStatus !== undefined) {
+      rowOut.variant_local_status = variantLocalStatus;
     }
     // Only emit a binding-set hash when the row has registered current bindings.
     if (currentRegistered.length > 0) {

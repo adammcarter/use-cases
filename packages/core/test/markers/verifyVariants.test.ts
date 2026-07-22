@@ -5,12 +5,14 @@ import { afterEach, describe, expect, test } from "vitest";
 import { resolveWorkspaceContext } from "../../src/index.js";
 import {
   runBindCommand,
+  runScanCommand,
   runVerifyCommand,
   singleKeyResolver,
   type VerifySpawnRequest,
   type VerifySpawnResult,
   type VerifySpawnRunner
 } from "../../src/markers/index.js";
+import { join as pathJoin } from "node:path";
 import { generateKeyPairSync } from "node:crypto";
 
 // Increment 4 (variant parametrization): verify treats each variant as its own row.
@@ -217,5 +219,59 @@ describe("verify — variant families (increment 4)", () => {
     expect(spy.calls).toHaveLength(0);
     expect(result.results.every((r) => r.status !== "pass")).toBe(true);
     expect(result.errors.some((e) => e.code === "VARIANT_TOKEN_MISSING")).toBe(true);
+  });
+});
+
+describe("scan — variant family local status (increment 6)", () => {
+  function scanBase(ws: ReturnType<typeof makeWorkspace>) {
+    return {
+      context: ws.context,
+      productRoot: ws.productRoot,
+      bindingsPath: ws.bindingsPath,
+      evidencePath: ws.evidencePath,
+      publicKeyResolver: resolver,
+      policyMode: "feature" as const,
+      generatedAt: GENERATED_AT,
+      repoCwd: ws.context.workspace_root
+    };
+  }
+
+  function familyRow(ws: ReturnType<typeof makeWorkspace>) {
+    const scan = runScanCommand(scanBase(ws));
+    return scan.status.rows.find((row) => row.row_id === "cart.quantity");
+  }
+
+  const ledger = (ws: ReturnType<typeof makeWorkspace>) =>
+    pathJoin(ws.context.data_root, ".use-cases", "verification-results.jsonl");
+
+  test("family is VERIFIED_LOCAL only when EVERY variant passes", () => {
+    const ws = makeWorkspace(["echo", "{variant}"], ["zero", "one", "many"]);
+    bindFamily(ws);
+    runVerifyCommand({ ...verifyBase(ws), all: true, spawnRunner: spySpawn().runner, outPath: ledger(ws) });
+
+    const row = familyRow(ws);
+    expect(row?.local_status).toBe("VERIFIED_LOCAL");
+    // Breakdown: each variant is green.
+    const breakdown = new Map((row?.variant_local_status ?? []).map((v) => [v.key, v.local_status]));
+    expect(breakdown.get("zero")).toBe("VERIFIED_LOCAL");
+    expect(breakdown.get("many")).toBe("VERIFIED_LOCAL");
+  });
+
+  test("one failing variant keeps the family out of VERIFIED_LOCAL and names it", () => {
+    const ws = makeWorkspace(["echo", "{variant}"], ["zero", "one", "negative"]);
+    bindFamily(ws);
+    runVerifyCommand({
+      ...verifyBase(ws),
+      all: true,
+      spawnRunner: spySpawn(["negative"]).runner,
+      outPath: ledger(ws)
+    });
+
+    const row = familyRow(ws);
+    expect(row?.local_status).not.toBe("VERIFIED_LOCAL");
+    const breakdown = new Map((row?.variant_local_status ?? []).map((v) => [v.key, v.local_status]));
+    expect(breakdown.get("zero")).toBe("VERIFIED_LOCAL");
+    expect(breakdown.get("one")).toBe("VERIFIED_LOCAL");
+    expect(breakdown.get("negative")).not.toBe("VERIFIED_LOCAL");
   });
 });
