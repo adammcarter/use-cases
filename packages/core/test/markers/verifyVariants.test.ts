@@ -5,6 +5,7 @@ import { afterEach, describe, expect, test } from "vitest";
 import { resolveWorkspaceContext } from "../../src/index.js";
 import {
   runBindCommand,
+  runProveCommand,
   runScanCommand,
   runVerifyCommand,
   singleKeyResolver,
@@ -12,7 +13,6 @@ import {
   type VerifySpawnResult,
   type VerifySpawnRunner
 } from "../../src/markers/index.js";
-import { join as pathJoin } from "node:path";
 import { generateKeyPairSync } from "node:crypto";
 
 // Increment 4 (variant parametrization): verify treats each variant as its own row.
@@ -242,7 +242,7 @@ describe("scan — variant family local status (increment 6)", () => {
   }
 
   const ledger = (ws: ReturnType<typeof makeWorkspace>) =>
-    pathJoin(ws.context.data_root, ".use-cases", "verification-results.jsonl");
+    join(ws.context.data_root, ".use-cases", "verification-results.jsonl");
 
   test("family is VERIFIED_LOCAL only when EVERY variant passes", () => {
     const ws = makeWorkspace(["echo", "{variant}"], ["zero", "one", "many"]);
@@ -311,5 +311,55 @@ describe("verify — variant CLI targeting (increment 7)", () => {
     const zero = planned.find((p) => p.row_id === "cart.quantity::zero");
     expect(zero?.command).toEqual(["echo", "zero"]);
     expect(zero?.disposition).toBe("run");
+  });
+});
+
+// ── Review findings (probed live, confirmed): honest signals for families ────
+
+describe("verify/prove — variant family honesty fixes (review)", () => {
+  test("--dry-run on a token-less family previews blocked, not run", () => {
+    const ws = makeWorkspace(["echo", "static"], ["zero", "one", "many"]);
+    bindFamily(ws);
+    const spy = spySpawn();
+    const result = runVerifyCommand({
+      ...verifyBase(ws),
+      all: true,
+      dryRun: true,
+      spawnRunner: spy.runner
+    });
+    expect(spy.calls).toHaveLength(0);
+    const planned = result.planned ?? [];
+    expect(planned).toHaveLength(3);
+    // The preview must mirror the real run: these would BLOCK, so say so.
+    expect(planned.every((p) => p.disposition === "blocked")).toBe(true);
+    expect(result.errors.filter((e) => e.code === "VARIANT_TOKEN_MISSING")).toHaveLength(1);
+  });
+
+  test("a token-less family surfaces ONE spec error, not one per variant", () => {
+    const ws = makeWorkspace(["echo", "static"], ["zero", "one", "many"]);
+    bindFamily(ws);
+    const result = runVerifyCommand({ ...verifyBase(ws), all: true, spawnRunner: spySpawn().runner });
+    expect(result.errors.filter((e) => e.code === "VARIANT_TOKEN_MISSING")).toHaveLength(1);
+  });
+
+  test("prove on a variant family fails honestly, not with a looping remediation", () => {
+    const ws = makeWorkspace(["echo", "{variant}"], ["zero", "one"]);
+    bindFamily(ws);
+    // Verify first so variant records exist — prove must still refuse, because the
+    // signed tier has no variant support yet, and must SAY that rather than sending
+    // the agent round a verify loop that can never satisfy it.
+    runVerifyCommand({ ...verifyBase(ws), all: true, spawnRunner: spySpawn().runner });
+    const result = runProveCommand({
+      ...verifyBase(ws),
+      rowId: "cart.quantity",
+      trustedCi: false,
+      verificationResults: [],
+      append: false,
+      idFactory: makeId()
+    });
+    const row = result.rows.find((r) => r.row_id === "cart.quantity");
+    expect(row?.status).toBe("failed");
+    expect(row?.reason).toBe("VARIANT_FAMILY_UNSUPPORTED");
+    expect(row?.message).not.toContain("run `uc verify");
   });
 });

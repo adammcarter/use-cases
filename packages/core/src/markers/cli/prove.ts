@@ -49,7 +49,7 @@ import type { FreshnessInputRow } from "../freshness.js";
 import type { GitRunner } from "../appendOnly.js";
 import { appendJsonlLine, nodeMarkerFs, type MarkerFs } from "./io.js";
 import { prepareScan, type ScanPreparation } from "./scan.js";
-import { registeredBindingsForRow } from "./shared.js";
+import { registeredBindingsForRow, rowVariants } from "./shared.js";
 import type { VerificationResultRecord } from "./verify.js";
 
 // The env var that must equal "1" for the dangerous unsafe-assume seam to be
@@ -308,6 +308,21 @@ function proveOneRow(args: ProveOneRowArgs): ProveRowResult {
     return rowResult(rowId, "failed", {
       reason: "ROW_NOT_FOUND",
       message: `row ${rowId} is not a known use-case row`
+    });
+  }
+
+  // A variant family cannot be signed yet: verify records per-variant results
+  // (`<family>::<key>`), and the signed tier has no variant model. Without this
+  // guard prove would report NO_PASSING_RESULT with a "run `uc verify` first"
+  // remediation that verify can NEVER satisfy — an infinite loop of honest-looking
+  // advice. Refuse with the truth instead.
+  if (rowVariants(loadedRow).length > 0) {
+    return rowResult(rowId, "failed", {
+      reason: "VARIANT_FAMILY_UNSUPPORTED",
+      message:
+        `row ${rowId} is a variant family; signed proofs for variant families are not ` +
+        `supported yet — use the keyless loop (\`uc verify --row ${rowId}\` then \`uc scan\`) ` +
+        `for per-variant local acceptance`
     });
   }
 

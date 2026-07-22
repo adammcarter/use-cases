@@ -235,6 +235,8 @@ export function runVerifyCommand(options: VerifyCommandOptions): VerifyCommandRe
       .sort((left, right) => (left < right ? -1 : left > right ? 1 : 0));
   }
 
+  const verifyErrors: Array<{ code: string; message: string }> = [];
+
   // --dry-run: resolve exactly what a real run WOULD execute, then stop. Nothing
   // is spawned, no ledger is written, and no result record is minted — a plan is
   // not evidence.
@@ -253,12 +255,19 @@ export function runVerifyCommand(options: VerifyCommandOptions): VerifyCommandRe
       }
       // A variant family plans one entry per variant (with {variant} substituted); an
       // ordinary row plans as itself. Mirrors the real-run fan-out so the preview is
-      // exactly what a run WOULD execute.
+      // exactly what a run WOULD execute — including the token-missing spec error,
+      // which would BLOCK a real run and so must preview as blocked, not "run".
       const variants = rowVariants(loadedRow);
       const planUnits =
         variants.length === 0
           ? [{ recordRowId: rowId, variantKey: undefined as string | undefined }]
           : variants.map((variant) => ({ recordRowId: `${rowId}::${variant.key}`, variantKey: variant.key as string | undefined }));
+      const tokenMissing =
+        variants.length > 0 &&
+        familyCannotDistinguishVariants(rowId, loadedRow, variants[0].key, options.context.verifiers);
+      if (tokenMissing) {
+        verifyErrors.push(variantTokenMissingError(rowId));
+      }
       for (const unit of planUnits) {
         const verifiers = resolveRowVerifiers(
           { slug: rowId, variant: unit.variantKey, verification_policy: loadedRow.verification_policy },
@@ -274,7 +283,17 @@ export function runVerifyCommand(options: VerifyCommandOptions): VerifyCommandRe
           });
           continue;
         }
-        for (const verifier of verifiers as ResolvedVerifier[]) {
+        const resolved = verifiers as ResolvedVerifier[];
+        if (tokenMissing && unit.variantKey !== undefined) {
+          planned.push({
+            row_id: unit.recordRowId,
+            verifier_id: resolved[0]?.verifier_id ?? null,
+            command: null,
+            disposition: "blocked"
+          });
+          continue;
+        }
+        for (const verifier of resolved) {
           planned.push({
             row_id: unit.recordRowId,
             verifier_id: verifier.verifier_id,
@@ -290,13 +309,12 @@ export function runVerifyCommand(options: VerifyCommandOptions): VerifyCommandRe
       out_path: null,
       planned,
       dry_run: true,
-      errors: []
+      errors: verifyErrors
     });
   }
 //: @use-case:end lifecycle.signals.verify_can_be_previewed
 
   const results: VerificationResultRecord[] = [];
-  const verifyErrors: Array<{ code: string; message: string }> = [];
   for (const rowId of targetRowIds) {
     const statusRow = prepared.status.rows.find((row) => row.row_id === rowId);
     const loadedRow = prepared.loaded.rows.find((row) => row.row_id === rowId);
@@ -341,6 +359,17 @@ export function runVerifyCommand(options: VerifyCommandOptions): VerifyCommandRe
             variantKey: variant.key as string | undefined
           }));
 
+    // Spec error, detected ONCE per family: a command with no {variant} token would
+    // "prove" every variant with the identical process. Surfaced as a single error;
+    // every variant unit records blocked and nothing is spawned for the family.
+    const familyTokenMissing =
+      variants.length > 0 &&
+      statusRow.status !== "INVALID" &&
+      familyCannotDistinguishVariants(rowId, loadedRow, variants[0].key, options.context.verifiers);
+    if (familyTokenMissing) {
+      verifyErrors.push(variantTokenMissingError(rowId));
+    }
+
     for (const unit of units) {
       // Per-variant integrity: hash a projection carrying this variant's identity so
       // each variant's row/binding-set hash is its own; binding-set hash mixes in the
@@ -382,26 +411,11 @@ export function runVerifyCommand(options: VerifyCommandOptions): VerifyCommandRe
 
       const resolved = verifiers as ResolvedVerifier[];
 
-      // Spec error: a variant family whose command can't distinguish variants (no
-      // {variant} token). Resolving with vs without the variant yields the SAME
-      // command -> the run would prove every variant identically. Surface, don't run.
-      if (unit.variantKey !== undefined) {
-        const variantless = resolveRowVerifiers(
-          { slug: rowId, verification_policy: loadedRow.verification_policy },
-          options.context.verifiers
-        ) as ResolvedVerifier[];
-        const cannotDistinguish = resolved.every(
-          (verifier, index) =>
-            JSON.stringify(verifier.command) === JSON.stringify(variantless[index]?.command)
-        );
-        if (cannotDistinguish) {
-          verifyErrors.push({
-            code: "VARIANT_TOKEN_MISSING",
-            message: `verifier for variant family '${rowId}' has no {variant} token, so it cannot distinguish variants; add {variant} to its command`
-          });
-          results.push({ ...base, status: "blocked", evidence_kind: null, verifier_id: resolved[0]?.verifier_id ?? null, verifier_kind: null, exit_code: null, stdout_sha256: null, stderr_sha256: null });
-          continue;
-        }
+      // Token-missing family (detected once, above): every variant unit records
+      // blocked and spawns nothing — the run cannot honestly distinguish variants.
+      if (unit.variantKey !== undefined && familyTokenMissing) {
+        results.push({ ...base, status: "blocked", evidence_kind: null, verifier_id: resolved[0]?.verifier_id ?? null, verifier_kind: null, exit_code: null, stdout_sha256: null, stderr_sha256: null });
+        continue;
       }
 
       // Every verifier resolved: run each, aggregate to a pass/fail verdict.
@@ -487,6 +501,45 @@ export function runVerifyCommand(options: VerifyCommandOptions): VerifyCommandRe
     out_path: outPath,
     errors: verifyErrors
   });
+}
+
+// A variant family whose resolved command is IDENTICAL with and without {variant}
+// cannot distinguish its variants: one process would "prove" every input shape at
+// once. Detected once per family from its first variant key (substitution is pure,
+// so any key answers for all). Blocked resolutions are excluded — they are already
+// their own, pre-existing failure mode.
+function familyCannotDistinguishVariants(
+  rowId: string,
+  loadedRow: FreshnessInputRow,
+  firstVariantKey: string,
+  workspaceVerifiers: Parameters<typeof resolveRowVerifiers>[1]
+): boolean {
+  const withVariant = resolveRowVerifiers(
+    { slug: rowId, variant: firstVariantKey, verification_policy: loadedRow.verification_policy },
+    workspaceVerifiers
+  );
+  if (withVariant.length === 0 || withVariant.some((verifier) => verifier.status === "blocked")) {
+    return false;
+  }
+  const without = resolveRowVerifiers(
+    { slug: rowId, verification_policy: loadedRow.verification_policy },
+    workspaceVerifiers
+  );
+  return withVariant.every((verifier, index) => {
+    const counterpart = without[index];
+    return (
+      verifier.status === "resolved" &&
+      counterpart?.status === "resolved" &&
+      JSON.stringify(verifier.command) === JSON.stringify(counterpart.command)
+    );
+  });
+}
+
+function variantTokenMissingError(rowId: string): { code: string; message: string } {
+  return {
+    code: "VARIANT_TOKEN_MISSING",
+    message: `verifier for variant family '${rowId}' has no {variant} token, so it cannot distinguish variants; add {variant} to its command`
+  };
 }
 
 // A variant's row projection: the family row minus its `variants` list, carrying the
