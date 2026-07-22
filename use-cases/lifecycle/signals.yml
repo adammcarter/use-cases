@@ -490,3 +490,75 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
+
+  - id: lifecycle.signals.variant_fanout
+    title: One family verifier proves every declared input variant
+    lifecycle: active
+    value_tier: core
+    journey_role: golden
+    usage_frequency: common
+    tags:
+      - verify
+      - variants
+      - parametrization
+    source_refs:
+      - kind: file
+        path: packages/core/src/markers/cli/verify.ts
+      - kind: file
+        path: packages/core/test/markers/verifyVariants.test.ts
+    actor: agent
+    intent: >-
+      Declare the input shapes of one behaviour (0/1/many, negative, boundary) as
+      variants of a single use-case, prove them all with one `uc verify` invocation,
+      and see exactly which shape fails without re-running anything.
+    preconditions:
+      - A use-case declares a non-empty variants list and its family is bound.
+      - The family's verifier command carries a {variant} token.
+    trigger: An agent runs `uc verify --row <family>` (or `--all`).
+    scenarios:
+      - id: lifecycle.signals.variant_fanout.loop
+        kind: steps
+        steps:
+          - Bind the family once (the code slug IS the family).
+          - Verify the family; one spawn per declared variant runs the shared verifier.
+          - Scan and read the family's per-variant local-status breakdown.
+    observable_outcomes:
+      - Each variant gets its own ledger record (row_id family::key) with its own hashes.
+      - The family is VERIFIED_LOCAL only when EVERY variant currently passes.
+      - A failing variant is named in the family's local_reason and breakdown.
+      - A family command without {variant} is a surfaced spec error, never a false pass.
+    host_applicability:
+      - host_surface: claude.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - packages/core/test/markers/verifyVariants.test.ts
+            - -t
+            - '{variant}'
+          inputs:
+            - packages/core/test/markers/verifyVariants.test.ts
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none
+    variants:
+      - key: spawn
+        title: One spawn per variant with per-variant records
+      - key: verdict
+        title: Exit code is each variant's own verdict
+      - key: names
+        title: A failing variant is named in the family breakdown
+      - key: dry
+        title: Dry-run previews the per-variant plan without spawning

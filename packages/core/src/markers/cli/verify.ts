@@ -331,6 +331,7 @@ export function runVerifyCommand(options: VerifyCommandOptions): VerifyCommandRe
     // A variant family fans out into one unit per declared variant; an ordinary row
     // is a single unit. Each unit produces ONE result record. The family stays the
     // bound row (slug = family id); a variant's record is keyed `<family>::<key>`.
+//: @use-case:lifecycle.signals.variant_fanout
     const variants = rowVariants(loadedRow);
     const units =
       variants.length === 0
@@ -423,6 +424,7 @@ export function runVerifyCommand(options: VerifyCommandOptions): VerifyCommandRe
       });
     }
   }
+//: @use-case:end lifecycle.signals.variant_fanout
 
   // Write the results ledger (one JSONL line per row) if requested. This is an
   // unsigned per-run snapshot — NOT the append-only trusted evidence ledger.
