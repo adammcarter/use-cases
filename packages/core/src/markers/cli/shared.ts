@@ -7,7 +7,7 @@
 import { isAbsolute, join, relative } from "node:path";
 import type { ResolvedWorkspaceContext } from "../../roots.js";
 import { loadUseCaseMatrix } from "../../useCases/loadUseCaseMatrix.js";
-import type { MatrixSnapshot, UseCaseV1 } from "../../useCases/types.js";
+import type { MatrixSnapshot } from "../../useCases/types.js";
 import type { FreshnessInputRow } from "../freshness.js";
 import type { PemOrKeyObject, PublicKeyResolver } from "../proofSignature.js";
 import {
@@ -29,49 +29,34 @@ export interface LoadedMarkerRows {
 
 export function loadMarkerRows(context: ResolvedWorkspaceContext): LoadedMarkerRows {
   const snapshot = loadUseCaseMatrix({ context });
-  const rows: FreshnessInputRow[] = snapshot.addressableUseCases.flatMap((useCase) =>
-    expandRow(useCase.value)
-  );
+  // A variant FAMILY stays ONE row here: the marker slug (and therefore the row id)
+  // is the family, and its `variants` ride along on the row as parameters. Variant
+  // fan-out (one spawn + one result record per variant) happens in verify, and the
+  // per-variant status breakdown in scan — both read the `variants` list off the row.
+  // Keeping the family as the row means binding, the slug grammar, and the freshness
+  // derivation stay unchanged; variants never need a slug the grammar forbids.
+  const rows: FreshnessInputRow[] = snapshot.addressableUseCases.map((useCase) => {
+    const value = useCase.value as Record<string, unknown>;
+    return {
+      ...value,
+      row_id: useCase.value.id,
+      verification_policy: value.verification_policy ?? null,
+      approval_policy: value.approval_policy ?? null
+    };
+  });
   return { rows, rowIds: new Set(rows.map((row) => row.row_id)), snapshot };
 }
 
-// The variant-family expansion point. A use-case with a non-empty `variants` list
-// becomes one marker row per variant (`<id>::<key>`); the family id itself is NOT a
-// verifiable row — it is only a container. Each variant row is a single-variant
-// projection: the `variants` array is stripped (so a variant's row hash reflects only
-// its own identity, not its siblings) and `variant_key` is injected. A use-case with
-// no variants is one ordinary row, byte-for-byte as before. Variant rows are emitted
-// in a stable key order so the row set is deterministic regardless of author ordering.
-function expandRow(value: UseCaseV1): FreshnessInputRow[] {
-  const record = value as Record<string, unknown>;
-  const base: FreshnessInputRow = {
-    ...record,
-    row_id: value.id,
-    verification_policy: record.verification_policy ?? null,
-    approval_policy: record.approval_policy ?? null
-  };
-
-  const variants = value.variants;
-  if (!variants || variants.length === 0) {
-    return [base];
+// The declared variants of a family row, in stable key order (or [] for an ordinary
+// row). The single source verify and scan both use to fan a family into its variants.
+export function rowVariants(row: FreshnessInputRow): Array<{ key: string; title?: string }> {
+  const variants = (row as { variants?: unknown }).variants;
+  if (!Array.isArray(variants)) {
+    return [];
   }
-
-  return [...variants]
-    .sort((left, right) => (left.key < right.key ? -1 : left.key > right.key ? 1 : 0))
-    .map((variant): FreshnessInputRow => {
-      const row: FreshnessInputRow = {
-        ...base,
-        row_id: `${value.id}::${variant.key}`,
-        variant_key: variant.key
-      };
-      // A variant row is a single-variant projection: drop the family's sibling list
-      // so a variant's row hash reflects only its own identity.
-      delete (row as Record<string, unknown>).variants;
-      if (variant.title !== undefined) {
-        (row as Record<string, unknown>).variant_title = variant.title;
-      }
-      return row;
-    });
+  return [...(variants as Array<{ key: string; title?: string }>)].sort((left, right) =>
+    left.key < right.key ? -1 : left.key > right.key ? 1 : 0
+  );
 }
 
 export function findRow(rows: ReadonlyArray<FreshnessInputRow>, rowId: string): FreshnessInputRow | undefined {
