@@ -26,6 +26,7 @@ import { expandPreset } from "./verifierPresets.js";
 export const DEFAULT_CONVENTION_VERIFIER_ID = "acceptance";
 
 const SLUG_TOKEN = "{slug}";
+const VARIANT_TOKEN = "{variant}";
 
 // The default evidence_kind for an entry that does not declare one (preset refs
 // may omit it). Matches the historical default-convention evidence kind.
@@ -35,6 +36,9 @@ const DEFAULT_EVIDENCE_KIND = "test_result";
 // substitute {slug}) plus the raw verification_policy object.
 export interface VerifierResolverRow {
   slug: string;
+  // When set (a variant row), `{variant}` is substituted in commands/inputs. For a
+  // variant row the caller passes the FAMILY id as `slug` and the variant key here.
+  variant?: string;
   verification_policy: unknown;
 }
 
@@ -76,7 +80,7 @@ export function resolveRowVerifiers(
   const rowVerifiers = extractVerifiers(row.verification_policy);
   const workspaceVerifiers = isRecord(workspace.verifiers) ? workspace.verifiers : {};
   return ids
-    .map((id) => resolveOne(id, row.slug, rowVerifiers, workspaceVerifiers, workspace.default))
+    .map((id) => resolveOne(id, row.slug, row.variant, rowVerifiers, workspaceVerifiers, workspace.default))
     .sort((left, right) =>
       left.verifier_id < right.verifier_id ? -1 : left.verifier_id > right.verifier_id ? 1 : 0
     );
@@ -85,23 +89,24 @@ export function resolveRowVerifiers(
 function resolveOne(
   id: string,
   slug: string,
+  variant: string | undefined,
   rowVerifiers: Record<string, unknown>,
   workspaceVerifiers: Record<string, unknown>,
   workspaceDefault: string | undefined
 ): VerifierResolution {
   // 1. The row's own declared verifier.
   if (isRecord(rowVerifiers[id])) {
-    return resolveEntry(id, slug, rowVerifiers[id] as Record<string, unknown>, "policy");
+    return resolveEntry(id, slug, variant, rowVerifiers[id] as Record<string, unknown>, "policy");
   }
   // 2. The workspace config's verifier of the same id.
   if (isRecord(workspaceVerifiers[id])) {
-    return resolveEntry(id, slug, workspaceVerifiers[id] as Record<string, unknown>, "workspace_config");
+    return resolveEntry(id, slug, variant, workspaceVerifiers[id] as Record<string, unknown>, "workspace_config");
   }
   // 3. The default-convention id, backed by the workspace's `verifiers.default`.
   if (id === DEFAULT_CONVENTION_VERIFIER_ID && typeof workspaceDefault === "string") {
     const target = workspaceVerifiers[workspaceDefault];
     if (isRecord(target)) {
-      return resolveEntry(id, slug, target as Record<string, unknown>, "workspace_default");
+      return resolveEntry(id, slug, variant, target as Record<string, unknown>, "workspace_default");
     }
     return {
       verifier_id: id,
@@ -125,28 +130,30 @@ function resolveOne(
 function resolveEntry(
   id: string,
   slug: string,
+  variant: string | undefined,
   entry: Record<string, unknown>,
   source: ResolvedVerifier["source"]
 ): VerifierResolution {
   if (typeof entry.preset === "string") {
-    return resolvePresetEntry(id, slug, entry, source);
+    return resolvePresetEntry(id, slug, variant, entry, source);
   }
-  return resolveScriptEntry(id, slug, entry, source);
+  return resolveScriptEntry(id, slug, variant, entry, source);
 }
 
 function resolvePresetEntry(
   id: string,
   slug: string,
+  variant: string | undefined,
   entry: Record<string, unknown>,
   source: ResolvedVerifier["source"]
 ): VerifierResolution {
-  const expansion = expandPreset(entry.preset as string, slug);
+  const expansion = expandPreset(entry.preset as string, slug, variant);
   if (expansion.status === "blocked") {
     return { verifier_id: id, status: "blocked", reason: expansion.reason };
   }
   // The entry may override inputs and supply evidence_kind / timeout_seconds.
   const inputs = Array.isArray(entry.inputs)
-    ? toStringArray(entry.inputs).map((part) => substituteSlug(part, slug))
+    ? toStringArray(entry.inputs).map((part) => substituteTokens(part, slug, variant))
     : expansion.expansion.inputs;
   const resolved: ResolvedVerifier = {
     verifier_id: id,
@@ -167,6 +174,7 @@ function resolvePresetEntry(
 function resolveScriptEntry(
   id: string,
   slug: string,
+  variant: string | undefined,
   entry: Record<string, unknown>,
   source: ResolvedVerifier["source"]
 ): ResolvedVerifier {
@@ -177,8 +185,8 @@ function resolveScriptEntry(
     kind: "script",
     evidence_kind:
       typeof entry.evidence_kind === "string" ? entry.evidence_kind : DEFAULT_EVIDENCE_KIND,
-    command: toStringArray(entry.command).map((part) => substituteSlug(part, slug)),
-    inputs: toStringArray(entry.inputs).map((part) => substituteSlug(part, slug))
+    command: toStringArray(entry.command).map((part) => substituteTokens(part, slug, variant)),
+    inputs: toStringArray(entry.inputs).map((part) => substituteTokens(part, slug, variant))
   };
   if (typeof entry.timeout_seconds === "number") {
     resolved.timeout_seconds = entry.timeout_seconds;
@@ -213,8 +221,9 @@ function extractVerifiers(policy: unknown): Record<string, unknown> {
   return {};
 }
 
-function substituteSlug(value: string, slug: string): string {
-  return value.split(SLUG_TOKEN).join(slug);
+function substituteTokens(value: string, slug: string, variant: string | undefined): string {
+  const withSlug = value.split(SLUG_TOKEN).join(slug);
+  return variant === undefined ? withSlug : withSlug.split(VARIANT_TOKEN).join(variant);
 }
 
 function toStringArray(value: unknown): string[] {

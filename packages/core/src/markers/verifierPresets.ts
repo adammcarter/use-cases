@@ -12,6 +12,7 @@
 // mirroring the resolver's return-blocked contract so the two compose cleanly.
 
 const SLUG_TOKEN = "{slug}";
+const VARIANT_TOKEN = "{variant}";
 
 // The canonical preset id union. Keep in sync with the `verifier_preset_id`
 // enum in schemas/v1/common.schema.json.
@@ -63,8 +64,13 @@ export function isVerifierPresetId(value: unknown): value is VerifierPresetId {
 }
 
 // Expand a preset id into its concrete `{ kind, command, inputs }`, substituting
-// `{slug}` throughout. Unknown ids return BLOCKED rather than throwing.
-export function expandPreset(presetId: string, slug: string): PresetExpansion {
+// `{slug}` (and, for a variant row, `{variant}`) throughout. Unknown ids return
+// BLOCKED rather than throwing.
+export function expandPreset(
+  presetId: string,
+  slug: string,
+  variant?: string
+): PresetExpansion {
   if (!isVerifierPresetId(presetId)) {
     return {
       status: "blocked",
@@ -77,12 +83,13 @@ export function expandPreset(presetId: string, slug: string): PresetExpansion {
     preset: presetId,
     expansion: {
       kind: "script",
-      command: template.command.map((part) => substituteSlug(part, slug)),
-      inputs: template.inputs.map((part) => substituteSlug(part, slug))
+      command: template.command.map((part) => substituteTokens(part, slug, variant)),
+      inputs: template.inputs.map((part) => substituteTokens(part, slug, variant))
     }
   };
 }
 
-function substituteSlug(value: string, slug: string): string {
-  return value.split(SLUG_TOKEN).join(slug);
+function substituteTokens(value: string, slug: string, variant: string | undefined): string {
+  const withSlug = value.split(SLUG_TOKEN).join(slug);
+  return variant === undefined ? withSlug : withSlug.split(VARIANT_TOKEN).join(variant);
 }
