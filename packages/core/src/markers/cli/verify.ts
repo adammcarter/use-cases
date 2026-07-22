@@ -16,6 +16,7 @@ import type { ResolvedWorkspaceContext } from "../../roots.js";
 import type { CommentPrefixConfig } from "../commentPrefix.js";
 import { sha256 } from "../canonicalJson.js";
 import { computeRowHash } from "../rowHash.js";
+import type { FreshnessInputRow } from "../freshness.js";
 import { computeBindingSetHash } from "../bindingSetHash.js";
 import { computeRowVerificationContextHash } from "../verificationContextHash.js";
 import { resolveRowVerifiers, type ResolvedVerifier } from "../verifierResolver.js";
@@ -24,7 +25,7 @@ import type { CurrentBindingRecord } from "../scanner.js";
 import type { GitRunner } from "../appendOnly.js";
 import { nodeMarkerFs, type MarkerFs } from "./io.js";
 import { prepareScan } from "./scan.js";
-import { registeredBindingsForRow } from "./shared.js";
+import { registeredBindingsForRow, rowVariants } from "./shared.js";
 
 // The schema id of one unsigned verification result line.
 export const VERIFICATION_RESULT_SCHEMA_ID = "ucase-verification-result-v1";
@@ -67,6 +68,10 @@ export interface VerificationResultRecord {
   stdout_sha256: string | null;
   stderr_sha256: string | null;
   created_at: string;
+  // Set only for a variant record (row_id `<family>::<key>`): the variant's key.
+  // Additive/optional — an ordinary row's record omits it, so existing ledgers and
+  // older readers are unaffected.
+  variant_key?: string;
 }
 
 export interface VerifyCommandOptions {
@@ -281,6 +286,7 @@ export function runVerifyCommand(options: VerifyCommandOptions): VerifyCommandRe
 //: @use-case:end lifecycle.signals.verify_can_be_previewed
 
   const results: VerificationResultRecord[] = [];
+  const verifyErrors: Array<{ code: string; message: string }> = [];
   for (const rowId of targetRowIds) {
     const statusRow = prepared.status.rows.find((row) => row.row_id === rowId);
     const loadedRow = prepared.loaded.rows.find((row) => row.row_id === rowId);
@@ -290,23 +296,20 @@ export function runVerifyCommand(options: VerifyCommandOptions): VerifyCommandRe
 
     const registeredSlugs = new Set(statusRow.known_binding_slugs);
     const bindings = registeredBindingsForRow(prepared.scan.bindings, rowId, registeredSlugs);
-
-    const rowHash = computeRowHash(loadedRow);
-    const bindingSetHash = computeBindingSetHash(
-      rowId,
-      bindings.map((binding) => ({
-        binding_slug: binding.binding_slug,
-        row_id: binding.row_id,
-        file_path: binding.file_path,
-        extent_kind: binding.extent_kind,
-        recognizer_id: binding.recognizer_id,
-        span_canon_id: binding.span_canon_id,
-        span_sha256: binding.span.sha256
-      }))
-    );
+    const bindingSetMembers = bindings.map((binding) => ({
+      binding_slug: binding.binding_slug,
+      row_id: binding.row_id,
+      file_path: binding.file_path,
+      extent_kind: binding.extent_kind,
+      recognizer_id: binding.recognizer_id,
+      span_canon_id: binding.span_canon_id,
+      span_sha256: binding.span.sha256
+    }));
     const spanHashes = bindings
       .map((binding) => binding.span.sha256)
       .sort((left, right) => (left < right ? -1 : left > right ? 1 : 0));
+    // Context hash is family-level (verifier DEFINITION, not the {variant}-substituted
+    // command), so a family and all its variants agree with scan/prove.
     const contextHash = computeRowVerificationContextHash({
       slug: rowId,
       verificationPolicy: loadedRow.verification_policy,
@@ -315,81 +318,100 @@ export function runVerifyCommand(options: VerifyCommandOptions): VerifyCommandRe
       workspaceVerifiers: options.context.verifiers
     });
 
-    const base = {
-      schema: VERIFICATION_RESULT_SCHEMA_ID,
-      row_id: rowId,
-      slug: rowId,
-      row_hash: rowHash,
-      binding_set_hash: bindingSetHash,
-      span_sha256s: spanHashes,
-      verification_context_hash: contextHash,
-      created_at: options.generatedAt
-    } as const;
+    // A variant family fans out into one unit per declared variant; an ordinary row
+    // is a single unit. Each unit produces ONE result record. The family stays the
+    // bound row (slug = family id); a variant's record is keyed `<family>::<key>`.
+    const variants = rowVariants(loadedRow);
+    const units =
+      variants.length === 0
+        ? [{ recordRowId: rowId, variantKey: undefined as string | undefined }]
+        : variants.map((variant) => ({
+            recordRowId: `${rowId}::${variant.key}`,
+            variantKey: variant.key as string | undefined
+          }));
 
-    // An INVALID row (binding integrity errors) cannot be verified -> fail.
-    if (statusRow.status === "INVALID") {
+    for (const unit of units) {
+      // Per-variant integrity: hash a projection carrying this variant's identity so
+      // each variant's row/binding-set hash is its own; binding-set hash mixes in the
+      // variant record id over the SHARED family span.
+      const unitRow =
+        unit.variantKey === undefined
+          ? loadedRow
+          : variantRowProjection(loadedRow, unit.recordRowId, unit.variantKey);
+      const base = {
+        schema: VERIFICATION_RESULT_SCHEMA_ID as VerificationResultRecord["schema"],
+        row_id: unit.recordRowId,
+        slug: unit.recordRowId,
+        row_hash: computeRowHash(unitRow),
+        binding_set_hash: computeBindingSetHash(unit.recordRowId, bindingSetMembers),
+        span_sha256s: spanHashes,
+        verification_context_hash: contextHash,
+        created_at: options.generatedAt,
+        ...(unit.variantKey !== undefined ? { variant_key: unit.variantKey } : {})
+      };
+
+      // An INVALID row (binding integrity errors) cannot be verified -> fail.
+      if (statusRow.status === "INVALID") {
+        results.push({ ...base, status: "fail", evidence_kind: null, verifier_id: null, verifier_kind: null, exit_code: null, stdout_sha256: null, stderr_sha256: null });
+        continue;
+      }
+
+      // Same workspace verifiers prove/scan use; a variant substitutes {variant}.
+      const verifiers = resolveRowVerifiers(
+        { slug: rowId, variant: unit.variantKey, verification_policy: loadedRow.verification_policy },
+        options.context.verifiers
+      );
+
+      // A bound row that demands NO verifier (e.g. mode:none) -> blocked.
+      const blocked = verifiers.find((verifier) => verifier.status === "blocked");
+      if (verifiers.length === 0 || blocked) {
+        results.push({ ...base, status: "blocked", evidence_kind: null, verifier_id: blocked ? blocked.verifier_id : null, verifier_kind: null, exit_code: null, stdout_sha256: null, stderr_sha256: null });
+        continue;
+      }
+
+      const resolved = verifiers as ResolvedVerifier[];
+
+      // Spec error: a variant family whose command can't distinguish variants (no
+      // {variant} token). Resolving with vs without the variant yields the SAME
+      // command -> the run would prove every variant identically. Surface, don't run.
+      if (unit.variantKey !== undefined) {
+        const variantless = resolveRowVerifiers(
+          { slug: rowId, verification_policy: loadedRow.verification_policy },
+          options.context.verifiers
+        ) as ResolvedVerifier[];
+        const cannotDistinguish = resolved.every(
+          (verifier, index) =>
+            JSON.stringify(verifier.command) === JSON.stringify(variantless[index]?.command)
+        );
+        if (cannotDistinguish) {
+          verifyErrors.push({
+            code: "VARIANT_TOKEN_MISSING",
+            message: `verifier for variant family '${rowId}' has no {variant} token, so it cannot distinguish variants; add {variant} to its command`
+          });
+          results.push({ ...base, status: "blocked", evidence_kind: null, verifier_id: resolved[0]?.verifier_id ?? null, verifier_kind: null, exit_code: null, stdout_sha256: null, stderr_sha256: null });
+          continue;
+        }
+      }
+
+      // Every verifier resolved: run each, aggregate to a pass/fail verdict.
+      const runs = resolved.map((verifier) => ({
+        verifier,
+        outcome: spawn({ command: verifier.command, cwd: contextRoot, timeout_seconds: verifier.timeout_seconds })
+      }));
+      const firstFailure = runs.find((run) => run.outcome.exit_code !== 0 || run.outcome.timed_out);
+      const decisive = firstFailure ?? runs[0];
+
       results.push({
         ...base,
-        status: "fail",
-        evidence_kind: null,
-        verifier_id: null,
-        verifier_kind: null,
-        exit_code: null,
-        stdout_sha256: null,
-        stderr_sha256: null
+        status: firstFailure ? "fail" : "pass",
+        evidence_kind: decisive.verifier.evidence_kind,
+        verifier_id: decisive.verifier.verifier_id,
+        verifier_kind: decisive.verifier.kind,
+        exit_code: decisive.outcome.exit_code,
+        stdout_sha256: sha256(decisive.outcome.stdout),
+        stderr_sha256: sha256(decisive.outcome.stderr)
       });
-      continue;
     }
-
-    // Same workspace verifiers prove/scan use, so the verifier this RUNS is the
-    // one the embedded + recomputed context hashes are derived from.
-    const verifiers = resolveRowVerifiers(
-      { slug: rowId, verification_policy: loadedRow.verification_policy },
-      options.context.verifiers
-    );
-
-    // A bound row that demands NO verifier (e.g. mode:none) can't be certified by
-    // verify -> blocked (recorded, surfaced, never crashes).
-    const blocked = verifiers.find((verifier) => verifier.status === "blocked");
-    if (verifiers.length === 0 || blocked) {
-      results.push({
-        ...base,
-        status: "blocked",
-        evidence_kind: null,
-        verifier_id: blocked ? blocked.verifier_id : null,
-        verifier_kind: null,
-        exit_code: null,
-        stdout_sha256: null,
-        stderr_sha256: null
-      });
-      continue;
-    }
-
-    // Every verifier resolved: run each, aggregate to a pass/fail row verdict.
-    const resolved = verifiers as ResolvedVerifier[];
-    const runs = resolved.map((verifier) => ({
-      verifier,
-      outcome: spawn({
-        command: verifier.command,
-        cwd: contextRoot,
-        timeout_seconds: verifier.timeout_seconds
-      })
-    }));
-    const firstFailure = runs.find(
-      (run) => run.outcome.exit_code !== 0 || run.outcome.timed_out
-    );
-    const decisive = firstFailure ?? runs[0];
-
-    results.push({
-      ...base,
-      status: firstFailure ? "fail" : "pass",
-      evidence_kind: decisive.verifier.evidence_kind,
-      verifier_id: decisive.verifier.verifier_id,
-      verifier_kind: decisive.verifier.kind,
-      exit_code: decisive.outcome.exit_code,
-      stdout_sha256: sha256(decisive.outcome.stdout),
-      stderr_sha256: sha256(decisive.outcome.stderr)
-    });
   }
 
   // Write the results ledger (one JSONL line per row) if requested. This is an
@@ -450,6 +472,24 @@ export function runVerifyCommand(options: VerifyCommandOptions): VerifyCommandRe
   return fail({
     exit_code: allPass ? 0 : 1,
     results,
-    out_path: outPath
+    out_path: outPath,
+    errors: verifyErrors
   });
+}
+
+// A variant's row projection: the family row minus its `variants` list, carrying the
+// variant's record id and key. Hashing this (computeRowHash) gives each variant a
+// distinct row hash reflecting only its own identity, not its siblings'.
+function variantRowProjection(
+  loadedRow: FreshnessInputRow,
+  recordRowId: string,
+  variantKey: string
+): FreshnessInputRow {
+  const projection: FreshnessInputRow = {
+    ...loadedRow,
+    row_id: recordRowId,
+    variant_key: variantKey
+  };
+  delete (projection as Record<string, unknown>).variants;
+  return projection;
 }
