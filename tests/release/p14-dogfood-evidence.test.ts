@@ -62,6 +62,7 @@ describe("P14 v1 release dogfood evidence", () => {
       "lifecycle.signals.impact_leads_with_the_union",
       "lifecycle.signals.nested_workspace_is_not_scanned",
       "lifecycle.signals.transient_output_stays_out_of_git",
+      "lifecycle.signals.variant_fanout",
       "lifecycle.signals.verify_can_be_previewed",
       "lifecycle.signals.verify_preserves_other_rows",
       "matrix.core.mutate",

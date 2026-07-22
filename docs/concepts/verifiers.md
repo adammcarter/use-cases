@@ -84,6 +84,45 @@ shared verifier definition fan out to a per-row test file:
 `tests/use-cases/billing.core.apply_discount.test.ts`,
 `tests/use-cases/billing.core.refund.test.ts`, and so on.
 
+## The `{variant}` convention — variant families
+
+A row that declares [`variants`](./matrix.md#what-a-row-carries) shares ONE
+verifier across all of them, and the command must carry a `{variant}` token so
+each spawn can select its input shape:
+
+```yaml
+verification_policy:
+  mode: requirements
+  verifiers:
+    journey:
+      kind: script
+      evidence_kind: test_result
+      command: [npx, vitest, run, "tests/use-cases/{slug}.test.ts", -t, "{variant}"]
+  requirements:
+    - evidence_kind: test_result
+      required_verifiers: [journey]
+      minimum_count: 1
+```
+
+`uc verify --row <family>` (or `--all`) then runs the command **once per
+declared variant** — `{slug}` = the family id, `{variant}` = the variant key —
+and each spawn's **exit code is that variant's verdict**. Every variant gets its
+own ledger record (`<family>::<key>`, with its own `row_hash` /
+`binding_set_hash` and a `variant_key` field), and the 0.4.1 merge keeps them
+all across incremental runs.
+
+Two honesty rules are enforced:
+
+- **A family command with no `{variant}` token is a spec error**
+  (`VARIANT_TOKEN_MISSING`): the identical process would "prove" every shape at
+  once, so verify records every variant `blocked` and spawns nothing.
+  `--dry-run` previews exactly the same refusal.
+- **`uc prove` refuses variant families** (`VARIANT_FAMILY_UNSUPPORTED`): the
+  signed tier has no variant model yet. Variant families live on the keyless
+  loop (`uc verify` → `uc scan`), where scan aggregates: the family is
+  `VERIFIED_LOCAL` iff every variant passes, and `variant_local_status` names
+  any failing shape.
+
 ## `verification_context_hash`: why weakening the test drops FRESH
 
 A proof certifies *what* was verified (row, policies, bindings, spans) and *which*

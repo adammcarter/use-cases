@@ -5,6 +5,47 @@ All notable changes to this project are documented here. The format is based on
 follows [Semantic Versioning](https://semver.org) (see docs/release.md). This is
 **pre-1.0 (beta) software**: anything MAY change before `1.0.0`.
 
+## 0.5.0 - 2026-07-22
+
+Variant parametrization: declare the input shapes of one behaviour (`0/1/many`,
+`empty vs null`, negative, boundary) as **variants of a single use-case row**,
+prove them all with one `uc verify` invocation, and see exactly which shape is
+failing in `uc scan` — instead of hand-copying N near-identical rows or hiding
+every shape behind one aggregate verdict. Everything is additive: a matrix
+without `variants` behaves byte-for-byte as 0.4.1 (pinned by a golden
+semantic-hash test), and no existing command, field, or output shape changed.
+
+### Added
+
+- **`variants` on a use-case row** (`[{ key, title? }]`, keys `[a-z0-9_-]+` and
+  unique per family). The family stays ONE row — one id, one code binding, one
+  shared verifier; its variants are parameters, not extra rows, so the marker/
+  slug grammar and the binding registry are untouched.
+- **`{variant}` token in verifier commands** (inline and preset), substituted
+  alongside `{slug}`. `uc verify` on a family spawns the shared command once per
+  variant; each spawn's exit code is that variant's verdict; each variant gets
+  its own ledger record (`<family>::<key>`, additive `variant_key` field, its
+  own `row_hash`/`binding_set_hash`) and the 0.4.1 merge preserves them all
+  across incremental runs. `--dry-run` previews the per-variant plan.
+- **Per-variant status in `uc scan`**: a family is `VERIFIED_LOCAL` only when
+  EVERY declared variant currently passes; otherwise the weakest variant status
+  wins and `local_reason` names the failing variant(s). New additive
+  `variant_local_status` breakdown array on family rows.
+- **Honest refusals, never false green**: a family command with no `{variant}`
+  token is a single surfaced `VARIANT_TOKEN_MISSING` spec error — every variant
+  records `blocked`, nothing spawns, and `--dry-run` previews the same refusal
+  instead of claiming it would run. `uc prove` refuses variant families with
+  `VARIANT_FAMILY_UNSUPPORTED` (the signed tier has no variant model yet)
+  instead of a `NO_PASSING_RESULT` remediation loop that `verify` could never
+  satisfy.
+
+### Compatibility
+
+- Old matrices, ledgers, and workflows are untouched under 0.5.0 — no
+  migration. Adopting `variants` in a repo sets a version floor: `uc < 0.5.0`
+  rejects the field with a loud schema error (never a silent misread), so
+  collaborators must upgrade before a matrix starts using variants.
+
 ## 0.4.3 - 2026-07-20
 
 0.4.2 was prepared but never tagged, so it never reached npm — `latest` stayed

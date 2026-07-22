@@ -47,6 +47,27 @@ A row is more than a title. The fields that drive the trust engine are:
   [verifiers](./verifiers.md).
 - **`approval_policy`** — release-gating intent, e.g. `required_for_release`. In
   **release** policy mode a `required_for_release` row that is not FRESH blocks.
+- **`variants`** *(optional, 0.5.0)* — the input shapes of ONE behaviour
+  (`0/1/many`, `empty vs null`, negative, boundary) declared as parameters of a
+  single row instead of N hand-copied rows:
+
+  ```yaml
+  variants:
+    - key: zero        # [a-z0-9_-]+, unique within the row
+      title: Rejects a zero quantity
+    - key: many
+    - key: negative
+  ```
+
+  A row with `variants` is a **variant family**. The family is still ONE row —
+  one `id`, one code binding, one shared verifier — but `uc verify` proves each
+  variant separately (one spawn per variant, `{variant}` substituted into the
+  command) and `uc scan` reports the family `VERIFIED_LOCAL` only when **every**
+  variant currently passes, with a per-variant breakdown naming any failing
+  shape. See [verifiers](./verifiers.md#the-variant-convention--variant-families).
+  Adopting `variants` requires every collaborator on `uc >= 0.5.0`: older
+  releases reject the field with a schema error (loudly and safely — never a
+  silent misread).
 
 ## Working with the matrix from the CLI
 

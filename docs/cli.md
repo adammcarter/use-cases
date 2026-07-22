@@ -83,6 +83,17 @@ signing key must be a PKCS8 ed25519 PEM — see
 - `uc verify [--row <id> | --all] --out <path> [--repo <path>] [--json]`: run each
   bound row's verifier command and write an **unsigned** verification-results
   ledger (one JSONL record per row). This is the step that actually executes tests.
+
+  **Variant families (0.5.0).** A row declaring `variants` fans out: one spawn
+  per variant with `{variant}` substituted into the shared command, one record
+  per variant (`<family>::<key>`), all merged into the same ledger.
+  `--dry-run` previews the per-variant plan. A family command without a
+  `{variant}` token is a surfaced `VARIANT_TOKEN_MISSING` spec error (recorded
+  `blocked`, nothing spawned). `uc scan` reports the family `VERIFIED_LOCAL`
+  only when every variant passes and emits a `variant_local_status` breakdown
+  naming any failing variant; `uc prove` refuses families
+  (`VARIANT_FAMILY_UNSUPPORTED` — the signed tier has no variant model yet).
+  See [verifiers](./concepts/verifiers.md#the-variant-convention--variant-families).
 - `uc prove (--row <id> | --all) --verification-results <path> --trusted-ci --signing-key-env <ENV> [--key-id <id>] [--append] [--repo <path>] [--json]`:
   mint **signed** ed25519 proof events from the `verify` results. Signing is
   CI-only: the private key is read from the named environment variable and never
