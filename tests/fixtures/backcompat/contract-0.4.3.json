@@ -1,0 +1,5369 @@
+{
+  "steps": [
+    {
+      "label": "matrix.validate",
+      "argv": [
+        "matrix",
+        "validate",
+        "--json"
+      ],
+      "exit_code": 0,
+      "keys": {
+        "$": {
+          "type": "object",
+          "value": "command,complete,context,data,diagnostics,ok,protocol_version,schema_version"
+        },
+        "$.command": {
+          "type": "string",
+          "value": "matrix.validate"
+        },
+        "$.complete": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.context": {
+          "type": "object",
+          "value": "component_id,data_root,workspace_root,workspace_snapshot"
+        },
+        "$.context.component_id": {
+          "type": "string",
+          "value": "backcompat"
+        },
+        "$.context.data_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.context.workspace_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.context.workspace_snapshot": {
+          "type": "object",
+          "value": "captured_at,component_id,dirty,head_revision,repository_id,vcs,working_tree_digest"
+        },
+        "$.context.workspace_snapshot.captured_at": {
+          "type": "string",
+          "value": "1970-01-01T00:00:00.000Z"
+        },
+        "$.context.workspace_snapshot.component_id": {
+          "type": "string",
+          "value": "backcompat"
+        },
+        "$.context.workspace_snapshot.dirty": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.context.workspace_snapshot.head_revision": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.repository_id": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.vcs": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.working_tree_digest": {
+          "type": "string",
+          "value": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "$.data": {
+          "type": "object",
+          "value": "ambiguous_ids,complete,counts,files,integrity,schema_version,valid"
+        },
+        "$.data.ambiguous_ids": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.complete": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.counts": {
+          "type": "object",
+          "value": "broken_references,files_discovered,files_excluded,files_loaded,use_case_candidates,use_cases_addressable,use_cases_ambiguous,use_cases_structurally_clean"
+        },
+        "$.data.counts.broken_references": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.counts.files_discovered": {
+          "type": "number",
+          "value": 1
+        },
+        "$.data.counts.files_excluded": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.counts.files_loaded": {
+          "type": "number",
+          "value": 1
+        },
+        "$.data.counts.use_case_candidates": {
+          "type": "number",
+          "value": 3
+        },
+        "$.data.counts.use_cases_addressable": {
+          "type": "number",
+          "value": 3
+        },
+        "$.data.counts.use_cases_ambiguous": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.counts.use_cases_structurally_clean": {
+          "type": "number",
+          "value": 3
+        },
+        "$.data.files": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.files[0]": {
+          "type": "object",
+          "value": "file_hash,path,semantic_hash,status"
+        },
+        "$.data.files[0].file_hash": {
+          "type": "string",
+          "value": "sha256:b48b3b5730513f629ebf0f6bb459ac1b48d2a836ad5a2e0c7bfc993c4af7dcc4"
+        },
+        "$.data.files[0].path": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.files[0].semantic_hash": {
+          "type": "string",
+          "value": "sha256:4fec98801b6f09d85d26353fa849474e6ca97009d877e0f0dcce5a3043334387"
+        },
+        "$.data.files[0].status": {
+          "type": "string",
+          "value": "loaded"
+        },
+        "$.data.integrity": {
+          "type": "object",
+          "value": "blocking_diagnostic_count,populated,state"
+        },
+        "$.data.integrity.blocking_diagnostic_count": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.integrity.populated": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.integrity.state": {
+          "type": "string",
+          "value": "clean"
+        },
+        "$.data.schema_version": {
+          "type": "number",
+          "value": 1
+        },
+        "$.data.valid": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.diagnostics": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.ok": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.protocol_version": {
+          "type": "number",
+          "value": 1
+        },
+        "$.schema_version": {
+          "type": "number",
+          "value": 1
+        }
+      }
+    },
+    {
+      "label": "matrix.list",
+      "argv": [
+        "matrix",
+        "list",
+        "--json"
+      ],
+      "exit_code": 0,
+      "keys": {
+        "$": {
+          "type": "object",
+          "value": "command,complete,context,data,diagnostics,ok,protocol_version,schema_version"
+        },
+        "$.command": {
+          "type": "string",
+          "value": "matrix.list"
+        },
+        "$.complete": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.context": {
+          "type": "object",
+          "value": "component_id,data_root,workspace_root,workspace_snapshot"
+        },
+        "$.context.component_id": {
+          "type": "string",
+          "value": "backcompat"
+        },
+        "$.context.data_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.context.workspace_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.context.workspace_snapshot": {
+          "type": "object",
+          "value": "captured_at,component_id,dirty,head_revision,repository_id,vcs,working_tree_digest"
+        },
+        "$.context.workspace_snapshot.captured_at": {
+          "type": "string",
+          "value": "1970-01-01T00:00:00.000Z"
+        },
+        "$.context.workspace_snapshot.component_id": {
+          "type": "string",
+          "value": "backcompat"
+        },
+        "$.context.workspace_snapshot.dirty": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.context.workspace_snapshot.head_revision": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.repository_id": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.vcs": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.working_tree_digest": {
+          "type": "string",
+          "value": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "$.data": {
+          "type": "object",
+          "value": "complete,counts,integrity,schema_version,use_cases"
+        },
+        "$.data.complete": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.counts": {
+          "type": "object",
+          "value": "returned,total_addressable"
+        },
+        "$.data.counts.returned": {
+          "type": "number",
+          "value": 3
+        },
+        "$.data.counts.total_addressable": {
+          "type": "number",
+          "value": 3
+        },
+        "$.data.integrity": {
+          "type": "object",
+          "value": "blocking_diagnostic_count,populated,state"
+        },
+        "$.data.integrity.blocking_diagnostic_count": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.integrity.populated": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.integrity.state": {
+          "type": "string",
+          "value": "clean"
+        },
+        "$.data.schema_version": {
+          "type": "number",
+          "value": 1
+        },
+        "$.data.use_cases": {
+          "type": "array",
+          "value": "len:3"
+        },
+        "$.data.use_cases[0]": {
+          "type": "object",
+          "value": "feature_id,host_surfaces,id,journey_role,lifecycle,semantic_hash,source_path,tags,title,value_tier"
+        },
+        "$.data.use_cases[0].feature_id": {
+          "type": "string",
+          "value": "checkout"
+        },
+        "$.data.use_cases[0].host_surfaces": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.use_cases[0].host_surfaces[0]": {
+          "type": "string",
+          "value": "codex.cli"
+        },
+        "$.data.use_cases[0].id": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.use_cases[0].journey_role": {
+          "type": "string",
+          "value": "golden"
+        },
+        "$.data.use_cases[0].lifecycle": {
+          "type": "string",
+          "value": "active"
+        },
+        "$.data.use_cases[0].semantic_hash": {
+          "type": "string",
+          "value": "sha256:474edff55b347936af2ce2364778de9108365350bb9a637a1f6d60439dbda4fb"
+        },
+        "$.data.use_cases[0].source_path": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.use_cases[0].tags": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.use_cases[0].title": {
+          "type": "string",
+          "value": "Apply a valid coupon"
+        },
+        "$.data.use_cases[0].value_tier": {
+          "type": "string",
+          "value": "critical"
+        },
+        "$.data.use_cases[1]": {
+          "type": "object",
+          "value": "feature_id,host_surfaces,id,journey_role,lifecycle,semantic_hash,source_path,tags,title,value_tier"
+        },
+        "$.data.use_cases[1].feature_id": {
+          "type": "string",
+          "value": "checkout"
+        },
+        "$.data.use_cases[1].host_surfaces": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.use_cases[1].host_surfaces[0]": {
+          "type": "string",
+          "value": "codex.cli"
+        },
+        "$.data.use_cases[1].id": {
+          "type": "string",
+          "value": "checkout.never_bound"
+        },
+        "$.data.use_cases[1].journey_role": {
+          "type": "string",
+          "value": "edge"
+        },
+        "$.data.use_cases[1].lifecycle": {
+          "type": "string",
+          "value": "active"
+        },
+        "$.data.use_cases[1].semantic_hash": {
+          "type": "string",
+          "value": "sha256:2eaa07e644eafb778d03226489cf5e153437d40abb3a9b0c4cba4458d4c1dae2"
+        },
+        "$.data.use_cases[1].source_path": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.use_cases[1].tags": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.use_cases[1].title": {
+          "type": "string",
+          "value": "A behaviour nobody has bound yet"
+        },
+        "$.data.use_cases[1].value_tier": {
+          "type": "string",
+          "value": "supporting"
+        },
+        "$.data.use_cases[2]": {
+          "type": "object",
+          "value": "feature_id,host_surfaces,id,journey_role,lifecycle,semantic_hash,source_path,tags,title,value_tier"
+        },
+        "$.data.use_cases[2].feature_id": {
+          "type": "string",
+          "value": "checkout"
+        },
+        "$.data.use_cases[2].host_surfaces": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.use_cases[2].host_surfaces[0]": {
+          "type": "string",
+          "value": "codex.cli"
+        },
+        "$.data.use_cases[2].id": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.use_cases[2].journey_role": {
+          "type": "string",
+          "value": "edge"
+        },
+        "$.data.use_cases[2].lifecycle": {
+          "type": "string",
+          "value": "active"
+        },
+        "$.data.use_cases[2].semantic_hash": {
+          "type": "string",
+          "value": "sha256:cce02e9c1b6c63d023308031a6a96ad94bdc2f878b699e210bd8cc3bbbfd9d75"
+        },
+        "$.data.use_cases[2].source_path": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.use_cases[2].tags": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.use_cases[2].title": {
+          "type": "string",
+          "value": "Refund an order"
+        },
+        "$.data.use_cases[2].value_tier": {
+          "type": "string",
+          "value": "core"
+        },
+        "$.diagnostics": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.ok": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.protocol_version": {
+          "type": "number",
+          "value": 1
+        },
+        "$.schema_version": {
+          "type": "number",
+          "value": 1
+        }
+      }
+    },
+    {
+      "label": "matrix.status",
+      "argv": [
+        "matrix",
+        "status",
+        "--json"
+      ],
+      "exit_code": 0,
+      "keys": {
+        "$": {
+          "type": "object",
+          "value": "command,complete,context,data,diagnostics,ok,protocol_version,schema_version"
+        },
+        "$.command": {
+          "type": "string",
+          "value": "matrix.status"
+        },
+        "$.complete": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.context": {
+          "type": "object",
+          "value": "component_id,data_root,workspace_root,workspace_snapshot"
+        },
+        "$.context.component_id": {
+          "type": "string",
+          "value": "backcompat"
+        },
+        "$.context.data_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.context.workspace_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.context.workspace_snapshot": {
+          "type": "object",
+          "value": "captured_at,component_id,dirty,head_revision,repository_id,vcs,working_tree_digest"
+        },
+        "$.context.workspace_snapshot.captured_at": {
+          "type": "string",
+          "value": "1970-01-01T00:00:00.000Z"
+        },
+        "$.context.workspace_snapshot.component_id": {
+          "type": "string",
+          "value": "backcompat"
+        },
+        "$.context.workspace_snapshot.dirty": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.context.workspace_snapshot.head_revision": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.repository_id": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.vcs": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.working_tree_digest": {
+          "type": "string",
+          "value": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "$.data": {
+          "type": "object",
+          "value": "complete,evidence,matrix,schema_version"
+        },
+        "$.data.complete": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.evidence": {
+          "type": "object",
+          "value": "aggregates,complete,counts,integrity,ledgers,schema_version"
+        },
+        "$.data.evidence.aggregates": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.evidence.complete": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.evidence.counts": {
+          "type": "object",
+          "value": "aggregates_active,aggregates_invalid,aggregates_total,events_loaded,ledgers"
+        },
+        "$.data.evidence.counts.aggregates_active": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.evidence.counts.aggregates_invalid": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.evidence.counts.aggregates_total": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.evidence.counts.events_loaded": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.evidence.counts.ledgers": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.evidence.integrity": {
+          "type": "object",
+          "value": "invalid_aggregate_count,state,torn_tail_count,unknown_scope_damage"
+        },
+        "$.data.evidence.integrity.invalid_aggregate_count": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.evidence.integrity.state": {
+          "type": "string",
+          "value": "clean"
+        },
+        "$.data.evidence.integrity.torn_tail_count": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.evidence.integrity.unknown_scope_damage": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.evidence.ledgers": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.evidence.schema_version": {
+          "type": "number",
+          "value": 1
+        },
+        "$.data.matrix": {
+          "type": "object",
+          "value": "ambiguous_ids,complete,counts,files,integrity,schema_version,valid"
+        },
+        "$.data.matrix.ambiguous_ids": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.matrix.complete": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.matrix.counts": {
+          "type": "object",
+          "value": "broken_references,files_discovered,files_excluded,files_loaded,use_case_candidates,use_cases_addressable,use_cases_ambiguous,use_cases_structurally_clean"
+        },
+        "$.data.matrix.counts.broken_references": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.matrix.counts.files_discovered": {
+          "type": "number",
+          "value": 1
+        },
+        "$.data.matrix.counts.files_excluded": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.matrix.counts.files_loaded": {
+          "type": "number",
+          "value": 1
+        },
+        "$.data.matrix.counts.use_case_candidates": {
+          "type": "number",
+          "value": 3
+        },
+        "$.data.matrix.counts.use_cases_addressable": {
+          "type": "number",
+          "value": 3
+        },
+        "$.data.matrix.counts.use_cases_ambiguous": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.matrix.counts.use_cases_structurally_clean": {
+          "type": "number",
+          "value": 3
+        },
+        "$.data.matrix.files": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.matrix.files[0]": {
+          "type": "object",
+          "value": "file_hash,path,semantic_hash,status"
+        },
+        "$.data.matrix.files[0].file_hash": {
+          "type": "string",
+          "value": "sha256:b48b3b5730513f629ebf0f6bb459ac1b48d2a836ad5a2e0c7bfc993c4af7dcc4"
+        },
+        "$.data.matrix.files[0].path": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.matrix.files[0].semantic_hash": {
+          "type": "string",
+          "value": "sha256:4fec98801b6f09d85d26353fa849474e6ca97009d877e0f0dcce5a3043334387"
+        },
+        "$.data.matrix.files[0].status": {
+          "type": "string",
+          "value": "loaded"
+        },
+        "$.data.matrix.integrity": {
+          "type": "object",
+          "value": "blocking_diagnostic_count,populated,state"
+        },
+        "$.data.matrix.integrity.blocking_diagnostic_count": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.matrix.integrity.populated": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.matrix.integrity.state": {
+          "type": "string",
+          "value": "clean"
+        },
+        "$.data.matrix.schema_version": {
+          "type": "number",
+          "value": 1
+        },
+        "$.data.matrix.valid": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.schema_version": {
+          "type": "number",
+          "value": 1
+        },
+        "$.diagnostics": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.ok": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.protocol_version": {
+          "type": "number",
+          "value": 1
+        },
+        "$.schema_version": {
+          "type": "number",
+          "value": 1
+        }
+      }
+    },
+    {
+      "label": "scan.unbound",
+      "argv": [
+        "scan",
+        "--json"
+      ],
+      "exit_code": 3,
+      "keys": {
+        "$": {
+          "type": "object",
+          "value": "command,complete,context,data,diagnostics,ok,protocol_version,schema_version"
+        },
+        "$.command": {
+          "type": "string",
+          "value": "markers.scan"
+        },
+        "$.complete": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.context": {
+          "type": "object",
+          "value": "component_id,data_root,workspace_root,workspace_snapshot"
+        },
+        "$.context.component_id": {
+          "type": "string",
+          "value": "backcompat"
+        },
+        "$.context.data_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.context.workspace_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.context.workspace_snapshot": {
+          "type": "object",
+          "value": "captured_at,component_id,dirty,head_revision,repository_id,vcs,working_tree_digest"
+        },
+        "$.context.workspace_snapshot.captured_at": {
+          "type": "string",
+          "value": "1970-01-01T00:00:00.000Z"
+        },
+        "$.context.workspace_snapshot.component_id": {
+          "type": "string",
+          "value": "backcompat"
+        },
+        "$.context.workspace_snapshot.dirty": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.context.workspace_snapshot.head_revision": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.repository_id": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.vcs": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.working_tree_digest": {
+          "type": "string",
+          "value": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "$.data": {
+          "type": "object",
+          "value": "evidence_errors,evidence_valid,exit_code,inferred_spans,ok,registry_errors,registry_valid,status"
+        },
+        "$.data.evidence_errors": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.evidence_valid": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.exit_code": {
+          "type": "number",
+          "value": 3
+        },
+        "$.data.inferred_spans": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.ok": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.registry_errors": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.registry_valid": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.status": {
+          "type": "object",
+          "value": "acceptance_claim,generated_at,guard_ok,integrity_errors,policy_mode,product_root,rows,schema,summary,tool"
+        },
+        "$.data.status.acceptance_claim": {
+          "type": "object",
+          "value": "claimable,proven,statement,total"
+        },
+        "$.data.status.acceptance_claim.claimable": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.acceptance_claim.proven": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.acceptance_claim.statement": {
+          "type": "string",
+          "value": "NOT_SUPPORTED — 0 of 3 behaviours verified"
+        },
+        "$.data.status.acceptance_claim.total": {
+          "type": "number",
+          "value": 3
+        },
+        "$.data.status.generated_at": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.status.guard_ok": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.integrity_errors": {
+          "type": "array",
+          "value": "len:2"
+        },
+        "$.data.status.integrity_errors[0]": {
+          "type": "object",
+          "value": "binding_slug,code,file_path,line,message,remediation,row_id"
+        },
+        "$.data.status.integrity_errors[0].binding_slug": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.status.integrity_errors[0].code": {
+          "type": "string",
+          "value": "UNREGISTERED_BINDING"
+        },
+        "$.data.status.integrity_errors[0].file_path": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.status.integrity_errors[0].line": {
+          "type": "number",
+          "value": 1
+        },
+        "$.data.status.integrity_errors[0].message": {
+          "type": "string",
+          "value": "current marker checkout.apply_coupon is not registered in the binding registry"
+        },
+        "$.data.status.integrity_errors[0].remediation": {
+          "type": "string",
+          "value": "register the marker already in the source with `uc bind --row checkout.apply_coupon --file src/coupon.js --register-existing`, or delete the marker if it is not wanted"
+        },
+        "$.data.status.integrity_errors[0].row_id": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.status.integrity_errors[1]": {
+          "type": "object",
+          "value": "binding_slug,code,file_path,line,message,remediation,row_id"
+        },
+        "$.data.status.integrity_errors[1].binding_slug": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.status.integrity_errors[1].code": {
+          "type": "string",
+          "value": "UNREGISTERED_BINDING"
+        },
+        "$.data.status.integrity_errors[1].file_path": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.status.integrity_errors[1].line": {
+          "type": "number",
+          "value": 1
+        },
+        "$.data.status.integrity_errors[1].message": {
+          "type": "string",
+          "value": "current marker checkout.refund_order is not registered in the binding registry"
+        },
+        "$.data.status.integrity_errors[1].remediation": {
+          "type": "string",
+          "value": "register the marker already in the source with `uc bind --row checkout.refund_order --file src/refund.js --register-existing`, or delete the marker if it is not wanted"
+        },
+        "$.data.status.integrity_errors[1].row_id": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.status.policy_mode": {
+          "type": "string",
+          "value": "feature"
+        },
+        "$.data.status.product_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.status.rows": {
+          "type": "array",
+          "value": "len:3"
+        },
+        "$.data.status.rows[0]": {
+          "type": "object",
+          "value": "approval_policy_hash,current_binding_slugs,current_bindings,known_binding_slugs,latest_trusted_proof_event,local_reason,local_status,matching_proof_event,missing_registered_binding_slugs,policy_block,reasons,required_action,required_for_release,row_hash,row_id,status,unregistered_current_binding_slugs,verification_policy_hash"
+        },
+        "$.data.status.rows[0].approval_policy_hash": {
+          "type": "string",
+          "value": "sha256:7f517f97e00a688b0b402e4005866127e5c928bf44a94ca53477ac34e24b5ef1"
+        },
+        "$.data.status.rows[0].current_binding_slugs": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[0].current_binding_slugs[0]": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.status.rows[0].current_bindings": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[0].known_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[0].latest_trusted_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[0].local_reason": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[0].local_status": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[0].matching_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[0].missing_registered_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[0].policy_block": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.status.rows[0].reasons": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[0].reasons[0]": {
+          "type": "object",
+          "value": "binding_slug,code,message"
+        },
+        "$.data.status.rows[0].reasons[0].binding_slug": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.status.rows[0].reasons[0].code": {
+          "type": "string",
+          "value": "UNREGISTERED_BINDING"
+        },
+        "$.data.status.rows[0].reasons[0].message": {
+          "type": "string",
+          "value": "current marker checkout.apply_coupon is not registered in the binding registry"
+        },
+        "$.data.status.rows[0].required_action": {
+          "type": "string",
+          "value": "uc scan (resolve binding integrity errors)"
+        },
+        "$.data.status.rows[0].required_for_release": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.rows[0].row_hash": {
+          "type": "string",
+          "value": "sha256:c2b25e8d096ff4a88ebe6e4f7165b32aabeec49ce588a08e28925c041d5df01e"
+        },
+        "$.data.status.rows[0].row_id": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.status.rows[0].status": {
+          "type": "string",
+          "value": "INVALID"
+        },
+        "$.data.status.rows[0].unregistered_current_binding_slugs": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[0].unregistered_current_binding_slugs[0]": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.status.rows[0].verification_policy_hash": {
+          "type": "string",
+          "value": "sha256:326d64cf7b78e949deaa5aa703b55a3cde3bfd0f0164336ae8069e3c132a921f"
+        },
+        "$.data.status.rows[1]": {
+          "type": "object",
+          "value": "approval_policy_hash,current_binding_slugs,current_bindings,known_binding_slugs,latest_trusted_proof_event,local_reason,local_status,matching_proof_event,missing_registered_binding_slugs,policy_block,reasons,required_action,required_for_release,row_hash,row_id,status,unregistered_current_binding_slugs,verification_policy_hash"
+        },
+        "$.data.status.rows[1].approval_policy_hash": {
+          "type": "string",
+          "value": "sha256:7f517f97e00a688b0b402e4005866127e5c928bf44a94ca53477ac34e24b5ef1"
+        },
+        "$.data.status.rows[1].current_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].current_bindings": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].known_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].latest_trusted_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[1].local_reason": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[1].local_status": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[1].matching_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[1].missing_registered_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].policy_block": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.rows[1].reasons": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].required_action": {
+          "type": "string",
+          "value": "uc bind --row checkout.never_bound --file <file> --mode <explicit|swift-func>"
+        },
+        "$.data.status.rows[1].required_for_release": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.rows[1].row_hash": {
+          "type": "string",
+          "value": "sha256:3b23a3fa8285b951750e863e66243d47563e20826785fff5d34ae3044fd3ab68"
+        },
+        "$.data.status.rows[1].row_id": {
+          "type": "string",
+          "value": "checkout.never_bound"
+        },
+        "$.data.status.rows[1].status": {
+          "type": "string",
+          "value": "UNBOUND"
+        },
+        "$.data.status.rows[1].unregistered_current_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].verification_policy_hash": {
+          "type": "string",
+          "value": "sha256:281dd496c32422966a6013cf472d622fb9f0fdc29dae29b9ed6a03227594f08d"
+        },
+        "$.data.status.rows[2]": {
+          "type": "object",
+          "value": "approval_policy_hash,current_binding_slugs,current_bindings,known_binding_slugs,latest_trusted_proof_event,local_reason,local_status,matching_proof_event,missing_registered_binding_slugs,policy_block,reasons,required_action,required_for_release,row_hash,row_id,status,unregistered_current_binding_slugs,verification_policy_hash"
+        },
+        "$.data.status.rows[2].approval_policy_hash": {
+          "type": "string",
+          "value": "sha256:7f517f97e00a688b0b402e4005866127e5c928bf44a94ca53477ac34e24b5ef1"
+        },
+        "$.data.status.rows[2].current_binding_slugs": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[2].current_binding_slugs[0]": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.status.rows[2].current_bindings": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[2].known_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[2].latest_trusted_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[2].local_reason": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[2].local_status": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[2].matching_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[2].missing_registered_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[2].policy_block": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.status.rows[2].reasons": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[2].reasons[0]": {
+          "type": "object",
+          "value": "binding_slug,code,message"
+        },
+        "$.data.status.rows[2].reasons[0].binding_slug": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.status.rows[2].reasons[0].code": {
+          "type": "string",
+          "value": "UNREGISTERED_BINDING"
+        },
+        "$.data.status.rows[2].reasons[0].message": {
+          "type": "string",
+          "value": "current marker checkout.refund_order is not registered in the binding registry"
+        },
+        "$.data.status.rows[2].required_action": {
+          "type": "string",
+          "value": "uc scan (resolve binding integrity errors)"
+        },
+        "$.data.status.rows[2].required_for_release": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.rows[2].row_hash": {
+          "type": "string",
+          "value": "sha256:0c28e5c5ae68852cbbe908de6fb8c0401a27afea8771223697f84e1772a45ad0"
+        },
+        "$.data.status.rows[2].row_id": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.status.rows[2].status": {
+          "type": "string",
+          "value": "INVALID"
+        },
+        "$.data.status.rows[2].unregistered_current_binding_slugs": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[2].unregistered_current_binding_slugs[0]": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.status.rows[2].verification_policy_hash": {
+          "type": "string",
+          "value": "sha256:7ff0f5d32adc4765aeecf80ac5b7b2e5d5951bb5b06fe6cba3723922df13e039"
+        },
+        "$.data.status.schema": {
+          "type": "string",
+          "value": "ucase-freshness-status-v1"
+        },
+        "$.data.status.summary": {
+          "type": "object",
+          "value": "fresh,invalid,policy_blocked,stale_local,suspect,unbound,unproven,unverified_local,verified_local"
+        },
+        "$.data.status.summary.fresh": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.summary.invalid": {
+          "type": "number",
+          "value": 2
+        },
+        "$.data.status.summary.policy_blocked": {
+          "type": "number",
+          "value": 2
+        },
+        "$.data.status.summary.stale_local": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.summary.suspect": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.summary.unbound": {
+          "type": "number",
+          "value": 1
+        },
+        "$.data.status.summary.unproven": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.summary.unverified_local": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.summary.verified_local": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.tool": {
+          "type": "object",
+          "value": "name,version"
+        },
+        "$.data.status.tool.name": {
+          "type": "string",
+          "value": "@adammcarter/use-cases"
+        },
+        "$.data.status.tool.version": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.diagnostics": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.ok": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.protocol_version": {
+          "type": "number",
+          "value": 1
+        },
+        "$.schema_version": {
+          "type": "number",
+          "value": 1
+        }
+      }
+    },
+    {
+      "label": "scan.unbound.gate",
+      "argv": [
+        "scan",
+        "--gate",
+        "--json"
+      ],
+      "exit_code": 3,
+      "keys": {
+        "$": {
+          "type": "object",
+          "value": "command,complete,context,data,diagnostics,ok,protocol_version,schema_version"
+        },
+        "$.command": {
+          "type": "string",
+          "value": "markers.scan"
+        },
+        "$.complete": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.context": {
+          "type": "object",
+          "value": "component_id,data_root,workspace_root,workspace_snapshot"
+        },
+        "$.context.component_id": {
+          "type": "string",
+          "value": "backcompat"
+        },
+        "$.context.data_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.context.workspace_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.context.workspace_snapshot": {
+          "type": "object",
+          "value": "captured_at,component_id,dirty,head_revision,repository_id,vcs,working_tree_digest"
+        },
+        "$.context.workspace_snapshot.captured_at": {
+          "type": "string",
+          "value": "1970-01-01T00:00:00.000Z"
+        },
+        "$.context.workspace_snapshot.component_id": {
+          "type": "string",
+          "value": "backcompat"
+        },
+        "$.context.workspace_snapshot.dirty": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.context.workspace_snapshot.head_revision": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.repository_id": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.vcs": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.working_tree_digest": {
+          "type": "string",
+          "value": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "$.data": {
+          "type": "object",
+          "value": "evidence_errors,evidence_valid,exit_code,gate,inferred_spans,ok,registry_errors,registry_valid,status"
+        },
+        "$.data.evidence_errors": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.evidence_valid": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.exit_code": {
+          "type": "number",
+          "value": 3
+        },
+        "$.data.gate": {
+          "type": "object",
+          "value": "blocked,offending_rows,policy_mode,required_bar,ungated_below_bar"
+        },
+        "$.data.gate.blocked": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.gate.offending_rows": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.gate.policy_mode": {
+          "type": "string",
+          "value": "feature"
+        },
+        "$.data.gate.required_bar": {
+          "type": "string",
+          "value": "VERIFIED_LOCAL"
+        },
+        "$.data.gate.ungated_below_bar": {
+          "type": "array",
+          "value": "len:2"
+        },
+        "$.data.gate.ungated_below_bar[0]": {
+          "type": "object",
+          "value": "local_status,row_id,status"
+        },
+        "$.data.gate.ungated_below_bar[0].local_status": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.gate.ungated_below_bar[0].row_id": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.gate.ungated_below_bar[0].status": {
+          "type": "string",
+          "value": "INVALID"
+        },
+        "$.data.gate.ungated_below_bar[1]": {
+          "type": "object",
+          "value": "local_status,row_id,status"
+        },
+        "$.data.gate.ungated_below_bar[1].local_status": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.gate.ungated_below_bar[1].row_id": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.gate.ungated_below_bar[1].status": {
+          "type": "string",
+          "value": "INVALID"
+        },
+        "$.data.inferred_spans": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.ok": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.registry_errors": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.registry_valid": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.status": {
+          "type": "object",
+          "value": "acceptance_claim,generated_at,guard_ok,integrity_errors,policy_mode,product_root,rows,schema,summary,tool"
+        },
+        "$.data.status.acceptance_claim": {
+          "type": "object",
+          "value": "claimable,proven,statement,total"
+        },
+        "$.data.status.acceptance_claim.claimable": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.acceptance_claim.proven": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.acceptance_claim.statement": {
+          "type": "string",
+          "value": "NOT_SUPPORTED — 0 of 3 behaviours verified"
+        },
+        "$.data.status.acceptance_claim.total": {
+          "type": "number",
+          "value": 3
+        },
+        "$.data.status.generated_at": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.status.guard_ok": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.integrity_errors": {
+          "type": "array",
+          "value": "len:2"
+        },
+        "$.data.status.integrity_errors[0]": {
+          "type": "object",
+          "value": "binding_slug,code,file_path,line,message,remediation,row_id"
+        },
+        "$.data.status.integrity_errors[0].binding_slug": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.status.integrity_errors[0].code": {
+          "type": "string",
+          "value": "UNREGISTERED_BINDING"
+        },
+        "$.data.status.integrity_errors[0].file_path": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.status.integrity_errors[0].line": {
+          "type": "number",
+          "value": 1
+        },
+        "$.data.status.integrity_errors[0].message": {
+          "type": "string",
+          "value": "current marker checkout.apply_coupon is not registered in the binding registry"
+        },
+        "$.data.status.integrity_errors[0].remediation": {
+          "type": "string",
+          "value": "register the marker already in the source with `uc bind --row checkout.apply_coupon --file src/coupon.js --register-existing`, or delete the marker if it is not wanted"
+        },
+        "$.data.status.integrity_errors[0].row_id": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.status.integrity_errors[1]": {
+          "type": "object",
+          "value": "binding_slug,code,file_path,line,message,remediation,row_id"
+        },
+        "$.data.status.integrity_errors[1].binding_slug": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.status.integrity_errors[1].code": {
+          "type": "string",
+          "value": "UNREGISTERED_BINDING"
+        },
+        "$.data.status.integrity_errors[1].file_path": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.status.integrity_errors[1].line": {
+          "type": "number",
+          "value": 1
+        },
+        "$.data.status.integrity_errors[1].message": {
+          "type": "string",
+          "value": "current marker checkout.refund_order is not registered in the binding registry"
+        },
+        "$.data.status.integrity_errors[1].remediation": {
+          "type": "string",
+          "value": "register the marker already in the source with `uc bind --row checkout.refund_order --file src/refund.js --register-existing`, or delete the marker if it is not wanted"
+        },
+        "$.data.status.integrity_errors[1].row_id": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.status.policy_mode": {
+          "type": "string",
+          "value": "feature"
+        },
+        "$.data.status.product_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.status.rows": {
+          "type": "array",
+          "value": "len:3"
+        },
+        "$.data.status.rows[0]": {
+          "type": "object",
+          "value": "approval_policy_hash,current_binding_slugs,current_bindings,known_binding_slugs,latest_trusted_proof_event,local_reason,local_status,matching_proof_event,missing_registered_binding_slugs,policy_block,reasons,required_action,required_for_release,row_hash,row_id,status,unregistered_current_binding_slugs,verification_policy_hash"
+        },
+        "$.data.status.rows[0].approval_policy_hash": {
+          "type": "string",
+          "value": "sha256:7f517f97e00a688b0b402e4005866127e5c928bf44a94ca53477ac34e24b5ef1"
+        },
+        "$.data.status.rows[0].current_binding_slugs": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[0].current_binding_slugs[0]": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.status.rows[0].current_bindings": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[0].known_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[0].latest_trusted_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[0].local_reason": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[0].local_status": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[0].matching_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[0].missing_registered_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[0].policy_block": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.status.rows[0].reasons": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[0].reasons[0]": {
+          "type": "object",
+          "value": "binding_slug,code,message"
+        },
+        "$.data.status.rows[0].reasons[0].binding_slug": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.status.rows[0].reasons[0].code": {
+          "type": "string",
+          "value": "UNREGISTERED_BINDING"
+        },
+        "$.data.status.rows[0].reasons[0].message": {
+          "type": "string",
+          "value": "current marker checkout.apply_coupon is not registered in the binding registry"
+        },
+        "$.data.status.rows[0].required_action": {
+          "type": "string",
+          "value": "uc scan (resolve binding integrity errors)"
+        },
+        "$.data.status.rows[0].required_for_release": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.rows[0].row_hash": {
+          "type": "string",
+          "value": "sha256:c2b25e8d096ff4a88ebe6e4f7165b32aabeec49ce588a08e28925c041d5df01e"
+        },
+        "$.data.status.rows[0].row_id": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.status.rows[0].status": {
+          "type": "string",
+          "value": "INVALID"
+        },
+        "$.data.status.rows[0].unregistered_current_binding_slugs": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[0].unregistered_current_binding_slugs[0]": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.status.rows[0].verification_policy_hash": {
+          "type": "string",
+          "value": "sha256:326d64cf7b78e949deaa5aa703b55a3cde3bfd0f0164336ae8069e3c132a921f"
+        },
+        "$.data.status.rows[1]": {
+          "type": "object",
+          "value": "approval_policy_hash,current_binding_slugs,current_bindings,known_binding_slugs,latest_trusted_proof_event,local_reason,local_status,matching_proof_event,missing_registered_binding_slugs,policy_block,reasons,required_action,required_for_release,row_hash,row_id,status,unregistered_current_binding_slugs,verification_policy_hash"
+        },
+        "$.data.status.rows[1].approval_policy_hash": {
+          "type": "string",
+          "value": "sha256:7f517f97e00a688b0b402e4005866127e5c928bf44a94ca53477ac34e24b5ef1"
+        },
+        "$.data.status.rows[1].current_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].current_bindings": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].known_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].latest_trusted_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[1].local_reason": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[1].local_status": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[1].matching_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[1].missing_registered_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].policy_block": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.rows[1].reasons": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].required_action": {
+          "type": "string",
+          "value": "uc bind --row checkout.never_bound --file <file> --mode <explicit|swift-func>"
+        },
+        "$.data.status.rows[1].required_for_release": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.rows[1].row_hash": {
+          "type": "string",
+          "value": "sha256:3b23a3fa8285b951750e863e66243d47563e20826785fff5d34ae3044fd3ab68"
+        },
+        "$.data.status.rows[1].row_id": {
+          "type": "string",
+          "value": "checkout.never_bound"
+        },
+        "$.data.status.rows[1].status": {
+          "type": "string",
+          "value": "UNBOUND"
+        },
+        "$.data.status.rows[1].unregistered_current_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].verification_policy_hash": {
+          "type": "string",
+          "value": "sha256:281dd496c32422966a6013cf472d622fb9f0fdc29dae29b9ed6a03227594f08d"
+        },
+        "$.data.status.rows[2]": {
+          "type": "object",
+          "value": "approval_policy_hash,current_binding_slugs,current_bindings,known_binding_slugs,latest_trusted_proof_event,local_reason,local_status,matching_proof_event,missing_registered_binding_slugs,policy_block,reasons,required_action,required_for_release,row_hash,row_id,status,unregistered_current_binding_slugs,verification_policy_hash"
+        },
+        "$.data.status.rows[2].approval_policy_hash": {
+          "type": "string",
+          "value": "sha256:7f517f97e00a688b0b402e4005866127e5c928bf44a94ca53477ac34e24b5ef1"
+        },
+        "$.data.status.rows[2].current_binding_slugs": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[2].current_binding_slugs[0]": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.status.rows[2].current_bindings": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[2].known_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[2].latest_trusted_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[2].local_reason": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[2].local_status": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[2].matching_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[2].missing_registered_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[2].policy_block": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.status.rows[2].reasons": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[2].reasons[0]": {
+          "type": "object",
+          "value": "binding_slug,code,message"
+        },
+        "$.data.status.rows[2].reasons[0].binding_slug": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.status.rows[2].reasons[0].code": {
+          "type": "string",
+          "value": "UNREGISTERED_BINDING"
+        },
+        "$.data.status.rows[2].reasons[0].message": {
+          "type": "string",
+          "value": "current marker checkout.refund_order is not registered in the binding registry"
+        },
+        "$.data.status.rows[2].required_action": {
+          "type": "string",
+          "value": "uc scan (resolve binding integrity errors)"
+        },
+        "$.data.status.rows[2].required_for_release": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.rows[2].row_hash": {
+          "type": "string",
+          "value": "sha256:0c28e5c5ae68852cbbe908de6fb8c0401a27afea8771223697f84e1772a45ad0"
+        },
+        "$.data.status.rows[2].row_id": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.status.rows[2].status": {
+          "type": "string",
+          "value": "INVALID"
+        },
+        "$.data.status.rows[2].unregistered_current_binding_slugs": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[2].unregistered_current_binding_slugs[0]": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.status.rows[2].verification_policy_hash": {
+          "type": "string",
+          "value": "sha256:7ff0f5d32adc4765aeecf80ac5b7b2e5d5951bb5b06fe6cba3723922df13e039"
+        },
+        "$.data.status.schema": {
+          "type": "string",
+          "value": "ucase-freshness-status-v1"
+        },
+        "$.data.status.summary": {
+          "type": "object",
+          "value": "fresh,invalid,policy_blocked,stale_local,suspect,unbound,unproven,unverified_local,verified_local"
+        },
+        "$.data.status.summary.fresh": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.summary.invalid": {
+          "type": "number",
+          "value": 2
+        },
+        "$.data.status.summary.policy_blocked": {
+          "type": "number",
+          "value": 2
+        },
+        "$.data.status.summary.stale_local": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.summary.suspect": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.summary.unbound": {
+          "type": "number",
+          "value": 1
+        },
+        "$.data.status.summary.unproven": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.summary.unverified_local": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.summary.verified_local": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.tool": {
+          "type": "object",
+          "value": "name,version"
+        },
+        "$.data.status.tool.name": {
+          "type": "string",
+          "value": "@adammcarter/use-cases"
+        },
+        "$.data.status.tool.version": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.diagnostics": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.ok": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.protocol_version": {
+          "type": "number",
+          "value": 1
+        },
+        "$.schema_version": {
+          "type": "number",
+          "value": 1
+        }
+      }
+    },
+    {
+      "label": "impact.clean",
+      "argv": [
+        "impact",
+        "--json"
+      ],
+      "exit_code": 0,
+      "keys": {
+        "$": {
+          "type": "object",
+          "value": "command,complete,context,data,diagnostics,ok,protocol_version,schema_version"
+        },
+        "$.command": {
+          "type": "string",
+          "value": "markers.impact"
+        },
+        "$.complete": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.context": {
+          "type": "object",
+          "value": "component_id,data_root,workspace_root,workspace_snapshot"
+        },
+        "$.context.component_id": {
+          "type": "string",
+          "value": "backcompat"
+        },
+        "$.context.data_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.context.workspace_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.context.workspace_snapshot": {
+          "type": "object",
+          "value": "captured_at,component_id,dirty,head_revision,repository_id,vcs,working_tree_digest"
+        },
+        "$.context.workspace_snapshot.captured_at": {
+          "type": "string",
+          "value": "1970-01-01T00:00:00.000Z"
+        },
+        "$.context.workspace_snapshot.component_id": {
+          "type": "string",
+          "value": "backcompat"
+        },
+        "$.context.workspace_snapshot.dirty": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.context.workspace_snapshot.head_revision": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.repository_id": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.vcs": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.working_tree_digest": {
+          "type": "string",
+          "value": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "$.data": {
+          "type": "object",
+          "value": "base,broken_bindings,changed_files,command,errors,exit_code,impacted,ok,schema,summary,touched"
+        },
+        "$.data.base": {
+          "type": "string",
+          "value": "HEAD"
+        },
+        "$.data.broken_bindings": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.changed_files": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.command": {
+          "type": "string",
+          "value": "impact"
+        },
+        "$.data.errors": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.exit_code": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.impacted": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.ok": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.schema": {
+          "type": "string",
+          "value": "ucase-impact-report-v1"
+        },
+        "$.data.summary": {
+          "type": "string",
+          "value": "0 behaviours impacted"
+        },
+        "$.data.touched": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.diagnostics": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.ok": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.protocol_version": {
+          "type": "number",
+          "value": 1
+        },
+        "$.schema_version": {
+          "type": "number",
+          "value": 1
+        }
+      }
+    },
+    {
+      "label": "bind.coupon",
+      "argv": [
+        "bind",
+        "--row",
+        "checkout.apply_coupon",
+        "--file",
+        "src/coupon.js",
+        "--mode",
+        "explicit",
+        "--register-existing",
+        "--json"
+      ],
+      "exit_code": 0,
+      "keys": {
+        "$": {
+          "type": "object",
+          "value": "command,complete,context,data,diagnostics,ok,protocol_version,schema_version"
+        },
+        "$.command": {
+          "type": "string",
+          "value": "markers.bind"
+        },
+        "$.complete": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.context": {
+          "type": "object",
+          "value": "component_id,data_root,workspace_root,workspace_snapshot"
+        },
+        "$.context.component_id": {
+          "type": "string",
+          "value": "backcompat"
+        },
+        "$.context.data_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.context.workspace_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.context.workspace_snapshot": {
+          "type": "object",
+          "value": "captured_at,component_id,dirty,head_revision,repository_id,vcs,working_tree_digest"
+        },
+        "$.context.workspace_snapshot.captured_at": {
+          "type": "string",
+          "value": "1970-01-01T00:00:00.000Z"
+        },
+        "$.context.workspace_snapshot.component_id": {
+          "type": "string",
+          "value": "backcompat"
+        },
+        "$.context.workspace_snapshot.dirty": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.context.workspace_snapshot.head_revision": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.repository_id": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.vcs": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.working_tree_digest": {
+          "type": "string",
+          "value": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "$.data": {
+          "type": "object",
+          "value": "binding_slug,command,errors,exit_code,file_path,mode,next_command,ok,registry_event_appended,row_id,scan_result"
+        },
+        "$.data.binding_slug": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.command": {
+          "type": "string",
+          "value": "bind"
+        },
+        "$.data.errors": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.exit_code": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.file_path": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.mode": {
+          "type": "string",
+          "value": "explicit"
+        },
+        "$.data.next_command": {
+          "type": "string",
+          "value": "uc verify --row checkout.apply_coupon"
+        },
+        "$.data.ok": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.registry_event_appended": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.row_id": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.scan_result": {
+          "type": "object",
+          "value": "extent_kind,span_end_line,span_sha256,span_start_line"
+        },
+        "$.data.scan_result.extent_kind": {
+          "type": "string",
+          "value": "explicit"
+        },
+        "$.data.scan_result.span_end_line": {
+          "type": "number",
+          "value": 4
+        },
+        "$.data.scan_result.span_sha256": {
+          "type": "string",
+          "value": "sha256:5915cee72b03b2f1f628274b05e9f8f7e677fe924f3ea6a124c5e63530d9e57b"
+        },
+        "$.data.scan_result.span_start_line": {
+          "type": "number",
+          "value": 2
+        },
+        "$.diagnostics": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.ok": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.protocol_version": {
+          "type": "number",
+          "value": 1
+        },
+        "$.schema_version": {
+          "type": "number",
+          "value": 1
+        }
+      }
+    },
+    {
+      "label": "bind.refund",
+      "argv": [
+        "bind",
+        "--row",
+        "checkout.refund_order",
+        "--file",
+        "src/refund.js",
+        "--mode",
+        "explicit",
+        "--register-existing",
+        "--json"
+      ],
+      "exit_code": 0,
+      "keys": {
+        "$": {
+          "type": "object",
+          "value": "command,complete,context,data,diagnostics,ok,protocol_version,schema_version"
+        },
+        "$.command": {
+          "type": "string",
+          "value": "markers.bind"
+        },
+        "$.complete": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.context": {
+          "type": "object",
+          "value": "component_id,data_root,workspace_root,workspace_snapshot"
+        },
+        "$.context.component_id": {
+          "type": "string",
+          "value": "backcompat"
+        },
+        "$.context.data_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.context.workspace_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.context.workspace_snapshot": {
+          "type": "object",
+          "value": "captured_at,component_id,dirty,head_revision,repository_id,vcs,working_tree_digest"
+        },
+        "$.context.workspace_snapshot.captured_at": {
+          "type": "string",
+          "value": "1970-01-01T00:00:00.000Z"
+        },
+        "$.context.workspace_snapshot.component_id": {
+          "type": "string",
+          "value": "backcompat"
+        },
+        "$.context.workspace_snapshot.dirty": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.context.workspace_snapshot.head_revision": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.repository_id": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.vcs": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.working_tree_digest": {
+          "type": "string",
+          "value": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "$.data": {
+          "type": "object",
+          "value": "binding_slug,command,errors,exit_code,file_path,mode,next_command,ok,registry_event_appended,row_id,scan_result"
+        },
+        "$.data.binding_slug": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.command": {
+          "type": "string",
+          "value": "bind"
+        },
+        "$.data.errors": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.exit_code": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.file_path": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.mode": {
+          "type": "string",
+          "value": "explicit"
+        },
+        "$.data.next_command": {
+          "type": "string",
+          "value": "uc verify --row checkout.refund_order"
+        },
+        "$.data.ok": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.registry_event_appended": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.row_id": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.scan_result": {
+          "type": "object",
+          "value": "extent_kind,span_end_line,span_sha256,span_start_line"
+        },
+        "$.data.scan_result.extent_kind": {
+          "type": "string",
+          "value": "explicit"
+        },
+        "$.data.scan_result.span_end_line": {
+          "type": "number",
+          "value": 4
+        },
+        "$.data.scan_result.span_sha256": {
+          "type": "string",
+          "value": "sha256:220220cc26e9975a720d438393da9fe539303583ee1f95525373e1baf7ff4a5e"
+        },
+        "$.data.scan_result.span_start_line": {
+          "type": "number",
+          "value": 2
+        },
+        "$.diagnostics": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.ok": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.protocol_version": {
+          "type": "number",
+          "value": 1
+        },
+        "$.schema_version": {
+          "type": "number",
+          "value": 1
+        }
+      }
+    },
+    {
+      "label": "scan.bound",
+      "argv": [
+        "scan",
+        "--json"
+      ],
+      "exit_code": 0,
+      "keys": {
+        "$": {
+          "type": "object",
+          "value": "command,complete,context,data,diagnostics,ok,protocol_version,schema_version"
+        },
+        "$.command": {
+          "type": "string",
+          "value": "markers.scan"
+        },
+        "$.complete": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.context": {
+          "type": "object",
+          "value": "component_id,data_root,workspace_root,workspace_snapshot"
+        },
+        "$.context.component_id": {
+          "type": "string",
+          "value": "backcompat"
+        },
+        "$.context.data_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.context.workspace_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.context.workspace_snapshot": {
+          "type": "object",
+          "value": "captured_at,component_id,dirty,head_revision,repository_id,vcs,working_tree_digest"
+        },
+        "$.context.workspace_snapshot.captured_at": {
+          "type": "string",
+          "value": "1970-01-01T00:00:00.000Z"
+        },
+        "$.context.workspace_snapshot.component_id": {
+          "type": "string",
+          "value": "backcompat"
+        },
+        "$.context.workspace_snapshot.dirty": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.context.workspace_snapshot.head_revision": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.repository_id": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.vcs": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.working_tree_digest": {
+          "type": "string",
+          "value": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "$.data": {
+          "type": "object",
+          "value": "evidence_errors,evidence_valid,exit_code,inferred_spans,ok,registry_errors,registry_valid,status"
+        },
+        "$.data.evidence_errors": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.evidence_valid": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.exit_code": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.inferred_spans": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.ok": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.registry_errors": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.registry_valid": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.status": {
+          "type": "object",
+          "value": "acceptance_claim,generated_at,guard_ok,integrity_errors,policy_mode,product_root,rows,schema,summary,tool"
+        },
+        "$.data.status.acceptance_claim": {
+          "type": "object",
+          "value": "claimable,proven,statement,total"
+        },
+        "$.data.status.acceptance_claim.claimable": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.acceptance_claim.proven": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.acceptance_claim.statement": {
+          "type": "string",
+          "value": "NOT_SUPPORTED — 0 of 3 behaviours verified"
+        },
+        "$.data.status.acceptance_claim.total": {
+          "type": "number",
+          "value": 3
+        },
+        "$.data.status.generated_at": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.status.guard_ok": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.status.integrity_errors": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.policy_mode": {
+          "type": "string",
+          "value": "feature"
+        },
+        "$.data.status.product_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.status.rows": {
+          "type": "array",
+          "value": "len:3"
+        },
+        "$.data.status.rows[0]": {
+          "type": "object",
+          "value": "approval_policy_hash,current_binding_set_hash,current_binding_slugs,current_bindings,known_binding_slugs,latest_trusted_proof_event,local_reason,local_status,matching_proof_event,missing_registered_binding_slugs,policy_block,reasons,required_action,required_for_release,row_hash,row_id,status,unregistered_current_binding_slugs,verification_policy_hash"
+        },
+        "$.data.status.rows[0].approval_policy_hash": {
+          "type": "string",
+          "value": "sha256:7f517f97e00a688b0b402e4005866127e5c928bf44a94ca53477ac34e24b5ef1"
+        },
+        "$.data.status.rows[0].current_binding_set_hash": {
+          "type": "string",
+          "value": "sha256:11d49e5c5db18d8fa81d7f933f0b28fa940d4b70582ed58491260cdc40da039e"
+        },
+        "$.data.status.rows[0].current_binding_slugs": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[0].current_binding_slugs[0]": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.status.rows[0].current_bindings": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[0].current_bindings[0]": {
+          "type": "object",
+          "value": "binding_slug,extent_kind,file_path,recognizer_id,span_canon_id,span_end_line,span_sha256,span_start_line"
+        },
+        "$.data.status.rows[0].current_bindings[0].binding_slug": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.status.rows[0].current_bindings[0].extent_kind": {
+          "type": "string",
+          "value": "explicit"
+        },
+        "$.data.status.rows[0].current_bindings[0].file_path": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.status.rows[0].current_bindings[0].recognizer_id": {
+          "type": "string",
+          "value": "explicit-span-v1"
+        },
+        "$.data.status.rows[0].current_bindings[0].span_canon_id": {
+          "type": "string",
+          "value": "ucase-span-lines-v2"
+        },
+        "$.data.status.rows[0].current_bindings[0].span_end_line": {
+          "type": "number",
+          "value": 4
+        },
+        "$.data.status.rows[0].current_bindings[0].span_sha256": {
+          "type": "string",
+          "value": "sha256:5915cee72b03b2f1f628274b05e9f8f7e677fe924f3ea6a124c5e63530d9e57b"
+        },
+        "$.data.status.rows[0].current_bindings[0].span_start_line": {
+          "type": "number",
+          "value": 2
+        },
+        "$.data.status.rows[0].known_binding_slugs": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[0].known_binding_slugs[0]": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.status.rows[0].latest_trusted_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[0].local_reason": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[0].local_status": {
+          "type": "string",
+          "value": "UNVERIFIED_LOCAL"
+        },
+        "$.data.status.rows[0].matching_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[0].missing_registered_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[0].policy_block": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.rows[0].reasons": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[0].required_action": {
+          "type": "string",
+          "value": "uc prove --row checkout.apply_coupon"
+        },
+        "$.data.status.rows[0].required_for_release": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.rows[0].row_hash": {
+          "type": "string",
+          "value": "sha256:c2b25e8d096ff4a88ebe6e4f7165b32aabeec49ce588a08e28925c041d5df01e"
+        },
+        "$.data.status.rows[0].row_id": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.status.rows[0].status": {
+          "type": "string",
+          "value": "UNPROVEN"
+        },
+        "$.data.status.rows[0].unregistered_current_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[0].verification_policy_hash": {
+          "type": "string",
+          "value": "sha256:326d64cf7b78e949deaa5aa703b55a3cde3bfd0f0164336ae8069e3c132a921f"
+        },
+        "$.data.status.rows[1]": {
+          "type": "object",
+          "value": "approval_policy_hash,current_binding_slugs,current_bindings,known_binding_slugs,latest_trusted_proof_event,local_reason,local_status,matching_proof_event,missing_registered_binding_slugs,policy_block,reasons,required_action,required_for_release,row_hash,row_id,status,unregistered_current_binding_slugs,verification_policy_hash"
+        },
+        "$.data.status.rows[1].approval_policy_hash": {
+          "type": "string",
+          "value": "sha256:7f517f97e00a688b0b402e4005866127e5c928bf44a94ca53477ac34e24b5ef1"
+        },
+        "$.data.status.rows[1].current_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].current_bindings": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].known_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].latest_trusted_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[1].local_reason": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[1].local_status": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[1].matching_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[1].missing_registered_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].policy_block": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.rows[1].reasons": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].required_action": {
+          "type": "string",
+          "value": "uc bind --row checkout.never_bound --file <file> --mode <explicit|swift-func>"
+        },
+        "$.data.status.rows[1].required_for_release": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.rows[1].row_hash": {
+          "type": "string",
+          "value": "sha256:3b23a3fa8285b951750e863e66243d47563e20826785fff5d34ae3044fd3ab68"
+        },
+        "$.data.status.rows[1].row_id": {
+          "type": "string",
+          "value": "checkout.never_bound"
+        },
+        "$.data.status.rows[1].status": {
+          "type": "string",
+          "value": "UNBOUND"
+        },
+        "$.data.status.rows[1].unregistered_current_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].verification_policy_hash": {
+          "type": "string",
+          "value": "sha256:281dd496c32422966a6013cf472d622fb9f0fdc29dae29b9ed6a03227594f08d"
+        },
+        "$.data.status.rows[2]": {
+          "type": "object",
+          "value": "approval_policy_hash,current_binding_set_hash,current_binding_slugs,current_bindings,known_binding_slugs,latest_trusted_proof_event,local_reason,local_status,matching_proof_event,missing_registered_binding_slugs,policy_block,reasons,required_action,required_for_release,row_hash,row_id,status,unregistered_current_binding_slugs,verification_policy_hash"
+        },
+        "$.data.status.rows[2].approval_policy_hash": {
+          "type": "string",
+          "value": "sha256:7f517f97e00a688b0b402e4005866127e5c928bf44a94ca53477ac34e24b5ef1"
+        },
+        "$.data.status.rows[2].current_binding_set_hash": {
+          "type": "string",
+          "value": "sha256:752aa8a87fe4d5dd9d1bb17b6f26cfa4eb858ca755e8531a800e7e470f0cbe18"
+        },
+        "$.data.status.rows[2].current_binding_slugs": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[2].current_binding_slugs[0]": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.status.rows[2].current_bindings": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[2].current_bindings[0]": {
+          "type": "object",
+          "value": "binding_slug,extent_kind,file_path,recognizer_id,span_canon_id,span_end_line,span_sha256,span_start_line"
+        },
+        "$.data.status.rows[2].current_bindings[0].binding_slug": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.status.rows[2].current_bindings[0].extent_kind": {
+          "type": "string",
+          "value": "explicit"
+        },
+        "$.data.status.rows[2].current_bindings[0].file_path": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.status.rows[2].current_bindings[0].recognizer_id": {
+          "type": "string",
+          "value": "explicit-span-v1"
+        },
+        "$.data.status.rows[2].current_bindings[0].span_canon_id": {
+          "type": "string",
+          "value": "ucase-span-lines-v2"
+        },
+        "$.data.status.rows[2].current_bindings[0].span_end_line": {
+          "type": "number",
+          "value": 4
+        },
+        "$.data.status.rows[2].current_bindings[0].span_sha256": {
+          "type": "string",
+          "value": "sha256:220220cc26e9975a720d438393da9fe539303583ee1f95525373e1baf7ff4a5e"
+        },
+        "$.data.status.rows[2].current_bindings[0].span_start_line": {
+          "type": "number",
+          "value": 2
+        },
+        "$.data.status.rows[2].known_binding_slugs": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[2].known_binding_slugs[0]": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.status.rows[2].latest_trusted_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[2].local_reason": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[2].local_status": {
+          "type": "string",
+          "value": "UNVERIFIED_LOCAL"
+        },
+        "$.data.status.rows[2].matching_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[2].missing_registered_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[2].policy_block": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.rows[2].reasons": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[2].required_action": {
+          "type": "string",
+          "value": "uc prove --row checkout.refund_order"
+        },
+        "$.data.status.rows[2].required_for_release": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.rows[2].row_hash": {
+          "type": "string",
+          "value": "sha256:0c28e5c5ae68852cbbe908de6fb8c0401a27afea8771223697f84e1772a45ad0"
+        },
+        "$.data.status.rows[2].row_id": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.status.rows[2].status": {
+          "type": "string",
+          "value": "UNPROVEN"
+        },
+        "$.data.status.rows[2].unregistered_current_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[2].verification_policy_hash": {
+          "type": "string",
+          "value": "sha256:7ff0f5d32adc4765aeecf80ac5b7b2e5d5951bb5b06fe6cba3723922df13e039"
+        },
+        "$.data.status.schema": {
+          "type": "string",
+          "value": "ucase-freshness-status-v1"
+        },
+        "$.data.status.summary": {
+          "type": "object",
+          "value": "fresh,invalid,policy_blocked,stale_local,suspect,unbound,unproven,unverified_local,verified_local"
+        },
+        "$.data.status.summary.fresh": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.summary.invalid": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.summary.policy_blocked": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.summary.stale_local": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.summary.suspect": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.summary.unbound": {
+          "type": "number",
+          "value": 1
+        },
+        "$.data.status.summary.unproven": {
+          "type": "number",
+          "value": 2
+        },
+        "$.data.status.summary.unverified_local": {
+          "type": "number",
+          "value": 2
+        },
+        "$.data.status.summary.verified_local": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.tool": {
+          "type": "object",
+          "value": "name,version"
+        },
+        "$.data.status.tool.name": {
+          "type": "string",
+          "value": "@adammcarter/use-cases"
+        },
+        "$.data.status.tool.version": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.diagnostics": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.ok": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.protocol_version": {
+          "type": "number",
+          "value": 1
+        },
+        "$.schema_version": {
+          "type": "number",
+          "value": 1
+        }
+      }
+    },
+    {
+      "label": "verify.all",
+      "argv": [
+        "verify",
+        "--all",
+        "--json"
+      ],
+      "exit_code": 0,
+      "keys": {
+        "$": {
+          "type": "object",
+          "value": "command,complete,context,data,diagnostics,ok,protocol_version,schema_version"
+        },
+        "$.command": {
+          "type": "string",
+          "value": "markers.verify"
+        },
+        "$.complete": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.context": {
+          "type": "object",
+          "value": "component_id,data_root,workspace_root,workspace_snapshot"
+        },
+        "$.context.component_id": {
+          "type": "string",
+          "value": "backcompat"
+        },
+        "$.context.data_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.context.workspace_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.context.workspace_snapshot": {
+          "type": "object",
+          "value": "captured_at,component_id,dirty,head_revision,repository_id,vcs,working_tree_digest"
+        },
+        "$.context.workspace_snapshot.captured_at": {
+          "type": "string",
+          "value": "1970-01-01T00:00:00.000Z"
+        },
+        "$.context.workspace_snapshot.component_id": {
+          "type": "string",
+          "value": "backcompat"
+        },
+        "$.context.workspace_snapshot.dirty": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.context.workspace_snapshot.head_revision": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.repository_id": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.vcs": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.working_tree_digest": {
+          "type": "string",
+          "value": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "$.data": {
+          "type": "object",
+          "value": "command,errors,exit_code,ok,out_path,results"
+        },
+        "$.data.command": {
+          "type": "string",
+          "value": "verify"
+        },
+        "$.data.errors": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.exit_code": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.ok": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.out_path": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.results": {
+          "type": "array",
+          "value": "len:2"
+        },
+        "$.data.results[0]": {
+          "type": "object",
+          "value": "binding_set_hash,created_at,evidence_kind,exit_code,row_hash,row_id,schema,slug,span_sha256s,status,stderr_sha256,stdout_sha256,verification_context_hash,verifier_id,verifier_kind"
+        },
+        "$.data.results[0].binding_set_hash": {
+          "type": "string",
+          "value": "sha256:11d49e5c5db18d8fa81d7f933f0b28fa940d4b70582ed58491260cdc40da039e"
+        },
+        "$.data.results[0].created_at": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.results[0].evidence_kind": {
+          "type": "string",
+          "value": "test_result"
+        },
+        "$.data.results[0].exit_code": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.results[0].row_hash": {
+          "type": "string",
+          "value": "sha256:c2b25e8d096ff4a88ebe6e4f7165b32aabeec49ce588a08e28925c041d5df01e"
+        },
+        "$.data.results[0].row_id": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.results[0].schema": {
+          "type": "string",
+          "value": "ucase-verification-result-v1"
+        },
+        "$.data.results[0].slug": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.results[0].span_sha256s": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.results[0].span_sha256s[0]": {
+          "type": "string",
+          "value": "sha256:5915cee72b03b2f1f628274b05e9f8f7e677fe924f3ea6a124c5e63530d9e57b"
+        },
+        "$.data.results[0].status": {
+          "type": "string",
+          "value": "pass"
+        },
+        "$.data.results[0].stderr_sha256": {
+          "type": "string",
+          "value": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "$.data.results[0].stdout_sha256": {
+          "type": "string",
+          "value": "sha256:8561af03b15dd4d8078072d38cfeffdef8bfc5397cb3f77599d4d96b897f590e"
+        },
+        "$.data.results[0].verification_context_hash": {
+          "type": "string",
+          "value": "sha256:bd866924c58ec41c4d59447e8f8ab8b6e908f10c7627c0287e9481ed0c2d4f16"
+        },
+        "$.data.results[0].verifier_id": {
+          "type": "string",
+          "value": "coupon_check"
+        },
+        "$.data.results[0].verifier_kind": {
+          "type": "string",
+          "value": "script"
+        },
+        "$.data.results[1]": {
+          "type": "object",
+          "value": "binding_set_hash,created_at,evidence_kind,exit_code,row_hash,row_id,schema,slug,span_sha256s,status,stderr_sha256,stdout_sha256,verification_context_hash,verifier_id,verifier_kind"
+        },
+        "$.data.results[1].binding_set_hash": {
+          "type": "string",
+          "value": "sha256:752aa8a87fe4d5dd9d1bb17b6f26cfa4eb858ca755e8531a800e7e470f0cbe18"
+        },
+        "$.data.results[1].created_at": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.results[1].evidence_kind": {
+          "type": "string",
+          "value": "test_result"
+        },
+        "$.data.results[1].exit_code": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.results[1].row_hash": {
+          "type": "string",
+          "value": "sha256:0c28e5c5ae68852cbbe908de6fb8c0401a27afea8771223697f84e1772a45ad0"
+        },
+        "$.data.results[1].row_id": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.results[1].schema": {
+          "type": "string",
+          "value": "ucase-verification-result-v1"
+        },
+        "$.data.results[1].slug": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.results[1].span_sha256s": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.results[1].span_sha256s[0]": {
+          "type": "string",
+          "value": "sha256:220220cc26e9975a720d438393da9fe539303583ee1f95525373e1baf7ff4a5e"
+        },
+        "$.data.results[1].status": {
+          "type": "string",
+          "value": "pass"
+        },
+        "$.data.results[1].stderr_sha256": {
+          "type": "string",
+          "value": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "$.data.results[1].stdout_sha256": {
+          "type": "string",
+          "value": "sha256:34aacab79b7cb6193ca976fa5a626096941c76ebadf705cf0b8e917a3179b57f"
+        },
+        "$.data.results[1].verification_context_hash": {
+          "type": "string",
+          "value": "sha256:c32d3b7441a01df09dde0ae4a62b1868ca692836ebb4db53ad06be32500191d4"
+        },
+        "$.data.results[1].verifier_id": {
+          "type": "string",
+          "value": "refund_check"
+        },
+        "$.data.results[1].verifier_kind": {
+          "type": "string",
+          "value": "script"
+        },
+        "$.diagnostics": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.ok": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.protocol_version": {
+          "type": "number",
+          "value": 1
+        },
+        "$.schema_version": {
+          "type": "number",
+          "value": 1
+        }
+      }
+    },
+    {
+      "label": "scan.verified",
+      "argv": [
+        "scan",
+        "--json"
+      ],
+      "exit_code": 0,
+      "keys": {
+        "$": {
+          "type": "object",
+          "value": "command,complete,context,data,diagnostics,ok,protocol_version,schema_version"
+        },
+        "$.command": {
+          "type": "string",
+          "value": "markers.scan"
+        },
+        "$.complete": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.context": {
+          "type": "object",
+          "value": "component_id,data_root,workspace_root,workspace_snapshot"
+        },
+        "$.context.component_id": {
+          "type": "string",
+          "value": "backcompat"
+        },
+        "$.context.data_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.context.workspace_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.context.workspace_snapshot": {
+          "type": "object",
+          "value": "captured_at,component_id,dirty,head_revision,repository_id,vcs,working_tree_digest"
+        },
+        "$.context.workspace_snapshot.captured_at": {
+          "type": "string",
+          "value": "1970-01-01T00:00:00.000Z"
+        },
+        "$.context.workspace_snapshot.component_id": {
+          "type": "string",
+          "value": "backcompat"
+        },
+        "$.context.workspace_snapshot.dirty": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.context.workspace_snapshot.head_revision": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.repository_id": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.vcs": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.working_tree_digest": {
+          "type": "string",
+          "value": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "$.data": {
+          "type": "object",
+          "value": "evidence_errors,evidence_valid,exit_code,inferred_spans,ok,registry_errors,registry_valid,status"
+        },
+        "$.data.evidence_errors": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.evidence_valid": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.exit_code": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.inferred_spans": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.ok": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.registry_errors": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.registry_valid": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.status": {
+          "type": "object",
+          "value": "acceptance_claim,generated_at,guard_ok,integrity_errors,policy_mode,product_root,rows,schema,summary,tool"
+        },
+        "$.data.status.acceptance_claim": {
+          "type": "object",
+          "value": "claimable,proven,statement,total"
+        },
+        "$.data.status.acceptance_claim.claimable": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.acceptance_claim.proven": {
+          "type": "number",
+          "value": 2
+        },
+        "$.data.status.acceptance_claim.statement": {
+          "type": "string",
+          "value": "NOT_SUPPORTED — 2 of 3 behaviours verified"
+        },
+        "$.data.status.acceptance_claim.total": {
+          "type": "number",
+          "value": 3
+        },
+        "$.data.status.generated_at": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.status.guard_ok": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.status.integrity_errors": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.policy_mode": {
+          "type": "string",
+          "value": "feature"
+        },
+        "$.data.status.product_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.status.rows": {
+          "type": "array",
+          "value": "len:3"
+        },
+        "$.data.status.rows[0]": {
+          "type": "object",
+          "value": "approval_policy_hash,current_binding_set_hash,current_binding_slugs,current_bindings,known_binding_slugs,latest_trusted_proof_event,local_reason,local_status,matching_proof_event,missing_registered_binding_slugs,policy_block,reasons,required_action,required_for_release,row_hash,row_id,status,unregistered_current_binding_slugs,verification_policy_hash"
+        },
+        "$.data.status.rows[0].approval_policy_hash": {
+          "type": "string",
+          "value": "sha256:7f517f97e00a688b0b402e4005866127e5c928bf44a94ca53477ac34e24b5ef1"
+        },
+        "$.data.status.rows[0].current_binding_set_hash": {
+          "type": "string",
+          "value": "sha256:11d49e5c5db18d8fa81d7f933f0b28fa940d4b70582ed58491260cdc40da039e"
+        },
+        "$.data.status.rows[0].current_binding_slugs": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[0].current_binding_slugs[0]": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.status.rows[0].current_bindings": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[0].current_bindings[0]": {
+          "type": "object",
+          "value": "binding_slug,extent_kind,file_path,recognizer_id,span_canon_id,span_end_line,span_sha256,span_start_line"
+        },
+        "$.data.status.rows[0].current_bindings[0].binding_slug": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.status.rows[0].current_bindings[0].extent_kind": {
+          "type": "string",
+          "value": "explicit"
+        },
+        "$.data.status.rows[0].current_bindings[0].file_path": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.status.rows[0].current_bindings[0].recognizer_id": {
+          "type": "string",
+          "value": "explicit-span-v1"
+        },
+        "$.data.status.rows[0].current_bindings[0].span_canon_id": {
+          "type": "string",
+          "value": "ucase-span-lines-v2"
+        },
+        "$.data.status.rows[0].current_bindings[0].span_end_line": {
+          "type": "number",
+          "value": 4
+        },
+        "$.data.status.rows[0].current_bindings[0].span_sha256": {
+          "type": "string",
+          "value": "sha256:5915cee72b03b2f1f628274b05e9f8f7e677fe924f3ea6a124c5e63530d9e57b"
+        },
+        "$.data.status.rows[0].current_bindings[0].span_start_line": {
+          "type": "number",
+          "value": 2
+        },
+        "$.data.status.rows[0].known_binding_slugs": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[0].known_binding_slugs[0]": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.status.rows[0].latest_trusted_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[0].local_reason": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[0].local_status": {
+          "type": "string",
+          "value": "VERIFIED_LOCAL"
+        },
+        "$.data.status.rows[0].matching_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[0].missing_registered_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[0].policy_block": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.rows[0].reasons": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[0].required_action": {
+          "type": "string",
+          "value": "uc prove --row checkout.apply_coupon"
+        },
+        "$.data.status.rows[0].required_for_release": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.rows[0].row_hash": {
+          "type": "string",
+          "value": "sha256:c2b25e8d096ff4a88ebe6e4f7165b32aabeec49ce588a08e28925c041d5df01e"
+        },
+        "$.data.status.rows[0].row_id": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.status.rows[0].status": {
+          "type": "string",
+          "value": "UNPROVEN"
+        },
+        "$.data.status.rows[0].unregistered_current_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[0].verification_policy_hash": {
+          "type": "string",
+          "value": "sha256:326d64cf7b78e949deaa5aa703b55a3cde3bfd0f0164336ae8069e3c132a921f"
+        },
+        "$.data.status.rows[1]": {
+          "type": "object",
+          "value": "approval_policy_hash,current_binding_slugs,current_bindings,known_binding_slugs,latest_trusted_proof_event,local_reason,local_status,matching_proof_event,missing_registered_binding_slugs,policy_block,reasons,required_action,required_for_release,row_hash,row_id,status,unregistered_current_binding_slugs,verification_policy_hash"
+        },
+        "$.data.status.rows[1].approval_policy_hash": {
+          "type": "string",
+          "value": "sha256:7f517f97e00a688b0b402e4005866127e5c928bf44a94ca53477ac34e24b5ef1"
+        },
+        "$.data.status.rows[1].current_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].current_bindings": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].known_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].latest_trusted_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[1].local_reason": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[1].local_status": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[1].matching_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[1].missing_registered_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].policy_block": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.rows[1].reasons": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].required_action": {
+          "type": "string",
+          "value": "uc bind --row checkout.never_bound --file <file> --mode <explicit|swift-func>"
+        },
+        "$.data.status.rows[1].required_for_release": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.rows[1].row_hash": {
+          "type": "string",
+          "value": "sha256:3b23a3fa8285b951750e863e66243d47563e20826785fff5d34ae3044fd3ab68"
+        },
+        "$.data.status.rows[1].row_id": {
+          "type": "string",
+          "value": "checkout.never_bound"
+        },
+        "$.data.status.rows[1].status": {
+          "type": "string",
+          "value": "UNBOUND"
+        },
+        "$.data.status.rows[1].unregistered_current_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].verification_policy_hash": {
+          "type": "string",
+          "value": "sha256:281dd496c32422966a6013cf472d622fb9f0fdc29dae29b9ed6a03227594f08d"
+        },
+        "$.data.status.rows[2]": {
+          "type": "object",
+          "value": "approval_policy_hash,current_binding_set_hash,current_binding_slugs,current_bindings,known_binding_slugs,latest_trusted_proof_event,local_reason,local_status,matching_proof_event,missing_registered_binding_slugs,policy_block,reasons,required_action,required_for_release,row_hash,row_id,status,unregistered_current_binding_slugs,verification_policy_hash"
+        },
+        "$.data.status.rows[2].approval_policy_hash": {
+          "type": "string",
+          "value": "sha256:7f517f97e00a688b0b402e4005866127e5c928bf44a94ca53477ac34e24b5ef1"
+        },
+        "$.data.status.rows[2].current_binding_set_hash": {
+          "type": "string",
+          "value": "sha256:752aa8a87fe4d5dd9d1bb17b6f26cfa4eb858ca755e8531a800e7e470f0cbe18"
+        },
+        "$.data.status.rows[2].current_binding_slugs": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[2].current_binding_slugs[0]": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.status.rows[2].current_bindings": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[2].current_bindings[0]": {
+          "type": "object",
+          "value": "binding_slug,extent_kind,file_path,recognizer_id,span_canon_id,span_end_line,span_sha256,span_start_line"
+        },
+        "$.data.status.rows[2].current_bindings[0].binding_slug": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.status.rows[2].current_bindings[0].extent_kind": {
+          "type": "string",
+          "value": "explicit"
+        },
+        "$.data.status.rows[2].current_bindings[0].file_path": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.status.rows[2].current_bindings[0].recognizer_id": {
+          "type": "string",
+          "value": "explicit-span-v1"
+        },
+        "$.data.status.rows[2].current_bindings[0].span_canon_id": {
+          "type": "string",
+          "value": "ucase-span-lines-v2"
+        },
+        "$.data.status.rows[2].current_bindings[0].span_end_line": {
+          "type": "number",
+          "value": 4
+        },
+        "$.data.status.rows[2].current_bindings[0].span_sha256": {
+          "type": "string",
+          "value": "sha256:220220cc26e9975a720d438393da9fe539303583ee1f95525373e1baf7ff4a5e"
+        },
+        "$.data.status.rows[2].current_bindings[0].span_start_line": {
+          "type": "number",
+          "value": 2
+        },
+        "$.data.status.rows[2].known_binding_slugs": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[2].known_binding_slugs[0]": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.status.rows[2].latest_trusted_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[2].local_reason": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[2].local_status": {
+          "type": "string",
+          "value": "VERIFIED_LOCAL"
+        },
+        "$.data.status.rows[2].matching_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[2].missing_registered_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[2].policy_block": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.rows[2].reasons": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[2].required_action": {
+          "type": "string",
+          "value": "uc prove --row checkout.refund_order"
+        },
+        "$.data.status.rows[2].required_for_release": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.rows[2].row_hash": {
+          "type": "string",
+          "value": "sha256:0c28e5c5ae68852cbbe908de6fb8c0401a27afea8771223697f84e1772a45ad0"
+        },
+        "$.data.status.rows[2].row_id": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.status.rows[2].status": {
+          "type": "string",
+          "value": "UNPROVEN"
+        },
+        "$.data.status.rows[2].unregistered_current_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[2].verification_policy_hash": {
+          "type": "string",
+          "value": "sha256:7ff0f5d32adc4765aeecf80ac5b7b2e5d5951bb5b06fe6cba3723922df13e039"
+        },
+        "$.data.status.schema": {
+          "type": "string",
+          "value": "ucase-freshness-status-v1"
+        },
+        "$.data.status.summary": {
+          "type": "object",
+          "value": "fresh,invalid,policy_blocked,stale_local,suspect,unbound,unproven,unverified_local,verified_local"
+        },
+        "$.data.status.summary.fresh": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.summary.invalid": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.summary.policy_blocked": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.summary.stale_local": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.summary.suspect": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.summary.unbound": {
+          "type": "number",
+          "value": 1
+        },
+        "$.data.status.summary.unproven": {
+          "type": "number",
+          "value": 2
+        },
+        "$.data.status.summary.unverified_local": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.summary.verified_local": {
+          "type": "number",
+          "value": 2
+        },
+        "$.data.status.tool": {
+          "type": "object",
+          "value": "name,version"
+        },
+        "$.data.status.tool.name": {
+          "type": "string",
+          "value": "@adammcarter/use-cases"
+        },
+        "$.data.status.tool.version": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.diagnostics": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.ok": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.protocol_version": {
+          "type": "number",
+          "value": 1
+        },
+        "$.schema_version": {
+          "type": "number",
+          "value": 1
+        }
+      }
+    },
+    {
+      "label": "scan.verified.gate",
+      "argv": [
+        "scan",
+        "--gate",
+        "--json"
+      ],
+      "exit_code": 0,
+      "keys": {
+        "$": {
+          "type": "object",
+          "value": "command,complete,context,data,diagnostics,ok,protocol_version,schema_version"
+        },
+        "$.command": {
+          "type": "string",
+          "value": "markers.scan"
+        },
+        "$.complete": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.context": {
+          "type": "object",
+          "value": "component_id,data_root,workspace_root,workspace_snapshot"
+        },
+        "$.context.component_id": {
+          "type": "string",
+          "value": "backcompat"
+        },
+        "$.context.data_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.context.workspace_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.context.workspace_snapshot": {
+          "type": "object",
+          "value": "captured_at,component_id,dirty,head_revision,repository_id,vcs,working_tree_digest"
+        },
+        "$.context.workspace_snapshot.captured_at": {
+          "type": "string",
+          "value": "1970-01-01T00:00:00.000Z"
+        },
+        "$.context.workspace_snapshot.component_id": {
+          "type": "string",
+          "value": "backcompat"
+        },
+        "$.context.workspace_snapshot.dirty": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.context.workspace_snapshot.head_revision": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.repository_id": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.vcs": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.working_tree_digest": {
+          "type": "string",
+          "value": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "$.data": {
+          "type": "object",
+          "value": "evidence_errors,evidence_valid,exit_code,gate,inferred_spans,ok,registry_errors,registry_valid,status"
+        },
+        "$.data.evidence_errors": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.evidence_valid": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.exit_code": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.gate": {
+          "type": "object",
+          "value": "blocked,offending_rows,policy_mode,required_bar,ungated_below_bar"
+        },
+        "$.data.gate.blocked": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.gate.offending_rows": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.gate.policy_mode": {
+          "type": "string",
+          "value": "feature"
+        },
+        "$.data.gate.required_bar": {
+          "type": "string",
+          "value": "VERIFIED_LOCAL"
+        },
+        "$.data.gate.ungated_below_bar": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.inferred_spans": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.ok": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.registry_errors": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.registry_valid": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.status": {
+          "type": "object",
+          "value": "acceptance_claim,generated_at,guard_ok,integrity_errors,policy_mode,product_root,rows,schema,summary,tool"
+        },
+        "$.data.status.acceptance_claim": {
+          "type": "object",
+          "value": "claimable,proven,statement,total"
+        },
+        "$.data.status.acceptance_claim.claimable": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.acceptance_claim.proven": {
+          "type": "number",
+          "value": 2
+        },
+        "$.data.status.acceptance_claim.statement": {
+          "type": "string",
+          "value": "NOT_SUPPORTED — 2 of 3 behaviours verified"
+        },
+        "$.data.status.acceptance_claim.total": {
+          "type": "number",
+          "value": 3
+        },
+        "$.data.status.generated_at": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.status.guard_ok": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.status.integrity_errors": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.policy_mode": {
+          "type": "string",
+          "value": "feature"
+        },
+        "$.data.status.product_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.status.rows": {
+          "type": "array",
+          "value": "len:3"
+        },
+        "$.data.status.rows[0]": {
+          "type": "object",
+          "value": "approval_policy_hash,current_binding_set_hash,current_binding_slugs,current_bindings,known_binding_slugs,latest_trusted_proof_event,local_reason,local_status,matching_proof_event,missing_registered_binding_slugs,policy_block,reasons,required_action,required_for_release,row_hash,row_id,status,unregistered_current_binding_slugs,verification_policy_hash"
+        },
+        "$.data.status.rows[0].approval_policy_hash": {
+          "type": "string",
+          "value": "sha256:7f517f97e00a688b0b402e4005866127e5c928bf44a94ca53477ac34e24b5ef1"
+        },
+        "$.data.status.rows[0].current_binding_set_hash": {
+          "type": "string",
+          "value": "sha256:11d49e5c5db18d8fa81d7f933f0b28fa940d4b70582ed58491260cdc40da039e"
+        },
+        "$.data.status.rows[0].current_binding_slugs": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[0].current_binding_slugs[0]": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.status.rows[0].current_bindings": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[0].current_bindings[0]": {
+          "type": "object",
+          "value": "binding_slug,extent_kind,file_path,recognizer_id,span_canon_id,span_end_line,span_sha256,span_start_line"
+        },
+        "$.data.status.rows[0].current_bindings[0].binding_slug": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.status.rows[0].current_bindings[0].extent_kind": {
+          "type": "string",
+          "value": "explicit"
+        },
+        "$.data.status.rows[0].current_bindings[0].file_path": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.status.rows[0].current_bindings[0].recognizer_id": {
+          "type": "string",
+          "value": "explicit-span-v1"
+        },
+        "$.data.status.rows[0].current_bindings[0].span_canon_id": {
+          "type": "string",
+          "value": "ucase-span-lines-v2"
+        },
+        "$.data.status.rows[0].current_bindings[0].span_end_line": {
+          "type": "number",
+          "value": 4
+        },
+        "$.data.status.rows[0].current_bindings[0].span_sha256": {
+          "type": "string",
+          "value": "sha256:5915cee72b03b2f1f628274b05e9f8f7e677fe924f3ea6a124c5e63530d9e57b"
+        },
+        "$.data.status.rows[0].current_bindings[0].span_start_line": {
+          "type": "number",
+          "value": 2
+        },
+        "$.data.status.rows[0].known_binding_slugs": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[0].known_binding_slugs[0]": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.status.rows[0].latest_trusted_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[0].local_reason": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[0].local_status": {
+          "type": "string",
+          "value": "VERIFIED_LOCAL"
+        },
+        "$.data.status.rows[0].matching_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[0].missing_registered_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[0].policy_block": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.rows[0].reasons": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[0].required_action": {
+          "type": "string",
+          "value": "uc prove --row checkout.apply_coupon"
+        },
+        "$.data.status.rows[0].required_for_release": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.rows[0].row_hash": {
+          "type": "string",
+          "value": "sha256:c2b25e8d096ff4a88ebe6e4f7165b32aabeec49ce588a08e28925c041d5df01e"
+        },
+        "$.data.status.rows[0].row_id": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.status.rows[0].status": {
+          "type": "string",
+          "value": "UNPROVEN"
+        },
+        "$.data.status.rows[0].unregistered_current_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[0].verification_policy_hash": {
+          "type": "string",
+          "value": "sha256:326d64cf7b78e949deaa5aa703b55a3cde3bfd0f0164336ae8069e3c132a921f"
+        },
+        "$.data.status.rows[1]": {
+          "type": "object",
+          "value": "approval_policy_hash,current_binding_slugs,current_bindings,known_binding_slugs,latest_trusted_proof_event,local_reason,local_status,matching_proof_event,missing_registered_binding_slugs,policy_block,reasons,required_action,required_for_release,row_hash,row_id,status,unregistered_current_binding_slugs,verification_policy_hash"
+        },
+        "$.data.status.rows[1].approval_policy_hash": {
+          "type": "string",
+          "value": "sha256:7f517f97e00a688b0b402e4005866127e5c928bf44a94ca53477ac34e24b5ef1"
+        },
+        "$.data.status.rows[1].current_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].current_bindings": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].known_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].latest_trusted_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[1].local_reason": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[1].local_status": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[1].matching_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[1].missing_registered_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].policy_block": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.rows[1].reasons": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].required_action": {
+          "type": "string",
+          "value": "uc bind --row checkout.never_bound --file <file> --mode <explicit|swift-func>"
+        },
+        "$.data.status.rows[1].required_for_release": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.rows[1].row_hash": {
+          "type": "string",
+          "value": "sha256:3b23a3fa8285b951750e863e66243d47563e20826785fff5d34ae3044fd3ab68"
+        },
+        "$.data.status.rows[1].row_id": {
+          "type": "string",
+          "value": "checkout.never_bound"
+        },
+        "$.data.status.rows[1].status": {
+          "type": "string",
+          "value": "UNBOUND"
+        },
+        "$.data.status.rows[1].unregistered_current_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].verification_policy_hash": {
+          "type": "string",
+          "value": "sha256:281dd496c32422966a6013cf472d622fb9f0fdc29dae29b9ed6a03227594f08d"
+        },
+        "$.data.status.rows[2]": {
+          "type": "object",
+          "value": "approval_policy_hash,current_binding_set_hash,current_binding_slugs,current_bindings,known_binding_slugs,latest_trusted_proof_event,local_reason,local_status,matching_proof_event,missing_registered_binding_slugs,policy_block,reasons,required_action,required_for_release,row_hash,row_id,status,unregistered_current_binding_slugs,verification_policy_hash"
+        },
+        "$.data.status.rows[2].approval_policy_hash": {
+          "type": "string",
+          "value": "sha256:7f517f97e00a688b0b402e4005866127e5c928bf44a94ca53477ac34e24b5ef1"
+        },
+        "$.data.status.rows[2].current_binding_set_hash": {
+          "type": "string",
+          "value": "sha256:752aa8a87fe4d5dd9d1bb17b6f26cfa4eb858ca755e8531a800e7e470f0cbe18"
+        },
+        "$.data.status.rows[2].current_binding_slugs": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[2].current_binding_slugs[0]": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.status.rows[2].current_bindings": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[2].current_bindings[0]": {
+          "type": "object",
+          "value": "binding_slug,extent_kind,file_path,recognizer_id,span_canon_id,span_end_line,span_sha256,span_start_line"
+        },
+        "$.data.status.rows[2].current_bindings[0].binding_slug": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.status.rows[2].current_bindings[0].extent_kind": {
+          "type": "string",
+          "value": "explicit"
+        },
+        "$.data.status.rows[2].current_bindings[0].file_path": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.status.rows[2].current_bindings[0].recognizer_id": {
+          "type": "string",
+          "value": "explicit-span-v1"
+        },
+        "$.data.status.rows[2].current_bindings[0].span_canon_id": {
+          "type": "string",
+          "value": "ucase-span-lines-v2"
+        },
+        "$.data.status.rows[2].current_bindings[0].span_end_line": {
+          "type": "number",
+          "value": 4
+        },
+        "$.data.status.rows[2].current_bindings[0].span_sha256": {
+          "type": "string",
+          "value": "sha256:220220cc26e9975a720d438393da9fe539303583ee1f95525373e1baf7ff4a5e"
+        },
+        "$.data.status.rows[2].current_bindings[0].span_start_line": {
+          "type": "number",
+          "value": 2
+        },
+        "$.data.status.rows[2].known_binding_slugs": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[2].known_binding_slugs[0]": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.status.rows[2].latest_trusted_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[2].local_reason": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[2].local_status": {
+          "type": "string",
+          "value": "VERIFIED_LOCAL"
+        },
+        "$.data.status.rows[2].matching_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[2].missing_registered_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[2].policy_block": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.rows[2].reasons": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[2].required_action": {
+          "type": "string",
+          "value": "uc prove --row checkout.refund_order"
+        },
+        "$.data.status.rows[2].required_for_release": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.rows[2].row_hash": {
+          "type": "string",
+          "value": "sha256:0c28e5c5ae68852cbbe908de6fb8c0401a27afea8771223697f84e1772a45ad0"
+        },
+        "$.data.status.rows[2].row_id": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.status.rows[2].status": {
+          "type": "string",
+          "value": "UNPROVEN"
+        },
+        "$.data.status.rows[2].unregistered_current_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[2].verification_policy_hash": {
+          "type": "string",
+          "value": "sha256:7ff0f5d32adc4765aeecf80ac5b7b2e5d5951bb5b06fe6cba3723922df13e039"
+        },
+        "$.data.status.schema": {
+          "type": "string",
+          "value": "ucase-freshness-status-v1"
+        },
+        "$.data.status.summary": {
+          "type": "object",
+          "value": "fresh,invalid,policy_blocked,stale_local,suspect,unbound,unproven,unverified_local,verified_local"
+        },
+        "$.data.status.summary.fresh": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.summary.invalid": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.summary.policy_blocked": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.summary.stale_local": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.summary.suspect": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.summary.unbound": {
+          "type": "number",
+          "value": 1
+        },
+        "$.data.status.summary.unproven": {
+          "type": "number",
+          "value": 2
+        },
+        "$.data.status.summary.unverified_local": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.summary.verified_local": {
+          "type": "number",
+          "value": 2
+        },
+        "$.data.status.tool": {
+          "type": "object",
+          "value": "name,version"
+        },
+        "$.data.status.tool.name": {
+          "type": "string",
+          "value": "@adammcarter/use-cases"
+        },
+        "$.data.status.tool.version": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.diagnostics": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.ok": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.protocol_version": {
+          "type": "number",
+          "value": 1
+        },
+        "$.schema_version": {
+          "type": "number",
+          "value": 1
+        }
+      }
+    },
+    {
+      "label": "verify.single_row",
+      "argv": [
+        "verify",
+        "--row",
+        "checkout.apply_coupon",
+        "--json"
+      ],
+      "exit_code": 0,
+      "keys": {
+        "$": {
+          "type": "object",
+          "value": "command,complete,context,data,diagnostics,ok,protocol_version,schema_version"
+        },
+        "$.command": {
+          "type": "string",
+          "value": "markers.verify"
+        },
+        "$.complete": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.context": {
+          "type": "object",
+          "value": "component_id,data_root,workspace_root,workspace_snapshot"
+        },
+        "$.context.component_id": {
+          "type": "string",
+          "value": "backcompat"
+        },
+        "$.context.data_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.context.workspace_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.context.workspace_snapshot": {
+          "type": "object",
+          "value": "captured_at,component_id,dirty,head_revision,repository_id,vcs,working_tree_digest"
+        },
+        "$.context.workspace_snapshot.captured_at": {
+          "type": "string",
+          "value": "1970-01-01T00:00:00.000Z"
+        },
+        "$.context.workspace_snapshot.component_id": {
+          "type": "string",
+          "value": "backcompat"
+        },
+        "$.context.workspace_snapshot.dirty": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.context.workspace_snapshot.head_revision": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.repository_id": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.vcs": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.working_tree_digest": {
+          "type": "string",
+          "value": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "$.data": {
+          "type": "object",
+          "value": "command,errors,exit_code,ok,out_path,results"
+        },
+        "$.data.command": {
+          "type": "string",
+          "value": "verify"
+        },
+        "$.data.errors": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.exit_code": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.ok": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.out_path": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.results": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.results[0]": {
+          "type": "object",
+          "value": "binding_set_hash,created_at,evidence_kind,exit_code,row_hash,row_id,schema,slug,span_sha256s,status,stderr_sha256,stdout_sha256,verification_context_hash,verifier_id,verifier_kind"
+        },
+        "$.data.results[0].binding_set_hash": {
+          "type": "string",
+          "value": "sha256:11d49e5c5db18d8fa81d7f933f0b28fa940d4b70582ed58491260cdc40da039e"
+        },
+        "$.data.results[0].created_at": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.results[0].evidence_kind": {
+          "type": "string",
+          "value": "test_result"
+        },
+        "$.data.results[0].exit_code": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.results[0].row_hash": {
+          "type": "string",
+          "value": "sha256:c2b25e8d096ff4a88ebe6e4f7165b32aabeec49ce588a08e28925c041d5df01e"
+        },
+        "$.data.results[0].row_id": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.results[0].schema": {
+          "type": "string",
+          "value": "ucase-verification-result-v1"
+        },
+        "$.data.results[0].slug": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.results[0].span_sha256s": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.results[0].span_sha256s[0]": {
+          "type": "string",
+          "value": "sha256:5915cee72b03b2f1f628274b05e9f8f7e677fe924f3ea6a124c5e63530d9e57b"
+        },
+        "$.data.results[0].status": {
+          "type": "string",
+          "value": "pass"
+        },
+        "$.data.results[0].stderr_sha256": {
+          "type": "string",
+          "value": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "$.data.results[0].stdout_sha256": {
+          "type": "string",
+          "value": "sha256:8561af03b15dd4d8078072d38cfeffdef8bfc5397cb3f77599d4d96b897f590e"
+        },
+        "$.data.results[0].verification_context_hash": {
+          "type": "string",
+          "value": "sha256:bd866924c58ec41c4d59447e8f8ab8b6e908f10c7627c0287e9481ed0c2d4f16"
+        },
+        "$.data.results[0].verifier_id": {
+          "type": "string",
+          "value": "coupon_check"
+        },
+        "$.data.results[0].verifier_kind": {
+          "type": "string",
+          "value": "script"
+        },
+        "$.diagnostics": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.ok": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.protocol_version": {
+          "type": "number",
+          "value": 1
+        },
+        "$.schema_version": {
+          "type": "number",
+          "value": 1
+        }
+      }
+    },
+    {
+      "label": "scan.after_single_row",
+      "argv": [
+        "scan",
+        "--json"
+      ],
+      "exit_code": 0,
+      "keys": {
+        "$": {
+          "type": "object",
+          "value": "command,complete,context,data,diagnostics,ok,protocol_version,schema_version"
+        },
+        "$.command": {
+          "type": "string",
+          "value": "markers.scan"
+        },
+        "$.complete": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.context": {
+          "type": "object",
+          "value": "component_id,data_root,workspace_root,workspace_snapshot"
+        },
+        "$.context.component_id": {
+          "type": "string",
+          "value": "backcompat"
+        },
+        "$.context.data_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.context.workspace_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.context.workspace_snapshot": {
+          "type": "object",
+          "value": "captured_at,component_id,dirty,head_revision,repository_id,vcs,working_tree_digest"
+        },
+        "$.context.workspace_snapshot.captured_at": {
+          "type": "string",
+          "value": "1970-01-01T00:00:00.000Z"
+        },
+        "$.context.workspace_snapshot.component_id": {
+          "type": "string",
+          "value": "backcompat"
+        },
+        "$.context.workspace_snapshot.dirty": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.context.workspace_snapshot.head_revision": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.repository_id": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.vcs": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.working_tree_digest": {
+          "type": "string",
+          "value": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "$.data": {
+          "type": "object",
+          "value": "evidence_errors,evidence_valid,exit_code,inferred_spans,ok,registry_errors,registry_valid,status"
+        },
+        "$.data.evidence_errors": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.evidence_valid": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.exit_code": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.inferred_spans": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.ok": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.registry_errors": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.registry_valid": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.status": {
+          "type": "object",
+          "value": "acceptance_claim,generated_at,guard_ok,integrity_errors,policy_mode,product_root,rows,schema,summary,tool"
+        },
+        "$.data.status.acceptance_claim": {
+          "type": "object",
+          "value": "claimable,proven,statement,total"
+        },
+        "$.data.status.acceptance_claim.claimable": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.acceptance_claim.proven": {
+          "type": "number",
+          "value": 2
+        },
+        "$.data.status.acceptance_claim.statement": {
+          "type": "string",
+          "value": "NOT_SUPPORTED — 2 of 3 behaviours verified"
+        },
+        "$.data.status.acceptance_claim.total": {
+          "type": "number",
+          "value": 3
+        },
+        "$.data.status.generated_at": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.status.guard_ok": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.status.integrity_errors": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.policy_mode": {
+          "type": "string",
+          "value": "feature"
+        },
+        "$.data.status.product_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.status.rows": {
+          "type": "array",
+          "value": "len:3"
+        },
+        "$.data.status.rows[0]": {
+          "type": "object",
+          "value": "approval_policy_hash,current_binding_set_hash,current_binding_slugs,current_bindings,known_binding_slugs,latest_trusted_proof_event,local_reason,local_status,matching_proof_event,missing_registered_binding_slugs,policy_block,reasons,required_action,required_for_release,row_hash,row_id,status,unregistered_current_binding_slugs,verification_policy_hash"
+        },
+        "$.data.status.rows[0].approval_policy_hash": {
+          "type": "string",
+          "value": "sha256:7f517f97e00a688b0b402e4005866127e5c928bf44a94ca53477ac34e24b5ef1"
+        },
+        "$.data.status.rows[0].current_binding_set_hash": {
+          "type": "string",
+          "value": "sha256:11d49e5c5db18d8fa81d7f933f0b28fa940d4b70582ed58491260cdc40da039e"
+        },
+        "$.data.status.rows[0].current_binding_slugs": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[0].current_binding_slugs[0]": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.status.rows[0].current_bindings": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[0].current_bindings[0]": {
+          "type": "object",
+          "value": "binding_slug,extent_kind,file_path,recognizer_id,span_canon_id,span_end_line,span_sha256,span_start_line"
+        },
+        "$.data.status.rows[0].current_bindings[0].binding_slug": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.status.rows[0].current_bindings[0].extent_kind": {
+          "type": "string",
+          "value": "explicit"
+        },
+        "$.data.status.rows[0].current_bindings[0].file_path": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.status.rows[0].current_bindings[0].recognizer_id": {
+          "type": "string",
+          "value": "explicit-span-v1"
+        },
+        "$.data.status.rows[0].current_bindings[0].span_canon_id": {
+          "type": "string",
+          "value": "ucase-span-lines-v2"
+        },
+        "$.data.status.rows[0].current_bindings[0].span_end_line": {
+          "type": "number",
+          "value": 4
+        },
+        "$.data.status.rows[0].current_bindings[0].span_sha256": {
+          "type": "string",
+          "value": "sha256:5915cee72b03b2f1f628274b05e9f8f7e677fe924f3ea6a124c5e63530d9e57b"
+        },
+        "$.data.status.rows[0].current_bindings[0].span_start_line": {
+          "type": "number",
+          "value": 2
+        },
+        "$.data.status.rows[0].known_binding_slugs": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[0].known_binding_slugs[0]": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.status.rows[0].latest_trusted_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[0].local_reason": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[0].local_status": {
+          "type": "string",
+          "value": "VERIFIED_LOCAL"
+        },
+        "$.data.status.rows[0].matching_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[0].missing_registered_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[0].policy_block": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.rows[0].reasons": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[0].required_action": {
+          "type": "string",
+          "value": "uc prove --row checkout.apply_coupon"
+        },
+        "$.data.status.rows[0].required_for_release": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.rows[0].row_hash": {
+          "type": "string",
+          "value": "sha256:c2b25e8d096ff4a88ebe6e4f7165b32aabeec49ce588a08e28925c041d5df01e"
+        },
+        "$.data.status.rows[0].row_id": {
+          "type": "string",
+          "value": "checkout.apply_coupon"
+        },
+        "$.data.status.rows[0].status": {
+          "type": "string",
+          "value": "UNPROVEN"
+        },
+        "$.data.status.rows[0].unregistered_current_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[0].verification_policy_hash": {
+          "type": "string",
+          "value": "sha256:326d64cf7b78e949deaa5aa703b55a3cde3bfd0f0164336ae8069e3c132a921f"
+        },
+        "$.data.status.rows[1]": {
+          "type": "object",
+          "value": "approval_policy_hash,current_binding_slugs,current_bindings,known_binding_slugs,latest_trusted_proof_event,local_reason,local_status,matching_proof_event,missing_registered_binding_slugs,policy_block,reasons,required_action,required_for_release,row_hash,row_id,status,unregistered_current_binding_slugs,verification_policy_hash"
+        },
+        "$.data.status.rows[1].approval_policy_hash": {
+          "type": "string",
+          "value": "sha256:7f517f97e00a688b0b402e4005866127e5c928bf44a94ca53477ac34e24b5ef1"
+        },
+        "$.data.status.rows[1].current_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].current_bindings": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].known_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].latest_trusted_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[1].local_reason": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[1].local_status": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[1].matching_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[1].missing_registered_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].policy_block": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.rows[1].reasons": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].required_action": {
+          "type": "string",
+          "value": "uc bind --row checkout.never_bound --file <file> --mode <explicit|swift-func>"
+        },
+        "$.data.status.rows[1].required_for_release": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.rows[1].row_hash": {
+          "type": "string",
+          "value": "sha256:3b23a3fa8285b951750e863e66243d47563e20826785fff5d34ae3044fd3ab68"
+        },
+        "$.data.status.rows[1].row_id": {
+          "type": "string",
+          "value": "checkout.never_bound"
+        },
+        "$.data.status.rows[1].status": {
+          "type": "string",
+          "value": "UNBOUND"
+        },
+        "$.data.status.rows[1].unregistered_current_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[1].verification_policy_hash": {
+          "type": "string",
+          "value": "sha256:281dd496c32422966a6013cf472d622fb9f0fdc29dae29b9ed6a03227594f08d"
+        },
+        "$.data.status.rows[2]": {
+          "type": "object",
+          "value": "approval_policy_hash,current_binding_set_hash,current_binding_slugs,current_bindings,known_binding_slugs,latest_trusted_proof_event,local_reason,local_status,matching_proof_event,missing_registered_binding_slugs,policy_block,reasons,required_action,required_for_release,row_hash,row_id,status,unregistered_current_binding_slugs,verification_policy_hash"
+        },
+        "$.data.status.rows[2].approval_policy_hash": {
+          "type": "string",
+          "value": "sha256:7f517f97e00a688b0b402e4005866127e5c928bf44a94ca53477ac34e24b5ef1"
+        },
+        "$.data.status.rows[2].current_binding_set_hash": {
+          "type": "string",
+          "value": "sha256:752aa8a87fe4d5dd9d1bb17b6f26cfa4eb858ca755e8531a800e7e470f0cbe18"
+        },
+        "$.data.status.rows[2].current_binding_slugs": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[2].current_binding_slugs[0]": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.status.rows[2].current_bindings": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[2].current_bindings[0]": {
+          "type": "object",
+          "value": "binding_slug,extent_kind,file_path,recognizer_id,span_canon_id,span_end_line,span_sha256,span_start_line"
+        },
+        "$.data.status.rows[2].current_bindings[0].binding_slug": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.status.rows[2].current_bindings[0].extent_kind": {
+          "type": "string",
+          "value": "explicit"
+        },
+        "$.data.status.rows[2].current_bindings[0].file_path": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.status.rows[2].current_bindings[0].recognizer_id": {
+          "type": "string",
+          "value": "explicit-span-v1"
+        },
+        "$.data.status.rows[2].current_bindings[0].span_canon_id": {
+          "type": "string",
+          "value": "ucase-span-lines-v2"
+        },
+        "$.data.status.rows[2].current_bindings[0].span_end_line": {
+          "type": "number",
+          "value": 4
+        },
+        "$.data.status.rows[2].current_bindings[0].span_sha256": {
+          "type": "string",
+          "value": "sha256:220220cc26e9975a720d438393da9fe539303583ee1f95525373e1baf7ff4a5e"
+        },
+        "$.data.status.rows[2].current_bindings[0].span_start_line": {
+          "type": "number",
+          "value": 2
+        },
+        "$.data.status.rows[2].known_binding_slugs": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.status.rows[2].known_binding_slugs[0]": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.status.rows[2].latest_trusted_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[2].local_reason": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[2].local_status": {
+          "type": "string",
+          "value": "VERIFIED_LOCAL"
+        },
+        "$.data.status.rows[2].matching_proof_event": {
+          "type": "null",
+          "value": null
+        },
+        "$.data.status.rows[2].missing_registered_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[2].policy_block": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.rows[2].reasons": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[2].required_action": {
+          "type": "string",
+          "value": "uc prove --row checkout.refund_order"
+        },
+        "$.data.status.rows[2].required_for_release": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.status.rows[2].row_hash": {
+          "type": "string",
+          "value": "sha256:0c28e5c5ae68852cbbe908de6fb8c0401a27afea8771223697f84e1772a45ad0"
+        },
+        "$.data.status.rows[2].row_id": {
+          "type": "string",
+          "value": "checkout.refund_order"
+        },
+        "$.data.status.rows[2].status": {
+          "type": "string",
+          "value": "UNPROVEN"
+        },
+        "$.data.status.rows[2].unregistered_current_binding_slugs": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.status.rows[2].verification_policy_hash": {
+          "type": "string",
+          "value": "sha256:7ff0f5d32adc4765aeecf80ac5b7b2e5d5951bb5b06fe6cba3723922df13e039"
+        },
+        "$.data.status.schema": {
+          "type": "string",
+          "value": "ucase-freshness-status-v1"
+        },
+        "$.data.status.summary": {
+          "type": "object",
+          "value": "fresh,invalid,policy_blocked,stale_local,suspect,unbound,unproven,unverified_local,verified_local"
+        },
+        "$.data.status.summary.fresh": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.summary.invalid": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.summary.policy_blocked": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.summary.stale_local": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.summary.suspect": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.summary.unbound": {
+          "type": "number",
+          "value": 1
+        },
+        "$.data.status.summary.unproven": {
+          "type": "number",
+          "value": 2
+        },
+        "$.data.status.summary.unverified_local": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.status.summary.verified_local": {
+          "type": "number",
+          "value": 2
+        },
+        "$.data.status.tool": {
+          "type": "object",
+          "value": "name,version"
+        },
+        "$.data.status.tool.name": {
+          "type": "string",
+          "value": "@adammcarter/use-cases"
+        },
+        "$.data.status.tool.version": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.diagnostics": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.ok": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.protocol_version": {
+          "type": "number",
+          "value": 1
+        },
+        "$.schema_version": {
+          "type": "number",
+          "value": 1
+        }
+      }
+    },
+    {
+      "label": "matrix.status.verified",
+      "argv": [
+        "matrix",
+        "status",
+        "--json"
+      ],
+      "exit_code": 0,
+      "keys": {
+        "$": {
+          "type": "object",
+          "value": "command,complete,context,data,diagnostics,ok,protocol_version,schema_version"
+        },
+        "$.command": {
+          "type": "string",
+          "value": "matrix.status"
+        },
+        "$.complete": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.context": {
+          "type": "object",
+          "value": "component_id,data_root,workspace_root,workspace_snapshot"
+        },
+        "$.context.component_id": {
+          "type": "string",
+          "value": "backcompat"
+        },
+        "$.context.data_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.context.workspace_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.context.workspace_snapshot": {
+          "type": "object",
+          "value": "captured_at,component_id,dirty,head_revision,repository_id,vcs,working_tree_digest"
+        },
+        "$.context.workspace_snapshot.captured_at": {
+          "type": "string",
+          "value": "1970-01-01T00:00:00.000Z"
+        },
+        "$.context.workspace_snapshot.component_id": {
+          "type": "string",
+          "value": "backcompat"
+        },
+        "$.context.workspace_snapshot.dirty": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.context.workspace_snapshot.head_revision": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.repository_id": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.vcs": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.working_tree_digest": {
+          "type": "string",
+          "value": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "$.data": {
+          "type": "object",
+          "value": "complete,evidence,matrix,schema_version"
+        },
+        "$.data.complete": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.evidence": {
+          "type": "object",
+          "value": "aggregates,complete,counts,integrity,ledgers,schema_version"
+        },
+        "$.data.evidence.aggregates": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.evidence.complete": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.evidence.counts": {
+          "type": "object",
+          "value": "aggregates_active,aggregates_invalid,aggregates_total,events_loaded,ledgers"
+        },
+        "$.data.evidence.counts.aggregates_active": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.evidence.counts.aggregates_invalid": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.evidence.counts.aggregates_total": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.evidence.counts.events_loaded": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.evidence.counts.ledgers": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.evidence.integrity": {
+          "type": "object",
+          "value": "invalid_aggregate_count,state,torn_tail_count,unknown_scope_damage"
+        },
+        "$.data.evidence.integrity.invalid_aggregate_count": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.evidence.integrity.state": {
+          "type": "string",
+          "value": "clean"
+        },
+        "$.data.evidence.integrity.torn_tail_count": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.evidence.integrity.unknown_scope_damage": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.data.evidence.ledgers": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.evidence.schema_version": {
+          "type": "number",
+          "value": 1
+        },
+        "$.data.matrix": {
+          "type": "object",
+          "value": "ambiguous_ids,complete,counts,files,integrity,schema_version,valid"
+        },
+        "$.data.matrix.ambiguous_ids": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.matrix.complete": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.matrix.counts": {
+          "type": "object",
+          "value": "broken_references,files_discovered,files_excluded,files_loaded,use_case_candidates,use_cases_addressable,use_cases_ambiguous,use_cases_structurally_clean"
+        },
+        "$.data.matrix.counts.broken_references": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.matrix.counts.files_discovered": {
+          "type": "number",
+          "value": 1
+        },
+        "$.data.matrix.counts.files_excluded": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.matrix.counts.files_loaded": {
+          "type": "number",
+          "value": 1
+        },
+        "$.data.matrix.counts.use_case_candidates": {
+          "type": "number",
+          "value": 3
+        },
+        "$.data.matrix.counts.use_cases_addressable": {
+          "type": "number",
+          "value": 3
+        },
+        "$.data.matrix.counts.use_cases_ambiguous": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.matrix.counts.use_cases_structurally_clean": {
+          "type": "number",
+          "value": 3
+        },
+        "$.data.matrix.files": {
+          "type": "array",
+          "value": "len:1"
+        },
+        "$.data.matrix.files[0]": {
+          "type": "object",
+          "value": "file_hash,path,semantic_hash,status"
+        },
+        "$.data.matrix.files[0].file_hash": {
+          "type": "string",
+          "value": "sha256:b48b3b5730513f629ebf0f6bb459ac1b48d2a836ad5a2e0c7bfc993c4af7dcc4"
+        },
+        "$.data.matrix.files[0].path": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.matrix.files[0].semantic_hash": {
+          "type": "string",
+          "value": "sha256:4fec98801b6f09d85d26353fa849474e6ca97009d877e0f0dcce5a3043334387"
+        },
+        "$.data.matrix.files[0].status": {
+          "type": "string",
+          "value": "loaded"
+        },
+        "$.data.matrix.integrity": {
+          "type": "object",
+          "value": "blocking_diagnostic_count,populated,state"
+        },
+        "$.data.matrix.integrity.blocking_diagnostic_count": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.matrix.integrity.populated": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.matrix.integrity.state": {
+          "type": "string",
+          "value": "clean"
+        },
+        "$.data.matrix.schema_version": {
+          "type": "number",
+          "value": 1
+        },
+        "$.data.matrix.valid": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.schema_version": {
+          "type": "number",
+          "value": 1
+        },
+        "$.diagnostics": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.ok": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.protocol_version": {
+          "type": "number",
+          "value": 1
+        },
+        "$.schema_version": {
+          "type": "number",
+          "value": 1
+        }
+      }
+    },
+    {
+      "label": "verify.unbound_row",
+      "argv": [
+        "verify",
+        "--row",
+        "checkout.never_bound",
+        "--json"
+      ],
+      "exit_code": 0,
+      "keys": {
+        "$": {
+          "type": "object",
+          "value": "command,complete,context,data,diagnostics,ok,protocol_version,schema_version"
+        },
+        "$.command": {
+          "type": "string",
+          "value": "markers.verify"
+        },
+        "$.complete": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.context": {
+          "type": "object",
+          "value": "component_id,data_root,workspace_root,workspace_snapshot"
+        },
+        "$.context.component_id": {
+          "type": "string",
+          "value": "backcompat"
+        },
+        "$.context.data_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.context.workspace_root": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.context.workspace_snapshot": {
+          "type": "object",
+          "value": "captured_at,component_id,dirty,head_revision,repository_id,vcs,working_tree_digest"
+        },
+        "$.context.workspace_snapshot.captured_at": {
+          "type": "string",
+          "value": "1970-01-01T00:00:00.000Z"
+        },
+        "$.context.workspace_snapshot.component_id": {
+          "type": "string",
+          "value": "backcompat"
+        },
+        "$.context.workspace_snapshot.dirty": {
+          "type": "boolean",
+          "value": false
+        },
+        "$.context.workspace_snapshot.head_revision": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.repository_id": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.vcs": {
+          "type": "string",
+          "value": "unknown"
+        },
+        "$.context.workspace_snapshot.working_tree_digest": {
+          "type": "string",
+          "value": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "$.data": {
+          "type": "object",
+          "value": "command,errors,exit_code,ok,out_path,results"
+        },
+        "$.data.command": {
+          "type": "string",
+          "value": "verify"
+        },
+        "$.data.errors": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.data.exit_code": {
+          "type": "number",
+          "value": 0
+        },
+        "$.data.ok": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.data.out_path": {
+          "type": "string",
+          "value": "<redacted>"
+        },
+        "$.data.results": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.diagnostics": {
+          "type": "array",
+          "value": "len:0"
+        },
+        "$.ok": {
+          "type": "boolean",
+          "value": true
+        },
+        "$.protocol_version": {
+          "type": "number",
+          "value": 1
+        },
+        "$.schema_version": {
+          "type": "number",
+          "value": 1
+        }
+      }
+    }
+  ]
+}
