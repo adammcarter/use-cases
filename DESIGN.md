@@ -162,8 +162,9 @@ uc verify --row cart.quantity
   verifier, spawns it ONCE, parses the report, writes N variant records.
 - `uc verify --all` → families expand to their variant rows automatically; each family
   still spawns its verifier once.
-- `uc verify --row cart.quantity::negative` → optional single-variant targeting; runs
-  the shared verifier once but records only that variant (others untouched by the merge).
+- ~~`uc verify --row cart.quantity::negative` single-variant targeting~~ — NOT built
+  (review-corrected): `--row` targets are family-level only; a `::`-suffixed id is
+  `ROW_NOT_FOUND`. Single-variant targeting is a possible future addition.
 - `uc scan` → lists each variant row (`cart.quantity::zero …`) with its own
   `local_status`. A family is VERIFIED_LOCAL-complete only when every variant row is.
 - `uc bind cart.quantity …` binds the family; variants inherit. (`uc bind` on a

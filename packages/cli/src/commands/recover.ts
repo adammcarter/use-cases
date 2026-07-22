@@ -327,7 +327,17 @@ export const recoverCommand: CliCommand = {
     const bar = wantFresh ? "FRESH" : "VERIFIED_LOCAL";
     const scanRows = scanResult.status?.rows ?? [];
     const rowById = new Map(scanRows.map((row) => [row.row_id, row]));
-    const targetRowIds = all ? verifyResult.results.map((r) => r.row_id) : [rowId!];
+    // Verify records a variant family per variant (`<family>::<key>`), but scan
+    // reports at the FAMILY level (the family row aggregates its variants). Map
+    // every result back to its family id — otherwise a green variant family reads
+    // as "not green" here forever, purely because the lookup key never matches.
+    const familyRowId = (id: string): string => {
+      const separator = id.indexOf("::");
+      return separator < 0 ? id : id.slice(0, separator);
+    };
+    const targetRowIds = all
+      ? [...new Set(verifyResult.results.map((r) => familyRowId(r.row_id)))]
+      : [rowId!];
     const notGreen = targetRowIds.filter((id) => {
       const row = rowById.get(id);
       const reached = wantFresh
