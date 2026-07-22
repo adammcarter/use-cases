@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 import { loadUseCaseMatrix } from "../../src/useCases/loadUseCaseMatrix.js";
+import { loadMarkerRows } from "../../src/markers/cli/shared.js";
 import { resolveWorkspaceContext } from "../../src/roots.js";
 
 // Increment 1 (variant parametrization): a use-case may declare an additive,
@@ -115,3 +116,78 @@ describe("variant parametrization — schema + loader (increment 1)", () => {
 // above. Pinned deliberately — see the test comment.
 const NO_VARIANTS_GOLDEN_HASH =
   "sha256:79c8840a1ff57a32dbc919d2e83ee97744e14aa99de6a92f7a2dc977efa5518b";
+
+// ── Increment 2: row expansion ──────────────────────────────────────────────
+// A family expands into one marker row per variant (id `family::key`); a use-case
+// with no variants stays exactly one ordinary row. Row generation is the single
+// place (loadMarkerRows) both verify and scan draw their row set from.
+
+function rowsFor(fileBody: string) {
+  const workspaceRoot = mkdtempSync(join(tmpdir(), "uc-variant-rows-"));
+  const useCasesRoot = join(workspaceRoot, "use-cases");
+  mkdirSync(useCasesRoot, { recursive: true });
+  writeFileSync(join(useCasesRoot, "cart.yml"), fileBody, "utf8");
+  return loadMarkerRows(resolveWorkspaceContext({ workspaceRoot }));
+}
+
+describe("variant parametrization — row expansion (increment 2)", () => {
+  test("a family expands into one row per variant, ids `family::key`", () => {
+    const loaded = rowsFor(
+      familyYaml("cart.quantity", [{ key: "zero" }, { key: "one" }, { key: "many" }])
+    );
+    expect(loaded.rows.map((row) => row.row_id)).toEqual([
+      "cart.quantity::many",
+      "cart.quantity::one",
+      "cart.quantity::zero"
+    ]);
+    // Each variant row carries its own key and NOT the family's variants array.
+    const zero = loaded.rows.find((row) => row.row_id === "cart.quantity::zero");
+    expect(zero?.variant_key).toBe("zero");
+    expect(zero).not.toHaveProperty("variants");
+    // rowIds mirrors the expanded set (variant ids, no bare family id).
+    expect(loaded.rowIds.has("cart.quantity")).toBe(false);
+    expect(loaded.rowIds.has("cart.quantity::zero")).toBe(true);
+  });
+
+  test("a use-case with no variants stays one ordinary row (no `::`)", () => {
+    const loaded = rowsFor(familyYaml("cart.quantity", null));
+    expect(loaded.rows.map((row) => row.row_id)).toEqual(["cart.quantity"]);
+    expect(loaded.rows[0]).not.toHaveProperty("variant_key");
+  });
+
+  test("a mixed matrix expands only the family", () => {
+    const body = [
+      familyYaml("cart.quantity", [{ key: "one" }, { key: "two" }]).replace(/\n$/, ""),
+      // second use-case (ordinary) appended under the same use_cases list
+      "  - id: cart.remove",
+      "    title: Remove an item",
+      "    lifecycle: active",
+      "    value_tier: core",
+      "    journey_role: alternate",
+      "    usage_frequency: occasional",
+      "    actor: shopper",
+      "    intent: Remove an item.",
+      "    preconditions: [Cart has an item.]",
+      "    trigger: Shopper removes an item.",
+      "    scenarios:",
+      "      - id: cart.remove.web",
+      "        kind: steps",
+      "        steps: [Remove an item.]",
+      "    observable_outcomes: [The item is gone.]",
+      "    host_applicability:",
+      "      - host_surface: codex.cli",
+      "        supported: true",
+      "    verification_policy:",
+      "      mode: none",
+      "    approval_policy:",
+      "      mode: none",
+      ""
+    ].join("\n");
+    const loaded = rowsFor(body);
+    expect(loaded.rows.map((row) => row.row_id).sort()).toEqual([
+      "cart.quantity::one",
+      "cart.quantity::two",
+      "cart.remove"
+    ]);
+  });
+});
