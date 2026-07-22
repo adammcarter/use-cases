@@ -275,3 +275,41 @@ describe("scan — variant family local status (increment 6)", () => {
     expect(breakdown.get("negative")).not.toBe("VERIFIED_LOCAL");
   });
 });
+
+describe("verify — variant CLI targeting (increment 7)", () => {
+  test("--row <family> fans out to every variant", () => {
+    const ws = makeWorkspace(["echo", "{variant}"], ["zero", "one", "many"]);
+    bindFamily(ws);
+    const spy = spySpawn();
+    const result = runVerifyCommand({ ...verifyBase(ws), rowId: "cart.quantity", spawnRunner: spy.runner });
+    expect(spy.calls).toHaveLength(3);
+    expect(result.results.map((r) => r.row_id).sort()).toEqual([
+      "cart.quantity::many",
+      "cart.quantity::one",
+      "cart.quantity::zero"
+    ]);
+  });
+
+  test("--dry-run plans one entry per variant and spawns nothing", () => {
+    const ws = makeWorkspace(["echo", "{variant}"], ["zero", "one"]);
+    bindFamily(ws);
+    const spy = spySpawn();
+    const result = runVerifyCommand({
+      ...verifyBase(ws),
+      all: true,
+      dryRun: true,
+      spawnRunner: spy.runner
+    });
+    expect(spy.calls).toHaveLength(0);
+    expect(result.results).toHaveLength(0);
+    const planned = result.planned ?? [];
+    expect(planned.map((p) => p.row_id).sort()).toEqual([
+      "cart.quantity::one",
+      "cart.quantity::zero"
+    ]);
+    // The previewed command is exactly what a real run would execute.
+    const zero = planned.find((p) => p.row_id === "cart.quantity::zero");
+    expect(zero?.command).toEqual(["echo", "zero"]);
+    expect(zero?.disposition).toBe("run");
+  });
+});

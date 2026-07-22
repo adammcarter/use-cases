@@ -251,27 +251,37 @@ export function runVerifyCommand(options: VerifyCommandOptions): VerifyCommandRe
         planned.push({ row_id: rowId, verifier_id: null, command: null, disposition: "invalid" });
         continue;
       }
-      const verifiers = resolveRowVerifiers(
-        { slug: rowId, verification_policy: loadedRow.verification_policy },
-        options.context.verifiers
-      );
-      const blocked = verifiers.find((verifier) => verifier.status === "blocked");
-      if (verifiers.length === 0 || blocked) {
-        planned.push({
-          row_id: rowId,
-          verifier_id: blocked ? blocked.verifier_id : null,
-          command: null,
-          disposition: "blocked"
-        });
-        continue;
-      }
-      for (const verifier of verifiers as ResolvedVerifier[]) {
-        planned.push({
-          row_id: rowId,
-          verifier_id: verifier.verifier_id,
-          command: verifier.command,
-          disposition: "run"
-        });
+      // A variant family plans one entry per variant (with {variant} substituted); an
+      // ordinary row plans as itself. Mirrors the real-run fan-out so the preview is
+      // exactly what a run WOULD execute.
+      const variants = rowVariants(loadedRow);
+      const planUnits =
+        variants.length === 0
+          ? [{ recordRowId: rowId, variantKey: undefined as string | undefined }]
+          : variants.map((variant) => ({ recordRowId: `${rowId}::${variant.key}`, variantKey: variant.key as string | undefined }));
+      for (const unit of planUnits) {
+        const verifiers = resolveRowVerifiers(
+          { slug: rowId, variant: unit.variantKey, verification_policy: loadedRow.verification_policy },
+          options.context.verifiers
+        );
+        const blocked = verifiers.find((verifier) => verifier.status === "blocked");
+        if (verifiers.length === 0 || blocked) {
+          planned.push({
+            row_id: unit.recordRowId,
+            verifier_id: blocked ? blocked.verifier_id : null,
+            command: null,
+            disposition: "blocked"
+          });
+          continue;
+        }
+        for (const verifier of verifiers as ResolvedVerifier[]) {
+          planned.push({
+            row_id: unit.recordRowId,
+            verifier_id: verifier.verifier_id,
+            command: verifier.command,
+            disposition: "run"
+          });
+        }
       }
     }
     return fail({
