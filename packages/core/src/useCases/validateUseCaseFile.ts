@@ -86,14 +86,27 @@ export function validateUseCaseFile(
     feature: FeatureV1;
     use_cases: UseCaseV1[];
   };
-  return {
-    file: {
-      path: sourcePath,
-      status: "loaded",
-      semantic_hash: computeSemanticHash(parsed.value),
-      file_hash: fileHash
-    },
-    candidates: value.use_cases.map((useCase, index) => ({
+
+  // Variant keys must be unique within a family. JSON Schema can enforce each key's
+  // charset but cannot assert uniqueness across sibling `key` values, so it is checked
+  // here. An offending family is excluded from candidates (not addressable) and the
+  // duplicate is surfaced as a diagnostic — the rest of the file's use cases still load.
+  const diagnostics: Diagnostic[] = [];
+  const candidates: LoadedUseCase[] = [];
+  value.use_cases.forEach((useCase, index) => {
+    const duplicateKey = firstDuplicateVariantKey(useCase.variants);
+    if (duplicateKey !== null) {
+      diagnostics.push(
+        diagnostic(
+          "duplicate_variant_key",
+          `Use case ${useCase.id} declares variant key "${duplicateKey}" more than once.`,
+          sourcePath,
+          useCase.id
+        )
+      );
+      return;
+    }
+    candidates.push({
       value: useCase,
       feature: value.feature,
       semanticHash: computeSemanticHash(useCase),
@@ -102,9 +115,35 @@ export function validateUseCaseFile(
         jsonPointer: `/use_cases/${index}`,
         fileByteHash: fileHash
       }
-    })),
-    diagnostics: []
+    });
+  });
+
+  return {
+    file: {
+      path: sourcePath,
+      status: "loaded",
+      semantic_hash: computeSemanticHash(parsed.value),
+      file_hash: fileHash
+    },
+    candidates,
+    diagnostics
   };
+}
+
+function firstDuplicateVariantKey(
+  variants: UseCaseV1["variants"]
+): string | null {
+  if (!variants) {
+    return null;
+  }
+  const seen = new Set<string>();
+  for (const variant of variants) {
+    if (seen.has(variant.key)) {
+      return variant.key;
+    }
+    seen.add(variant.key);
+  }
+  return null;
 }
 
 function versionDispatch(value: unknown, sourcePath: string): Diagnostic | null {

@@ -63,6 +63,7 @@ export type UseCaseV1 = {
   source_refs?: Array<{ kind: "file"; path: string }>;
   related_use_cases?: string[];
   scenarios?: Array<{ id: string; kind: string }>;
+  variants?: Array<{ key: string; title?: string }>;
   host_applicability?: Array<{
     host_surface: HostSurface;
     supported: boolean;

@@ -111,6 +111,19 @@
         },
         "verification_policy": { "$ref": "common.schema.json#/$defs/verification_policy" },
         "approval_policy": { "$ref": "common.schema.json#/$defs/approval_policy" },
+        "variants": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "key": { "type": "string", "pattern": "^[a-z0-9_-]+$" },
+              "title": { "type": "string", "minLength": 1 }
+            },
+            "required": ["key"]
+          }
+        },
         "extensions": { "$ref": "common.schema.json#/$defs/extensions" }
       },
       "required": ["id", "title", "lifecycle", "value_tier", "journey_role", "usage_frequency"],
