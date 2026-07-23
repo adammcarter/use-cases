@@ -173,10 +173,10 @@ use_cases:
         steps:
           - Ask the readiness and driver questions with the host question tool before showcase start.
           - Perform the demo with the chosen driver and presentation formats.
-          - Ask approve / reject / talk about this, then wire the answer to the signed approve path, showcase reject, or pause-and-discuss.
+          - Ask approve / reject / talk about this, then record the answer as acceptance, showcase reject, or pause-and-discuss.
     observable_outcomes:
       - No live run starts before an explicit ready answer.
-      - An approve answer produces a signed, run-bound approval submitted by the agent; agent prose alone never becomes a sign-off.
+      - An approve answer is recorded as the user's acceptance with their notes verbatim; the signed sign-off tier stays a separate opt-in path.
       - A reject answer records the user's notes verbatim; talking about it records nothing.
     host_applicability:
       - host_surface: claude.cli

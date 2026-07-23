@@ -125,9 +125,11 @@ describe("P7 canonical skills and activation bootstrap", () => {
     // Gate 3: the fixed three-way verdict, with optional notes on approve/reject.
     expect(source).toMatch(/approve, reject, or talk about this/i);
     expect(source).toMatch(/notes/i);
-    // Approve wires the SIGNED path (approve-run + approval-token), never agent prose.
-    expect(source).toContain("uc approve-run");
-    expect(source).toContain("--approval-token");
+    // The gates change HOW the answer is collected, never what it is worth:
+    // no signed-tier plumbing in the everyday flow, and the F3 path stays the
+    // separate opt-in release/audit gate.
+    expect(source).toMatch(/a tap, not typed text/i);
+    expect(source).toMatch(/opt-in release\/audit path/i);
     // Reject carries the user's decision + notes through the reject command.
     expect(source).toContain("`uc showcase reject");
     // The gates never soften the F3 boundary this file already guards below.

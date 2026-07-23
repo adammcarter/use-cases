@@ -5,6 +5,18 @@ All notable changes to this project are documented here. The format is based on
 follows [Semantic Versioning](https://semver.org) (see docs/release.md). This is
 **pre-1.0 (beta) software**: anything MAY change before `1.0.0`.
 
+## Unreleased
+
+### Changed
+
+- **Demo-gate verdicts are UX-only.** The showcase skill's Gate 3 wiring no
+  longer routes an approve answer through the signed approval path
+  (`approve-run` / `--approval-token`): the gates change how the answer is
+  collected (a tap instead of typed text), never what an answer is worth. An
+  approve is recorded as the user's acceptance with their notes verbatim; the
+  signed sign-off tier stays the separate, opt-in release/audit path it always
+  was.
+
 ## 0.5.1 - 2026-07-23
 
 ### Added
