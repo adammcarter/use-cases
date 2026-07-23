@@ -362,4 +362,27 @@ describe("verify/prove — variant family honesty fixes (review)", () => {
     expect(row?.reason).toBe("VARIANT_FAMILY_UNSUPPORTED");
     expect(row?.message).not.toContain("run `uc verify");
   });
+
+  test("prove --all SKIPS a variant family instead of failing the whole sweep", () => {
+    const ws = makeWorkspace(["echo", "{variant}"], ["zero", "one"]);
+    bindFamily(ws);
+    runVerifyCommand({ ...verifyBase(ws), all: true, spawnRunner: spySpawn().runner });
+    // A sweep proves what is provable and reports the rest. One unsupported
+    // family must not exit 5 and turn release CI permanently red (it did:
+    // lifecycle.signals.variant_fanout failed every use-cases workflow run
+    // after 0.5.0 shipped).
+    const result = runProveCommand({
+      ...verifyBase(ws),
+      all: true,
+      trustedCi: false,
+      verificationResults: [],
+      append: false,
+      idFactory: makeId()
+    });
+    const row = result.rows.find((r) => r.row_id === "cart.quantity");
+    expect(row?.status).toBe("skipped_variant_family");
+    expect(row?.reason).toBe("VARIANT_FAMILY_UNSUPPORTED");
+    expect(row?.message).toContain("keyless loop");
+    expect(result.exit_code).toBe(0);
+  });
 });

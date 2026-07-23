@@ -114,6 +114,7 @@ export type ProveRowStatus =
   | "candidate"
   | "skipped_unbound"
   | "skipped_fresh"
+  | "skipped_variant_family"
   | "failed";
 
 export interface ProveRowResult {
@@ -269,6 +270,7 @@ export function runProveCommand(options: ProveCommandOptions): ProveCommandResul
       trusted,
       dryRun,
       allowUnsafe,
+      sweep: !options.rowId,
       idFactory
     });
     rows.push(evaluation);
@@ -297,11 +299,13 @@ interface ProveOneRowArgs {
   trusted: boolean;
   dryRun: boolean;
   allowUnsafe: boolean;
+  /** True when the row came from an --all sweep rather than an explicit --row. */
+  sweep: boolean;
   idFactory: () => string;
 }
 
 function proveOneRow(args: ProveOneRowArgs): ProveRowResult {
-  const { rowId, options, prepared, fs, contextRoot, trusted, dryRun, allowUnsafe, idFactory } = args;
+  const { rowId, options, prepared, fs, contextRoot, trusted, dryRun, allowUnsafe, sweep, idFactory } = args;
   const statusRow = prepared.status.rows.find((row) => row.row_id === rowId);
   const loadedRow = prepared.loaded.rows.find((row) => row.row_id === rowId);
   if (!statusRow || !loadedRow) {
@@ -315,9 +319,11 @@ function proveOneRow(args: ProveOneRowArgs): ProveRowResult {
   // (`<family>::<key>`), and the signed tier has no variant model. Without this
   // guard prove would report NO_PASSING_RESULT with a "run `uc verify` first"
   // remediation that verify can NEVER satisfy — an infinite loop of honest-looking
-  // advice. Refuse with the truth instead.
+  // advice. An explicit --row asked for the unsupported thing, so refuse hard;
+  // a sweep proves what is provable, so skip with the same truth (one family
+  // must not exit 5 and hold every CI sweep permanently red).
   if (rowVariants(loadedRow).length > 0) {
-    return rowResult(rowId, "failed", {
+    return rowResult(rowId, sweep ? "skipped_variant_family" : "failed", {
       reason: "VARIANT_FAMILY_UNSUPPORTED",
       message:
         `row ${rowId} is a variant family; signed proofs for variant families are not ` +
