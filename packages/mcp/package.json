@@ -1,6 +1,6 @@
 {
   "name": "@adammcarter/use-cases-mcp",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "type": "module",
   "description": "MCP server for @adammcarter/use-cases.",
   "license": "MIT",

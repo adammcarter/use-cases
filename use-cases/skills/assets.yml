@@ -171,11 +171,11 @@ use_cases:
       - id: skills.assets.demo_gates.gates
         kind: steps
         steps:
-          - Send the item's demo card inline (Steps / Expect), then ask the readiness question with the host question tool in the same message.
+          - Send the item's demo card inline (Steps / Expect) as its own message and end the turn, then ask the readiness question with the host question tool in the next turn.
           - Perform exactly the card's steps with the chosen driver and presentation format.
           - Reprint the card with Actual filled, then ask approve / reject / run it again in that order, recording the answer as acceptance, showcase reject, or a re-performance.
     observable_outcomes:
-      - No live run starts before an explicit ready answer, and no question is ever asked without its card in the same message.
+      - No live run starts before an explicit ready answer, and no question is ever asked before its card has been delivered as its own completed message.
       - An approve answer is recorded as the user's acceptance with their notes verbatim; the signed sign-off tier stays a separate opt-in path.
       - A reject answer records the user's notes verbatim; run it again re-performs and re-asks without recording; talking about it records nothing.
     host_applicability:

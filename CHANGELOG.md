@@ -5,6 +5,23 @@ All notable changes to this project are documented here. The format is based on
 follows [Semantic Versioning](https://semver.org) (see docs/release.md). This is
 **pre-1.0 (beta) software**: anything MAY change before `1.0.0`.
 
+## 0.5.4 - 2026-07-23
+
+### Changed
+
+- **Card-first visibility replaces same-message atomicity.** Live-run evidence
+  (a second sign-off run on a fullscreen-TUI host) showed the 0.5.3 "card and
+  question in ONE message" rule backfiring: hosts that render structured
+  questions as a modal flush assistant text only when the turn completes, so
+  the question hid the card — and on reject/interrupt the card never rendered
+  at all. The demo card loop is now three turns per item: post the card as its
+  OWN message and END the turn → ask the ready-gate in the next turn → perform,
+  post the full card reprinted with **Actual** as its own message, then ask the
+  verdict in the following turn. A retry re-composes from the card: repost it,
+  end the turn, re-ask — never re-issue a bare question. The walkthrough
+  skill's Over-to-you Confirm follows the same rule. (`showcase` SKILL.md,
+  `walkthrough` SKILL.md, `skills.assets.demo_gates` row + pinning test.)
+
 ## 0.5.3 - 2026-07-23
 
 ### Changed
