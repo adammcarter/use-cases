@@ -102,14 +102,22 @@ use_cases:
       mode: none
 `;
 
-const SOURCE = `//: @use-case:cart.quantity
-export const quantity = 1;
-//: @use-case:end cart.quantity
-
-//: @use-case:cart.remove
-export const remove = 1;
-//: @use-case:end cart.remove
-`;
+// No line of THIS file may begin with the marker comment prefix: a repo-root
+// `uc scan` reads fixture markers as real bindings (literal cart.* markers
+// here broke the use-cases integrity workflow on main). Building the fixture
+// from joined fragments keeps the written temp file byte-identical while this
+// source stays invisible to the scanner.
+const MARKER_PREFIX = "//" + ": @use-case:";
+const SOURCE = [
+  `${MARKER_PREFIX}cart.quantity`,
+  "export const quantity = 1;",
+  `${MARKER_PREFIX}end cart.quantity`,
+  "",
+  `${MARKER_PREFIX}cart.remove`,
+  "export const remove = 1;",
+  `${MARKER_PREFIX}end cart.remove`,
+  ""
+].join("\n");
 
 const tempDirs: string[] = [];
 afterEach(() => {
