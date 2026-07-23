@@ -116,15 +116,24 @@ describe("P7 canonical skills and activation bootstrap", () => {
   //: @use-case:skills.assets.demo_gates
   test("showcase skill gates live demos on explicit user answers", () => {
     const source = readFileSync(join(skillRoot, "showcase", "SKILL.md"), "utf8");
-    expect(source).toContain("## Demo Gates");
+    expect(source).toContain("## The Demo Card Loop");
+    // The card is the demo; the question is only its confirm button.
+    expect(source).toMatch(/card is the demo/i);
     // Gate 1: a live run starts only after the user says they are ready.
-    expect(source).toMatch(/Gate 1[\s\S]{0,200}ready/i);
-    expect(source).toMatch(/never start a live run/i);
+    expect(source).toMatch(/Gate 1[\s\S]{0,300}ready/i);
+    expect(source).toMatch(/never start from inference/i);
     // Gate 2: driver choice, agent-driven offered only when genuinely executable.
     expect(source).toMatch(/Gate 2[\s\S]{0,200}who drives/i);
-    // Gate 3: the fixed three-way verdict, with optional notes on approve/reject.
-    expect(source).toMatch(/approve, reject, or talk about this/i);
+    // Gate 3: the fixed verdict in the fixed order, with optional notes.
+    expect(source).toMatch(/Approve, Reject, Run it again/);
     expect(source).toMatch(/notes/i);
+    // Atomicity: card text and question tool call share ONE message; a retry
+    // re-composes the whole turn (card first), never re-asks a bare question.
+    expect(source).toMatch(/SAME message/);
+    expect(source).toMatch(/re-composes the whole turn/i);
+    // The card grows across turns (Actual appended); reprints stand alone.
+    expect(source).toMatch(/\*\*Actual\*\*/);
+    expect(source).toMatch(/card grows/i);
     // The gates change HOW the answer is collected, never what it is worth:
     // no signed-tier plumbing in the everyday flow, and the F3 path stays the
     // separate opt-in release/audit gate.

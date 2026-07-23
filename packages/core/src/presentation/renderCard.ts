@@ -53,7 +53,10 @@ export function renderCard(item: PresentationPlanItem, result?: RenderResult): s
   const format = item.presentation_format ?? defaultFormatForDeliveryKind(item.delivery_kind);
   enforceHonesty(item, format, result);
   const meta = FORMAT_META[format];
-  const header = `${meta.emoji} ${meta.verb}: ${item.use_case_id}  ${DOT}  ${meta.descriptor}`;
+  // Markdown card heading: emoji + verb as a ### title, item id + descriptor
+  // beneath it, so hosts that render markdown show a scannable card and plain-
+  // text hosts still read naturally top-to-bottom.
+  const header = `### ${meta.emoji} ${meta.verb}: ${item.use_case_id}\n\n\`${item.use_case_id}\` ${DOT} ${meta.descriptor}`;
   return `${header}\n\n${renderBody(item, format, result)}`;
 }
 
@@ -116,10 +119,19 @@ function renderBody(
 }
 
 function renderTesting(item: PresentationPlanItem, result: RenderResult | undefined): string {
+  const steps =
+    item.resolved_steps.length > 0
+      ? item.resolved_steps.map((step, index) => `${index + 1}. ${step}`)
+      : ["1. (none)"];
   return [
-    `Run:     ${joinSteps(item.resolved_steps)}`,
-    `Expect:  ${joinSteps(item.expected_observations)}`,
-    `Got:     ${gotLine(result)}`
+    "**Steps**",
+    ...steps,
+    "",
+    "**Expect**",
+    joinSteps(item.expected_observations),
+    "",
+    "**Actual**",
+    gotLine(result)
   ].join("\n");
 }
 

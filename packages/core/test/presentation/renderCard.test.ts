@@ -50,15 +50,18 @@ describe("renderCard", () => {
     for (const format of formats) {
       const meta = FORMAT_META[format];
       const card = renderCard(makeItem({ presentation_format: format }));
-      expect(card).toContain(`${meta.emoji} ${meta.verb}:`);
+      // Markdown card heading: ### + emoji + verb, item id echoed beneath.
+      expect(card).toContain(`### ${meta.emoji} ${meta.verb}:`);
       expect(card).toContain("demo.feature");
+      expect(card).toContain("`demo.feature`");
       expect(card).toContain(meta.descriptor);
     }
 
     const testing = renderCard(makeItem({ presentation_format: "testing" }));
-    expect(testing).toContain("Run:");
-    expect(testing).toContain("Expect:");
-    expect(testing).toContain("Got:");
+    expect(testing).toContain("**Steps**");
+    expect(testing).toMatch(/\n1\. /);
+    expect(testing).toContain("**Expect**");
+    expect(testing).toContain("**Actual**");
 
     const comparing = renderCard(makeItem({ presentation_format: "comparing" }));
     expect(comparing).toContain(MARK_FAIL);
@@ -90,7 +93,7 @@ describe("renderCard", () => {
     expect(() => renderCard(item, { status: "pass", got: "Banner shown" })).toThrow(HonestyRuleError);
 
     const withEvidence = renderCard(item, { status: "pass", got: "Banner shown", evidenceId: "ev.1" });
-    expect(withEvidence).toContain(`Got:`);
+    expect(withEvidence).toContain("**Actual**");
     expect(withEvidence).toContain(MARK_PASS);
 
     const pending = renderCard(item);

@@ -30,12 +30,14 @@ Every plan item carries a chosen `presentation_format`. Present each item in exa
 - Explaining (emoji speech balloon) - description only: plain text then "not run - explanation only".
 - Over to you (emoji raised hand) - needs the human: numbered steps then Confirm: yes / no.
 
-Testing (emoji tube) and Comparing (emoji scales) are the live formats; reserve them for items the walkthrough actually runs.
+Testing (emoji tube) and Comparing (emoji scales) are the live formats; reserve them for items the walkthrough actually runs, and when one runs, present it as the demo card the `showcase` skill defines (Steps / Expect / Actual; card and question in one message).
+
+Render each item as an inline markdown card: a `###` heading with the fixed emoji plus a plain-English title, the item id beneath it, then the format's fields as bold titles on their own lines. Follow-up turns reprint the whole card with new information appended (the card grows; it never mutates), so any single message stands alone.
 
 Render the fixed emoji + verb header for the chosen format. The header verb is a promise and must not lie:
 
 - Citing a Reviewing "Shows" or "From" requires backing evidence; it never implies the behavior is being re-run now.
-- Over to you stays open on Confirm: yes / no until a real human answers; the agent can never fill that answer in.
+- Over to you stays open on Confirm: yes / no until a real human answers; the agent can never fill that answer in. Ask the Confirm with the host's structured question tool (`AskUserQuestion` on Claude; the closest native single-tap prompt elsewhere), with the card above the question in the same message.
 - A check mark, a "Shows", or a "Confirm: yes" must correspond to a real recorded result, never to agent prose alone.
 
 ## Operating Rules

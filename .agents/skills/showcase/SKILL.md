@@ -27,19 +27,52 @@ Generated plans, walkthroughs, capsules, and runbooks are prepared material only
 - Run mode records actual performed events. Use `uc showcase start --json` only when the request clearly asks for a live run or the user agrees to perform one.
 - A generated plan must not be described as a completed demo.
 
-## Demo Gates
+## The Demo Card Loop
 
-Every live run passes three user gates. Ask each gate with the host's structured question tool (`AskUserQuestion` on Claude; the closest native single-tap prompt elsewhere) so the user answers with a tap, not typed commands. The agent operates every command in this flow; the user only answers questions.
+Every live plan item runs as a fixed two-turn loop built around a **demo card**. The card is the demo; every question is only its confirm button. The user should be able to follow the whole run by reading cards alone.
 
-- Gate 1 - Ready. Before `uc showcase start`, ask whether the user is ready to see the demo. Never start a live run from inference, a generated plan, or momentum alone; "not yet" means hold with nothing recorded.
-- Gate 2 - Driver. In the same prompt, ask who drives the demo: the agent (offer only when the agent can genuinely execute the steps - scripts, AppleScript, computer use) or the user following the plan's steps. Agent-driven items present as Testing or Inspecting; user-driven items present as Over to you, where Confirm stays human.
-- Gate 3 - Verdict. After the demo, ask exactly three options: approve, reject, or talk about this. Approve and reject both accept optional free-text notes from the user.
+### The card
 
-Wire the Gate 3 answer to the run record. The gates change how the answer is collected (a tap, not typed text), never what an answer is worth - an answer given through the question tool carries exactly the trust a typed one always did:
+Rendered inline in chat as markdown (not a code block), in exactly this shape:
 
-- Approve: treat it as the user's acceptance of the demo, quoting their answer and notes verbatim; record any remaining decisions with `uc showcase decide --json` and close with `uc showcase finish --json`. Act only on a fresh, explicit approve answer for that exact run - never a stale, inferred, or agent-authored one.
-- Reject: record the user's decision and notes with `uc showcase reject --statement`, record any failing verdicts' decisions with `uc showcase decide --json`, then `uc showcase finish --json`.
-- Talk about this: `uc showcase pause --json`, discuss, then re-ask Gate 3. Discussion alone records nothing.
+    ### 🧪 Demo N of T — <plain-English promise of the behavior>
+
+    `<use_case_id.scenario>` · live
+
+    **Steps**
+    1. <numbered, exact actions the agent will perform>
+    2. <...>
+    3. <always end by returning the user's focus/context to where they were>
+
+    **Expect**
+    <one crisp statement of what the user should see, phase by phase if the demo has phases>
+
+On the post-run reprint the same card is repeated in full with one section appended:
+
+    **Actual**
+    <what actually happened / what the evidence recorded> — the user's eyes decide.
+
+The card grows; it never mutates. Follow-up turns reprint the whole card with the new information added, so any single message stands alone.
+
+### The loop, per item
+
+- Turn 1 - Present. Send the card (Steps + Expect), then in the same message ask Gate 1 with the host's structured question tool (`AskUserQuestion` on Claude; the closest native single-tap prompt elsewhere): ready to run this card, options "Ready - go" / "Not yet". Never start from inference, a generated plan, or momentum; "Not yet" holds with nothing recorded.
+- Turn 2 - Perform and grade. Only after "Ready - go": perform exactly the card's Steps - nothing more, nothing less - then send the full card reprinted with **Actual** filled, and in the same message ask Gate 3 (verdict) with options **in this order: Approve, Reject, Run it again**. Approve and Reject accept optional free-text notes; "Run it again" re-performs the same card's Steps and re-asks the verdict, recording nothing in between. Discussion arrives through the host's free-text option and maps to `uc showcase pause --json`, talk, then re-ask.
+- Gate 2 - Driver - is asked once per run (or per item when it genuinely varies): who drives, the agent (offer only when the agent can genuinely execute the steps - scripts, AppleScript, computer use) or the user following the card's Steps. Agent-driven items present as Testing or Inspecting; user-driven items present as Over to you, where Confirm stays human.
+
+### The atomicity rule (hard)
+
+The card and its question are ONE unit, always in the SAME message: card text first, question tool call second. A question tool call with no card above it in the same message is invalid - the widget renders detached and the user loses the contract they are approving.
+
+This rule exists because the observed failure mode is real and repeats: after an interruption, rejection, or tool error, the natural retry is to re-issue the last *tool call* (the bare question). That is wrong. **A retry re-composes the whole turn: card first, then question.** If the previous message's card was dropped for any reason, resend it - never assume an earlier card is "still on screen".
+
+### Wiring verdicts to the record
+
+The gates change how the answer is collected (a tap, not typed text), never what an answer is worth - an answer given through the question tool carries exactly the trust a typed one always did:
+
+- Approve: treat it as the user's acceptance of that card, quoting their answer and notes verbatim; record the observation and verdict, then move to the next item - whose Turn 1 must begin with its own card, never a bare ready-gate. Record remaining decisions with `uc showcase decide --json` and close the run with `uc showcase finish --json`. Act only on a fresh, explicit approve answer for that exact run - never a stale, inferred, or agent-authored one.
+- Reject: record the user's decision and notes with `uc showcase reject --statement`, record any failing verdicts' decisions with `uc showcase decide --json`, then `uc showcase finish --json`. A rejected live card stays a live failure; it is never restaged into a pass or re-narrated as an explanation.
+- Run it again: re-perform, reprint the card with the fresh Actual, re-ask. Repeat runs overwrite nothing; only the verdict the user finally gives is recorded.
 
 The signed sign-off tier (`uc approve-run` + `uc showcase approve --approval-token`) is unchanged by these gates: it remains the separate, opt-in release/audit path, and stays out of the everyday demo flow unless the run's approval policy demands it.
 
@@ -54,18 +87,20 @@ The signed sign-off tier (`uc approve-run` + `uc showcase approve --approval-tok
 
 ## Presentation Formats
 
-Every plan item carries a chosen `presentation_format`. Present each item in exactly one of the six fixed formats, reading the choice from the plan item (never inventing one):
+Every plan item carries a chosen `presentation_format`. Present each item in exactly one of the six fixed formats, reading the choice from the plan item (never inventing one). Testing items use the demo-card shape above (Steps / Expect / Actual); the other formats keep their fixed field pairs:
 
-- Testing (emoji tube) - runs it live: Run / Expect / Got.
+- Testing (emoji tube) - runs it live: Steps / Expect / Actual, as the demo card.
 - Comparing (emoji scales) - guardrail or before-after: a blocked row and an allowed row.
 - Inspecting (emoji magnifier) - examine the real artifact: In / Look.
 - Reviewing (emoji scroll) - cite an earlier run: From / Shows (not re-run now).
 - Over to you (emoji raised hand) - needs the human: numbered steps then Confirm: yes / no.
 - Explaining (emoji speech balloon) - description only: plain text then "not run - explanation only".
 
-Render the fixed emoji + verb header for the chosen format so the user can scan the mode at a glance. The header verb is a promise and must not lie:
+Render every format as an inline markdown card in the demo-card style: a `###` heading with the fixed emoji plus a plain-English title, the item id beneath it, then the format's fields as bold titles on their own lines. Non-live formats follow the same two rules as Testing cards: the card and any question share one message, and follow-up turns reprint the whole card with new information appended.
 
-- A failed Testing item shows Got with a cross mark. It must never be re-narrated as Explaining; a live failure stays a live failure.
+The header verb is a promise and must not lie:
+
+- A failed Testing item shows Actual with a cross mark. It must never be re-narrated as Explaining; a live failure stays a live failure.
 - Over to you stays open on Confirm: yes / no until a real human answers. The agent can never fill that answer in.
 - A check mark, a Reviewing "Shows", or a "Confirm: yes" must correspond to a real recorded result, never to agent prose alone.
 

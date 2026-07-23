@@ -171,13 +171,13 @@ use_cases:
       - id: skills.assets.demo_gates.gates
         kind: steps
         steps:
-          - Ask the readiness and driver questions with the host question tool before showcase start.
-          - Perform the demo with the chosen driver and presentation formats.
-          - Ask approve / reject / talk about this, then record the answer as acceptance, showcase reject, or pause-and-discuss.
+          - Send the item's demo card inline (Steps / Expect), then ask the readiness question with the host question tool in the same message.
+          - Perform exactly the card's steps with the chosen driver and presentation format.
+          - Reprint the card with Actual filled, then ask approve / reject / run it again in that order, recording the answer as acceptance, showcase reject, or a re-performance.
     observable_outcomes:
-      - No live run starts before an explicit ready answer.
+      - No live run starts before an explicit ready answer, and no question is ever asked without its card in the same message.
       - An approve answer is recorded as the user's acceptance with their notes verbatim; the signed sign-off tier stays a separate opt-in path.
-      - A reject answer records the user's notes verbatim; talking about it records nothing.
+      - A reject answer records the user's notes verbatim; run it again re-performs and re-asks without recording; talking about it records nothing.
     host_applicability:
       - host_surface: claude.cli
         supported: true
