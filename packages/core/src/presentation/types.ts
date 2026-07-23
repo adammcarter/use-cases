@@ -50,6 +50,8 @@ export type PresentationPlanItem = {
   delivery_kind: DeliveryKind;
   scenario_scope: "whole_use_case" | "explicit";
   use_case_id: string;
+  /** The row's plain-English title -- the card heading. Optional so hand-authored plans without it still render (falling back to the id). */
+  use_case_title?: string;
   scenario_ids: string[];
   use_case_content_hash: string;
   estimated_seconds: number;

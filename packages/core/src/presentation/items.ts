@@ -50,6 +50,7 @@ export function toPlanItem(
     delivery_kind: deliveryKind,
     scenario_scope: useCase.value.scenarios?.length ? "explicit" : "whole_use_case",
     use_case_id: useCase.value.id,
+    use_case_title: useCase.value.title,
     scenario_ids: (useCase.value.scenarios ?? []).map((scenario) => scenario.id),
     use_case_content_hash: useCase.semanticHash,
     estimated_seconds: profile.fallbackEstimateSeconds,

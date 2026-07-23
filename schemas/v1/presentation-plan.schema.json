@@ -114,6 +114,7 @@
           "delivery_kind": { "enum": ["live_demo", "evidence_review", "explanation"] },
           "scenario_scope": { "enum": ["whole_use_case", "explicit"] },
           "use_case_id": { "$ref": "common.schema.json#/$defs/id" },
+          "use_case_title": { "type": "string", "minLength": 1 },
           "scenario_ids": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/id" } },
           "use_case_content_hash": { "$ref": "common.schema.json#/$defs/hash" },
           "estimated_seconds": { "type": "integer", "minimum": 1 },

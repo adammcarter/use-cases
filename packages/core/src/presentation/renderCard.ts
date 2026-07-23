@@ -53,10 +53,12 @@ export function renderCard(item: PresentationPlanItem, result?: RenderResult): s
   const format = item.presentation_format ?? defaultFormatForDeliveryKind(item.delivery_kind);
   enforceHonesty(item, format, result);
   const meta = FORMAT_META[format];
-  // Markdown card heading: emoji + verb as a ### title, item id + descriptor
-  // beneath it, so hosts that render markdown show a scannable card and plain-
-  // text hosts still read naturally top-to-bottom.
-  const header = `### ${meta.emoji} ${meta.verb}: ${item.use_case_id}\n\n\`${item.use_case_id}\` ${DOT} ${meta.descriptor}`;
+  // Markdown card heading: emoji + verb + the row's plain-English title as a
+  // ### heading (the id would be noise there); the id + descriptor sit beneath
+  // for traceability, so hosts that render markdown show a scannable card and
+  // plain-text hosts still read naturally top-to-bottom.
+  const heading = item.use_case_title?.trim() ? item.use_case_title.trim() : item.use_case_id;
+  const header = `### ${meta.emoji} ${meta.verb}: ${heading}\n\n\`${item.use_case_id}\` ${DOT} ${meta.descriptor}`;
   return `${header}\n\n${renderBody(item, format, result)}`;
 }
 

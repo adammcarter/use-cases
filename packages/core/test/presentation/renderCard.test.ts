@@ -49,12 +49,18 @@ describe("renderCard", () => {
     ];
     for (const format of formats) {
       const meta = FORMAT_META[format];
-      const card = renderCard(makeItem({ presentation_format: format }));
-      // Markdown card heading: ### + emoji + verb, item id echoed beneath.
-      expect(card).toContain(`### ${meta.emoji} ${meta.verb}:`);
-      expect(card).toContain("demo.feature");
-      expect(card).toContain("`demo.feature`");
-      expect(card).toContain(meta.descriptor);
+      // Heading uses the row's plain-English title when present; id stays
+      // beneath for traceability, never in the heading noise.
+      const titled = renderCard(
+        makeItem({ presentation_format: format, use_case_title: "The demo feature works" })
+      );
+      expect(titled).toContain(`### ${meta.emoji} ${meta.verb}: The demo feature works`);
+      expect(titled).toContain("`demo.feature`");
+      expect(titled).toContain(meta.descriptor);
+
+      // Without a title (hand-authored plan), fall back to the id.
+      const untitled = renderCard(makeItem({ presentation_format: format }));
+      expect(untitled).toContain(`### ${meta.emoji} ${meta.verb}: demo.feature`);
     }
 
     const testing = renderCard(makeItem({ presentation_format: "testing" }));
