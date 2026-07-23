@@ -127,10 +127,17 @@ describe("P7 canonical skills and activation bootstrap", () => {
     // Gate 3: the fixed verdict in the fixed order, with optional notes.
     expect(source).toMatch(/Approve, Reject, Run it again/);
     expect(source).toMatch(/notes/i);
-    // Atomicity: card text and question tool call share ONE message; a retry
-    // re-composes the whole turn (card first), never re-asks a bare question.
-    expect(source).toMatch(/SAME message/);
-    expect(source).toMatch(/re-composes the whole turn/i);
+    // Card-first visibility: the card is posted as its OWN message and the
+    // turn ENDS before any question is asked (hosts that render structured
+    // questions as a modal flush assistant text only at turn end — a question
+    // in the same message hides the card, and on reject it never renders).
+    expect(source).toMatch(/OWN message/);
+    expect(source).toMatch(/end(s)? the turn/i);
+    expect(source).toMatch(/never rides in the same message/i);
+    // A retry re-composes from the card: repost it, end the turn, re-ask —
+    // never re-issue a bare question.
+    expect(source).toMatch(/re-composes from the card/i);
+    expect(source).toMatch(/repost/i);
     // The card grows across turns (Actual appended); reprints stand alone.
     expect(source).toMatch(/\*\*Actual\*\*/);
     expect(source).toMatch(/card grows/i);

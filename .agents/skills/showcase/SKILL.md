@@ -29,7 +29,7 @@ Generated plans, walkthroughs, capsules, and runbooks are prepared material only
 
 ## The Demo Card Loop
 
-Every live plan item runs as a fixed two-turn loop built around a **demo card**. The card is the demo; every question is only its confirm button. The user should be able to follow the whole run by reading cards alone.
+Every live plan item runs as a fixed loop built around a **demo card**. The card is the demo; every question is only its confirm button. The user should be able to follow the whole run by reading cards alone - which is why the card is always posted first, on its own, before any question can appear.
 
 ### The card
 
@@ -56,21 +56,25 @@ The card grows; it never mutates. Follow-up turns reprint the whole card with th
 
 ### The loop, per item
 
-- Turn 1 - Present. Send the card (Steps + Expect), then in the same message ask Gate 1 with the host's structured question tool (`AskUserQuestion` on Claude; the closest native single-tap prompt elsewhere): ready to run this card, options "Ready - go" / "Not yet". Never start from inference, a generated plan, or momentum; "Not yet" holds with nothing recorded.
-- Turn 2 - Perform and grade. Only after "Ready - go": perform exactly the card's Steps - nothing more, nothing less - then send the full card reprinted with **Actual** filled, and in the same message ask Gate 3 (verdict) with options **in this order: Approve, Reject, Run it again**. Approve and Reject accept optional free-text notes; "Run it again" re-performs the same card's Steps and re-asks the verdict, recording nothing in between. Discussion arrives through the host's free-text option and maps to `uc showcase pause --json`, talk, then re-ask.
+- Turn 1 - Present. Send the card (Steps + Expect) as its OWN message and END the turn - no question tool call, no other tool calls after the card. The card must be on the user's screen before anything else happens.
+- Turn 2 - Gate. In the NEXT turn, ask Gate 1 with the host's structured question tool (`AskUserQuestion` on Claude; the closest native single-tap prompt elsewhere): ready to run this card, options "Ready - go" / "Not yet". A one-line pointer ("Card above - ready?") may precede the question; the full card lives in the previous message. Never start from inference, a generated plan, or momentum; "Not yet" holds with nothing recorded.
+- Turn 3 - Perform and grade. Only after "Ready - go": perform exactly the card's Steps - nothing more, nothing less - then send the full card reprinted with **Actual** filled as its OWN message and end the turn, then ask Gate 3 (verdict) in the following turn with options **in this order: Approve, Reject, Run it again**. Approve and Reject accept optional free-text notes; "Run it again" re-performs the same card's Steps and re-asks the verdict, recording nothing in between. Discussion arrives through the host's free-text option and maps to `uc showcase pause --json`, talk, then re-ask.
 - Gate 2 - Driver - is asked once per run (or per item when it genuinely varies): who drives, the agent (offer only when the agent can genuinely execute the steps - scripts, AppleScript, computer use) or the user following the card's Steps. Agent-driven items present as Testing or Inspecting; user-driven items present as Over to you, where Confirm stays human.
 
-### The atomicity rule (hard)
+### The card-first visibility rule (hard)
 
-The card and its question are ONE unit, always in the SAME message: card text first, question tool call second. A question tool call with no card above it in the same message is invalid - the widget renders detached and the user loses the contract they are approving.
+The card is posted as its OWN message, the turn ends, and only then is its question asked. A question NEVER rides in the same message as its card, and a question with no card delivered in a previous message is invalid.
 
-This rule exists because the observed failure mode is real and repeats: after an interruption, rejection, or tool error, the natural retry is to re-issue the last *tool call* (the bare question). That is wrong. **A retry re-composes the whole turn: card first, then question.** If the previous message's card was dropped for any reason, resend it - never assume an earlier card is "still on screen".
+This rule exists because both observed failure modes are real and repeat:
+
+- Hosts that render structured questions as a modal (e.g. Claude Code's fullscreen TUI) flush assistant text to the transcript only when the turn completes. A question in the same message as the card throws the modal up first, hides the card behind it, and - if the user rejects or interrupts - the card never renders at all. From the user's side the card never existed. Ending the turn after the card is the only way to ENSURE it is shown before the question appears.
+- After an interruption, rejection, or tool error, the natural retry is to re-issue the last *tool call* (the bare question). That is wrong. **A retry re-composes from the card: repost the full card as its own message, end the turn, then re-ask.** Never assume an earlier card is "still on screen".
 
 ### Wiring verdicts to the record
 
 The gates change how the answer is collected (a tap, not typed text), never what an answer is worth - an answer given through the question tool carries exactly the trust a typed one always did:
 
-- Approve: treat it as the user's acceptance of that card, quoting their answer and notes verbatim; record the observation and verdict, then move to the next item - whose Turn 1 must begin with its own card, never a bare ready-gate. Record remaining decisions with `uc showcase decide --json` and close the run with `uc showcase finish --json`. Act only on a fresh, explicit approve answer for that exact run - never a stale, inferred, or agent-authored one.
+- Approve: treat it as the user's acceptance of that card, quoting their answer and notes verbatim; record the observation and verdict, then move to the next item - whose Turn 1 must begin with its own card message, never a bare ready-gate. Record remaining decisions with `uc showcase decide --json` and close the run with `uc showcase finish --json`. Act only on a fresh, explicit approve answer for that exact run - never a stale, inferred, or agent-authored one.
 - Reject: record the user's decision and notes with `uc showcase reject --statement`, record any failing verdicts' decisions with `uc showcase decide --json`, then `uc showcase finish --json`. A rejected live card stays a live failure; it is never restaged into a pass or re-narrated as an explanation.
 - Run it again: re-perform, reprint the card with the fresh Actual, re-ask. Repeat runs overwrite nothing; only the verdict the user finally gives is recorded.
 
@@ -96,7 +100,7 @@ Every plan item carries a chosen `presentation_format`. Present each item in exa
 - Over to you (emoji raised hand) - needs the human: numbered steps then Confirm: yes / no.
 - Explaining (emoji speech balloon) - description only: plain text then "not run - explanation only".
 
-Render every format as an inline markdown card in the demo-card style: a `###` heading with the fixed emoji plus a plain-English title, the item id beneath it, then the format's fields as bold titles on their own lines. Non-live formats follow the same two rules as Testing cards: the card and any question share one message, and follow-up turns reprint the whole card with new information appended.
+Render every format as an inline markdown card in the demo-card style: a `###` heading with the fixed emoji plus a plain-English title, the item id beneath it, then the format's fields as bold titles on their own lines. Non-live formats follow the same two rules as Testing cards: the card is posted as its own message before any question is asked (card-first visibility), and follow-up turns reprint the whole card with new information appended.
 
 The header verb is a promise and must not lie:
 
