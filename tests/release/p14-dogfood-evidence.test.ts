@@ -121,6 +121,7 @@ describe("P14 v1 release dogfood evidence", () => {
       "showcase.live.user_signoff",
       "skills.assets.asset_validation",
       "skills.assets.degraded_assets",
+      "skills.assets.demo_gates",
       "skills.assets.host_declaration",
       "skills.assets.unreachable_skills_fail_doctor"
     ]);
