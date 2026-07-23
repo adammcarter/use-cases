@@ -5,6 +5,27 @@ All notable changes to this project are documented here. The format is based on
 follows [Semantic Versioning](https://semver.org) (see docs/release.md). This is
 **pre-1.0 (beta) software**: anything MAY change before `1.0.0`.
 
+## Unreleased
+
+### Added
+
+- **Demo gates in the showcase skill.** Every live showcase now passes three
+  explicit user gates, asked via the host's structured question tool
+  (AskUserQuestion on Claude): (1) *Ready?* — a live run never starts from
+  inference or a generated plan alone; (2) *Who drives?* — agent-driven
+  (offered only when the agent can genuinely execute the steps) or user-driven
+  via the plan's steps; (3) *Verdict* — approve / reject / talk about this,
+  with optional free-text notes on approve and reject. The agent operates every
+  command; the user only answers questions. Approve wires the F3 signed path
+  (`uc approve-run` → `uc showcase approve --approval-token`, notes as the
+  `--statement`); reject wires `uc showcase reject`; talk pauses and records
+  nothing. Key custody sets the stated assurance tier — an agent-readable key
+  is agent-scope assurance; a keychain/user-shell key is non-spoofable sign-off.
+- `approve-run` added to the known flat CLI commands so skill prose referencing
+  the signer validates in `uc doctor skills`.
+- Dogfood row `skills.assets.demo_gates` pinning the gate contract via
+  `tests/skills/p7-skills.test.ts` (bound, `VERIFIED_LOCAL`).
+
 ## 0.5.0 - 2026-07-22
 
 Variant parametrization: declare the input shapes of one behaviour (`0/1/many`,

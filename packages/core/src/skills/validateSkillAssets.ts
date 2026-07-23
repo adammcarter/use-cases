@@ -60,7 +60,9 @@ const KNOWN_FLAT_CLI_COMMANDS = new Set([
   "recover",
   "keygen",
   "prove",
-  "validate-ledger"
+  "validate-ledger",
+  // F3 out-of-band human signer, referenced by the showcase skill's demo gates.
+  "approve-run"
 ]);
 const FORBIDDEN_PATTERNS: Array<{ code: string; pattern: RegExp; message: string }> = [
   {

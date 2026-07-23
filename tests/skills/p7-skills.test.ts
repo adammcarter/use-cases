@@ -52,7 +52,8 @@ const knownFlatCliCommands = new Set([
   "recover",
   "keygen",
   "prove",
-  "validate-ledger"
+  "validate-ledger",
+  "approve-run"
 ]);
 
 describe("P7 canonical skills and activation bootstrap", () => {
@@ -111,6 +112,28 @@ describe("P7 canonical skills and activation bootstrap", () => {
     expect(combined).not.toMatch(/agents?\s+may\s+(claim|record)\s+(user approval|user sign-off)/i);
     expect(combined).not.toMatch(/\bhost\s+support\s+is\s+verified\./i);
   });
+
+  //: @use-case:skills.assets.demo_gates
+  test("showcase skill gates live demos on explicit user answers", () => {
+    const source = readFileSync(join(skillRoot, "showcase", "SKILL.md"), "utf8");
+    expect(source).toContain("## Demo Gates");
+    // Gate 1: a live run starts only after the user says they are ready.
+    expect(source).toMatch(/Gate 1[\s\S]{0,200}ready/i);
+    expect(source).toMatch(/never start a live run/i);
+    // Gate 2: driver choice, agent-driven offered only when genuinely executable.
+    expect(source).toMatch(/Gate 2[\s\S]{0,200}who drives/i);
+    // Gate 3: the fixed three-way verdict, with optional notes on approve/reject.
+    expect(source).toMatch(/approve, reject, or talk about this/i);
+    expect(source).toMatch(/notes/i);
+    // Approve wires the SIGNED path (approve-run + approval-token), never agent prose.
+    expect(source).toContain("uc approve-run");
+    expect(source).toContain("--approval-token");
+    // Reject carries the user's decision + notes through the reject command.
+    expect(source).toContain("`uc showcase reject");
+    // The gates never soften the F3 boundary this file already guards below.
+    expect(source).toMatch(/explicit/i);
+  });
+  //: @use-case:end skills.assets.demo_gates
 
   test("activation docs include an ASCII skill-selection decision tree", () => {
     const source = readFileSync(join(repoRoot, "docs", "activation.md"), "utf8");

@@ -27,6 +27,24 @@ Generated plans, walkthroughs, capsules, and runbooks are prepared material only
 - Run mode records actual performed events. Use `uc showcase start --json` only when the request clearly asks for a live run or the user agrees to perform one.
 - A generated plan must not be described as a completed demo.
 
+## Demo Gates
+
+Every live run passes three user gates. Ask each gate with the host's structured question tool (`AskUserQuestion` on Claude; the closest native single-tap prompt elsewhere) so the user answers with a tap, not typed commands. The agent operates every command in this flow; the user only answers questions.
+
+- Gate 1 - Ready. Before `uc showcase start`, ask whether the user is ready to see the demo. Never start a live run from inference, a generated plan, or momentum alone; "not yet" means hold with nothing recorded.
+- Gate 2 - Driver. In the same prompt, ask who drives the demo: the agent (offer only when the agent can genuinely execute the steps - scripts, AppleScript, computer use) or the user following the plan's steps. Agent-driven items present as Testing or Inspecting; user-driven items present as Over to you, where Confirm stays human.
+- Gate 3 - Verdict. After the demo, ask exactly three options: approve, reject, or talk about this. Approve and reject both accept optional free-text notes from the user.
+
+Wire the Gate 3 answer to the run record:
+
+- Approve: the agent operates the trusted approval path end to end - mint the run-bound request, sign it with the user's configured approval key via `uc approve-run --decision approved`, and submit it with `uc showcase approve --approval-token`, carrying the user's notes as the `--statement`. Run this path only on a fresh, explicit approve answer for that exact run - never from a stale, inferred, or agent-authored answer.
+- Reject: record the user's decision and notes with `uc showcase reject --statement`, record any failing verdicts' decisions with `uc showcase decide --json`, then `uc showcase finish --json`.
+- Talk about this: `uc showcase pause --json`, discuss, then re-ask Gate 3. Discussion alone records nothing.
+
+Key custody sets the assurance tier: an approval key the agent can read yields agent-scope assurance suited to the daily loop, while a key held in an OS keychain or signed in the user's own shell upgrades the same flow to non-spoofable human sign-off. State the tier honestly; never present the lower tier as the higher one.
+
+When the verifier rejects the token as ASSURANCE_TOO_LOW for the run's floor, that rejection is correct behavior, not a bug to work around: report the recorded tier plainly, keep the user's Gate 3 answer as conversational sign-off, and never re-sign with a higher `--assurance-method` than the ceremony that actually happened.
+
 ## Live Run Rules
 
 - Record observations before verdicts with `uc showcase record-observation --json`.

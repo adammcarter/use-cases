@@ -147,6 +147,61 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
+  - id: skills.assets.demo_gates
+    title: Live showcase demos are gated on explicit user answers
+    lifecycle: active
+    value_tier: core
+    journey_role: golden
+    usage_frequency: occasional
+    tags:
+      - skills
+      - showcase
+      - approval
+    source_refs:
+      - kind: file
+        path: .agents/skills/showcase/SKILL.md
+      - kind: file
+        path: tests/skills/p7-skills.test.ts
+    actor: agent
+    intent: Run a live demo only when the user says they are ready, let them choose who drives, and turn their approve/reject/talk answer into the correct recorded outcome without the user touching commands.
+    preconditions:
+      - A showcase plan with presentable items exists.
+    trigger: An agent prepares to perform a live showcase for the user.
+    scenarios:
+      - id: skills.assets.demo_gates.gates
+        kind: steps
+        steps:
+          - Ask the readiness and driver questions with the host question tool before showcase start.
+          - Perform the demo with the chosen driver and presentation formats.
+          - Ask approve / reject / talk about this, then wire the answer to the signed approve path, showcase reject, or pause-and-discuss.
+    observable_outcomes:
+      - No live run starts before an explicit ready answer.
+      - An approve answer produces a signed, run-bound approval submitted by the agent; agent prose alone never becomes a sign-off.
+      - A reject answer records the user's notes verbatim; talking about it records nothing.
+    host_applicability:
+      - host_surface: claude.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/skills/p7-skills.test.ts
+          inputs:
+            - tests/skills/p7-skills.test.ts
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none
   - id: skills.assets.unreachable_skills_fail_doctor
     title: Unreachable skills fail doctor instead of passing green
     lifecycle: active
