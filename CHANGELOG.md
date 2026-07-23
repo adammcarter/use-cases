@@ -5,6 +5,36 @@ All notable changes to this project are documented here. The format is based on
 follows [Semantic Versioning](https://semver.org) (see docs/release.md). This is
 **pre-1.0 (beta) software**: anything MAY change before `1.0.0`.
 
+## 0.5.3 - 2026-07-23
+
+### Changed
+
+- **The Demo Card Loop.** The showcase skill's "Demo Gates" grew into a full
+  card contract, battle-tested in a live sign-off run: every live item renders
+  as an inline markdown demo card (`###` emoji heading with the row's
+  plain-English title, item id beneath, **Steps** numbered / **Expect** /
+  **Actual** as bold titles on their own lines). The loop per item is fixed:
+  card + ready-gate in ONE message → perform exactly the card's steps → the
+  full card reprinted with **Actual** filled + the verdict question in ONE
+  message. The card and its question are one atomic unit — the observed
+  failure mode this hardens against is an agent re-asking a bare question
+  after an interruption instead of re-composing the whole turn (card first).
+  The card grows across turns; it never mutates.
+- **Verdict order and "Run it again".** Gate 3 is now Approve / Reject /
+  Run it again, in that order. "Run it again" re-performs the same card's
+  steps and re-asks, recording nothing in between; discussion still maps to
+  pause-and-talk, recording nothing.
+- **Card headings use the row title.** `renderCard` puts the use case's
+  plain-English title in the heading (`🧪 Testing: The session pill follows
+  focus promptly`), demoting the id to the traceability line beneath. Plan
+  items carry a new optional `use_case_title` (emitted by selection; optional
+  in the plan schema so hand-authored plans still validate; id fallback when
+  absent). The testing body is now Steps (numbered) / Expect / Actual to
+  match the skill's card shape; honesty rules are unchanged.
+- **Walkthrough cards.** The walkthrough skill renders its non-live formats
+  as the same inline markdown cards, and Over-to-you Confirms are asked with
+  the host question tool with the card above the question in the same message.
+
 ## 0.5.2 - 2026-07-23
 
 ### Changed
