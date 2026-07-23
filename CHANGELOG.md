@@ -5,7 +5,7 @@ All notable changes to this project are documented here. The format is based on
 follows [Semantic Versioning](https://semver.org) (see docs/release.md). This is
 **pre-1.0 (beta) software**: anything MAY change before `1.0.0`.
 
-## Unreleased
+## 0.5.2 - 2026-07-23
 
 ### Changed
 
@@ -16,6 +16,19 @@ follows [Semantic Versioning](https://semver.org) (see docs/release.md). This is
   approve is recorded as the user's acceptance with their notes verbatim; the
   signed sign-off tier stays the separate, opt-in release/audit path it always
   was.
+
+### Fixed
+
+- **`uc prove --all` no longer fails the whole sweep on a variant family.**
+  Since 0.5.0 shipped `lifecycle.signals.variant_fanout`, every sweep exited 5
+  on its deliberate `VARIANT_FAMILY_UNSUPPORTED` refusal and kept the
+  use-cases integrity workflow permanently red. A sweep now records the family
+  as `skipped_variant_family` (same reason, exit 0); an explicit
+  `--row <family>` still refuses hard.
+- **Repo scans no longer pick up fixture markers from the variant regression
+  test.** Literal `cart.*` markers inside `recoverVariants.test.ts` registered
+  as phantom bindings and failed every scan with
+  `END_WITHOUT_START`/`ROW_NOT_FOUND` integrity errors.
 
 ## 0.5.1 - 2026-07-23
 

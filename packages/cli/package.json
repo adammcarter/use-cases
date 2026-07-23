@@ -1,6 +1,6 @@
 {
   "name": "@adammcarter/use-cases-cli",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "type": "module",
   "description": "CLI for @adammcarter/use-cases.",
   "license": "MIT",
