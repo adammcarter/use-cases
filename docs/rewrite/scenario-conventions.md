@@ -156,10 +156,33 @@ Measured 2026-09-16, while ordering the remaining feature files:
 | with a `verifiers:` block, so something can actually run | 42 |
 | with none — proven by `agent_observation` or `manual_observation` | 47 |
 
-**More than half the matrix has nothing mechanical behind it.** Those rows
-declare `required_verifiers: [agent]` or `[user]` and a `requirements` block,
-but no command, so `uc verify` has nothing to spawn and the row can never reach
-`VERIFIED_LOCAL` on its own evidence.
+**More than half the matrix has nothing mechanical behind it** — but the 47 are
+two different problems, and an earlier draft of this section wrongly described
+them as one:
+
+| of the 89 active rows | |
+|---|---|
+| a `verifiers:` block defining what runs | 42 |
+| **honest observation**: `required_verifiers: [agent]` or `[user]` | 17 |
+| **defect**: `required_verifiers: [script]`, no `verifiers:` block defining it | 22 |
+| **defect**: no verifier and no requirement at all | 8 |
+
+`agent` and `user` are verifier KINDS, not ids a `verifiers:` block defines: an
+agent observation or a person's sign-off has no command behind it by design.
+Counting those 17 as broken would bury the 22 that really are.
+
+**Row 2's target is 30** — the two defect rows. That number is now printed by
+`scripts/check-scenario-conventions.mjs` beside row 1b's, so it starts with a
+target rather than a surprise.
+
+The 22 are a dangling reference. They name a verifier id that nothing defines,
+and they read exactly like a healthy row — `uc matrix validate` passes them with
+zero diagnostics, the same way it passed the dead `source_refs`. They are not a
+decision to take; they are a bug to fix, and row 2 fixes it by defining the
+verifier when it writes the test.
+
+`scripts/check-scenario-conventions.mjs` now counts both shapes, so the number
+gating row 2 is as countable as the number gating row 1b.
 
 This matters because ADR 0007 decision 2 says every row is proven through the
 binary before any Swift is written. Forty-seven rows cannot be, as written.
@@ -183,10 +206,32 @@ with each:
   in a human approving. The tool's part is drivable; the approval is not, and
   must not be, since the whole point is that an agent cannot mint it.
 
-The open question this raises is not a detail of wording: **does row 1b deepen
-an observation-only row with scenarios nothing can assert, or does the missing
-verifier get added first?** Adding one is not new behaviour — the behaviour
-already exists and already has a command — but it does change how the row is
-proven, which is row 2's subject rather than row 1b's.
+**Resolved: a missing verifier does not block the scenario.** A scenario says
+what the behaviour IS; a `verification_policy` says how it gets proven. ADR 0007
+puts them in different ladder rows — decision 1 is the scenarios, decision 2 is
+the test and the binding — so the verifier is row 2's output, not row 1b's
+precondition. `verification_policy` is row content, not contract: decision 8
+freezes the envelope, the schemas, the marker syntax and the ledger formats, and
+changing how an EXISTING behaviour is proven falls under rows for existing
+behaviour being pre-approved.
 
-Recorded here rather than decided alone.
+The test to apply per row is one question: **is there a command or MCP tool
+whose JSON the outcome can be asserted against?** For roughly 40 of the 47 the
+answer is yes — `uc matrix validate`, `uc plan showcase`, the showcase command
+family, `uc migrate test-matrix`, the MCP tools directly, `uc capsule list/plan/run`.
+Those are deepened now.
+
+**What genuinely blocks is eight rows**, and it needs a decision rather than a
+judgement call:
+
+- the five `lifecycle.loop.*` rows — agent doctrine, which no command implements
+- `evidence.ledger.untrusted_content_boundary` — the same, a rule about how an
+  agent must treat content
+- `matrix.product.claim_guardrails` — the same
+- `showcase.live.user_signoff` — proof that is genuinely a person, and an agent
+  minting it is the thing the design exists to prevent
+
+Decision 2 cannot cover these as written. Either they park like the 15 parked
+`roadmap.*` rows, or decision 2 takes a named exception for doctrine. Until
+that is answered they are left untouched rather than deepened, because
+scenarios nothing can assert are padding, and padding reads as coverage.

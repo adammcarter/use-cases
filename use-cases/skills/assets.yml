@@ -27,12 +27,28 @@ use_cases:
       - The plugin ships one or more agent skill directories under .agents/skills.
     trigger: Agent or release gate runs doctor skills before publishing or activating a host.
     scenarios:
-      - id: skills.assets.asset_validation.doctor
+      - id: skills.assets.asset_validation.golden_doctor
         kind: steps
         steps:
-          - Run doctor skills.
-          - Inspect each discovered skill name, required asset, and front-matter.
-          - Confirm every shipped skill reports as valid.
+          - Run doctor skills against an intact checkout.
+          - Inspect each discovered skill name, required asset and front-matter.
+        observable_outcomes:
+          - Each shipped skill is discovered with a stable name and intact assets.
+          - Every shipped skill reports as valid.
+      - id: skills.assets.asset_validation.bad_required_file_missing
+        kind: steps
+        steps:
+          - Remove a required file from a shipped skill.
+          - Run doctor skills and read the result.
+        observable_outcomes:
+          - A skill cannot be published while its required files are missing.
+      - id: skills.assets.asset_validation.edge_front_matter_name_matches_the_directory
+        kind: steps
+        steps:
+          - Read each canonical skill's front-matter name and compare it with its directory.
+          - Confirm the discovered name is the one the host will use.
+        observable_outcomes:
+          - A skill's discovered name is stable because the front-matter name matches the directory.
     observable_outcomes:
       - Each shipped skill is discovered with a stable name and intact assets.
       - A skill cannot be published while its required files are missing.
@@ -69,12 +85,28 @@ use_cases:
       - A skill directory is missing a required file or carries malformed front-matter.
     trigger: Agent runs doctor skills against a damaged or incomplete skill set.
     scenarios:
-      - id: skills.assets.degraded_assets.report
+      - id: skills.assets.degraded_assets.golden_report
         kind: steps
         steps:
           - Run doctor skills against a skill missing required assets.
-          - Confirm the damaged skill is reported with a diagnostic.
-          - Confirm healthy skills remain usable and the run is non-fatal.
+          - Read the diagnostic it reports.
+        observable_outcomes:
+          - The damaged skill is reported with a diagnostic.
+      - id: skills.assets.degraded_assets.bad_damage_is_never_reported_as_healthy
+        kind: steps
+        steps:
+          - Run doctor skills against a skill with malformed front-matter.
+          - Read whether it passes.
+        observable_outcomes:
+          - Damaged skills are visible rather than silently treated as valid.
+      - id: skills.assets.degraded_assets.edge_one_damaged_skill_does_not_hide_the_rest
+        kind: steps
+        steps:
+          - Damage one skill and leave the others intact.
+          - Run doctor skills and read every skill's status, and the exit behaviour.
+        observable_outcomes:
+          - One damaged skill does not hide the status of the others.
+          - Healthy skills remain usable and the run is non-fatal.
     observable_outcomes:
       - Damaged skills are visible rather than silently treated as valid.
       - One damaged skill does not hide the status of the others.
@@ -113,16 +145,28 @@ use_cases:
       - The package ships its skills under skills/ at the repo root.
     trigger: The Claude host reads the plugin manifests while installing or loading the plugin.
     scenarios:
-      - id: skills.assets.host_declaration.manifests
+      - id: skills.assets.host_declaration.golden_manifests
         kind: steps
         steps:
           - Confirm the canonical skills live under skills/<name>/SKILL.md at the plugin root.
           - Read the marketplace manifest and confirm it offers the use-cases plugin from the repo root.
-      - id: skills.assets.host_declaration.moved_skills
+        observable_outcomes:
+          - Skills sit where the host scans, so no manifest entry is needed for the host to load them.
+          - A marketplace manifest ships, so the plugin can be installed at all and its plugin manifest is read.
+      - id: skills.assets.host_declaration.bad_moved_skills
         kind: steps
         steps:
           - Move a canonical skill out of skills/.
-          - Confirm uc doctor skills reports it as unreachable by the host.
+          - Run uc doctor skills and read what it reports.
+        observable_outcomes:
+          - A canonical skill moved out of skills/ is reported as unreachable by the host, not as a pass.
+      - id: skills.assets.host_declaration.edge_marketplace_manifest_is_what_makes_it_readable
+        kind: steps
+        steps:
+          - Remove the marketplace manifest while leaving the skills in place.
+          - Read whether the plugin manifest is still reached.
+        observable_outcomes:
+          - Without a marketplace manifest the plugin cannot be installed, so its manifest is never read.
     observable_outcomes:
       - Skills sit where the host scans, so no manifest entry is needed for the host to load them.
       - A marketplace manifest ships, so the plugin can be installed at all and its plugin manifest is read.
@@ -171,12 +215,36 @@ use_cases:
       - A showcase plan with presentable items exists.
     trigger: An agent prepares to perform a live showcase for the user.
     scenarios:
-      - id: skills.assets.demo_gates.gates
+      - id: skills.assets.demo_gates.golden_gates
         kind: steps
         steps:
-          - Send the item's demo card inline (Steps / Expect) as its own message and end the turn, then ask the readiness question with the host question tool in the next turn.
+          - Send the item's demo card inline (Steps / Expect) as its own message and end the turn, then ask the readiness question in the next turn.
           - Perform exactly the card's steps with the chosen driver and presentation format.
-          - Reprint the card with Actual filled, then ask approve / reject / run it again in that order, recording the answer as acceptance, showcase reject, or a re-performance.
+          - Reprint the card with Actual filled, then ask approve / reject / run it again in that order.
+        observable_outcomes:
+          - No live run starts before an explicit ready answer.
+          - An approve answer is recorded as the user's acceptance with their notes verbatim; the signed sign-off tier stays a separate opt-in path.
+      - id: skills.assets.demo_gates.bad_question_before_its_card
+        kind: steps
+        steps:
+          - Attempt to ask the readiness question in the same turn as the card.
+          - Read what the skill requires instead.
+        observable_outcomes:
+          - No question is ever asked before its card has been delivered as its own completed message.
+      - id: skills.assets.demo_gates.bad_reject_is_recorded_verbatim
+        kind: steps
+        steps:
+          - Answer reject at the acceptance question, with notes.
+          - Read what is recorded.
+        observable_outcomes:
+          - A reject answer records the user's notes verbatim, rather than being softened or summarised.
+      - id: skills.assets.demo_gates.edge_run_it_again_and_talking_record_nothing
+        kind: steps
+        steps:
+          - Answer run it again, then answer talking about it.
+          - Read what each records.
+        observable_outcomes:
+          - Run it again re-performs and re-asks without recording; talking about it records nothing.
     observable_outcomes:
       - No live run starts before an explicit ready answer, and no question is ever asked before its card has been delivered as its own completed message.
       - An approve answer is recorded as the user's acceptance with their notes verbatim; the signed sign-off tier stays a separate opt-in path.
@@ -228,27 +296,45 @@ use_cases:
       - Skill assets are present on disk and structurally valid.
     trigger: Agent or release gate runs doctor skills against a checkout whose host registration is broken.
     scenarios:
-      - id: skills.assets.unreachable_skills_fail_doctor.undeclared
+      - id: skills.assets.unreachable_skills_fail_doctor.golden_intact_checkout
+        kind: steps
+        steps:
+          - Run skill asset validation against an intact plugin checkout.
+          - Read the host_registration field.
+        observable_outcomes:
+          - An intact checkout reports the skills as registered.
+          - The result carries a host_registration field naming the host, its manifest path, and whether the skill root is declared and installable.
+      - id: skills.assets.unreachable_skills_fail_doctor.bad_undeclared
         kind: steps
         steps:
           - Remove the skills key from the Claude plugin manifest.
           - Run skill asset validation.
-          - Confirm skills.host_not_declared is reported and the result is not complete.
-      - id: skills.assets.unreachable_skills_fail_doctor.misdirected
+        observable_outcomes:
+          - skills.host_not_declared is reported and the result is not complete.
+          - Skills that exist on disk but that no host can load are an error, not a pass.
+      - id: skills.assets.unreachable_skills_fail_doctor.bad_misdirected
         kind: steps
         steps:
           - Point the manifest skills key at a directory that does not hold the canonical skills.
-          - Confirm skills.host_not_declared is still reported.
-      - id: skills.assets.unreachable_skills_fail_doctor.uninstallable
+          - Run skill asset validation.
+        observable_outcomes:
+          - A manifest that declares a directory not actually holding the canonical skills does not count as declared.
+          - skills.host_not_declared is still reported.
+      - id: skills.assets.unreachable_skills_fail_doctor.bad_uninstallable
         kind: steps
         steps:
           - Remove the marketplace manifest, or list a different plugin in it.
-          - Confirm skills.host_not_installable is reported.
-      - id: skills.assets.unreachable_skills_fail_doctor.manifest_missing
+          - Run skill asset validation.
+        observable_outcomes:
+          - skills.host_not_installable is reported.
+          - A declared skill root is still unreachable without a marketplace manifest that offers this plugin.
+      - id: skills.assets.unreachable_skills_fail_doctor.edge_manifest_missing
         kind: steps
         steps:
-          - Run validation against a checkout with no Claude plugin manifest.
-          - Confirm skills.host_manifest_missing is reported.
+          - Run validation against a checkout with no Claude plugin manifest at all.
+          - Read the diagnostic.
+        observable_outcomes:
+          - skills.host_manifest_missing is reported, distinctly from a manifest that is present but wrong.
     observable_outcomes:
       - Skills that exist on disk but that no host can load are an error, not a pass.
       - The result carries a host_registration field naming the host, its manifest path, and whether the skill root is declared and installable.

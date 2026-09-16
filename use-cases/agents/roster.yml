@@ -14,6 +14,7 @@ use_cases:
       - agents
       - packaging
       - hosts
+      - no-edge-path
     source_refs:
       - kind: file
         path: packages/core/src/agents/canonicalAgents.ts
@@ -33,12 +34,31 @@ use_cases:
       - The plugin declares a canonical agent roster in CANONICAL_AGENTS.
     trigger: A release or install gate checks the plugin's shipped surfaces.
     scenarios:
-      - id: agents.roster.shipped_with_plugin.declared
+      - id: agents.roster.shipped_with_plugin.golden_declared
         kind: steps
         steps:
           - Read the agents directory and compare it to CANONICAL_AGENTS.
           - Confirm the Claude plugin manifest declares ./agents.
           - Confirm the published package files list includes agents.
+        observable_outcomes:
+          - The agents directory holds exactly the canonical roster, no more and no less.
+          - A user installing the plugin can dispatch all three agents by name.
+      - id: agents.roster.shipped_with_plugin.bad_roster_entry_without_a_body
+        kind: steps
+        steps:
+          - Add a name to CANONICAL_AGENTS with no matching body file.
+          - Run the gate.
+        observable_outcomes:
+          - An agent added to the roster without a body fails the gate.
+          - The roster and the directory are held equal in both directions.
+      - id: agents.roster.shipped_with_plugin.bad_body_shipped_without_being_declared
+        kind: steps
+        steps:
+          - Add a body file to the agents directory that the roster does not name.
+          - Run the gate.
+        observable_outcomes:
+          - An agent shipped without being declared fails the gate.
+          - A body cannot reach users on one host while being invisible to the roster.
     observable_outcomes:
       - An agent added to the roster without a body, or shipped without being declared, fails the gate.
       - A user installing the plugin can dispatch all three agents by name.
@@ -88,12 +108,44 @@ use_cases:
       - The plugin ships agent bodies that instruct other agents.
     trigger: A change to any shipped agent body, or to the CLI command surface it cites.
     scenarios:
-      - id: agents.roster.bodies_hold_the_line.forbidden
+      - id: agents.roster.bodies_hold_the_line.golden_frontmatter_matches_the_filename
         kind: steps
         steps:
-          - Parse each agent's YAML frontmatter and check its name matches the filename.
-          - Extract every `uc` command the body cites and check it against the shared allowlist.
-          - Check the body claims no user approval and names no private roster or home path.
+          - Parse each agent's YAML frontmatter.
+          - Compare its name with the filename.
+        observable_outcomes:
+          - Every shipped agent opens with parseable frontmatter whose name matches its filename.
+      - id: agents.roster.bodies_hold_the_line.bad_cites_a_command_the_cli_does_not_ship
+        kind: steps
+        steps:
+          - Extract every uc command the body cites.
+          - Check each against the shared allowlist.
+        observable_outcomes:
+          - A body that sends the reader to a command the CLI does not ship fails the gate.
+      - id: agents.roster.bodies_hold_the_line.bad_claims_the_users_approval
+        kind: steps
+        steps:
+          - Check the body for text authorising an agent to claim user approval or sign-off.
+          - Check it for text calling a generated plan, walkthrough, capsule or runbook proof.
+          - Check it for a claim that host support is verified.
+        observable_outcomes:
+          - A body that authorises an agent to claim the user's sign-off fails the gate.
+          - A body that calls prepared material proof fails the same way.
+      - id: agents.roster.bodies_hold_the_line.bad_names_one_authors_private_setup
+        kind: steps
+        steps:
+          - Check the body for references to a private roster, a home path, or a sibling repo.
+          - Run the gate.
+        observable_outcomes:
+          - A body naming agent-setup, a ~/.claude path or an absolute /Users/ path fails the gate.
+          - Agent bodies ship to everyone who installs the plugin, so one author's machine is meaningless to them.
+      - id: agents.roster.bodies_hold_the_line.edge_description_is_specific_enough_to_route_on
+        kind: steps
+        steps:
+          - Read each agent's frontmatter description.
+          - Check it is a string, long enough to carry a trigger, and not a bare restatement of the name.
+        observable_outcomes:
+          - A description that merely restates the agent's name fails, because it tells a dispatching agent nothing about when to reach for it.
     observable_outcomes:
       - A body that sends the reader to a command the CLI does not ship fails the gate.
       - A body that authorises an agent to claim the user's sign-off fails the gate.
@@ -143,12 +195,36 @@ use_cases:
       - Skill and agent bodies are validated against a shared command allowlist.
     trigger: A command is added to or removed from the CLI registry.
     scenarios:
-      - id: agents.roster.command_allowlist_tracks_cli.parity
+      - id: agents.roster.command_allowlist_tracks_cli.golden_nested_command_parity
         kind: steps
         steps:
-          - Derive every dispatchable command path from the CLI registry.
-          - Compare it against the shared allowlist, plus the bespoke builtins.
-          - Confirm `impact` and `showcase request-approval` — the two that had drifted — are allowed.
+          - Derive every dispatchable nested command path from the CLI registry.
+          - Compare it against the shared allowlist.
+        observable_outcomes:
+          - Every dispatchable nested command is allowed in skill and agent bodies.
+          - A skill or agent citing a real command is never reported as unknown.
+      - id: agents.roster.command_allowlist_tracks_cli.golden_flat_command_parity
+        kind: steps
+        steps:
+          - Derive every dispatchable flat command from the CLI registry.
+          - Compare it against the allowlist plus the bespoke builtins.
+        observable_outcomes:
+          - Every dispatchable flat command is allowed, along with the bespoke builtins.
+      - id: agents.roster.command_allowlist_tracks_cli.bad_registry_command_missing_from_the_allowlist
+        kind: steps
+        steps:
+          - Add a command to the CLI registry without adding it to the allowlist.
+          - Run the parity gate.
+        observable_outcomes:
+          - Adding a registry command without the allowlist fails the gate.
+          - The allowlist cannot drift from what the CLI actually dispatches.
+      - id: agents.roster.command_allowlist_tracks_cli.edge_the_commands_that_exposed_the_drift
+        kind: steps
+        steps:
+          - Check impact and showcase request-approval against the allowlist.
+          - Confirm both are allowed.
+        observable_outcomes:
+          - The two commands that had already drifted are allowed, so the regression that prompted this gate stays fixed.
     observable_outcomes:
       - Adding a registry command without the allowlist fails the gate.
       - A skill or agent citing a real command is never reported as unknown.
