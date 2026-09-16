@@ -22,26 +22,36 @@ use_cases:
       - uc init runs in a repo with no use-cases.yml.
     trigger: The agent runs uc init --repo . from the /use-cases:init skill.
     scenarios:
-      - id: plugin.init.records_decision_in_agents_md.no_file
+      - id: plugin.init.records_decision_in_agents_md.golden_no_file
         kind: steps
         steps:
           - Run uc init in a repo with no AGENTS.md.
-          - Confirm AGENTS.md is created holding a "## Use-case driven development" section with "yes — <today>", a pointer to the use-cases and use-case-driven-development skills, and the instruction that agents follow them.
-      - id: plugin.init.records_decision_in_agents_md.existing_file
+          - Read the created file and its "## Use-case driven development" section.
+        observable_outcomes:
+          - AGENTS.md is created holding the section with "yes — <today>", a pointer to the use-cases and use-case-driven-development skills, and the instruction that agents follow them.
+      - id: plugin.init.records_decision_in_agents_md.edge_existing_file
         kind: steps
         steps:
           - Run uc init in a repo whose AGENTS.md has other content.
-          - Confirm the existing content is untouched and the section is appended after it.
-      - id: plugin.init.records_decision_in_agents_md.already_recorded
+          - Compare the file before and after.
+        observable_outcomes:
+          - The existing content is untouched and the section is appended after it.
+      - id: plugin.init.records_decision_in_agents_md.edge_already_recorded
         kind: steps
         steps:
           - Run uc init in a repo whose AGENTS.md already has the section, with yes or no.
-          - Confirm the file is unchanged and the result names the existing answer.
-      - id: plugin.init.records_decision_in_agents_md.second_run
+          - Read the file and the result.
+        observable_outcomes:
+          - The file is unchanged and the result names the existing answer.
+          - A recorded no is left standing, not overwritten with a yes.
+      - id: plugin.init.records_decision_in_agents_md.bad_second_run_is_blocked
         kind: steps
         steps:
-          - Run uc init twice.
-          - Confirm the second run is blocked as today and AGENTS.md still has exactly one section.
+          - Run uc init twice in the same repo.
+          - Read the second result and count the sections in AGENTS.md.
+        observable_outcomes:
+          - The second run is blocked as today, and AGENTS.md still has exactly one section.
+          - AGENTS.md carries exactly one decision section after any number of runs.
     observable_outcomes:
       - AGENTS.md carries exactly one decision section after any number of runs.
       - The section is the one the use-case-driven-development skill reads.
@@ -88,27 +98,38 @@ use_cases:
       - uc init runs in a git repo with no use-cases.yml.
     trigger: The agent runs uc init --repo .
     scenarios:
-      - id: plugin.init.wires_git_hooks.fresh_repo
+      - id: plugin.init.wires_git_hooks.golden_fresh_repo
         kind: steps
         steps:
           - Run uc init in a git repo with no hooks.
-          - Confirm .githooks/pre-commit and .githooks/pre-push exist, are executable, and core.hooksPath is .githooks.
-          - Confirm pre-commit runs uc matrix validate, uc validate-ledger and a scan for INVALID, and pre-push runs uc impact and uc scan and always exits 0.
-      - id: plugin.init.wires_git_hooks.existing_hooks_path
+          - Read .githooks/pre-commit and .githooks/pre-push and the configured hooksPath.
+          - Read what each hook runs.
+        observable_outcomes:
+          - Both hooks exist, are executable, and core.hooksPath is .githooks.
+          - pre-commit runs uc matrix validate, uc validate-ledger and a scan for INVALID; pre-push runs uc impact and uc scan and always exits 0.
+      - id: plugin.init.wires_git_hooks.bad_uc_missing_warns_rather_than_blocks
+        kind: steps
+        steps:
+          - Run the written pre-commit with no uc on PATH and no override.
+          - Read the exit code and the warning.
+        observable_outcomes:
+          - It exits 0 with a warning naming the install route, so a contributor without the plugin is not locked out.
+          - A missing tool is never allowed to lock a repo.
+      - id: plugin.init.wires_git_hooks.edge_existing_hooks_path
         kind: steps
         steps:
           - Run uc init in a repo where core.hooksPath already points elsewhere with its own pre-commit.
-          - Confirm the hooks are written into that directory, the existing pre-commit keeps its content with the use-cases block appended, and hooksPath is left alone.
-      - id: plugin.init.wires_git_hooks.uc_missing
-        kind: steps
-        steps:
-          - Run the written pre-commit with no uc on PATH and no UC override.
-          - Confirm it exits 0 with a warning naming the install route, so a contributor without the plugin is not locked out.
-      - id: plugin.init.wires_git_hooks.not_a_git_repo
+          - Read that directory and the git config afterwards.
+        observable_outcomes:
+          - The hooks are written into that directory, the existing pre-commit keeps its content with the use-cases block appended, and hooksPath is left alone.
+          - Existing hooks are extended, never replaced.
+      - id: plugin.init.wires_git_hooks.edge_not_a_git_repo
         kind: steps
         steps:
           - Run uc init in a directory that is not a git repo.
-          - Confirm the hook files are still written and the result notes that hooksPath was not set.
+          - Read the written files and the result.
+        observable_outcomes:
+          - The hook files are still written and the result notes that hooksPath was not set.
     observable_outcomes:
       - A fresh yes repo has enforcement from the first commit.
       - Existing hooks are extended, never replaced.
@@ -146,6 +167,7 @@ use_cases:
     tags:
       - init
       - template
+      - no-bad-path
     source_refs:
       - kind: file
         path: packages/core/src/init/scaffold.ts
@@ -155,21 +177,28 @@ use_cases:
       - uc init runs in a repo with no use-cases.yml.
     trigger: The agent runs uc init --repo .
     scenarios:
-      - id: plugin.init.vends_sample_matrix.shape
+      - id: plugin.init.vends_sample_matrix.golden_shape
         kind: steps
         steps:
           - Run uc init and read use-cases/example.yml.
-          - Confirm the sample row carries a golden, a bad and an edge scenario, a comment on every top-level field, and a note that each scenario becomes one test.
-      - id: plugin.init.vends_sample_matrix.validates
+          - Read the sample row's scenarios and comments.
+        observable_outcomes:
+          - The sample row carries a golden, a bad and an edge scenario, a comment on every top-level field, and a note that each scenario becomes one test.
+          - The sample is a template to copy, not a placeholder to delete.
+      - id: plugin.init.vends_sample_matrix.golden_validates
         kind: steps
         steps:
           - Run uc matrix validate on the fresh workspace.
-          - Confirm it is clean.
-      - id: plugin.init.vends_sample_matrix.honest_scan
+          - Read the result.
+        observable_outcomes:
+          - A fresh workspace validates clean.
+      - id: plugin.init.vends_sample_matrix.edge_honest_scan
         kind: steps
         steps:
           - Run uc scan on the fresh workspace.
-          - Confirm the sample row reads UNBOUND with no INVALID rows, so a fresh repo never claims coverage it lacks.
+          - Read the sample row's status.
+        observable_outcomes:
+          - The sample row reads UNBOUND with no INVALID rows, so a fresh repo never claims coverage it lacks.
     observable_outcomes:
       - The sample is a template to copy, not a placeholder to delete.
       - A fresh workspace validates and scans clean.
@@ -207,6 +236,7 @@ use_cases:
     tags:
       - init
       - skills
+      - no-bad-path
     source_refs:
       - kind: file
         path: skills/init/SKILL.md
@@ -216,16 +246,22 @@ use_cases:
       - The plugin is installed; the repo may be empty.
     trigger: The user or agent invokes /use-cases:init.
     scenarios:
-      - id: plugin.init.skill_hands_off.text
+      - id: plugin.init.skill_hands_off.golden_text
         kind: steps
         steps:
           - Read skills/init/SKILL.md.
-          - Confirm it runs uc init --repo ., tells the agent to read AGENTS.md back, and ends by invoking the use-case-driven-development skill.
-      - id: plugin.init.skill_hands_off.already_initialised
+          - Follow what it instructs the agent to do, in order.
+        observable_outcomes:
+          - It runs uc init --repo ., tells the agent to read AGENTS.md back, and ends by invoking the use-case-driven-development skill.
+          - One slash command takes a repo from empty to inside the loop.
+      - id: plugin.init.skill_hands_off.edge_already_initialised
         kind: steps
         steps:
           - Read the skill's guidance for a repo where uc init is blocked because use-cases.yml already exists.
-          - Confirm it says to read the recorded answer in AGENTS.md and go straight to the loop.
+          - Follow what it tells the agent to do instead.
+        observable_outcomes:
+          - It says to read the recorded answer in AGENTS.md and go straight to the loop.
+          - An already-adopted repo is never sent round the init path again.
     observable_outcomes:
       - One slash command takes a repo from empty to inside the loop.
     host_applicability:
@@ -262,6 +298,7 @@ use_cases:
     tags:
       - skills
       - loop
+      - no-edge-path
     source_refs:
       - kind: file
         path: skills/use-case-driven-development/SKILL.md
@@ -271,21 +308,30 @@ use_cases:
       - The plugin is installed on any supported host.
     trigger: An agent loads /use-cases:use-case-driven-development at the start of framing, or the init skill hands over to it.
     scenarios:
-      - id: plugin.init.loop_skill_ported.present_and_canonical
+      - id: plugin.init.loop_skill_ported.golden_present_and_canonical
         kind: steps
         steps:
           - Read skills/use-case-driven-development/SKILL.md.
-          - Confirm its front-matter name matches the directory and the skill is in the plugin's canonical list, so doctor and every host see it.
-      - id: plugin.init.loop_skill_ported.host_neutral
+          - Compare its front-matter name with its directory and with the plugin's canonical skill list.
+        observable_outcomes:
+          - Its front-matter name matches the directory and the skill is in the canonical list, so doctor and every host see it.
+      - id: plugin.init.loop_skill_ported.golden_covers_the_loop
+        kind: steps
+        steps:
+          - Read the skill for the order it puts the phases in.
+          - Check which uc commands and MCP tools each phase names.
+        observable_outcomes:
+          - It reads the AGENTS.md section first and sends a repo without one to /use-cases:init.
+          - It covers understand, frame, build, verify, sign-off and land, and names bind, verify, scan and recover.
+          - A repo without the decision is sent to init rather than asked ad hoc.
+      - id: plugin.init.loop_skill_ported.bad_nothing_host_specific
         kind: steps
         steps:
           - Search the skill for machine- or host-specific instructions.
-          - Confirm there is no talk-to-myself, no npm install, no ~/.claude path, no agent-setup skill named as a dependency, and no simulator or Xcode step.
-      - id: plugin.init.loop_skill_ported.covers_the_loop
-        kind: steps
-        steps:
-          - Confirm the skill reads the AGENTS.md section first and sends a repo without one to /use-cases:init.
-          - Confirm it covers understand, frame, build, verify, sign-off and land with the uc commands and MCP tools each uses, and names bind, verify, scan and recover.
+          - Check each hit against what a host other than Claude could do.
+        observable_outcomes:
+          - There is no talk-to-myself, no npm install, no ~/.claude path, no agent-setup skill named as a dependency, and no simulator or Xcode step.
+          - One loop skill, read the same way on Claude, Copilot, Codex and OpenCode.
     observable_outcomes:
       - One loop skill, read the same way on Claude, Copilot, Codex and OpenCode.
       - A repo without the decision is sent to init rather than asked ad hoc.
