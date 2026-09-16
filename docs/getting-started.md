@@ -26,13 +26,21 @@ There is nothing to build or download: the repo carries a committed,
 dependency-free bundle of the CLI and the MCP server in `dist/`, so a clone runs
 with Node alone.
 
-In Claude Code, install it as a plugin and everything is wired for you —
-skills, agents, the MCP server, and `uc` on PATH inside the session:
+Install it as a plugin into your agent and everything is wired for you:
+skills, the MCP server, the bootstrap, and where `uc` lives.
 
 ```text
-/plugin marketplace add adammcarter/use-cases
-/plugin install use-cases@use-cases
+Claude Code   /plugin marketplace add adammcarter/use-cases
+              /plugin install use-cases@use-cases
+Copilot CLI   copilot plugin install adammcarter/use-cases
+              copilot mcp enable use-cases
+Codex         codex plugin marketplace add adammcarter/use-cases
+              codex plugin add use-cases@use-cases
+OpenCode      opencode plugin add 'github:adammcarter/use-cases'
 ```
+
+Claude also puts `uc` on PATH inside the session; on every host the bootstrap
+names the full path to the plugin's `bin/uc`.
 
 Anywhere else, clone the repo and run the committed bundle:
 

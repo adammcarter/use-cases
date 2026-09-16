@@ -1,0 +1,24 @@
+{
+  "name": "use-cases",
+  "version": "0.6.0",
+  "description": "Use-case, evidence, and live showcase infrastructure for agent work.",
+  "license": "MIT",
+  "skills": "./skills/",
+  "mcpServers": "./.codex-plugin/mcp.json",
+  "hooks": {
+    "hooks": {
+      "SessionStart": [
+        {
+          "matcher": "startup|resume|clear|compact",
+          "hooks": [
+            {
+              "type": "command",
+              "command": "bash \"${PLUGIN_ROOT}/hooks/session-start\"",
+              "statusMessage": "Loading Use Cases bootstrap"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

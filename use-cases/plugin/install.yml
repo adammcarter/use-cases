@@ -90,7 +90,7 @@ use_cases:
       - kind: file
         path: hooks/session-start
     actor: agent
-    intent: Run uc from a skill or agent body exactly as written, with nothing installed globally, because the plugin puts its own bin/ on PATH at session start.
+    intent: Run uc from a skill or agent body exactly as written, with nothing installed globally, because the plugin puts its own bin/ on PATH at session start where the host allows it and names the binary's path in the bootstrap everywhere.
     preconditions:
       - The plugin is installed and its session-start hook runs.
     trigger: The host starts a session and runs hooks/session-start.
@@ -110,6 +110,11 @@ use_cases:
         steps:
           - Run hooks/session-start with CLAUDE_ENV_FILE unset.
           - Confirm the bootstrap JSON is printed and nothing else is written.
+      - id: plugin.install.uc_on_path_in_session.bootstrap_names_the_path
+        kind: steps
+        steps:
+          - Run hooks/session-start on any host.
+          - Confirm the injected bootstrap ends with a line naming the absolute path of the plugin's bin/uc, so an agent whose host cannot alter PATH still runs the right binary.
       - id: plugin.install.uc_on_path_in_session.unwritable_env_file
         kind: steps
         steps:
@@ -118,6 +123,7 @@ use_cases:
     observable_outcomes:
       - uc works in a session without any global install.
       - Delivering the bootstrap never depends on the PATH export succeeding.
+      - Every host's agent is told where uc lives, whether or not PATH was changed.
     host_applicability:
       - host_surface: claude.cli
         supported: true
@@ -137,6 +143,213 @@ use_cases:
             - tests/plugin/session-path.test.ts
             - bin/uc
             - hooks/session-start
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none
+  - id: plugin.install.copilot_from_github
+    title: Copilot CLI installs the plugin straight from GitHub
+    lifecycle: active
+    value_tier: core
+    journey_role: golden
+    usage_frequency: occasional
+    tags:
+      - plugin
+      - install
+      - copilot
+    source_refs:
+      - kind: file
+        path: .claude-plugin/plugin.json
+      - kind: file
+        path: hooks/hooks.json
+      - kind: file
+        path: hooks/session-start
+    actor: user
+    intent: Install the plugin into GitHub Copilot CLI with one command and have the skills, bootstrap and MCP tools present, with no npm and no build. Copilot reads the Claude manifest and hook; a root Agent Plugins manifest makes it ignore the hook, so none ships.
+    preconditions:
+      - The repo is public on GitHub with the Claude manifests and no root plugin.json.
+      - Node is on PATH on the user's machine.
+    trigger: The user runs copilot plugin install adammcarter/use-cases.
+    scenarios:
+      - id: plugin.install.copilot_from_github.claude_manifest_serves_copilot
+        kind: steps
+        steps:
+          - Confirm no plugin.json or mcp.json exists at the repo root; Copilot reads .claude-plugin/plugin.json and hooks/hooks.json instead, and interpolates ${CLAUDE_PLUGIN_ROOT} in both.
+          - Confirm hooks/hooks.json wires SessionStart to hooks/session-start with that variable.
+      - id: plugin.install.copilot_from_github.hook_shape
+        kind: steps
+        steps:
+          - Run hooks/session-start with COPILOT_CLI=1, and again without it.
+          - Confirm the first JSON has a top-level additionalContext and the second the Claude shape; Copilot accepts the Claude shape, so both deliver the bootstrap.
+      - id: plugin.install.copilot_from_github.live_session
+        kind: steps
+        steps:
+          - Install with copilot plugin install, then copilot mcp enable use-cases.
+          - In a copilot -p session confirm the four skills, the bootstrap text and the use-cases MCP tools are present.
+    observable_outcomes:
+      - One command installs the plugin; the plugin's MCP server appears in copilot mcp list and works once enabled.
+      - Skills and the bootstrap are present on the first session.
+    host_applicability:
+      - host_surface: copilot.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/plugin/host-manifests.test.ts
+          inputs:
+            - tests/plugin/host-manifests.test.ts
+            - .claude-plugin/plugin.json
+            - hooks/hooks.json
+            - hooks/session-start
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none
+  - id: plugin.install.codex_from_github
+    title: Codex installs the plugin from its marketplace
+    lifecycle: active
+    value_tier: core
+    journey_role: golden
+    usage_frequency: occasional
+    tags:
+      - plugin
+      - install
+      - codex
+    source_refs:
+      - kind: file
+        path: .codex-plugin/plugin.json
+      - kind: file
+        path: .codex-plugin/mcp.json
+    actor: user
+    intent: Install the plugin into Codex with two commands and have the skills, bootstrap and MCP server registered.
+    preconditions:
+      - The repo is public on GitHub; Codex reads .claude-plugin/marketplace.json as its marketplace.
+    trigger: The user runs codex plugin marketplace add adammcarter/use-cases then codex plugin add use-cases@use-cases.
+    scenarios:
+      - id: plugin.install.codex_from_github.codex_manifest
+        kind: steps
+        steps:
+          - Read .codex-plugin/plugin.json.
+          - Confirm it names the skills directory, points mcpServers at .codex-plugin/mcp.json, declares the SessionStart hook on hooks/session-start, and matches the Claude manifest's name and version.
+          - Confirm .codex-plugin/mcp.json runs node on ./dist/uc-mcp.js with cwd "." so the path resolves inside the plugin root.
+          - Confirm no .mcp.json exists at the repo root; Copilot would read it as workspace config and its relative path would break the plugin's MCP server there.
+      - id: plugin.install.codex_from_github.live_skills
+        kind: steps
+        steps:
+          - Install from the marketplace and run codex debug prompt-input.
+          - Confirm the four skills are listed as use-cases:<name>.
+      - id: plugin.install.codex_from_github.live_mcp
+        kind: steps
+        steps:
+          - In a Codex session confirm the use-cases MCP tools are present.
+          - Not yet performed; the account's Codex usage cap blocked a session on 2026-09-16.
+    observable_outcomes:
+      - Two commands install the plugin; skills are visible to Codex.
+      - The MCP server is declared in Codex's own manifest form; its live appearance is still to be observed.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/plugin/host-manifests.test.ts
+          inputs:
+            - tests/plugin/host-manifests.test.ts
+            - .codex-plugin/plugin.json
+            - .codex-plugin/mcp.json
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none
+  - id: plugin.install.opencode_from_git
+    title: OpenCode installs the plugin from git
+    lifecycle: active
+    value_tier: core
+    journey_role: golden
+    usage_frequency: occasional
+    tags:
+      - plugin
+      - install
+      - opencode
+    source_refs:
+      - kind: file
+        path: opencode/plugin.js
+      - kind: file
+        path: package.json
+    actor: user
+    intent: Install the plugin into OpenCode with one command and have the MCP server, the skills, the bootstrap and uc on PATH, all registered by the plugin module itself.
+    preconditions:
+      - The repo is public on GitHub; package.json exports the OpenCode plugin module.
+      - Node is on PATH on the user's machine.
+    trigger: The user runs opencode plugin add 'github:adammcarter/use-cases'.
+    scenarios:
+      - id: plugin.install.opencode_from_git.module_registers_everything
+        kind: steps
+        steps:
+          - Load opencode/plugin.js and call setup with a fake context.
+          - Confirm it sets an MCP server named use-cases running node on the bundle, adds one skill per skills/<name>/SKILL.md, pushes the bootstrap into the system prompt for context, compaction, generate and title, and puts bin/ first on PATH for shells.
+      - id: plugin.install.opencode_from_git.package_entry
+        kind: steps
+        steps:
+          - Read package.json.
+          - Confirm exports["."] points at opencode/plugin.js and the module is plain JavaScript with no imports the bundle does not already provide.
+      - id: plugin.install.opencode_from_git.missing_bootstrap
+        kind: steps
+        steps:
+          - Call setup with the bootstrap file absent.
+          - Confirm the MCP server, skills and PATH still register and the injected text says the bootstrap could not be read.
+      - id: plugin.install.opencode_from_git.live_session
+        kind: steps
+        steps:
+          - Load the module in an OpenCode session and ask for command -v uc, the MCP tool names and the bootstrap text.
+          - Confirm uc resolves to the plugin's bin, the use-cases tools are listed and the bootstrap is present.
+    observable_outcomes:
+      - One command installs the plugin; nothing else is configured by hand.
+      - The plugin module is the single place OpenCode wiring lives.
+    host_applicability:
+      - host_surface: opencode.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/plugin/opencode-plugin.test.ts
+          inputs:
+            - tests/plugin/opencode-plugin.test.ts
+            - opencode/plugin.js
+            - package.json
       requirements:
         - evidence_kind: test_result
           required_verifiers:

@@ -69,12 +69,25 @@ Typical workflows: **continuous** (keep the matrix live as you build), **backfil
 ## Quickstart
 
 ```bash
-# Claude Code — two commands, no npm, no build. Next session you have the
-# /use-cases:* skills, the agents, the MCP tools, and `uc` on PATH.
+# No npm, no build: the repo carries a committed, dependency-free bundle and
+# installs straight from GitHub into each host. Pick yours.
+
+# Claude Code — next session: /use-cases:* skills, agents, MCP tools, uc on PATH
 /plugin marketplace add adammcarter/use-cases
 /plugin install use-cases@use-cases
 
-# Anywhere else: clone it and run the committed bundle with Node alone.
+# GitHub Copilot CLI — then enable the plugin's MCP server once
+copilot plugin install adammcarter/use-cases
+copilot mcp enable use-cases
+
+# Codex
+codex plugin marketplace add adammcarter/use-cases
+codex plugin add use-cases@use-cases
+
+# OpenCode — the plugin module registers the MCP server, skills and PATH itself
+opencode plugin add 'github:adammcarter/use-cases'
+
+# Anywhere else: clone it and run the committed bundle with Node alone
 git clone https://github.com/adammcarter/use-cases.git
 alias uc="$PWD/use-cases/bin/uc"
 

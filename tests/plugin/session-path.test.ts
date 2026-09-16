@@ -62,6 +62,17 @@ describe("uc is a plain command inside any session", () => {
     expect(result.stderr).toBe("");
   });
 
+  test("the bootstrap ends by naming the absolute path of bin/uc on every host", () => {
+    for (const extra of [{ CLAUDE_ENV_FILE: undefined }, { COPILOT_CLI: "1" }]) {
+      const result = runHook(extra);
+      expect(result.status, result.stderr).toBe(0);
+      const ctx = "hookSpecificOutput" in JSON.parse(result.stdout)
+        ? bootstrapContext(result.stdout)
+        : (JSON.parse(result.stdout).additionalContext as string);
+      expect(ctx).toMatch(new RegExp(`uc .*${repoRoot.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}/bin/uc`));
+    }
+  });
+
   test("with an unwritable CLAUDE_ENV_FILE the hook still delivers the bootstrap and names the file on stderr", () => {
     const envFile = join(scratch(), "missing-dir", "env.sh");
     const result = runHook({ CLAUDE_ENV_FILE: envFile });
