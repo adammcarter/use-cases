@@ -22,16 +22,17 @@ Every command shown here is a real `uc` command. Concepts are linked to the
 
 ## 1. Install the CLI
 
-Install is being redesigned: the repo installs directly into your agent as a
-plugin, with no npm step. Until that lands, run the CLI from a checkout:
+There is nothing to build or download: the repo carries a committed,
+dependency-free bundle of the CLI and the MCP server in `dist/`, so a clone runs
+with Node alone.
 
 ```bash
-corepack pnpm install && corepack pnpm -s build
-alias uc="node $PWD/packages/cli/dist/index.js"
+git clone https://github.com/adammcarter/use-cases.git
+alias uc="node $PWD/use-cases/dist/uc.js"
 ```
 
-The same build produces the companion MCP server at
-`packages/mcp/dist/index.js` — see [the MCP contract](./mcp.md).
+The companion MCP server is `dist/uc-mcp.js` — see [the MCP contract](./mcp.md).
+Installing the repo as a plugin into your agent registers both for you.
 
 ## 2. Scaffold the workspace with `uc init`
 

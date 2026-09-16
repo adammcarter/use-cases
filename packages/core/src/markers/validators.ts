@@ -29,7 +29,9 @@ let validatorCache: Map<string, ValidateFunction> | undefined;
 function findSchemasDir(): string {
   const candidates = [
     fileURLToPath(new URL("./schemas/", import.meta.url)),
-    fileURLToPath(new URL("../../src/markers/schemas/", import.meta.url))
+    fileURLToPath(new URL("../../src/markers/schemas/", import.meta.url)),
+    // The committed bundle lives at <plugin root>/dist/; the schemas stay in source.
+    fileURLToPath(new URL("../packages/core/src/markers/schemas/", import.meta.url))
   ];
   const found = candidates.find((candidate) =>
     existsSync(join(candidate, "binding-registry-event.schema.json"))

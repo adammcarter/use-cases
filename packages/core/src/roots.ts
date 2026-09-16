@@ -104,14 +104,26 @@ type WorkspaceConfig = {
   approval_trust?: WorkspaceApprovalTrust;
 };
 
+// The plugin root is the checkout that carries `.claude-plugin/plugin.json`. Walk
+// up from this module so the answer is the same whether the code runs from
+// packages/core/dist (a development build) or from the committed dist/ bundle.
+function findPluginRoot(): string {
+  let dir = dirname(fileURLToPath(import.meta.url));
+  for (let depth = 0; depth < 6; depth += 1) {
+    if (existsSync(join(dir, ".claude-plugin", "plugin.json"))) return dir;
+    const parent = dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
+}
+
 export function resolveWorkspaceContext(
   options: ResolveWorkspaceContextOptions = {}
 ): ResolvedWorkspaceContext {
   const workspaceRootInput = options.workspaceRoot ?? process.cwd();
   const workspaceRoot = realpathIfExists(resolve(workspaceRootInput));
-  const pluginRoot = realpathIfExists(
-    options.pluginRoot ?? resolve(dirname(fileURLToPath(import.meta.url)), "../../..")
-  );
+  const pluginRoot = realpathIfExists(options.pluginRoot ?? findPluginRoot());
   const configPath = join(workspaceRoot, "use-cases.yml");
   const config = existsSync(configPath) ? readWorkspaceConfig(configPath, workspaceRoot) : null;
 

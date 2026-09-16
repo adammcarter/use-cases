@@ -17,7 +17,7 @@
     "use-cases": {
       "command": "node",
       "args": [
-        "./packages/mcp/dist/index.js"
+        "${CLAUDE_PLUGIN_ROOT}/dist/uc-mcp.js"
       ]
     }
   }

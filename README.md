@@ -69,9 +69,10 @@ Typical workflows: **continuous** (keep the matrix live as you build), **backfil
 ## Quickstart
 
 ```bash
-# Install: coming with the plugin redesign — the repo installs directly into your
-# agent as a plugin; until then run the CLI from a checkout:
-#   corepack pnpm install && corepack pnpm -s build && alias uc="node $PWD/packages/cli/dist/index.js"
+# Nothing to install: the repo carries a committed, dependency-free build.
+# Clone it and run the CLI with Node alone (plugin install per host: see below).
+git clone https://github.com/adammcarter/use-cases.git
+alias uc="node $PWD/use-cases/dist/uc.js"
 
 # Scaffold a workspace (creates use-cases/ + config with one example behaviour)
 uc init

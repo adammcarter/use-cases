@@ -1,0 +1,86 @@
+schema_version: 1
+feature:
+  id: plugin.bundle
+  name: Plugin bundle
+  summary: The repo carries a committed, dependency-free build of the CLI and MCP server so a host that clones it as a plugin can run both with Node alone.
+use_cases:
+  - id: plugin.bundle.runs_from_clean_clone
+    title: Committed bundle runs from a clean clone
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    tags:
+      - plugin
+      - install
+      - bundle
+    source_refs:
+      - kind: file
+        path: scripts/bundle.mjs
+      - kind: file
+        path: dist/uc.js
+      - kind: file
+        path: dist/uc-mcp.js
+    actor: host
+    intent: Run the CLI and the MCP server straight from a git clone of the plugin, with no install or build step.
+    preconditions:
+      - The repo has been cloned by an agent host as a plugin; no package manager has run.
+      - Node is on PATH.
+    trigger: The host starts a session and launches the MCP server, or a skill invokes the CLI, via the committed bundle.
+    scenarios:
+      - id: plugin.bundle.runs_from_clean_clone.cli
+        kind: steps
+        steps:
+          - Copy the tracked files of the repo to an empty directory with no node_modules.
+          - Run node dist/uc.js version --json.
+          - Confirm the JSON envelope reports the tool name and version.
+      - id: plugin.bundle.runs_from_clean_clone.mcp
+        kind: steps
+        steps:
+          - In the same clean copy, start node dist/uc-mcp.js over stdio.
+          - Send initialize and tools/list.
+          - Confirm the server answers and lists the use-case tools.
+      - id: plugin.bundle.runs_from_clean_clone.workspace_paths
+        kind: steps
+        steps:
+          - In the clean copy, run node dist/uc.js matrix validate --repo <fixture> --json.
+          - Confirm schemas and marker validators resolve from the bundle's location, not from packages/*/dist.
+      - id: plugin.bundle.runs_from_clean_clone.drift
+        kind: steps
+        steps:
+          - Rebuild the bundle from source into a temporary directory.
+          - Compare it byte-for-byte with the committed dist/.
+          - Confirm a difference fails, naming the file, so a stale bundle cannot land.
+    observable_outcomes:
+      - node dist/uc.js and node dist/uc-mcp.js work in a clone with no node_modules.
+      - The committed bundle always matches the source it was built from.
+      - The bundle never depends on packages/*/dist existing.
+    host_applicability:
+      - host_surface: claude.cli
+        supported: true
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/plugin/bundle.test.ts
+          inputs:
+            - tests/plugin/bundle.test.ts
+            - scripts/bundle.mjs
+            - dist/uc.js
+            - dist/uc-mcp.js
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none

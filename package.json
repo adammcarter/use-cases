@@ -12,15 +12,17 @@
     "node": ">=22"
   },
   "scripts": {
-    "build": "tsc -b packages/core packages/cli packages/mcp && node packages/core/scripts/copy-schemas.mjs && chmod +x packages/cli/dist/index.js packages/mcp/dist/index.js",
+    "build": "tsc -b packages/core packages/cli packages/mcp && node packages/core/scripts/copy-schemas.mjs && chmod +x packages/cli/dist/index.js packages/mcp/dist/index.js && node scripts/bundle.mjs",
     "clean": "rm -rf packages/*/dist coverage",
     "cli": "node packages/cli/dist/index.js",
     "lint": "tsc -b --pretty false --dry",
     "test": "vitest run",
-    "typecheck": "tsc -b --pretty false"
+    "typecheck": "tsc -b --pretty false",
+    "bundle": "node scripts/bundle.mjs"
   },
   "devDependencies": {
     "@types/node": "26.1.0",
+    "esbuild": "0.28.2",
     "typescript": "6.0.3",
     "vitest": "4.1.10"
   },
