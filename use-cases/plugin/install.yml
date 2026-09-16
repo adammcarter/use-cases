@@ -82,11 +82,11 @@ use_cases:
             - -s
             - vitest
             - run
-            - tests/plugin/claude-install.test.ts
+            - tests/blackbox/plugin-install-claude.test.ts
+            - -t
+            - plugin.install.claude_from_github
           inputs:
-            - tests/plugin/claude-install.test.ts
-            - .claude-plugin/plugin.json
-            - .claude-plugin/marketplace.json
+            - tests/blackbox/plugin-install-claude.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:

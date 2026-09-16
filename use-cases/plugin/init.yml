@@ -355,10 +355,11 @@ use_cases:
             - -s
             - vitest
             - run
-            - tests/skills/loop-skill.test.ts
+            - tests/blackbox/plugin-init-loop-skill.test.ts
+            - -t
+            - plugin.init.loop_skill_ported
           inputs:
-            - tests/skills/loop-skill.test.ts
-            - skills/use-case-driven-development/SKILL.md
+            - tests/blackbox/plugin-init-loop-skill.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:

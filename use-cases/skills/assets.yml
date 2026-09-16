@@ -184,9 +184,11 @@ use_cases:
             - -s
             - vitest
             - run
-            - tests/skills/p7-skills.test.ts
+            - tests/blackbox/skills-assets.test.ts
+            - -t
+            - skills.assets.host_declaration
           inputs:
-            - tests/skills/p7-skills.test.ts
+            - tests/blackbox/skills-assets.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -353,9 +355,11 @@ use_cases:
             - -s
             - vitest
             - run
-            - packages/core/test/skills/hostRegistration.test.ts
+            - tests/blackbox/skills-assets.test.ts
+            - -t
+            - skills.assets.unreachable_skills_fail_doctor
           inputs:
-            - packages/core/test/skills/hostRegistration.test.ts
+            - tests/blackbox/skills-assets.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
