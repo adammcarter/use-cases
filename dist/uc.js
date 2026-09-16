@@ -21941,20 +21941,20 @@ function validateSkillAssets(options) {
   const diagnostics = [];
   const skills = [];
   const commandReferences = [];
-  const skillRoot = join12(root2, ".agents", "skills");
+  const skillRoot = join12(root2, "skills");
   if (!existsSync14(skillRoot)) {
-    diagnostics.push(diagnostic("skills.root_missing", "Missing .agents/skills directory.", ".agents/skills"));
+    diagnostics.push(diagnostic("skills.root_missing", "Missing skills directory.", "skills"));
   } else {
     const actualSkillNames = readdirSync5(skillRoot).sort();
     for (const expected of CANONICAL_SKILLS) {
       if (!actualSkillNames.includes(expected)) {
-        diagnostics.push(diagnostic("skills.missing", `Missing canonical skill '${expected}'.`, `.agents/skills/${expected}/SKILL.md`, expected));
+        diagnostics.push(diagnostic("skills.missing", `Missing canonical skill '${expected}'.`, `skills/${expected}/SKILL.md`, expected));
       }
     }
   }
   const names = /* @__PURE__ */ new Set();
   for (const skillName of CANONICAL_SKILLS) {
-    const sourcePath = `.agents/skills/${skillName}/SKILL.md`;
+    const sourcePath = `skills/${skillName}/SKILL.md`;
     const fullPath = join12(root2, sourcePath);
     if (!existsSync14(fullPath)) {
       continue;

@@ -29,6 +29,18 @@ escape_for_json() {
 
 session_context=$(escape_for_json "$bootstrap_content")
 
+# Claude Code sources $CLAUDE_ENV_FILE before every shell command. Putting the
+# plugin's bin/ first on PATH makes `uc` a plain command in the session with
+# nothing installed globally. Other hosts leave the variable unset; a file that
+# cannot be written is reported, never fatal — the bootstrap below still ships.
+#: @use-case:plugin.install.uc_on_path_in_session#hook
+if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
+  if ! printf 'export PATH="%s/bin:$PATH"\n' "${PLUGIN_ROOT}" >> "${CLAUDE_ENV_FILE}" 2>/dev/null; then
+    echo "use-cases: could not write PATH export to CLAUDE_ENV_FILE (${CLAUDE_ENV_FILE}); run uc as ${PLUGIN_ROOT}/bin/uc" >&2
+  fi
+fi
+#: @use-case:end plugin.install.uc_on_path_in_session#hook
+
 # printf (not heredoc) avoids the bash 5.3+ heredoc hang.
 if [ -n "${COPILOT_CLI:-}" ]; then
   printf '{\n  "additionalContext": "%s"\n}\n' "$session_context"

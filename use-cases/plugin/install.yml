@@ -1,0 +1,146 @@
+schema_version: 1
+feature:
+  id: plugin.install
+  name: Plugin install
+  summary: A public GitHub repo any agent host installs as a plugin, with skills, agents, the MCP server and the uc command all reachable on the first session.
+use_cases:
+  - id: plugin.install.claude_from_github
+    title: Claude Code installs the plugin straight from GitHub
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    tags:
+      - plugin
+      - install
+      - claude
+    source_refs:
+      - kind: file
+        path: .claude-plugin/plugin.json
+      - kind: file
+        path: .claude-plugin/marketplace.json
+      - kind: file
+        path: skills
+    actor: user
+    intent: Install the plugin into Claude Code with two commands and have the skills, agents and MCP tools present on the next session, with no npm and no build.
+    preconditions:
+      - The repo is public on GitHub at adammcarter/use-cases with the manifests at the root.
+      - Node is on PATH on the user's machine.
+    trigger: The user runs /plugin marketplace add adammcarter/use-cases then /plugin install use-cases@use-cases.
+    scenarios:
+      - id: plugin.install.claude_from_github.manifests_point_at_real_files
+        kind: steps
+        steps:
+          - Read .claude-plugin/plugin.json.
+          - Confirm every declared agent path exists, the MCP server command is node on ${CLAUDE_PLUGIN_ROOT}/dist/uc-mcp.js, and hooks resolve to hooks/hooks.json.
+          - Confirm the marketplace manifest offers use-cases with source "." so the plugin is the repo root.
+      - id: plugin.install.claude_from_github.skills_in_the_scanned_dir
+        kind: steps
+        steps:
+          - Confirm the four canonical skills live under skills/<name>/SKILL.md at the repo root, the directory Claude scans by default.
+          - Confirm each SKILL.md front-matter name matches its directory so the slash command is /use-cases:<name>.
+      - id: plugin.install.claude_from_github.live_session
+        kind: steps
+        steps:
+          - In Claude Code run the two install commands, then start a new session.
+          - Confirm /use-cases:use-cases, showcase, walkthrough and migration are listed, the three agents are available, and the use-cases MCP server reports its tools.
+    observable_outcomes:
+      - Two commands install the plugin; nothing else is downloaded or built.
+      - Skills appear as /use-cases:<skill> and the MCP tools are live on the next session.
+      - A manifest that points at a missing file fails the test before it can ship.
+    host_applicability:
+      - host_surface: claude.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/plugin/claude-install.test.ts
+          inputs:
+            - tests/plugin/claude-install.test.ts
+            - .claude-plugin/plugin.json
+            - .claude-plugin/marketplace.json
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none
+  - id: plugin.install.uc_on_path_in_session
+    title: uc is a plain command inside any session
+    lifecycle: active
+    value_tier: core
+    journey_role: golden
+    usage_frequency: common
+    tags:
+      - plugin
+      - install
+      - hooks
+    source_refs:
+      - kind: file
+        path: bin/uc
+      - kind: file
+        path: hooks/session-start
+    actor: agent
+    intent: Run uc from a skill or agent body exactly as written, with nothing installed globally, because the plugin puts its own bin/ on PATH at session start.
+    preconditions:
+      - The plugin is installed and its session-start hook runs.
+    trigger: The host starts a session and runs hooks/session-start.
+    scenarios:
+      - id: plugin.install.uc_on_path_in_session.bin_runs_the_bundle
+        kind: steps
+        steps:
+          - Run bin/uc version --json from any working directory.
+          - Confirm it runs dist/uc.js and prints the version envelope.
+      - id: plugin.install.uc_on_path_in_session.hook_exports_path
+        kind: steps
+        steps:
+          - Run hooks/session-start with CLAUDE_ENV_FILE pointing at a writable file.
+          - Confirm the hook still prints the bootstrap JSON, and the env file now contains an export that puts the plugin's bin/ first on PATH.
+      - id: plugin.install.uc_on_path_in_session.no_env_file
+        kind: steps
+        steps:
+          - Run hooks/session-start with CLAUDE_ENV_FILE unset.
+          - Confirm the bootstrap JSON is printed and nothing else is written.
+      - id: plugin.install.uc_on_path_in_session.unwritable_env_file
+        kind: steps
+        steps:
+          - Run hooks/session-start with CLAUDE_ENV_FILE pointing into a directory that does not exist.
+          - Confirm the bootstrap JSON is still printed, the exit code is 0, and stderr names the file it could not write.
+    observable_outcomes:
+      - uc works in a session without any global install.
+      - Delivering the bootstrap never depends on the PATH export succeeding.
+    host_applicability:
+      - host_surface: claude.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/plugin/session-path.test.ts
+          inputs:
+            - tests/plugin/session-path.test.ts
+            - bin/uc
+            - hooks/session-start
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none

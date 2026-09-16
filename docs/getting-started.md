@@ -26,13 +26,22 @@ There is nothing to build or download: the repo carries a committed,
 dependency-free bundle of the CLI and the MCP server in `dist/`, so a clone runs
 with Node alone.
 
+In Claude Code, install it as a plugin and everything is wired for you —
+skills, agents, the MCP server, and `uc` on PATH inside the session:
+
+```text
+/plugin marketplace add adammcarter/use-cases
+/plugin install use-cases@use-cases
+```
+
+Anywhere else, clone the repo and run the committed bundle:
+
 ```bash
 git clone https://github.com/adammcarter/use-cases.git
-alias uc="node $PWD/use-cases/dist/uc.js"
+alias uc="$PWD/use-cases/bin/uc"
 ```
 
 The companion MCP server is `dist/uc-mcp.js` — see [the MCP contract](./mcp.md).
-Installing the repo as a plugin into your agent registers both for you.
 
 ## 2. Scaffold the workspace with `uc init`
 

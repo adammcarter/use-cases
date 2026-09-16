@@ -61,7 +61,7 @@ Agents may record agent observations and agent verdicts when the workflow allows
 
 ## Host Support Language
 
-Canonical skills existing in `.agents/skills` means the plugin has host-agnostic instructions. It does not mean Claude, Codex, Copilot, or OpenCode support has been verified. A host profile existing does not prove support. A doctor check passing does not prove a live host workflow. Claim host support only when recorded host evidence exists.
+Canonical skills existing in `skills` means the plugin has host-agnostic instructions. It does not mean Claude, Codex, Copilot, or OpenCode support has been verified. A host profile existing does not prove support. A doctor check passing does not prove a live host workflow. Claim host support only when recorded host evidence exists.
 
 ## CLI Command Mapping
 

@@ -69,10 +69,14 @@ Typical workflows: **continuous** (keep the matrix live as you build), **backfil
 ## Quickstart
 
 ```bash
-# Nothing to install: the repo carries a committed, dependency-free build.
-# Clone it and run the CLI with Node alone (plugin install per host: see below).
+# Claude Code — two commands, no npm, no build. Next session you have the
+# /use-cases:* skills, the agents, the MCP tools, and `uc` on PATH.
+/plugin marketplace add adammcarter/use-cases
+/plugin install use-cases@use-cases
+
+# Anywhere else: clone it and run the committed bundle with Node alone.
 git clone https://github.com/adammcarter/use-cases.git
-alias uc="node $PWD/use-cases/dist/uc.js"
+alias uc="$PWD/use-cases/bin/uc"
 
 # Scaffold a workspace (creates use-cases/ + config with one example behaviour)
 uc init

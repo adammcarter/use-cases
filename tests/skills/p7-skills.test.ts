@@ -12,7 +12,7 @@ import {
 } from "../../packages/core/src/cli/knownCommands.js";
 
 const repoRoot = resolve(import.meta.dirname, "../..");
-const skillRoot = join(repoRoot, ".agents", "skills");
+const skillRoot = join(repoRoot, "skills");
 // Bound to the single source of truth, so this test guards that host projection
 // and skill validation (which both read CANONICAL_SKILLS) cover every shipped
 // skill — including `migration`, which host projection once silently dropped.
@@ -144,24 +144,19 @@ describe("P7 canonical skills and activation bootstrap", () => {
   });
 });
 
-// The skills used to exist on disk and be invisible to every host: nothing
-// declared `.agents/skills` to Claude, and the package was never installable as
-// a plugin, so no agent could ever load the showcase protocol. These pin the
-// two manifest facts that make the skills discoverable.
+// The skills used to live outside `skills/`, the one directory the Claude host
+// scans, and the package was never installable as a plugin, so no agent could
+// ever load the showcase protocol. These pin the two facts that make the skills
+// reachable: where they sit, and that a marketplace offers the plugin.
 //: @use-case:skills.assets.host_declaration
 describe("P7 skills are declared to the Claude host", () => {
-  const claudeManifest = JSON.parse(readFileSync(join(repoRoot, ".claude-plugin", "plugin.json"), "utf8")) as {
-    skills?: string | string[];
-  };
-
-  test("the Claude plugin manifest declares the non-default skills directory", () => {
-    const declared = typeof claudeManifest.skills === "string" ? [claudeManifest.skills] : (claudeManifest.skills ?? []);
-    // Claude only auto-scans `skills/` at plugin root. Ours live in
-    // `.agents/skills`, so without an explicit entry they are never loaded.
-    expect(declared.map((entry) => entry.replace(/\/$/, ""))).toContain("./.agents/skills");
+  test("the canonical skills live in skills/ at the plugin root", () => {
+    for (const skill of CANONICAL_SKILLS) {
+      expect(existsSync(join(repoRoot, "skills", skill, "SKILL.md")), skill).toBe(true);
+    }
   });
 
-  test("the package ships a marketplace manifest so it can be installed as a plugin", () => {
+  test("the package ships a marketplace manifest that offers the plugin from the repo root", () => {
     const marketplacePath = join(repoRoot, ".claude-plugin", "marketplace.json");
     expect(existsSync(marketplacePath)).toBe(true);
     const marketplace = JSON.parse(readFileSync(marketplacePath, "utf8")) as {
@@ -169,7 +164,8 @@ describe("P7 skills are declared to the Claude host", () => {
       plugins?: Array<{ name?: string; source?: string }>;
     };
     expect(marketplace.name).toBe("use-cases");
-    expect(marketplace.plugins?.map((plugin) => plugin.name)).toContain("use-cases");
+    const entry = marketplace.plugins?.find((plugin) => plugin.name === "use-cases");
+    expect(entry?.source).toBe(".");
   });
 });
 //: @use-case:end skills.assets.host_declaration

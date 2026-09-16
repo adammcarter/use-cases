@@ -11,7 +11,7 @@ yes — 2026-09-16
 Every functional change on this repo starts in `use-cases/`: rows are agreed
 before tests, tests and code are wrapped in the row's markers, and the scan is
 the coverage number. The rules are in the plugin's own skills under
-`.agents/skills/` — `use-case-driven-development` for when and in what order,
+`skills/` — `use-case-driven-development` for when and in what order,
 `use-cases` for the commands — and every agent working here follows them.
 Scaffolding, docs and config changes need no row.
 

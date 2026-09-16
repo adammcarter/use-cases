@@ -48,22 +48,22 @@ export function validateSkillAssets(options: { context: ResolvedWorkspaceContext
   const diagnostics: Diagnostic[] = [];
   const skills: SkillAssetSummary[] = [];
   const commandReferences: SkillCommandReference[] = [];
-  const skillRoot = join(root, ".agents", "skills");
+  const skillRoot = join(root, "skills");
 
   if (!existsSync(skillRoot)) {
-    diagnostics.push(diagnostic("skills.root_missing", "Missing .agents/skills directory.", ".agents/skills"));
+    diagnostics.push(diagnostic("skills.root_missing", "Missing skills directory.", "skills"));
   } else {
     const actualSkillNames = readdirSync(skillRoot).sort();
     for (const expected of CANONICAL_SKILLS) {
       if (!actualSkillNames.includes(expected)) {
-        diagnostics.push(diagnostic("skills.missing", `Missing canonical skill '${expected}'.`, `.agents/skills/${expected}/SKILL.md`, expected));
+        diagnostics.push(diagnostic("skills.missing", `Missing canonical skill '${expected}'.`, `skills/${expected}/SKILL.md`, expected));
       }
     }
   }
 
   const names = new Set<string>();
   for (const skillName of CANONICAL_SKILLS) {
-    const sourcePath = `.agents/skills/${skillName}/SKILL.md`;
+    const sourcePath = `skills/${skillName}/SKILL.md`;
     const fullPath = join(root, sourcePath);
     if (!existsSync(fullPath)) {
       continue;

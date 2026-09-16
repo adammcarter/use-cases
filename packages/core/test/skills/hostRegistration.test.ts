@@ -1,4 +1,4 @@
-import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
@@ -19,7 +19,7 @@ afterEach(() => {
 function pluginCheckout(): string {
   const root = mkdtempSync(join(tmpdir(), "uc-skill-registration-"));
   temporaryRoots.push(root);
-  for (const entry of [".agents", ".claude-plugin", "bootstrap", "docs"]) {
+  for (const entry of ["skills", ".claude-plugin", "bootstrap", "docs"]) {
     cpSync(join(repoRoot, entry), join(root, entry), { recursive: true });
   }
   return root;
@@ -54,12 +54,9 @@ describe("skill host registration", () => {
 
   // THE REGRESSION THIS EXISTS FOR: skills present on disk, doctor green,
   // and no agent could load them, because nothing declared the directory.
-  test("skills present on disk but undeclared to the host are an error, not a pass", () => {
+  test("a canonical skill moved out of skills/ is unreachable by the host, not a pass", () => {
     const root = pluginCheckout();
-    const manifestPath = join(root, ".claude-plugin", "plugin.json");
-    const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as Record<string, unknown>;
-    delete manifest.skills;
-    writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+    renameSync(join(root, "skills", "showcase"), join(root, "showcase-elsewhere"));
 
     expect(codesFor(root)).toContain("skills.host_not_declared");
     expect(validateSkillAssets({ context: contextFor(root) }).complete).toBe(false);
@@ -67,6 +64,7 @@ describe("skill host registration", () => {
 
   test("a manifest pointing at the wrong directory does not count as declared", () => {
     const root = pluginCheckout();
+    renameSync(join(root, "skills"), join(root, "elsewhere"));
     const manifestPath = join(root, ".claude-plugin", "plugin.json");
     const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as Record<string, unknown>;
     manifest.skills = ["./skills/"];
