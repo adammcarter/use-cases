@@ -25,12 +25,27 @@ use_cases:
       - A workspace config declares a data root that may differ from the repository root.
     trigger: Agent points the CLI or MCP server at a repository and inspects resolved roots.
     scenarios:
-      - id: diagnostics.contracts.root_resolution.doctor
+      - id: diagnostics.contracts.root_resolution.golden_doctor
         kind: steps
         steps:
           - Run doctor roots against the repository.
           - Confirm workspace root and data root are reported distinctly.
-          - Confirm a separated data root resolves and unsafe or symlinked roots are rejected.
+        observable_outcomes:
+          - The workspace root and the data root are reported as separate facts, not one path.
+      - id: diagnostics.contracts.root_resolution.bad_unsafe_or_symlinked_root_is_refused
+        kind: steps
+        steps:
+          - Point the tool at an unsafe or symlinked root.
+          - Read what it does.
+        observable_outcomes:
+          - Unsafe roots are refused rather than silently followed.
+      - id: diagnostics.contracts.root_resolution.edge_separated_data_root_resolves
+        kind: steps
+        steps:
+          - Declare a data root that differs from the repository root, as a monorepo or CI layout does.
+          - Run doctor roots and then a command that reads matrix, evidence and showcase paths.
+        observable_outcomes:
+          - The data root can be relocated without breaking matrix, evidence or showcase paths.
     observable_outcomes:
       - The data root can be relocated without breaking matrix, evidence, or showcase paths.
       - Unsafe roots are refused rather than silently followed.
@@ -69,12 +84,27 @@ use_cases:
       - The package ships versioned v1 result and entity schemas.
     trigger: Integrator or release gate enumerates the contract and validates fixtures.
     scenarios:
-      - id: diagnostics.contracts.schema_contract_surface.validate
+      - id: diagnostics.contracts.schema_contract_surface.golden_validate
         kind: steps
         steps:
-          - Run schema list to enumerate published v1 schemas.
+          - Run schema list to enumerate the published v1 schemas.
           - Run schema validate-fixtures against the bundled fixtures.
-          - Confirm CLI and MCP results validate against their declared schema IDs.
+        observable_outcomes:
+          - Every command result is backed by a published, versioned schema.
+      - id: diagnostics.contracts.schema_contract_surface.bad_a_drifted_result_fails_validation
+        kind: steps
+        steps:
+          - Change a result shape so it no longer matches its declared schema.
+          - Run the fixture validation.
+        observable_outcomes:
+          - A drifted result or fixture fails validation rather than passing silently.
+      - id: diagnostics.contracts.schema_contract_surface.edge_cli_and_mcp_validate_against_the_same_ids
+        kind: steps
+        steps:
+          - Validate a CLI result and the equivalent MCP result against their declared schema ids.
+          - Confirm both resolve.
+        observable_outcomes:
+          - CLI and MCP results validate against their declared schema IDs, so an integrator can depend on one contract.
     observable_outcomes:
       - Every command result is backed by a published, versioned schema.
       - A drifted result or fixture fails validation rather than passing silently.
@@ -111,12 +141,27 @@ use_cases:
       - The workspace config declares a component id, or none is set and the default applies.
     trigger: Any CLI or MCP command runs and returns a result envelope.
     scenarios:
-      - id: diagnostics.contracts.identity_consistency.envelope
+      - id: diagnostics.contracts.identity_consistency.golden_envelope
         kind: steps
         steps:
           - Run any command with --json and read context.component_id.
-          - Confirm it equals the configured component id, or the use-cases default when unconfigured.
-          - Confirm no envelope, schema default, or version surface reports the pre-rename name.
+          - Compare it with the configured component id.
+        observable_outcomes:
+          - Every envelope reports component_id use-cases for this repository.
+      - id: diagnostics.contracts.identity_consistency.bad_no_stale_product_name_survives_anywhere
+        kind: steps
+        steps:
+          - Search every envelope, schema default and version surface for the pre-rename name.
+          - Confirm none reports it.
+        observable_outcomes:
+          - No envelope, schema default or version surface reports the pre-rename name, so a published build never leaks a stale product name.
+      - id: diagnostics.contracts.identity_consistency.edge_unconfigured_workspace_uses_the_default
+        kind: steps
+        steps:
+          - Run a command in a workspace with no component id configured.
+          - Read context.component_id.
+        observable_outcomes:
+          - An unconfigured workspace still defaults to use-cases rather than a stale name.
     observable_outcomes:
       - Every envelope reports component_id use-cases for this repository.
       - An unconfigured workspace still defaults to use-cases rather than a stale name.
@@ -142,6 +187,7 @@ use_cases:
       - diagnostics
       - cli
       - discoverability
+      - no-edge-path
     source_refs:
       - kind: file
         path: packages/cli/src/index.ts
@@ -153,12 +199,21 @@ use_cases:
       - The CLI is built and on PATH (or invoked via node).
     trigger: An agent reaches for help before it knows a command's exact arguments.
     scenarios:
-      - id: diagnostics.contracts.cli_self_documents.usage
+      - id: diagnostics.contracts.cli_self_documents.golden_usage
         kind: steps
         steps:
-          - Run the CLI with no command, with --help, or with -h.
+          - Run the CLI with no command, with --help, and with -h.
           - Run a known command with --help.
-          - Run an unrecognized command.
+        observable_outcomes:
+          - A bare invocation, --help or -h prints a usage envelope listing the available commands and their flags.
+          - An agent can discover a command's arguments without reading the source or the test suite.
+      - id: diagnostics.contracts.cli_self_documents.bad_unrecognized_command_is_not_a_bare_refusal
+        kind: steps
+        steps:
+          - Run an unrecognised command.
+          - Read what is printed.
+        observable_outcomes:
+          - An unrecognised command prints usage scoped to its group instead of a bare command.unknown response.
     observable_outcomes:
       - A bare invocation, --help, or -h prints a usage envelope listing the available commands and their flags.
       - An unrecognized command prints usage scoped to its group instead of a bare command.unknown response.
@@ -205,11 +260,26 @@ use_cases:
       - The compiled core dist has not been built yet.
     trigger: An agent invokes the CLI before running the build.
     scenarios:
-      - id: diagnostics.contracts.missing_build_hint.hint
+      - id: diagnostics.contracts.missing_build_hint.golden_hint
         kind: steps
         steps:
-          - Invoke the CLI with the compiled core absent.
-          - Read the message and exit code.
+          - Invoke the CLI on a fresh clone with the compiled core absent.
+          - Read the message.
+        observable_outcomes:
+          - The CLI prints an actionable message naming the build command.
+      - id: diagnostics.contracts.missing_build_hint.bad_never_a_raw_module_not_found
+        kind: steps
+        steps:
+          - Invoke the CLI with the compiled core absent and read the full output.
+          - Confirm no raw module-resolution stack is surfaced.
+        observable_outcomes:
+          - A raw module-not-found stack is never what the user sees first.
+      - id: diagnostics.contracts.missing_build_hint.edge_exit_code_is_non_zero
+        kind: steps
+        steps:
+          - Invoke the CLI with the compiled core absent and read the exit code.
+        observable_outcomes:
+          - The process exits non-zero so the missing build is not mistaken for success.
     observable_outcomes:
       - The CLI prints an actionable message naming the build command rather than a raw module-not-found stack.
       - The process exits non-zero so the missing build is not mistaken for success.

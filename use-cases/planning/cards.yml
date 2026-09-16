@@ -25,12 +25,27 @@ use_cases:
       - The matrix contains active rows with value and journey metadata.
     trigger: User or agent asks what to show in a focused live demo.
     scenarios:
-      - id: planning.cards.showcase_selection.cli
+      - id: planning.cards.showcase_selection.golden_cli
         kind: steps
         steps:
           - Run plan showcase with a max item limit.
-          - Confirm selected rows prioritize critical or core golden paths.
-          - Review reasons, exclusions, evidence gaps, and prepared-not-performed status.
+          - Confirm selected rows prioritise critical or core golden paths.
+        observable_outcomes:
+          - The plan is concise and reasoned, and fits the limit it was given.
+      - id: planning.cards.showcase_selection.bad_a_plan_is_not_proof
+        kind: steps
+        steps:
+          - Generate a showcase plan and stop there.
+          - Read whether anything reports it as proven.
+        observable_outcomes:
+          - It remains prepared material until a showcase run records events.
+      - id: planning.cards.showcase_selection.edge_reasons_and_exclusions_are_reported
+        kind: steps
+        steps:
+          - Read the plan's reasons, exclusions, evidence gaps and prepared-not-performed status.
+          - Confirm an excluded row can be explained.
+        observable_outcomes:
+          - Every selection carries its reason, and every exclusion is visible rather than silent.
     observable_outcomes:
       - The plan is concise and reasoned.
       - It remains prepared material until a showcase run records events.
@@ -67,12 +82,28 @@ use_cases:
       - The user wants broad explanation rather than a short sign-off demo.
     trigger: User asks for an extensive walkthrough, caveats, gaps, or provenance.
     scenarios:
-      - id: planning.cards.walkthrough_coverage.cli
+      - id: planning.cards.walkthrough_coverage.golden_cli
         kind: steps
         steps:
           - Run plan walkthrough.
-          - Confirm selection includes more than golden paths.
-          - Include caveats, evidence state, and exclusions in the explanation.
+          - Confirm the selection includes more than golden paths.
+        observable_outcomes:
+          - Edge, negative and failure rows are visible when useful.
+          - The walkthrough covers product breadth.
+      - id: planning.cards.walkthrough_coverage.bad_breadth_is_not_signoff
+        kind: steps
+        steps:
+          - Generate a walkthrough over a matrix with unproven rows.
+          - Read whether it presents itself as acceptance.
+        observable_outcomes:
+          - The walkthrough covers product breadth without pretending to be sign-off.
+      - id: planning.cards.walkthrough_coverage.edge_caveats_and_evidence_state_travel_with_it
+        kind: steps
+        steps:
+          - Read the caveats, evidence state and exclusions in the explanation.
+          - Confirm a gap is named rather than omitted.
+        observable_outcomes:
+          - Caveats, evidence state and exclusions are part of the walkthrough, not a separate report.
     observable_outcomes:
       - The walkthrough covers product breadth without pretending to be sign-off.
       - Edge, negative, and failure rows are visible when useful.
@@ -109,12 +140,27 @@ use_cases:
       - A plan, capsule plan, or walkthrough has been generated.
     trigger: Agent reports plan status or prepares a showcase from generated material.
     scenarios:
-      - id: planning.cards.prepared_not_performed.guard
+      - id: planning.cards.prepared_not_performed.golden_guard
         kind: steps
         steps:
           - Generate a plan.
-          - Confirm `prepared_not_performed` is true.
-          - Avoid claiming proof until showcase run events exist.
+          - Read the prepared_not_performed flag.
+        observable_outcomes:
+          - A generated plan reports prepared_not_performed true.
+      - id: planning.cards.prepared_not_performed.bad_a_plan_never_becomes_evidence_by_itself
+        kind: steps
+        steps:
+          - Attempt to treat a generated plan, capsule plan or walkthrough as proof.
+          - Read what the tool reports.
+        observable_outcomes:
+          - Generated plans do not become evidence or approval by themselves.
+      - id: planning.cards.prepared_not_performed.edge_a_run_must_bind_to_the_plan_hash
+        kind: steps
+        steps:
+          - Start a showcase run from a plan, then mutate the plan content and start again.
+          - Read which run is accepted.
+        observable_outcomes:
+          - A run must bind to the plan hash before performed proof exists, so a mutated plan cannot inherit a run.
     observable_outcomes:
       - Generated plans do not become evidence or approval by themselves.
       - A run must bind to the plan hash before performed proof exists.
@@ -140,6 +186,7 @@ use_cases:
       - planning
       - audience
       - timebox
+      - no-edge-path
     source_refs:
       - kind: file
         path: docs/showcase.md
@@ -151,12 +198,21 @@ use_cases:
       - The user has an audience, timebox, or review intent.
     trigger: User asks for a demo, review, walkthrough, or sign-off run with practical constraints.
     scenarios:
-      - id: planning.cards.audience_timebox_fit.adjust
+      - id: planning.cards.audience_timebox_fit.golden_adjust
         kind: steps
         steps:
-          - Capture audience and timebox.
+          - Capture the audience and timebox.
           - Generate a plan within the limit.
-          - Explain excluded rows that were lower priority or out of scope.
+        observable_outcomes:
+          - The plan fits the user's review context.
+      - id: planning.cards.audience_timebox_fit.bad_exclusions_are_never_hidden
+        kind: steps
+        steps:
+          - Generate a plan whose timebox forces rows out of scope.
+          - Read whether those rows are named.
+        observable_outcomes:
+          - Important exclusions are explicit instead of hidden.
+          - A shorter plan never silently drops what it could not fit.
     observable_outcomes:
       - The plan fits the user's review context.
       - Important exclusions are explicit instead of hidden.
@@ -193,12 +249,27 @@ use_cases:
       - The matrix or evidence snapshot is partial.
     trigger: Agent generates a plan while integrity is not clean.
     scenarios:
-      - id: planning.cards.partial_matrix_warning.strict
+      - id: planning.cards.partial_matrix_warning.golden_strict
         kind: steps
         steps:
           - Generate a plan against partial matrix input.
-          - Confirm the plan requires integrity acknowledgement or blocks in strict mode.
-          - Report diagnostics before any live run.
+          - Read whether it requires integrity acknowledgement or blocks in strict mode.
+        observable_outcomes:
+          - A plan over partial input requires acknowledgement, or blocks outright in strict mode.
+      - id: planning.cards.partial_matrix_warning.bad_partial_cannot_masquerade_as_full
+        kind: steps
+        steps:
+          - Generate a plan while integrity is not clean.
+          - Compare what is reported with a plan over a clean matrix.
+        observable_outcomes:
+          - Partial input cannot masquerade as ordinary full readiness.
+      - id: planning.cards.partial_matrix_warning.edge_diagnostics_precede_any_live_run
+        kind: steps
+        steps:
+          - Read when the diagnostics are reported relative to the run.
+          - Confirm they arrive before anything is performed.
+        observable_outcomes:
+          - Diagnostics are reported before any live run, not discovered during it.
     observable_outcomes:
       - Partial input cannot masquerade as ordinary full readiness.
     host_applicability:
