@@ -28,29 +28,36 @@ use_cases:
       - Node is on PATH.
     trigger: The host starts a session and launches the MCP server, or a skill invokes the CLI, via the committed bundle.
     scenarios:
-      - id: plugin.bundle.runs_from_clean_clone.cli
+      - id: plugin.bundle.runs_from_clean_clone.golden_cli
         kind: steps
         steps:
           - Copy the tracked files of the repo to an empty directory with no node_modules.
           - Run node dist/uc.js version --json.
-          - Confirm the JSON envelope reports the tool name and version.
-      - id: plugin.bundle.runs_from_clean_clone.mcp
+        observable_outcomes:
+          - The CLI runs in a clone with no node_modules and prints its version envelope.
+      - id: plugin.bundle.runs_from_clean_clone.golden_mcp
         kind: steps
         steps:
           - In the same clean copy, start node dist/uc-mcp.js over stdio.
           - Send initialize and tools/list.
-          - Confirm the server answers and lists the use-case tools.
-      - id: plugin.bundle.runs_from_clean_clone.workspace_paths
-        kind: steps
-        steps:
-          - In the clean copy, run node dist/uc.js matrix validate --repo <fixture> --json.
-          - Confirm schemas and marker validators resolve from the bundle's location, not from packages/*/dist.
-      - id: plugin.bundle.runs_from_clean_clone.drift
+        observable_outcomes:
+          - The MCP server answers and lists the use-case tools, with no install or build step.
+      - id: plugin.bundle.runs_from_clean_clone.bad_drift
         kind: steps
         steps:
           - Rebuild the bundle from source into a temporary directory.
           - Compare it byte-for-byte with the committed dist/.
-          - Confirm a difference fails, naming the file, so a stale bundle cannot land.
+        observable_outcomes:
+          - A difference fails and names the file, so a stale bundle cannot land.
+          - The committed bundle always matches the source it was built from.
+      - id: plugin.bundle.runs_from_clean_clone.edge_workspace_paths_resolve_from_the_bundle
+        kind: steps
+        steps:
+          - In the clean copy, run node dist/uc.js matrix validate --repo <fixture> --json.
+          - Read where schemas and marker validators were loaded from.
+        observable_outcomes:
+          - Schemas and marker validators resolve from the bundle's own location.
+          - The bundle never depends on packages/*/dist existing.
     observable_outcomes:
       - node dist/uc.js and node dist/uc-mcp.js work in a clone with no node_modules.
       - The committed bundle always matches the source it was built from.

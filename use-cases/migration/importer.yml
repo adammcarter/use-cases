@@ -25,12 +25,27 @@ use_cases:
       - A legacy TEST-MATRIX.md file exists.
     trigger: User or agent backfills an existing project into Use Cases.
     scenarios:
-      - id: migration.importer.reviewable_draft_import.dry_run
+      - id: migration.importer.reviewable_draft_import.golden_dry_run
         kind: steps
         steps:
           - Run migrate test-matrix in dry-run mode.
-          - Inspect generated draft rows and diagnostics.
-          - Write drafts only when the output is reviewable.
+          - Inspect the generated draft rows and diagnostics.
+        observable_outcomes:
+          - Legacy rows become draft use cases, not silent active acceptance.
+      - id: migration.importer.reviewable_draft_import.bad_import_is_never_silently_active
+        kind: steps
+        steps:
+          - Import a legacy matrix and read the lifecycle of every generated row.
+          - Confirm none is active.
+        observable_outcomes:
+          - An import cannot produce an active row, so migration never grants acceptance by itself.
+      - id: migration.importer.reviewable_draft_import.edge_review_warnings_name_what_is_ambiguous
+        kind: steps
+        steps:
+          - Import rows with ambiguous titles, old statuses and missing detail.
+          - Read the review warnings.
+        observable_outcomes:
+          - Review warnings identify ambiguous titles, old statuses and missing detail, so a reviewer knows where to look.
     observable_outcomes:
       - Legacy rows become draft use cases, not silent active acceptance.
       - Review warnings identify ambiguous titles, old statuses, and missing detail.
@@ -67,12 +82,28 @@ use_cases:
       - Legacy matrix rows include status text such as pass, fail, done, or accepted.
     trigger: Agent migrates legacy matrix content.
     scenarios:
-      - id: migration.importer.no_legacy_pass_as_proof.guard
+      - id: migration.importer.no_legacy_pass_as_proof.golden_guard
         kind: steps
         steps:
-          - Parse legacy rows with old status marks.
-          - Generate use-case rows without evidence IDs.
-          - Preserve old status only as review context when safe.
+          - Parse legacy rows carrying old status marks such as pass, done or accepted.
+          - Read the generated rows.
+        observable_outcomes:
+          - Generated rows carry no evidence ids.
+      - id: migration.importer.no_legacy_pass_as_proof.bad_an_old_pass_mark_never_becomes_evidence
+        kind: steps
+        steps:
+          - Import rows marked pass, then read evidence status for them.
+          - Confirm nothing counts as current proof.
+        observable_outcomes:
+          - Current evidence must be recorded separately through the evidence ledger.
+          - Migration cannot invent modern proof or user approval.
+      - id: migration.importer.no_legacy_pass_as_proof.edge_old_status_survives_as_review_context
+        kind: steps
+        steps:
+          - Read where an old status mark ends up in the generated row.
+          - Confirm it is context, not a claim.
+        observable_outcomes:
+          - Old status is preserved only as review context, where it cannot be mistaken for proof.
     observable_outcomes:
       - Current evidence must be recorded separately through the evidence ledger.
       - Migration cannot invent modern proof or user approval.
@@ -97,6 +128,7 @@ use_cases:
     tags:
       - migration
       - traceability
+      - no-bad-path
     source_refs:
       - kind: file
         path: docs/migration.md
@@ -108,12 +140,20 @@ use_cases:
       - A migration source file has identifiable source rows.
     trigger: Agent writes or reviews migrated draft use-case YAML.
     scenarios:
-      - id: migration.importer.source_traceability.refs
+      - id: migration.importer.source_traceability.golden_refs
         kind: steps
         steps:
           - Generate draft rows from a TEST-MATRIX source.
-          - Include source references or diagnostics for the original rows.
-          - Let reviewers compare generated rows to source intent.
+          - Read the source references or diagnostics for the original rows.
+        observable_outcomes:
+          - Migration output can be audited against its source.
+      - id: migration.importer.source_traceability.edge_a_reviewer_can_compare_row_to_source_intent
+        kind: steps
+        steps:
+          - Take one generated row and find the markdown row it came from.
+          - Compare the two.
+        observable_outcomes:
+          - A reviewer can trace any generated row back to the source row it was built from.
     observable_outcomes:
       - Migration output can be audited against its source.
     host_applicability:
@@ -149,12 +189,28 @@ use_cases:
       - Migration output contains draft or uncertain rows.
     trigger: Agent considers activating migrated rows.
     scenarios:
-      - id: migration.importer.human_review_activation.review
+      - id: migration.importer.human_review_activation.golden_review
         kind: steps
         steps:
-          - Present a concise feature printout of migrated rows.
-          - Ask the user to confirm high-value behavior and scope.
-          - Activate only rows that are reviewed and structurally usable.
+          - Present a concise feature printout of the migrated rows.
+          - Ask the user to confirm high-value behaviour and scope.
+          - Activate only the reviewed rows.
+        observable_outcomes:
+          - Migration review separates mechanical parsing from product acceptance.
+      - id: migration.importer.human_review_activation.bad_activation_without_review
+        kind: steps
+        steps:
+          - Attempt to activate migrated rows with no human review.
+          - Read what is required first.
+        observable_outcomes:
+          - Migrated rows stay draft or planned until a human has reviewed the feature printout.
+      - id: migration.importer.human_review_activation.edge_structurally_unusable_rows_stay_draft
+        kind: steps
+        steps:
+          - Review a set including rows that are reviewed but structurally incomplete.
+          - Read which are activated.
+        observable_outcomes:
+          - Only rows that are both reviewed AND structurally usable are activated.
     observable_outcomes:
       - Migration review separates mechanical parsing from product acceptance.
     host_applicability:

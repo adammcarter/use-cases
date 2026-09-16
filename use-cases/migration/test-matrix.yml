@@ -19,9 +19,27 @@ use_cases:
     preconditions: [A legacy TEST-MATRIX.md file exists.]
     trigger: User wants to replace a legacy matrix.
     scenarios:
-      - id: migration.test_matrix.draft.cli
+      - id: migration.test_matrix.draft.golden_dry_run
         kind: steps
-        steps: [Run migrate test-matrix in dry-run or write mode.]
+        steps:
+          - Run migrate test-matrix in dry-run mode against a legacy TEST-MATRIX.md.
+          - Read the generated YAML and the planned writes.
+        observable_outcomes:
+          - Generated YAML is draft behaviour, and the dry run writes nothing.
+      - id: migration.test_matrix.draft.bad_old_status_is_not_proof
+        kind: steps
+        steps:
+          - Import rows carrying old pass or accepted marks.
+          - Read how that status appears in the generated rows.
+        observable_outcomes:
+          - Old status is review context only and never becomes current proof.
+      - id: migration.test_matrix.draft.edge_write_mode_writes_the_drafts
+        kind: steps
+        steps:
+          - Run the same migration in write mode.
+          - Compare what landed with what the dry run planned.
+        observable_outcomes:
+          - Write mode writes exactly the drafts the dry run planned, so the preview is trustworthy.
     observable_outcomes: [Generated YAML is draft behavior and old status is review context only.]
     host_applicability:
       - host_surface: codex.cli
