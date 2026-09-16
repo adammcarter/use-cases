@@ -60,7 +60,7 @@ var init_version = __esm({
   "packages/core/src/version.ts"() {
     "use strict";
     PRODUCT_NAME = "@adammcarter/use-cases";
-    UCM_VERSION = "0.6.0";
+    UCM_VERSION = "0.7.0";
     DEFAULT_COMPONENT_ID = "use-cases";
   }
 });
