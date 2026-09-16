@@ -104,9 +104,27 @@ Two older seams exist and are not repeated: packing tarballs with `pnpm pack`
 (an npm-shaped path, and npm was removed in 0.7.0) and hardcoding
 `node packages/cli/dist/index.js`. Neither can be pointed at a Swift build.
 
-`UC_BIN` is a test-harness setting. The CLI itself reads no `UC_*` environment
-variable except `UCM_ALLOW_UNSAFE_VERIFICATION`, so this collides with nothing
-and changes no contract.
+`UC_BIN` is a test-harness setting and collides with nothing, but an earlier
+draft of this document (and commit 89cd1ee) claimed the CLI reads no `UC_*`
+variable except `UCM_ALLOW_UNSAFE_VERIFICATION`. **That was wrong**, and it was
+wrong because the grep that produced it piped through `grep -oE '"[A-Z_]{4,}"'`,
+which only matches *quoted* tokens and so returned 70 diagnostic-code constants
+and no environment variables at all.
+
+What the source actually reads:
+
+| variable | read by | what it does |
+|---|---|---|
+| `UC_RUN_KEY_FILE` | `markers/runAttestation.ts` | moves the machine-local run key off `~/.use-cases/run-key` |
+| `UCM_ALLOW_UNSAFE_VERIFICATION` | `markers/cli/prove.ts` | permits an assumed verification result |
+| `UCM_MCP_REPO` | `mcp/resources.ts` | the repo the MCP server serves |
+| `UCM_MCP_WRITE` | `mcp/toolHandlers.ts` | enables write tools |
+| `UCM_MCP_COMMAND_EXECUTION` | `mcp/toolHandlers.ts` | enables command execution |
+
+`UC_RUN_KEY_FILE` matters to this work beyond the correction: it is what makes
+the attestation scenarios testable at all. A black-box test points it at a
+throwaway path, so the suite never reads or writes the developer's own key, and
+`edge_scan_never_mints_a_key` can assert that no file appeared there.
 
 ## 5 · Scale
 
@@ -114,9 +132,15 @@ and changes no contract.
 |---|---|---|
 | rows (all) | 107 | 107 |
 | rows (active, excluding 15 parked roadmap rows) | 89 | 89 |
-| scenarios | 140 | ~220–260 |
+| scenarios | 140 | ~300–380 |
 | row-level outcomes | 206 | 206 |
 | scenario-level outcomes | 0 | one set per scenario |
+
+That estimate is the slice's rate, not a guess: 12 rows produced 52 scenarios,
+4.3 per row, and 89 active rows at that rate is roughly 380. Signals is richer
+than average — 49 of the 206 row-level outcomes sit on 13% of the rows — so the
+true figure is below it. An earlier draft said 220–260, which the slice showed
+was low.
 
 The target is not a number. It is that every behaviour someone depends on has a
 scenario that can fail. Where a row has no real bad or edge path, the row says

@@ -630,6 +630,7 @@ use_cases:
       - The check applies to child directories only; the product root's own config still scans the whole repository.
       - The parent scan no longer emits UNREGISTERED_BINDING or ROW_NOT_FOUND for markers that belong to a nested workspace.
       - A nested workspace's own `scan --repo <dir>` is unaffected, because its config sits at its product root rather than below it.
+      - A marker copied into a build directory or a repo copy is not scanned, so a copy never collides with the original.
     host_applicability:
       - host_surface: codex.cli
         supported: true
@@ -953,6 +954,8 @@ use_cases:
       - A failing run does not prove the behaviour holds.
       - Editing the row invalidates the run that proved the old one, so this tier decays like every other.
       - An unbound row cannot be proven by driving something and naming it.
+      - A voided record does not count.
+      - One row driven twice is reported once, so repetition never inflates the claim.
     host_applicability:
       - host_surface: codex.cli
         supported: true

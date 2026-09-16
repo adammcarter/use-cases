@@ -107,6 +107,13 @@ if [ -n "${scan_out:-}" ]; then
   ' || true
 fi
 
+# --- 3. scenario conventions (advisory during ladder row 1b) ---
+# docs/rewrite/scenario-conventions.md: every active row carries a golden, a bad
+# and an edge scenario, or a tag saying why not. This does NOT block yet — row 1b
+# is the work of clearing it, and blocking now would block every commit that made
+# progress. It flips to --strict when row 1b closes.
+node "$ROOT/scripts/check-scenario-conventions.mjs" | tail -1 >&2 || true
+
 if [ "$block" -ne 0 ]; then
   echo "use-cases precommit: BLOCKED. Fix the integrity errors above before committing." >&2
   exit 1
