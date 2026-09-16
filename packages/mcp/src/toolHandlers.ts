@@ -3,7 +3,6 @@ import { isAbsolute, relative, resolve } from "node:path";
 import type {
   CliResult,
   Diagnostic,
-  HostName,
   HostSurface,
   ResolvedWorkspaceContext,
   ShowcaseActorType,
@@ -24,7 +23,6 @@ const {
   appendShowcaseVerdict,
   createCliResult,
   finishShowcaseRun,
-  loadHostProfile,
   computeRunApprovalBinding,
   loadUseCaseMatrix,
   loadPresentationPlanFile,
@@ -38,7 +36,6 @@ const {
   resolveWorkspaceContext,
   workspaceNotFoundDiagnostic,
   runDemoCapsule,
-  runHostDoctor,
   selectShowcasePlan,
   selectWalkthroughPlan,
   startShowcaseRun,
@@ -497,18 +494,6 @@ export function showcaseRequestApproval(args: JsonObject): CliResult<unknown> {
       : null,
     status
   }, context, { complete: status.complete });
-}
-
-export function hostDoctor(args: JsonObject): CliResult<unknown> {
-  const context = contextFromArgs(args, "host.doctor");
-  if ("envelope" in context) return context.envelope;
-  const host = stringArg(args, "host") as HostName | null;
-  if (!host) return errorEnvelope("host.doctor", "host.required", "Missing host.");
-  const profile = loadHostProfile({ pluginRoot: context.plugin_root, host });
-  if (!profile.profile) {
-    return errorEnvelope("host.doctor", "host.profile_unavailable", profile.diagnostics[0]?.message ?? "Host profile unavailable.");
-  }
-  return envelope("host.doctor", runHostDoctor({ context, profile: profile.profile }), context);
 }
 
 function showcaseEnvelope(command: string, result: ShowcaseAppendResult, context: ResolvedWorkspaceContext): CliResult<unknown> {

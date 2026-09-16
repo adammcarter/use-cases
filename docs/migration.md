@@ -19,7 +19,7 @@ later by binding + verifying, never inherited.
   your file, infers its structure, and writes one reviewable **draft** use case
   per item via `uc matrix upsert`, carrying the original text + provenance. Just
   ask your agent to "migrate" / "bring in" / "import" your file and the bundled
-  `migration` skill activates. See `.agents/skills/migration/SKILL.md`.
+  `migration` skill activates. See `skills/migration/SKILL.md`.
 - **A standard `TEST-MATRIX.md` → `uc migrate test-matrix` (fast path).** For the
   one canonical markdown-table format there's a deterministic importer that
   already enforces the no-laundering invariant. Use it when your source fits.

@@ -60,10 +60,9 @@ describe("session-start bootstrap delivery", () => {
     expect(ctx).toContain(bootstrap.trim().slice(-40));
   });
 
-  test("Claude + Codex hooks.json declare SessionStart wired to the script", () => {
+  test("Claude hooks.json declares SessionStart wired to the script", () => {
     for (const [file, matcherIncludes] of [
-      ["hooks/hooks.json", "startup"],
-      ["hooks/hooks-codex.json", "startup"]
+      ["hooks/hooks.json", "startup"]
     ] as const) {
       const manifest = JSON.parse(readFileSync(resolve(repoRoot, file), "utf8"));
       const sessionStart = manifest.hooks.SessionStart;
@@ -74,40 +73,5 @@ describe("session-start bootstrap delivery", () => {
     }
   });
 
-  test("OpenCode plugin injects the bootstrap on session.started", async () => {
-    const modPath = resolve(repoRoot, ".opencode/plugin/use-cases.js");
-    expect(existsSync(modPath)).toBe(true);
-    const mod = await import(modPath);
-    const factory = mod.UseCasesPlugin ?? mod.default;
-    expect(typeof factory).toBe("function");
-    const plugin = await factory({ directory: repoRoot });
-    const out = await plugin["session.started"]();
-    expect(out.context).toContain(BOOTSTRAP_MARKER);
-    expect(out.context).toContain("<EXTREMELY_IMPORTANT>");
-  });
 
-  test("OpenCode plugin injects the bootstrap through message transform without duplicates", async () => {
-    const modPath = resolve(repoRoot, ".opencode/plugin/use-cases.js");
-    const mod = await import(`${modPath}?test=${Date.now()}`);
-    const factory = mod.UseCasesPlugin ?? mod.default;
-    const plugin = await factory({ directory: repoRoot });
-    const transform = plugin["experimental.chat.messages.transform"];
-    expect(typeof transform).toBe("function");
-
-    const output = {
-      messages: [
-        {
-          info: { role: "user" },
-          parts: [{ type: "text", text: "start" }]
-        }
-      ]
-    };
-
-    await transform({}, output);
-    await transform({}, output);
-
-    const texts = output.messages[0]!.parts.map((part) => part.text).join("\n");
-    expect(texts.match(/<EXTREMELY_IMPORTANT>/gu)).toHaveLength(1);
-    expect(output.messages[0]!.parts[0]!.text).toContain(BOOTSTRAP_MARKER);
-  });
 });

@@ -108,21 +108,24 @@ use_cases:
       - kind: file
         path: tests/skills/p7-skills.test.ts
     actor: agent
-    intent: Make the shipped skills reachable by the Claude host, which only auto-scans skills/ at plugin root while ours live in .agents/skills.
+    intent: Make the shipped skills reachable by the Claude host by keeping them in skills/ at the plugin root, the directory Claude scans by default, and offering the plugin through a marketplace manifest so the plugin manifest is read at all.
     preconditions:
-      - The package ships its skills under .agents/skills rather than the host's default skills/ directory.
+      - The package ships its skills under skills/ at the repo root.
     trigger: The Claude host reads the plugin manifests while installing or loading the plugin.
     scenarios:
       - id: skills.assets.host_declaration.manifests
         kind: steps
         steps:
-          - Read the Claude plugin manifest and confirm it declares ./.agents/skills.
-          - Read the marketplace manifest and confirm it offers the use-cases plugin.
-          - Confirm the Claude and Codex plugin manifests carry the same version.
+          - Confirm the canonical skills live under skills/<name>/SKILL.md at the plugin root.
+          - Read the marketplace manifest and confirm it offers the use-cases plugin from the repo root.
+      - id: skills.assets.host_declaration.moved_skills
+        kind: steps
+        steps:
+          - Move a canonical skill out of skills/.
+          - Confirm uc doctor skills reports it as unreachable by the host.
     observable_outcomes:
-      - The non-default skills directory is declared explicitly, so the host loads skills it would otherwise never scan.
+      - Skills sit where the host scans, so no manifest entry is needed for the host to load them.
       - A marketplace manifest ships, so the plugin can be installed at all and its plugin manifest is read.
-      - The two shipped plugin manifests cannot drift to different versions.
     host_applicability:
       - host_surface: claude.cli
         supported: true

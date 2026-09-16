@@ -80,7 +80,7 @@ describe("the registry owns every migrated command (legacy is builtins-only)", (
 
   test("the registry covers the canonical command groups", () => {
     const ids = new Set(allCommands.map((entry) => entry.command));
-    for (const id of ["matrix.validate", "showcase.approve", "markers.prove", "evidence.record", "host.doctor"]) {
+    for (const id of ["matrix.validate", "showcase.approve", "markers.prove", "evidence.record"]) {
       expect(ids).toContain(id);
     }
   });

@@ -91,8 +91,7 @@ These are real limits — read them before relying on it for a security decision
   (unknown) unless supplied out of band. A `null` value never satisfies a
   `require_protected_ref` gate — the gate fails closed.
 
-For the full asset/threat enumeration and mitigations, see the threat-model
-section of the [public v1 roadmap](docs/release/public-v1-roadmap.md) and the
+For the full asset/threat enumeration and mitigations, see the
 [security & trust overview](docs/security.md).
 
 ## Signing-key handling
@@ -113,4 +112,4 @@ Full procedure: [`docs/security/key-management.md`](docs/security/key-management
 ## Supported versions
 
 Security fixes target the latest released `1.x` line. See
-[`SUPPORT.md`](SUPPORT.md) for the supported runtime/CI/transport matrix.
+the CI workflow for the supported runtime.

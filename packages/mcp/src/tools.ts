@@ -16,8 +16,7 @@ import {
   showcaseVerdictInputSchema,
   showcaseDecideInputSchema,
   showcaseFinishInputSchema,
-  showcaseRequestApprovalInputSchema,
-  hostDoctorInputSchema
+  showcaseRequestApprovalInputSchema
 } from "./toolSchemas.js";
 import {
   boolArg,
@@ -27,7 +26,6 @@ import {
   evidenceRecord,
   evidenceStatus,
   evidenceVoid,
-  hostDoctor,
   isTrustedUserClaim,
   matrixList,
   matrixStatus,
@@ -88,8 +86,7 @@ const toolDefinitions: ToolDefinition[] = [
     "approval_request",
     showcaseRequestApprovalInputSchema,
     showcaseRequestApproval
-  ),
-  tool("host_doctor", "host.doctor", "Run read-only host profile/projection doctor checks.", "read", hostDoctorInputSchema, hostDoctor)
+  )
 ];
 
 export const mcpTools = toolDefinitions.map(({ handler: _handler, ...descriptor }) => descriptor);

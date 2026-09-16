@@ -28,9 +28,6 @@ Ships as a single package, `use-cases`, providing the `uc` CLI and the
 - **[TEST-MATRIX migration](./migration.md)** — importing an existing
   `TEST-MATRIX.md` into the matrix (behaviour coverage is preserved; proof is
   not).
-- **[Upgrading to 0.6.0](./migration/upgrading-to-0.6.0.md)** — what the new
-  binding-ledger event means for an existing project, and when a workspace
-  starts requiring 0.6.0 everywhere.
 - Runnable examples live under [`examples/`](../examples) — including
   [`examples/python-pytest`](../examples/python-pytest), a pure-Python project
   that reaches a signed **FRESH** row with `pytest` and no pnpm/vitest.
@@ -41,7 +38,7 @@ Ships as a single package, `use-cases`, providing the `uc` CLI and the
   configuration model.
 - [MCP contract](./mcp.md) — the MCP tools, modes, and safety boundaries.
 - [Data model](./data-model.md) — the persisted file shapes.
-- [Host support](./hosts.md) — Claude, Codex, Copilot, and OpenCode as
+- [Activation](./activation.md) — Claude, Codex, Copilot, and OpenCode as
   first-class hosts.
 - [Showcases](./showcase.md) — live runs in front of a reviewer.
 - [Architecture decision records](./adr) — the design decisions behind the
@@ -51,4 +48,3 @@ Ships as a single package, `use-cases`, providing the `uc` CLI and the
 
 - [Security and trust](./security.md) — keys, signing, the keyring, CI as the
   proof authority, and the safety boundaries on generated output.
-- [Release checklist](./release.md) — the production release gate.

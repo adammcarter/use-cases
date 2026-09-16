@@ -6,8 +6,6 @@ const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, "../../..");
 const source = join(repoRoot, "schemas/v1");
 const destination = join(repoRoot, "packages/core/dist/schemas/v1");
-const hostProfileSource = join(repoRoot, "hosts");
-const hostProfileDestination = join(repoRoot, "packages/core/dist/host-profiles");
 // The marker trust-engine schemas (binding-registry / proof-event / freshness)
 // live in src and are loaded at runtime by markers/validators.js. tsc does not
 // copy .json, so without this they only resolve via the in-repo `../../src`
@@ -23,9 +21,6 @@ withDirectoryLock(lockDir, () => {
   mkdirSync(destination, { recursive: true });
   cpSync(source, destination, { recursive: true });
   removeOrphanedEntries(source, destination);
-  mkdirSync(hostProfileDestination, { recursive: true });
-  cpSync(hostProfileSource, hostProfileDestination, { recursive: true });
-  removeOrphanedEntries(hostProfileSource, hostProfileDestination);
   mkdirSync(markerSchemaDestination, { recursive: true });
   cpSync(markerSchemaSource, markerSchemaDestination, { recursive: true });
   removeOrphanedEntries(markerSchemaSource, markerSchemaDestination);

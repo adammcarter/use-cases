@@ -15,11 +15,9 @@ const SHIPPED_DOCS = new Set([
   "docs/activation.md",
   "docs/cli.md",
   "docs/data-model.md",
-  "docs/hosts.md",
   "docs/markers-adoption.md",
   "docs/mcp.md",
   "docs/migration.md",
-  "docs/release.md",
   "docs/security.md",
   "docs/showcase.md"
 ]);

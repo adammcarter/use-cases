@@ -69,8 +69,27 @@ Typical workflows: **continuous** (keep the matrix live as you build), **backfil
 ## Quickstart
 
 ```bash
-# Install the CLI + MCP server (provides the `uc` and `uc-mcp` binaries)
-npm i -g use-cases
+# No npm, no build: the repo carries a committed, dependency-free bundle and
+# installs straight from GitHub into each host. Pick yours.
+
+# Claude Code — next session: /use-cases:* skills, agents, MCP tools, uc on PATH
+/plugin marketplace add adammcarter/use-cases
+/plugin install use-cases@use-cases
+
+# GitHub Copilot CLI — then enable the plugin's MCP server once
+copilot plugin install adammcarter/use-cases
+copilot mcp enable use-cases
+
+# Codex
+codex plugin marketplace add adammcarter/use-cases
+codex plugin add use-cases@use-cases
+
+# OpenCode — the plugin module registers the MCP server, skills and PATH itself
+opencode plugin add 'github:adammcarter/use-cases'
+
+# Anywhere else: clone it and run the committed bundle with Node alone
+git clone https://github.com/adammcarter/use-cases.git
+alias uc="$PWD/use-cases/bin/uc"
 
 # Scaffold a workspace (creates use-cases/ + config with one example behaviour)
 uc init
@@ -112,7 +131,7 @@ For the technically curious — the high-level shape:
 
 Ships as a single self-contained package: **`use-cases`** (binaries `uc` and `uc-mcp`). The `core` / `cli` / `mcp` workspaces are bundled inside it, not published separately.
 
-Deeper reading: [CLI reference](docs/cli.md) · [data model](docs/data-model.md) · [code markers & freshness](docs/markers-adoption.md) · [evidence & security](docs/security.md) · [showcase runs](docs/showcase.md) · [hosts & activation](docs/hosts.md) · [MCP](docs/mcp.md) · [migration](docs/migration.md).
+Deeper reading: [CLI reference](docs/cli.md) · [data model](docs/data-model.md) · [code markers & freshness](docs/markers-adoption.md) · [evidence & security](docs/security.md) · [showcase runs](docs/showcase.md) · [activation](docs/activation.md) · [MCP](docs/mcp.md) · [migration](docs/migration.md).
 
 ---
 

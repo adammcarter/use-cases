@@ -235,6 +235,8 @@ function runInit(argv: string[], wantsJson: boolean): number {
       `  component: ${result.component_id}`,
       "  created:",
       ...result.created_files.map((file) => `    - ${file}`),
+      `  AGENTS.md: ${result.agents_md?.status ?? "untouched"} (${result.agents_md?.decision ?? "-"})`,
+      `  git hooks: ${result.git_hooks?.hooks_dir ?? "-"}${result.git_hooks?.hooks_path_set ? " (core.hooksPath set)" : ""}`,
       "",
       "Next steps:",
       ...result.next_steps.map((step, index) => `  ${index + 1}. ${step}`),

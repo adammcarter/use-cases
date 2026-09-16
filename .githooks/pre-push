@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# use-cases: say which bound rows this push touches and where they stand.
+# Advisory only — pushing red is legitimate; LAND gates with `uc scan --gate`.
+root="$(git rev-parse --show-toplevel)"
+uc="node $root/dist/uc.js"
+if [ -f "$root/use-cases.yml" ]; then
+    $uc impact --repo "$root" 2>/dev/null || true
+    $uc scan --repo "$root" 2>/dev/null | tail -n 20 || true
+fi
+exit 0

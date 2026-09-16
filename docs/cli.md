@@ -143,17 +143,10 @@ signing key must be a PKCS8 ed25519 PEM — see
 - `showcase start|record-observation|record-verdict|decide|pause|resume|finish|approve|reject|correct`
   records a mechanical showcase run ledger.
 
-## Hosts And Doctors
+## Doctors
 
-- `host project --host <host> --repo <path> --dry-run|--write|--revert --json`
-  projects or removes thin activation stubs.
-- `host doctor --host <host> --repo <path> --json` checks profile and projection
-  visibility.
-- `host conformance --host <host> --repo <path> --json` checks one profile.
-- `host conformance --all --repo <path> --json` checks Claude, Codex, Copilot,
-  and OpenCode.
-- `doctor roots|skills|package --repo <path> --json` checks workspace roots,
-  canonical skills, and release packaging.
+- `doctor roots|skills --repo <path> --json` checks workspace roots and
+  canonical skills.
 
 ## Migration
 

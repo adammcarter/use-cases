@@ -56,5 +56,5 @@ Stop / surface:
 - If validation is incomplete, YAML is damaged, evidence may leak sensitive data, or a user-required approval would be asserted by an agent, stop and report concrete evidence.
 
 Canonical reference:
-- `docs/activation.md` and `.agents/skills/*/SKILL.md`.
+- `docs/activation.md` and `skills/*/SKILL.md`.
 </EXTREMELY_IMPORTANT>

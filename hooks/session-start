@@ -8,7 +8,6 @@
 #   - Claude Code (CLAUDE_PLUGIN_ROOT, not Copilot) -> hookSpecificOutput.additionalContext
 #   - Copilot CLI  (COPILOT_CLI)                    -> top-level additionalContext
 #   - Codex / other                                 -> hookSpecificOutput.additionalContext
-# OpenCode uses a native plugin instead (.opencode/plugin/use-cases.js).
 
 set -euo pipefail
 
@@ -16,6 +15,10 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 bootstrap_content=$(cat "${PLUGIN_ROOT}/bootstrap/use-cases.md" 2>&1 || echo "Error reading use-cases bootstrap")
+# Every host's agent is told where uc lives; only Claude can also put it on PATH.
+bootstrap_content="${bootstrap_content}
+
+The uc command for this plugin is ${PLUGIN_ROOT}/bin/uc. If \`uc\` is not on PATH, run it by that path."
 
 # Single C-level pass per replacement; far faster than a char loop.
 escape_for_json() {
@@ -30,13 +33,23 @@ escape_for_json() {
 
 session_context=$(escape_for_json "$bootstrap_content")
 
+# Claude Code sources $CLAUDE_ENV_FILE before every shell command. Putting the
+# plugin's bin/ first on PATH makes `uc` a plain command in the session with
+# nothing installed globally. Other hosts leave the variable unset; a file that
+# cannot be written is reported, never fatal — the bootstrap below still ships.
+#: @use-case:plugin.install.uc_on_path_in_session#hook
+if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
+  if ! printf 'export PATH="%s/bin:$PATH"\n' "${PLUGIN_ROOT}" >> "${CLAUDE_ENV_FILE}" 2>/dev/null; then
+    echo "use-cases: could not write PATH export to CLAUDE_ENV_FILE (${CLAUDE_ENV_FILE}); run uc as ${PLUGIN_ROOT}/bin/uc" >&2
+  fi
+fi
+#: @use-case:end plugin.install.uc_on_path_in_session#hook
+
 # printf (not heredoc) avoids the bash 5.3+ heredoc hang.
-#: @use-case:hosts.profiles.bootstrap_autoinject
 if [ -n "${COPILOT_CLI:-}" ]; then
   printf '{\n  "additionalContext": "%s"\n}\n' "$session_context"
 else
   printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$session_context"
 fi
-#: @use-case:end hosts.profiles.bootstrap_autoinject
 
 exit 0

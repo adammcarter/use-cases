@@ -143,11 +143,7 @@ const CANONICAL_COMMANDS = [
   "workflow.set-mode",
   "workflow.get-mode",
   "migrate.test-matrix",
-  "host.doctor",
-  "host.project",
-  "host.conformance",
   "doctor.skills",
-  "doctor.package",
   "doctor.roots",
   "markers.bind",
   "markers.scan",
@@ -278,29 +274,8 @@ const independentCases: IndependentCase[] = [
     ]
   },
   {
-    command: "host.doctor",
-    // data is a host doctor report; host-status-result describes a per-host status
-    // record (a different artifact), so this is envelope only.
-    build: () => ["host", "doctor", "--host", "codex", "--repo", join(fixturesRoot, "minimal-valid"), "--json"]
-  },
-  {
-    command: "host.project",
-    // --dry-run keeps it read-only; data is a projection plan, envelope only.
-    build: () => ["host", "project", "--host", "codex", "--repo", join(fixturesRoot, "minimal-valid"), "--dry-run", "--json"]
-  },
-  {
-    command: "host.conformance",
-    build: () => ["host", "conformance", "--host", "codex", "--repo", join(fixturesRoot, "minimal-valid"), "--json"]
-  },
-  {
     command: "doctor.skills",
     build: () => ["doctor", "skills", "--repo", join(fixturesRoot, "minimal-valid"), "--json"]
-  },
-  {
-    command: "doctor.package",
-    // Inspects the workspace as a package; the fixture is not a publishable package
-    // so this returns an error envelope — still a valid envelope (the contract here).
-    build: () => ["doctor", "package", "--repo", join(fixturesRoot, "minimal-valid"), "--json"]
   },
   {
     command: "doctor.roots",
@@ -813,8 +788,8 @@ describe("v1 CLI output conformance", () => {
   // Coverage gate: every canonical v1 command must have been exercised above. If a
   // command is added to the CLI surface, add it to CANONICAL_COMMANDS and cover it
   // here — otherwise this assertion (and the surface inventory) goes stale loudly.
-  test("covers every command in the canonical v1 CLI surface (44)", () => {
-    expect(CANONICAL_COMMANDS).toHaveLength(44);
+  test("covers every command in the canonical v1 CLI surface (40)", () => {
+    expect(CANONICAL_COMMANDS).toHaveLength(40);
     const expected = [...CANONICAL_COMMANDS].sort();
     const actual = [...covered].sort();
     expect(actual).toEqual(expected);

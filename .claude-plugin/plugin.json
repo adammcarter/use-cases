@@ -5,9 +5,6 @@
   "author": {
     "name": "Use Cases"
   },
-  "skills": [
-    "./.agents/skills/"
-  ],
   "agents": [
     "./agents/use-cases-updater.md",
     "./agents/use-cases-demo.md",
@@ -17,7 +14,7 @@
     "use-cases": {
       "command": "node",
       "args": [
-        "./packages/mcp/dist/index.js"
+        "${CLAUDE_PLUGIN_ROOT}/dist/uc-mcp.js"
       ]
     }
   }

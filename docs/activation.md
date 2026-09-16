@@ -13,9 +13,6 @@ mechanism is never copied onto another):
 | Host | Mechanism | Shape |
 |---|---|---|
 | Claude Code | `hooks/hooks.json` SessionStart (`startup\|clear\|compact`) runs `hooks/session-start` | `hookSpecificOutput.additionalContext` |
-| Copilot CLI | package-owned user hook at `~/.copilot/hooks/use-cases.json` runs `hooks/session-start` with `COPILOT_CLI=1` | top-level `additionalContext` |
-| Codex | `hooks/hooks-codex.json` SessionStart (`startup\|resume\|clear\|compact`) runs `hooks/session-start` | `hookSpecificOutput.additionalContext` |
-| OpenCode | `.opencode/plugin/use-cases.js` message transform; `session.started` compatibility | injected first user message context; `{ context }` compatibility |
 
 The injected content is exactly the trusted `<EXTREMELY_IMPORTANT>` bootstrap
 block — never repo data, tool output, or generated material. Auto-injection is a
@@ -64,7 +61,7 @@ Agents may record agent observations and agent verdicts when the workflow allows
 
 ## Host Support Language
 
-Canonical skills existing in `.agents/skills` means the plugin has host-agnostic instructions. It does not mean Claude, Codex, Copilot, or OpenCode support has been verified. A host profile existing does not prove support. A doctor check passing does not prove a live host workflow. Claim host support only when recorded host evidence exists.
+Canonical skills existing in `skills` means the plugin has host-agnostic instructions. It does not mean Claude, Codex, Copilot, or OpenCode support has been verified. A host profile existing does not prove support. A doctor check passing does not prove a live host workflow. Claim host support only when recorded host evidence exists.
 
 ## CLI Command Mapping
 

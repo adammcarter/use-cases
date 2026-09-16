@@ -11,7 +11,8 @@
 // `force` is set (a `blocked` result, never a silent clobber). All writes are
 // path-contained inside the repo root.
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { diagnostic, type Diagnostic } from "../schema/index.js";
 import { isValidId, resolveContainedPath } from "../roots.js";
@@ -29,6 +30,8 @@ export type ScaffoldWorkspaceOptions = {
   template?: InitTemplate;
   component?: string;
   force?: boolean;
+  // ISO date written into the AGENTS.md decision (default: today).
+  today?: string;
 };
 
 export type ScaffoldWorkspaceResult = {
@@ -40,6 +43,10 @@ export type ScaffoldWorkspaceResult = {
   // (and tests) can report exactly what was wired per template.
   default_verifier: { id: string; kind: "preset" | "script"; preset?: string; command?: string[] };
   created_files: string[];
+  // The once-per-repo decision the use-case-driven-development skill reads.
+  agents_md: { status: "created" | "appended" | "already_recorded"; decision: "yes" | "no" | "unknown" } | null;
+  // Where the git hooks landed and whether core.hooksPath now points at them.
+  git_hooks: { hooks_dir: string; hooks_path_set: boolean; extended: string[] } | null;
   next_steps: string[];
   diagnostics: Diagnostic[];
 };
@@ -131,6 +138,8 @@ export function scaffoldWorkspace(options: ScaffoldWorkspaceOptions): ScaffoldWo
     component_id: componentId,
     default_verifier: verifier.summary,
     created_files: [],
+    agents_md: null,
+    git_hooks: null,
     next_steps: [],
     diagnostics: [diagnostic]
   });
@@ -183,6 +192,8 @@ export function scaffoldWorkspace(options: ScaffoldWorkspaceOptions): ScaffoldWo
   }
 
   const gitignoreTouched = ensureGitignoreEntries(repoRoot);
+  const agentsMd = ensureAgentsMdDecision(repoRoot, options.today ?? new Date().toISOString().slice(0, 10));
+  const gitHooks = ensureGitHooks(repoRoot);
 
   return {
     schema_version: 1,
@@ -194,12 +205,153 @@ export function scaffoldWorkspace(options: ScaffoldWorkspaceOptions): ScaffoldWo
       toPosix(relative(repoRoot, configPath)),
       toPosix(relative(repoRoot, useCasePath)),
       ...templatePaths.map((file) => toPosix(relative(repoRoot, file.absPath))),
-      ...(gitignoreTouched ? [GITIGNORE_FILE] : [])
+      ...(gitignoreTouched ? [GITIGNORE_FILE] : []),
+      ...(agentsMd.status === "already_recorded" ? [] : [AGENTS_MD_FILE]),
+      ...gitHooks.written
     ],
-    next_steps: nextSteps(),
+    agents_md: { status: agentsMd.status, decision: agentsMd.decision },
+    git_hooks: { hooks_dir: gitHooks.hooks_dir, hooks_path_set: gitHooks.hooks_path_set, extended: gitHooks.extended },
+    next_steps: nextSteps({ hooksPathSet: gitHooks.hooks_path_set, hooksDir: gitHooks.hooks_dir }),
     diagnostics: []
   };
 }
+
+// ---------------------------------------------------------------------------
+// AGENTS.md — the once-per-repo decision.
+//
+// `use-case-driven-development` reads this section first, on every host, and
+// never asks again while it exists. init writes `yes` because running init IS
+// the decision; an existing section (yes or no) is left exactly as it is.
+const AGENTS_MD_FILE = "AGENTS.md";
+const DECISION_HEADING = "## Use-case driven development";
+
+//: @use-case:plugin.init.records_decision_in_agents_md#code
+function ensureAgentsMdDecision(
+  repoRoot: string,
+  today: string
+): { status: "created" | "appended" | "already_recorded"; decision: "yes" | "no" | "unknown" } {
+  const path = join(repoRoot, AGENTS_MD_FILE);
+  const existing = existsSync(path) ? readFileSync(path, "utf8") : null;
+
+  if (existing !== null && existing.includes(DECISION_HEADING)) {
+    const after = existing.slice(existing.indexOf(DECISION_HEADING) + DECISION_HEADING.length);
+    const answer = after.match(/^\s*(yes|no)\b/m)?.[1];
+    return { status: "already_recorded", decision: answer === "yes" || answer === "no" ? answer : "unknown" };
+  }
+
+  const section = [
+    DECISION_HEADING,
+    "",
+    `yes — ${today}`,
+    "",
+    "This repo is use-case driven: every functional change starts in `use-cases/`,",
+    "rows are agreed before tests, tests and code are wrapped in the row's markers,",
+    "and `uc scan` is the coverage number. The rules live in the Use Cases plugin's",
+    "skills — `use-case-driven-development` for when and in what order, `use-cases`",
+    "for the commands — and every agent working here follows them.",
+    ""
+  ].join("\n");
+
+  if (existing === null) {
+    writeFileSync(path, `# ${baseNameOf(repoRoot)}\n\n${section}`, "utf8");
+    return { status: "created", decision: "yes" };
+  }
+  const separator = existing.endsWith("\n") ? "" : "\n";
+  const spacer = existing.trim() === "" ? "" : "\n";
+  writeFileSync(path, `${existing}${separator}${spacer}${section}`, "utf8");
+  return { status: "appended", decision: "yes" };
+}
+//: @use-case:end plugin.init.records_decision_in_agents_md#code
+
+// ---------------------------------------------------------------------------
+// Git hooks — enforcement from the first commit.
+//
+// pre-commit blocks on what is simply wrong (invalid matrix, ledger, or a marker
+// that disagrees with its binding); pre-push only reports. Pushing red is
+// legitimate in the loop, so nothing before LAND refuses a push for a row that
+// is merely not green yet. A repo that already routes hooks elsewhere keeps its
+// directory and its scripts; the use-cases block is appended, never replacing.
+const DEFAULT_HOOKS_DIR = ".githooks";
+const HOOK_BLOCK_MARKER = "# use-cases:";
+
+const UC_LOOKUP = [
+  "# The plugin puts uc on PATH in Claude sessions; elsewhere set UC to <plugin>/bin/uc.",
+  'uc="${UC:-$(command -v uc 2>/dev/null || true)}"',
+  'if [ -z "$uc" ]; then',
+  '  echo "pre-commit: uc not found — install the Use Cases plugin (https://github.com/adammcarter/use-cases) or set UC=<plugin>/bin/uc" >&2',
+  "  exit 0",
+  "fi"
+];
+
+function preCommitBlock(): string[] {
+  return [
+    `${HOOK_BLOCK_MARKER} the matrix and its ledgers have to be well-formed to land at all.`,
+    'if [ -f "$(git rev-parse --show-toplevel)/use-cases.yml" ]; then',
+    ...UC_LOOKUP.map((line) => `  ${line}`.replace(/^  $/, "")),
+    '  root="$(git rev-parse --show-toplevel)"',
+    '  "$uc" matrix validate --repo "$root" --json >/dev/null \\',
+    '    || { echo "pre-commit: use-case matrix invalid — run: uc matrix validate --repo ." >&2; exit 1; }',
+    '  key=""; [ -f "$root/.use-cases/trusted-ci-public-key.pem" ] && key="--public-key $root/.use-cases/trusted-ci-public-key.pem"',
+    '  "$uc" validate-ledger --repo "$root" $key --json >/dev/null \\',
+    '    || { echo "pre-commit: use-case ledger invalid — run: uc validate-ledger --repo ." >&2; exit 1; }',
+    "  # A marker and its binding that disagree is INVALID; stale is fine here.",
+    '  if "$uc" scan --repo "$root" --json 2>/dev/null | grep -Eq \'"status": *"INVALID"\'; then',
+    '    echo "pre-commit: a use-case marker and its binding disagree — run: uc scan --repo ." >&2',
+    "    exit 1",
+    "  fi",
+    "fi"
+  ];
+}
+
+function prePushBlock(): string[] {
+  return [
+    `${HOOK_BLOCK_MARKER} say which bound rows this push touches and where they stand. Advisory only.`,
+    'if [ -f "$(git rev-parse --show-toplevel)/use-cases.yml" ]; then',
+    ...UC_LOOKUP.map((line) => `  ${line}`.replace("pre-commit:", "pre-push:")),
+    '  root="$(git rev-parse --show-toplevel)"',
+    '  "$uc" impact --repo "$root" 2>/dev/null || true',
+    '  "$uc" scan --repo "$root" 2>/dev/null | tail -n 20 || true',
+    "fi",
+    "exit 0"
+  ];
+}
+
+//: @use-case:plugin.init.wires_git_hooks#code
+function ensureGitHooks(repoRoot: string): { hooks_dir: string; hooks_path_set: boolean; written: string[]; extended: string[] } {
+  const isGitRepo = spawnSync("git", ["rev-parse", "--git-dir"], { cwd: repoRoot, encoding: "utf8" }).status === 0;
+  const configured = isGitRepo
+    ? spawnSync("git", ["config", "--get", "core.hooksPath"], { cwd: repoRoot, encoding: "utf8" }).stdout.trim()
+    : "";
+  const hooksDir = configured || DEFAULT_HOOKS_DIR;
+  const written: string[] = [];
+  const extended: string[] = [];
+
+  for (const [name, block] of [["pre-commit", preCommitBlock()], ["pre-push", prePushBlock()]] as const) {
+    const relPath = toPosix(join(hooksDir, name));
+    const absPath = resolveContainedPath(repoRoot, relPath, "Hook target escapes the repo boundary.");
+    mkdirSync(dirname(absPath), { recursive: true });
+    if (existsSync(absPath)) {
+      const existing = readFileSync(absPath, "utf8");
+      if (existing.includes(HOOK_BLOCK_MARKER)) continue;
+      // Their hook keeps running first; ours follows. A trailing `exit` in
+      // theirs would skip ours, which is their call, not a clobber.
+      const separator = existing.endsWith("\n") ? "" : "\n";
+      writeFileSync(absPath, `${existing}${separator}\n${block.join("\n")}\n`, "utf8");
+      extended.push(relPath);
+    } else {
+      writeFileSync(absPath, `#!/usr/bin/env bash\n${block.join("\n")}\n`, "utf8");
+      written.push(relPath);
+    }
+    chmodSync(absPath, 0o755);
+  }
+
+  let hooksPathSet = false;
+  if (isGitRepo && !configured) {
+    hooksPathSet = spawnSync("git", ["config", "core.hooksPath", DEFAULT_HOOKS_DIR], { cwd: repoRoot }).status === 0;
+  }
+  return { hooks_dir: hooksDir, hooks_path_set: hooksPathSet, written, extended };
+}
+//: @use-case:end plugin.init.wires_git_hooks#code
 
 type VerifierPlan = {
   // The YAML body for the `acceptance` verifier entry (indented two extra spaces
@@ -288,57 +440,85 @@ function renderConfig(componentId: string, verifier: VerifierPlan): string {
   ].join("\n");
 }
 
+//: @use-case:plugin.init.vends_sample_matrix#code
 function renderExampleUseCase(): string {
   return [
     "schema_version: 1",
-    "# TODO: replace this example with a real use case for your project.",
-    "# Each row describes one observable behaviour your product must keep working.",
-    "# Once you bind it to code (`uc bind`) and CI proves it, the row reaches FRESH.",
+    "# A worked example of one use-case row. Copy it for your first real row, then",
+    "# delete this one. One row is one behaviour; its scenarios are its tests — each",
+    "# scenario below becomes exactly one test, written before the code.",
     "feature:",
     "  id: example.feature",
     "  name: Example feature",
-    "  summary: An example use case scaffolded by `uc init` — replace it with your own.",
+    "  summary: A sample use case vended by `uc init` — copy its shape for your own rows.",
     "metadata:",
     "  owner: unassigned",
     "  lifecycle: active",
     "use_cases:",
     "  - id: example.feature.happy_path",
     "    title: Example happy path",
+    "    # planned while the row is agreed but unproven; active once tests are green",
+    "    # and both the test and the code are wrapped in this row's markers.",
     "    lifecycle: active",
+    "    # How much the product depends on this: critical | core | supporting | long_tail.",
     "    value_tier: core",
+    "    # Where it sits in the user's journey: golden | alternate | edge | negative | failure.",
     "    journey_role: golden",
+    "    # How often users hit it: common | occasional | rare.",
     "    usage_frequency: common",
     "    tags: [example]",
+    "    # Files the behaviour lives in. `uc bind` wraps the exact span with a marker.",
     "    source_refs:",
     "      - kind: file",
     "        path: src/example.ts",
+    "    # Who triggers the behaviour: user | agent | script | system.",
     "    actor: user",
-    "    intent: Demonstrate the use-cases row shape so you can replace it.",
+    "    # What they are trying to achieve, in one sentence.",
+    "    intent: Demonstrate the use-cases row shape so you can copy it.",
+    "    # What must already be true before the trigger.",
     "    preconditions:",
     "      - The project is set up.",
+    "    # The event that starts the behaviour.",
     "    trigger: The user performs the example action.",
+    "    # One golden path, then the bad paths and the edge cases. Each scenario is",
+    "    # one test; a test that proves nothing here is a scenario to write first.",
     "    scenarios:",
-    "      - id: example.feature.happy_path.main",
+    "      - id: example.feature.happy_path.golden",
     "        kind: steps",
     "        steps:",
-    "          - Perform the example action.",
+    "          - Perform the example action with valid input.",
     "          - Observe the expected result.",
+    "      - id: example.feature.happy_path.bad_input",
+    "        kind: steps",
+    "        steps:",
+    "          - Perform the example action with invalid input.",
+    "          - Observe a clear error and no side effect.",
+    "      - id: example.feature.happy_path.edge_empty",
+    "        kind: steps",
+    "        steps:",
+    "          - Perform the example action with empty input.",
+    "          - Observe the documented empty-input behaviour.",
+    "    # What a person can see when the behaviour holds — the acceptance criteria.",
     "    observable_outcomes:",
     "      - The expected result is visible to the user.",
+    "      - Invalid input is refused with a clear message.",
     "    host_applicability:",
     "      - host_surface: codex.cli",
     "        supported: true",
+    "    # Which verifier (from use-cases.yml) has to pass for this row to count.",
     "    verification_policy:",
     "      mode: requirements",
     "      requirements:",
     "        - evidence_kind: test_result",
     `          required_verifiers: [${DEFAULT_VERIFIER_ID}]`,
     "          minimum_count: 1",
+    "    # Whether a human must sign this row off in a showcase before release.",
     "    approval_policy:",
     "      mode: none",
     ""
   ].join("\n");
 }
+//: @use-case:end plugin.init.vends_sample_matrix#code
 
 // Extra files that make a template's scaffolded example RUNNABLE out of the
 // box. The `generic`, `python-pytest`, and `go-test` templates ship none here
@@ -411,9 +591,12 @@ function renderJsVitestTest(runCommand: string): string {
   ].join("\n");
 }
 
-export function nextSteps(): string[] {
+export function nextSteps(options: { hooksPathSet?: boolean; hooksDir?: string } = {}): string[] {
   return [
-    "Edit use-cases/example.yml — replace the example row with a real use case.",
+    ...(options.hooksPathSet === false && options.hooksDir === DEFAULT_HOOKS_DIR
+      ? ["Point git at the hooks once the repo is initialised: `git config core.hooksPath .githooks`."]
+      : []),
+    "Copy use-cases/example.yml's row for your first real use case, then delete the example.",
     "Run `uc matrix validate --repo . --json` to confirm the matrix is clean.",
     "Bind the implementing code with `uc bind` — code-marker grammar in docs/markers-adoption.md.",
     "Wire the `acceptance` verifier in use-cases.yml to your real test command (docs/cli.md).",

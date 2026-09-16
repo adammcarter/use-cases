@@ -105,9 +105,4 @@ describe("canonical agents", () => {
       expect(existsSync(join(repoRoot, entry))).toBe(true);
     }
   });
-
-  test("the published package ships the agents directory", () => {
-    const pkg = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as { files?: string[] };
-    expect(pkg.files ?? []).toContain("agents");
-  });
 });
