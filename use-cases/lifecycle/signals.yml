@@ -86,9 +86,11 @@ use_cases:
             - -s
             - vitest
             - run
-            - packages/core/test/markers/verify.test.ts
+            - tests/blackbox/lifecycle-signals.test.ts
+            - -t
+            - lifecycle.signals.verify_preserves_other_rows
           inputs:
-            - packages/core/test/markers/verify.test.ts
+            - tests/blackbox/lifecycle-signals.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -168,9 +170,11 @@ use_cases:
             - -s
             - vitest
             - run
-            - packages/core/test/markers/freshness-local.test.ts
+            - tests/blackbox/lifecycle-signals.test.ts
+            - -t
+            - lifecycle.signals.acceptance_claim_is_honest
           inputs:
-            - packages/core/test/markers/freshness-local.test.ts
+            - tests/blackbox/lifecycle-signals.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -241,9 +245,11 @@ use_cases:
             - -s
             - vitest
             - run
-            - tests/cli/impact.test.ts
+            - tests/blackbox/lifecycle-signals.test.ts
+            - -t
+            - lifecycle.signals.impact_leads_with_the_union
           inputs:
-            - tests/cli/impact.test.ts
+            - tests/blackbox/lifecycle-signals.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -329,11 +335,11 @@ use_cases:
             - -s
             - vitest
             - run
-            - tests/cli/actionable-output.test.ts
-            - packages/core/test/markers/renameHint.test.ts
+            - tests/blackbox/lifecycle-signals.test.ts
+            - -t
+            - lifecycle.signals.errors_hand_back_the_cure
           inputs:
-            - tests/cli/actionable-output.test.ts
-            - packages/core/test/markers/renameHint.test.ts
+            - tests/blackbox/lifecycle-signals.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -403,9 +409,11 @@ use_cases:
             - -s
             - vitest
             - run
-            - packages/core/test/markers/verify.test.ts
+            - tests/blackbox/lifecycle-signals.test.ts
+            - -t
+            - lifecycle.signals.verify_can_be_previewed
           inputs:
-            - packages/core/test/markers/verify.test.ts
+            - tests/blackbox/lifecycle-signals.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -469,9 +477,11 @@ use_cases:
             - -s
             - vitest
             - run
-            - tests/cli/actionable-output.test.ts
+            - tests/blackbox/lifecycle-signals.test.ts
+            - -t
+            - lifecycle.signals.bind_names_the_next_step
           inputs:
-            - tests/cli/actionable-output.test.ts
+            - tests/blackbox/lifecycle-signals.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -544,9 +554,11 @@ use_cases:
             - -s
             - vitest
             - run
-            - packages/core/test/init/scaffold-gitignore.test.ts
+            - tests/blackbox/lifecycle-signals.test.ts
+            - -t
+            - lifecycle.signals.transient_output_stays_out_of_git
           inputs:
-            - packages/core/test/init/scaffold-gitignore.test.ts
+            - tests/blackbox/lifecycle-signals.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -645,9 +657,11 @@ use_cases:
             - -s
             - vitest
             - run
-            - packages/core/test/markers/skipBuildDirs.test.ts
+            - tests/blackbox/lifecycle-signals.test.ts
+            - -t
+            - lifecycle.signals.nested_workspace_is_not_scanned
           inputs:
-            - packages/core/test/markers/skipBuildDirs.test.ts
+            - tests/blackbox/lifecycle-signals.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -742,11 +756,11 @@ use_cases:
             - -s
             - vitest
             - run
-            - packages/core/test/markers/verifyVariants.test.ts
+            - tests/blackbox/lifecycle-signals.test.ts
             - -t
-            - '{variant}'
+            - lifecycle.signals.variant_fanout
           inputs:
-            - packages/core/test/markers/verifyVariants.test.ts
+            - tests/blackbox/lifecycle-signals.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
