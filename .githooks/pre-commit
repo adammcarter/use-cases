@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# use-cases: the matrix and its ledgers have to be well-formed to land at all.
+# Blocking, fast, deterministic. Stale rows are fine here; INVALID is not.
+set -u
+root="$(git rev-parse --show-toplevel)"
+uc="node $root/dist/uc.js"
+if [ -f "$root/use-cases.yml" ]; then
+    $uc matrix validate --repo "$root" --json >/dev/null \
+        || { echo "pre-commit: use-case matrix invalid — run: uc matrix validate --repo ." >&2; exit 1; }
+    key=""; [ -f "$root/.use-cases/trusted-ci-public-key.pem" ] && key="--public-key $root/.use-cases/trusted-ci-public-key.pem"
+    $uc validate-ledger --repo "$root" $key --json >/dev/null \
+        || { echo "pre-commit: use-case ledger invalid — run: uc validate-ledger --repo ." >&2; exit 1; }
+    if $uc scan --repo "$root" --json 2>/dev/null | grep -Eq '"status": *"INVALID"'; then
+        echo "pre-commit: a use-case marker and its binding disagree — run: uc scan --repo ." >&2
+        exit 1
+    fi
+fi
+exit 0
