@@ -100,9 +100,11 @@ use_cases:
             - -s
             - vitest
             - run
-            - packages/core/test/markers/rebind.test.ts
+            - tests/blackbox/lifecycle-bindings.test.ts
+            - -t
+            - lifecycle.bindings.rebind_repoints_a_binding
           inputs:
-            - packages/core/test/markers/rebind.test.ts
+            - tests/blackbox/lifecycle-bindings.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -200,9 +202,11 @@ use_cases:
             - -s
             - vitest
             - run
-            - packages/core/test/markers/rebind.test.ts
+            - tests/blackbox/lifecycle-bindings.test.ts
+            - -t
+            - lifecycle.bindings.unbind_releases_a_registration
           inputs:
-            - packages/core/test/markers/rebind.test.ts
+            - tests/blackbox/lifecycle-bindings.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -278,11 +282,11 @@ use_cases:
             - -s
             - vitest
             - run
-            - packages/core/test/markers/bindingRegistry.test.ts
-            - tests/cli/actionable-output.test.ts
+            - tests/blackbox/lifecycle-bindings.test.ts
+            - -t
+            - lifecycle.bindings.retired_row_can_leave_the_matrix
           inputs:
-            - packages/core/test/markers/bindingRegistry.test.ts
-            - tests/cli/actionable-output.test.ts
+            - tests/blackbox/lifecycle-bindings.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
