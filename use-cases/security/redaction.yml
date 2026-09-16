@@ -84,10 +84,9 @@ use_cases:
             - -s
             - vitest
             - run
-            - packages/core/test/redact.test.ts
+            - tests/blackbox/security-redaction.test.ts
           inputs:
-            - packages/core/test/redact.test.ts
-            - packages/core/src/redact.ts
+            - tests/blackbox/security-redaction.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
