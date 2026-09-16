@@ -253,3 +253,70 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
+  - id: plugin.init.loop_skill_ported
+    title: The use-case-driven-development skill ships in the plugin, host-neutral
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    tags:
+      - skills
+      - loop
+    source_refs:
+      - kind: file
+        path: skills/use-case-driven-development/SKILL.md
+    actor: agent
+    intent: Give every host the same loop — the AGENTS.md decision, the matrix as the entry point, rows before tests, markers around tests and code, the scan as the coverage number — with nothing in it that only one machine or one host can do.
+    preconditions:
+      - The plugin is installed on any supported host.
+    trigger: An agent loads /use-cases:use-case-driven-development at the start of framing, or the init skill hands over to it.
+    scenarios:
+      - id: plugin.init.loop_skill_ported.present_and_canonical
+        kind: steps
+        steps:
+          - Read skills/use-case-driven-development/SKILL.md.
+          - Confirm its front-matter name matches the directory and the skill is in the plugin's canonical list, so doctor and every host see it.
+      - id: plugin.init.loop_skill_ported.host_neutral
+        kind: steps
+        steps:
+          - Search the skill for machine- or host-specific instructions.
+          - Confirm there is no talk-to-myself, no npm install, no ~/.claude path, no agent-setup skill named as a dependency, and no simulator or Xcode step.
+      - id: plugin.init.loop_skill_ported.covers_the_loop
+        kind: steps
+        steps:
+          - Confirm the skill reads the AGENTS.md section first and sends a repo without one to /use-cases:init.
+          - Confirm it covers understand, frame, build, verify, sign-off and land with the uc commands and MCP tools each uses, and names bind, verify, scan and recover.
+    observable_outcomes:
+      - One loop skill, read the same way on Claude, Copilot, Codex and OpenCode.
+      - A repo without the decision is sent to init rather than asked ad hoc.
+    host_applicability:
+      - host_surface: claude.cli
+        supported: true
+      - host_surface: codex.cli
+        supported: true
+      - host_surface: copilot.cli
+        supported: true
+      - host_surface: opencode.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/skills/loop-skill.test.ts
+          inputs:
+            - tests/skills/loop-skill.test.ts
+            - skills/use-case-driven-development/SKILL.md
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none

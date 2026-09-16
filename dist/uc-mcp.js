@@ -21869,7 +21869,7 @@ var CANONICAL_SKILLS;
 var init_canonicalSkills = __esm({
   "packages/core/src/skills/canonicalSkills.ts"() {
     "use strict";
-    CANONICAL_SKILLS = ["use-cases", "showcase", "walkthrough", "migration", "init"];
+    CANONICAL_SKILLS = ["use-cases", "showcase", "walkthrough", "migration", "init", "use-case-driven-development"];
   }
 });
 
