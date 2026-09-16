@@ -54,8 +54,22 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/blackbox/diagnostics-contracts.test.ts
+            - -t
+            - diagnostics.contracts.root_resolution
+          inputs:
+            - tests/blackbox/diagnostics-contracts.test.ts
       requirements:
-        - evidence_kind: command_result
+        - evidence_kind: test_result
           required_verifiers:
             - script
           minimum_count: 1
@@ -113,6 +127,20 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/blackbox/diagnostics-contracts.test.ts
+            - -t
+            - diagnostics.contracts.schema_contract_surface
+          inputs:
+            - tests/blackbox/diagnostics-contracts.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -170,8 +198,22 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/blackbox/diagnostics-contracts.test.ts
+            - -t
+            - diagnostics.contracts.identity_consistency
+          inputs:
+            - tests/blackbox/diagnostics-contracts.test.ts
       requirements:
-        - evidence_kind: command_result
+        - evidence_kind: test_result
           required_verifiers:
             - script
           minimum_count: 1
@@ -231,9 +273,11 @@ use_cases:
             - -s
             - vitest
             - run
-            - tests/conformance/cli/cli-ergonomics.test.ts
+            - tests/blackbox/diagnostics-contracts.test.ts
+            - -t
+            - diagnostics.contracts.cli_self_documents
           inputs:
-            - tests/conformance/cli/cli-ergonomics.test.ts
+            - tests/blackbox/diagnostics-contracts.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
