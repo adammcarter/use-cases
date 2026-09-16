@@ -76,10 +76,11 @@ use_cases:
             - -s
             - vitest
             - run
-            - tests/agents/canonical-agents.test.ts
+            - tests/blackbox/agents-roster.test.ts
+            - -t
+            - agents.roster.shipped_with_plugin
           inputs:
-            - tests/agents/canonical-agents.test.ts
-            - packages/core/src/agents/canonicalAgents.ts
+            - tests/blackbox/agents-roster.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -163,10 +164,11 @@ use_cases:
             - -s
             - vitest
             - run
-            - tests/agents/canonical-agents.test.ts
+            - tests/blackbox/agents-roster.test.ts
+            - -t
+            - agents.roster.bodies_hold_the_line
           inputs:
-            - tests/agents/canonical-agents.test.ts
-            - agents/use-cases-demo.md
+            - tests/blackbox/agents-roster.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -242,10 +244,11 @@ use_cases:
             - -s
             - vitest
             - run
-            - tests/cli/known-commands-parity.test.ts
+            - tests/blackbox/agents-roster.test.ts
+            - -t
+            - agents.roster.command_allowlist_tracks_cli
           inputs:
-            - tests/cli/known-commands-parity.test.ts
-            - packages/core/src/cli/knownCommands.ts
+            - tests/blackbox/agents-roster.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
