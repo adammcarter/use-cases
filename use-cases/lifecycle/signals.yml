@@ -758,7 +758,7 @@ use_cases:
             - run
             - tests/blackbox/lifecycle-signals.test.ts
             - -t
-            - lifecycle.signals.variant_fanout
+            - variant_fanout {variant}
           inputs:
             - tests/blackbox/lifecycle-signals.test.ts
       requirements:

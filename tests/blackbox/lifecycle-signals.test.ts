@@ -1101,7 +1101,7 @@ use_cases:
 
   // golden_loop. One spawn per declared variant, one record each, keyed
   // family::variant, so a reader can see which shape was proved.
-  test("each variant gets its own ledger record keyed family::variant", () => {
+  test("variant_fanout spawn — each variant gets its own ledger record keyed family::variant", () => {
     const workspace = makeFamily();
     const { envelope } = runUcJson<{ results: Array<{ row_id: string; status: string }> }>(
       ["verify", "--repo", ".", "--row", "probe.core.fam"],
@@ -1114,7 +1114,7 @@ use_cases:
   });
 
   // golden_family_verified_only_when_all_pass.
-  test("the family is VERIFIED_LOCAL only when every variant passes", () => {
+  test("variant_fanout verdict — the family is VERIFIED_LOCAL only when every variant passes", () => {
     const workspace = makeFamily();
     runUcJson(["verify", "--repo", ".", "--row", "probe.core.fam"], {
       cwd: workspace.dir,
@@ -1125,7 +1125,7 @@ use_cases:
 
   // bad_failing_variant_is_named. A partial failure must be reported as one,
   // and the failing shape named rather than left to be hunted.
-  test("a failing variant keeps the family out of green and is named", () => {
+  test("variant_fanout names verdict — a failing variant keeps the family out of green, is named, and fails the run", () => {
     const workspace = makeFamily({ failing: "other" });
     const result = runUcJson<{ exit_code: number; results: Array<{ row_id: string; status: string }> }>(
       ["verify", "--repo", ".", "--row", "probe.core.fam"],
@@ -1140,7 +1140,7 @@ use_cases:
 
   // bad_missing_variant_token_is_a_spec_error. A family whose command cannot
   // distinguish its variants is a spec error, surfaced once — never a false pass.
-  test("a family command with no {variant} token is a surfaced spec error", () => {
+  test("variant_fanout spawn — a family with no {variant} token is a spec error and spawns nothing", () => {
     const workspace = makeFamily({ token: false });
     const { envelope } = runUcJson<{ exit_code: number; errors: Array<{ code: string }> }>(
       ["verify", "--repo", ".", "--row", "probe.core.fam"],
@@ -1155,7 +1155,7 @@ use_cases:
 
   // edge_dry_run_previews_each_variant, both ways: one entry per variant, and a
   // token-less family previewing as blocked rather than as a run.
-  test("a dry run previews one entry per variant, and blocked when the token is missing", () => {
+  test("variant_fanout dry — previews one entry per variant, and blocked when the token is missing", () => {
     const fanned = runUcJson<{ planned: Array<{ row_id: string; disposition: string }> }>(
       ["verify", "--repo", ".", "--row", "probe.core.fam", "--dry-run"],
       { cwd: makeFamily().dir, env: { UC_RUN_KEY_FILE: "/dev/null" } }
