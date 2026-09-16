@@ -94,9 +94,12 @@ use_cases:
             - -s
             - vitest
             - run
-            - tests/conformance/mcp/p15-mcp-resources-prompts.test.ts
+            - tests/blackbox/mcp-resources.test.ts
+            - -t
+            - mcp.resources.workspace_state_is_readable_and_read_only
           inputs:
-            - tests/conformance/mcp/p15-mcp-resources-prompts.test.ts
+            - tests/blackbox/mcp-resources.test.ts
+            - tests/helpers/mcp-server.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -163,9 +166,12 @@ use_cases:
             - -s
             - vitest
             - run
-            - tests/conformance/mcp/p15-mcp-resources-prompts.test.ts
+            - tests/blackbox/mcp-resources.test.ts
+            - -t
+            - mcp.resources.schemas_are_readable_without_a_repo
           inputs:
-            - tests/conformance/mcp/p15-mcp-resources-prompts.test.ts
+            - tests/blackbox/mcp-resources.test.ts
+            - tests/helpers/mcp-server.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -240,9 +246,12 @@ use_cases:
             - -s
             - vitest
             - run
-            - tests/conformance/mcp/p15-mcp-resources-prompts.test.ts
+            - tests/blackbox/mcp-resources.test.ts
+            - -t
+            - mcp.resources.prompts_guide_without_widening_the_surface
           inputs:
-            - tests/conformance/mcp/p15-mcp-resources-prompts.test.ts
+            - tests/blackbox/mcp-resources.test.ts
+            - tests/helpers/mcp-server.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
