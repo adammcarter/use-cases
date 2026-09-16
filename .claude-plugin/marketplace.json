@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "use-cases",
-      "description": "Plan, prove, and showcase agent work. Ships the use-cases, showcase, walkthrough, and migration skills, plus the use-cases-updater, use-cases-demo-prep, and use-cases-demo agents.",
+      "description": "Plan, prove, and showcase agent work. Ships the init, use-cases, showcase, walkthrough, and migration skills, plus the use-cases-updater, use-cases-demo-prep, and use-cases-demo agents.",
       "source": "."
     }
   ]

@@ -1,0 +1,255 @@
+schema_version: 1
+feature:
+  id: plugin.init
+  name: Repo init
+  summary: uc init takes a fresh repo from nothing to use-case driven in one command, and the /use-cases:init skill runs it and hands the agent to the development loop.
+use_cases:
+  - id: plugin.init.records_decision_in_agents_md
+    title: init records the use-case-driven decision in AGENTS.md
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: occasional
+    tags:
+      - init
+      - agents-md
+    source_refs:
+      - kind: file
+        path: packages/core/src/init/scaffold.ts
+    actor: agent
+    intent: Leave a cross-host record that this repo is use-case driven, with the date, a signpost to the plugin's skills and an instruction to follow them, so every agent on every host reads the same answer.
+    preconditions:
+      - uc init runs in a repo with no use-cases.yml.
+    trigger: The agent runs uc init --repo . from the /use-cases:init skill.
+    scenarios:
+      - id: plugin.init.records_decision_in_agents_md.no_file
+        kind: steps
+        steps:
+          - Run uc init in a repo with no AGENTS.md.
+          - Confirm AGENTS.md is created holding a "## Use-case driven development" section with "yes — <today>", a pointer to the use-cases and use-case-driven-development skills, and the instruction that agents follow them.
+      - id: plugin.init.records_decision_in_agents_md.existing_file
+        kind: steps
+        steps:
+          - Run uc init in a repo whose AGENTS.md has other content.
+          - Confirm the existing content is untouched and the section is appended after it.
+      - id: plugin.init.records_decision_in_agents_md.already_recorded
+        kind: steps
+        steps:
+          - Run uc init in a repo whose AGENTS.md already has the section, with yes or no.
+          - Confirm the file is unchanged and the result names the existing answer.
+      - id: plugin.init.records_decision_in_agents_md.second_run
+        kind: steps
+        steps:
+          - Run uc init twice.
+          - Confirm the second run is blocked as today and AGENTS.md still has exactly one section.
+    observable_outcomes:
+      - AGENTS.md carries exactly one decision section after any number of runs.
+      - The section is the one the use-case-driven-development skill reads.
+    host_applicability:
+      - host_surface: claude.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - packages/core/test/init/scaffold-agents-md.test.ts
+          inputs:
+            - packages/core/test/init/scaffold-agents-md.test.ts
+            - packages/core/src/init/scaffold.ts
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none
+  - id: plugin.init.wires_git_hooks
+    title: init wires the pre-commit and pre-push hooks
+    lifecycle: active
+    value_tier: core
+    journey_role: golden
+    usage_frequency: occasional
+    tags:
+      - init
+      - git-hooks
+    source_refs:
+      - kind: file
+        path: packages/core/src/init/scaffold.ts
+    actor: agent
+    intent: Have git enforce the matrix from day one — pre-commit blocks on an invalid matrix, ledger or marker; pre-push only reports — without clobbering hooks the repo already has.
+    preconditions:
+      - uc init runs in a git repo with no use-cases.yml.
+    trigger: The agent runs uc init --repo .
+    scenarios:
+      - id: plugin.init.wires_git_hooks.fresh_repo
+        kind: steps
+        steps:
+          - Run uc init in a git repo with no hooks.
+          - Confirm .githooks/pre-commit and .githooks/pre-push exist, are executable, and core.hooksPath is .githooks.
+          - Confirm pre-commit runs uc matrix validate, uc validate-ledger and a scan for INVALID, and pre-push runs uc impact and uc scan and always exits 0.
+      - id: plugin.init.wires_git_hooks.existing_hooks_path
+        kind: steps
+        steps:
+          - Run uc init in a repo where core.hooksPath already points elsewhere with its own pre-commit.
+          - Confirm the hooks are written into that directory, the existing pre-commit keeps its content with the use-cases block appended, and hooksPath is left alone.
+      - id: plugin.init.wires_git_hooks.uc_missing
+        kind: steps
+        steps:
+          - Run the written pre-commit with no uc on PATH and no UC override.
+          - Confirm it exits 0 with a warning naming the install route, so a contributor without the plugin is not locked out.
+      - id: plugin.init.wires_git_hooks.not_a_git_repo
+        kind: steps
+        steps:
+          - Run uc init in a directory that is not a git repo.
+          - Confirm the hook files are still written and the result notes that hooksPath was not set.
+    observable_outcomes:
+      - A fresh yes repo has enforcement from the first commit.
+      - Existing hooks are extended, never replaced.
+    host_applicability:
+      - host_surface: claude.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - packages/core/test/init/scaffold-git-hooks.test.ts
+          inputs:
+            - packages/core/test/init/scaffold-git-hooks.test.ts
+            - packages/core/src/init/scaffold.ts
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none
+  - id: plugin.init.vends_sample_matrix
+    title: init vends a sample row that shows the whole shape
+    lifecycle: active
+    value_tier: core
+    journey_role: golden
+    usage_frequency: occasional
+    tags:
+      - init
+      - template
+    source_refs:
+      - kind: file
+        path: packages/core/src/init/scaffold.ts
+    actor: agent
+    intent: Give a new repo one worked example of a row — golden, bad and edge scenarios, every field explained in a comment — so the first real row is written by copying, not by reading the schema.
+    preconditions:
+      - uc init runs in a repo with no use-cases.yml.
+    trigger: The agent runs uc init --repo .
+    scenarios:
+      - id: plugin.init.vends_sample_matrix.shape
+        kind: steps
+        steps:
+          - Run uc init and read use-cases/example.yml.
+          - Confirm the sample row carries a golden, a bad and an edge scenario, a comment on every top-level field, and a note that each scenario becomes one test.
+      - id: plugin.init.vends_sample_matrix.validates
+        kind: steps
+        steps:
+          - Run uc matrix validate on the fresh workspace.
+          - Confirm it is clean.
+      - id: plugin.init.vends_sample_matrix.honest_scan
+        kind: steps
+        steps:
+          - Run uc scan on the fresh workspace.
+          - Confirm the sample row reads UNBOUND with no INVALID rows, so a fresh repo never claims coverage it lacks.
+    observable_outcomes:
+      - The sample is a template to copy, not a placeholder to delete.
+      - A fresh workspace validates and scans clean.
+    host_applicability:
+      - host_surface: claude.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - packages/core/test/init/scaffold-sample.test.ts
+          inputs:
+            - packages/core/test/init/scaffold-sample.test.ts
+            - packages/core/src/init/scaffold.ts
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none
+  - id: plugin.init.skill_hands_off
+    title: The init skill runs uc init and hands over to the loop
+    lifecycle: active
+    value_tier: core
+    journey_role: golden
+    usage_frequency: occasional
+    tags:
+      - init
+      - skills
+    source_refs:
+      - kind: file
+        path: skills/init/SKILL.md
+    actor: agent
+    intent: Make /use-cases:init the one thing an agent runs in a new repo — it runs uc init, reports what was written, and ends by invoking /use-cases:use-case-driven-development so the loop starts at once.
+    preconditions:
+      - The plugin is installed; the repo may be empty.
+    trigger: The user or agent invokes /use-cases:init.
+    scenarios:
+      - id: plugin.init.skill_hands_off.text
+        kind: steps
+        steps:
+          - Read skills/init/SKILL.md.
+          - Confirm it runs uc init --repo ., tells the agent to read AGENTS.md back, and ends by invoking the use-case-driven-development skill.
+      - id: plugin.init.skill_hands_off.already_initialised
+        kind: steps
+        steps:
+          - Read the skill's guidance for a repo where uc init is blocked because use-cases.yml already exists.
+          - Confirm it says to read the recorded answer in AGENTS.md and go straight to the loop.
+    observable_outcomes:
+      - One slash command takes a repo from empty to inside the loop.
+    host_applicability:
+      - host_surface: claude.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/skills/init-skill.test.ts
+          inputs:
+            - tests/skills/init-skill.test.ts
+            - skills/init/SKILL.md
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none

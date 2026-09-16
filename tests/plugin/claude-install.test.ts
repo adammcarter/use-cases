@@ -1,9 +1,9 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { describe, expect, test } from "vitest";
+import { CANONICAL_SKILLS } from "../../packages/core/src/skills/canonicalSkills.js";
 
 const repoRoot = resolve(import.meta.dirname, "../..");
-const CANONICAL_SKILLS = ["use-cases", "showcase", "walkthrough", "migration"];
 
 function readJson(path: string): any {
   return JSON.parse(readFileSync(join(repoRoot, path), "utf8"));

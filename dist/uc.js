@@ -21869,7 +21869,7 @@ var CANONICAL_SKILLS;
 var init_canonicalSkills = __esm({
   "packages/core/src/skills/canonicalSkills.ts"() {
     "use strict";
-    CANONICAL_SKILLS = ["use-cases", "showcase", "walkthrough", "migration"];
+    CANONICAL_SKILLS = ["use-cases", "showcase", "walkthrough", "migration", "init"];
   }
 });
 
@@ -39268,7 +39268,8 @@ var init_ciAuthority = __esm({
 });
 
 // packages/core/src/init/scaffold.ts
-import { existsSync as existsSync17, mkdirSync as mkdirSync7, readFileSync as readFileSync17, writeFileSync as writeFileSync4 } from "node:fs";
+import { spawnSync as spawnSync3 } from "node:child_process";
+import { chmodSync as chmodSync2, existsSync as existsSync17, mkdirSync as mkdirSync7, readFileSync as readFileSync17, writeFileSync as writeFileSync4 } from "node:fs";
 import { dirname as dirname7, join as join18, relative as relative11, resolve as resolve5, sep as sep8 } from "node:path";
 function isInitTemplate(value) {
   return typeof value === "string" && INIT_TEMPLATES.includes(value);
@@ -39313,6 +39314,8 @@ function scaffoldWorkspace(options) {
     component_id: componentId,
     default_verifier: verifier.summary,
     created_files: [],
+    agents_md: null,
+    git_hooks: null,
     next_steps: [],
     diagnostics: [diagnostic2]
   });
@@ -39355,6 +39358,8 @@ function scaffoldWorkspace(options) {
     writeFileSync4(file.absPath, file.body, "utf8");
   }
   const gitignoreTouched = ensureGitignoreEntries(repoRoot);
+  const agentsMd = ensureAgentsMdDecision(repoRoot, options.today ?? (/* @__PURE__ */ new Date()).toISOString().slice(0, 10));
+  const gitHooks = ensureGitHooks(repoRoot);
   return {
     schema_version: 1,
     status: "created",
@@ -39365,11 +39370,109 @@ function scaffoldWorkspace(options) {
       toPosix2(relative11(repoRoot, configPath)),
       toPosix2(relative11(repoRoot, useCasePath)),
       ...templatePaths.map((file) => toPosix2(relative11(repoRoot, file.absPath))),
-      ...gitignoreTouched ? [GITIGNORE_FILE] : []
+      ...gitignoreTouched ? [GITIGNORE_FILE] : [],
+      ...agentsMd.status === "already_recorded" ? [] : [AGENTS_MD_FILE],
+      ...gitHooks.written
     ],
-    next_steps: nextSteps(),
+    agents_md: { status: agentsMd.status, decision: agentsMd.decision },
+    git_hooks: { hooks_dir: gitHooks.hooks_dir, hooks_path_set: gitHooks.hooks_path_set, extended: gitHooks.extended },
+    next_steps: nextSteps({ hooksPathSet: gitHooks.hooks_path_set, hooksDir: gitHooks.hooks_dir }),
     diagnostics: []
   };
+}
+function ensureAgentsMdDecision(repoRoot, today) {
+  const path2 = join18(repoRoot, AGENTS_MD_FILE);
+  const existing = existsSync17(path2) ? readFileSync17(path2, "utf8") : null;
+  if (existing !== null && existing.includes(DECISION_HEADING)) {
+    const after = existing.slice(existing.indexOf(DECISION_HEADING) + DECISION_HEADING.length);
+    const answer = after.match(/^\s*(yes|no)\b/m)?.[1];
+    return { status: "already_recorded", decision: answer === "yes" || answer === "no" ? answer : "unknown" };
+  }
+  const section = [
+    DECISION_HEADING,
+    "",
+    `yes \u2014 ${today}`,
+    "",
+    "This repo is use-case driven: every functional change starts in `use-cases/`,",
+    "rows are agreed before tests, tests and code are wrapped in the row's markers,",
+    "and `uc scan` is the coverage number. The rules live in the Use Cases plugin's",
+    "skills \u2014 `use-case-driven-development` for when and in what order, `use-cases`",
+    "for the commands \u2014 and every agent working here follows them.",
+    ""
+  ].join("\n");
+  if (existing === null) {
+    writeFileSync4(path2, `# ${baseNameOf(repoRoot)}
+
+${section}`, "utf8");
+    return { status: "created", decision: "yes" };
+  }
+  const separator = existing.endsWith("\n") ? "" : "\n";
+  const spacer = existing.trim() === "" ? "" : "\n";
+  writeFileSync4(path2, `${existing}${separator}${spacer}${section}`, "utf8");
+  return { status: "appended", decision: "yes" };
+}
+function preCommitBlock() {
+  return [
+    `${HOOK_BLOCK_MARKER} the matrix and its ledgers have to be well-formed to land at all.`,
+    'if [ -f "$(git rev-parse --show-toplevel)/use-cases.yml" ]; then',
+    ...UC_LOOKUP.map((line) => `  ${line}`.replace(/^  $/, "")),
+    '  root="$(git rev-parse --show-toplevel)"',
+    '  "$uc" matrix validate --repo "$root" --json >/dev/null \\',
+    '    || { echo "pre-commit: use-case matrix invalid \u2014 run: uc matrix validate --repo ." >&2; exit 1; }',
+    '  key=""; [ -f "$root/.use-cases/trusted-ci-public-key.pem" ] && key="--public-key $root/.use-cases/trusted-ci-public-key.pem"',
+    '  "$uc" validate-ledger --repo "$root" $key --json >/dev/null \\',
+    '    || { echo "pre-commit: use-case ledger invalid \u2014 run: uc validate-ledger --repo ." >&2; exit 1; }',
+    "  # A marker and its binding that disagree is INVALID; stale is fine here.",
+    `  if "$uc" scan --repo "$root" --json 2>/dev/null | grep -Eq '"status": *"INVALID"'; then`,
+    '    echo "pre-commit: a use-case marker and its binding disagree \u2014 run: uc scan --repo ." >&2',
+    "    exit 1",
+    "  fi",
+    "fi"
+  ];
+}
+function prePushBlock() {
+  return [
+    `${HOOK_BLOCK_MARKER} say which bound rows this push touches and where they stand. Advisory only.`,
+    'if [ -f "$(git rev-parse --show-toplevel)/use-cases.yml" ]; then',
+    ...UC_LOOKUP.map((line) => `  ${line}`.replace("pre-commit:", "pre-push:")),
+    '  root="$(git rev-parse --show-toplevel)"',
+    '  "$uc" impact --repo "$root" 2>/dev/null || true',
+    '  "$uc" scan --repo "$root" 2>/dev/null | tail -n 20 || true',
+    "fi",
+    "exit 0"
+  ];
+}
+function ensureGitHooks(repoRoot) {
+  const isGitRepo = spawnSync3("git", ["rev-parse", "--git-dir"], { cwd: repoRoot, encoding: "utf8" }).status === 0;
+  const configured = isGitRepo ? spawnSync3("git", ["config", "--get", "core.hooksPath"], { cwd: repoRoot, encoding: "utf8" }).stdout.trim() : "";
+  const hooksDir = configured || DEFAULT_HOOKS_DIR;
+  const written = [];
+  const extended = [];
+  for (const [name, block] of [["pre-commit", preCommitBlock()], ["pre-push", prePushBlock()]]) {
+    const relPath = toPosix2(join18(hooksDir, name));
+    const absPath = resolveContainedPath(repoRoot, relPath, "Hook target escapes the repo boundary.");
+    mkdirSync7(dirname7(absPath), { recursive: true });
+    if (existsSync17(absPath)) {
+      const existing = readFileSync17(absPath, "utf8");
+      if (existing.includes(HOOK_BLOCK_MARKER)) continue;
+      const separator = existing.endsWith("\n") ? "" : "\n";
+      writeFileSync4(absPath, `${existing}${separator}
+${block.join("\n")}
+`, "utf8");
+      extended.push(relPath);
+    } else {
+      writeFileSync4(absPath, `#!/usr/bin/env bash
+${block.join("\n")}
+`, "utf8");
+      written.push(relPath);
+    }
+    chmodSync2(absPath, 493);
+  }
+  let hooksPathSet = false;
+  if (isGitRepo && !configured) {
+    hooksPathSet = spawnSync3("git", ["config", "core.hooksPath", DEFAULT_HOOKS_DIR], { cwd: repoRoot }).status === 0;
+  }
+  return { hooks_dir: hooksDir, hooks_path_set: hooksPathSet, written, extended };
 }
 function detectPackageManager(repoRoot) {
   for (const candidate of PACKAGE_MANAGER_LOCKFILES) {
@@ -39446,49 +39549,75 @@ function renderConfig(componentId, verifier) {
 function renderExampleUseCase() {
   return [
     "schema_version: 1",
-    "# TODO: replace this example with a real use case for your project.",
-    "# Each row describes one observable behaviour your product must keep working.",
-    "# Once you bind it to code (`uc bind`) and CI proves it, the row reaches FRESH.",
+    "# A worked example of one use-case row. Copy it for your first real row, then",
+    "# delete this one. One row is one behaviour; its scenarios are its tests \u2014 each",
+    "# scenario below becomes exactly one test, written before the code.",
     "feature:",
     "  id: example.feature",
     "  name: Example feature",
-    "  summary: An example use case scaffolded by `uc init` \u2014 replace it with your own.",
+    "  summary: A sample use case vended by `uc init` \u2014 copy its shape for your own rows.",
     "metadata:",
     "  owner: unassigned",
     "  lifecycle: active",
     "use_cases:",
     "  - id: example.feature.happy_path",
     "    title: Example happy path",
+    "    # planned while the row is agreed but unproven; active once tests are green",
+    "    # and both the test and the code are wrapped in this row's markers.",
     "    lifecycle: active",
+    "    # How much the product depends on this: critical | core | supporting | long_tail.",
     "    value_tier: core",
+    "    # Where it sits in the user's journey: golden | alternate | edge | negative | failure.",
     "    journey_role: golden",
+    "    # How often users hit it: common | occasional | rare.",
     "    usage_frequency: common",
     "    tags: [example]",
+    "    # Files the behaviour lives in. `uc bind` wraps the exact span with a marker.",
     "    source_refs:",
     "      - kind: file",
     "        path: src/example.ts",
+    "    # Who triggers the behaviour: user | agent | script | system.",
     "    actor: user",
-    "    intent: Demonstrate the use-cases row shape so you can replace it.",
+    "    # What they are trying to achieve, in one sentence.",
+    "    intent: Demonstrate the use-cases row shape so you can copy it.",
+    "    # What must already be true before the trigger.",
     "    preconditions:",
     "      - The project is set up.",
+    "    # The event that starts the behaviour.",
     "    trigger: The user performs the example action.",
+    "    # One golden path, then the bad paths and the edge cases. Each scenario is",
+    "    # one test; a test that proves nothing here is a scenario to write first.",
     "    scenarios:",
-    "      - id: example.feature.happy_path.main",
+    "      - id: example.feature.happy_path.golden",
     "        kind: steps",
     "        steps:",
-    "          - Perform the example action.",
+    "          - Perform the example action with valid input.",
     "          - Observe the expected result.",
+    "      - id: example.feature.happy_path.bad_input",
+    "        kind: steps",
+    "        steps:",
+    "          - Perform the example action with invalid input.",
+    "          - Observe a clear error and no side effect.",
+    "      - id: example.feature.happy_path.edge_empty",
+    "        kind: steps",
+    "        steps:",
+    "          - Perform the example action with empty input.",
+    "          - Observe the documented empty-input behaviour.",
+    "    # What a person can see when the behaviour holds \u2014 the acceptance criteria.",
     "    observable_outcomes:",
     "      - The expected result is visible to the user.",
+    "      - Invalid input is refused with a clear message.",
     "    host_applicability:",
     "      - host_surface: codex.cli",
     "        supported: true",
+    "    # Which verifier (from use-cases.yml) has to pass for this row to count.",
     "    verification_policy:",
     "      mode: requirements",
     "      requirements:",
     "        - evidence_kind: test_result",
     `          required_verifiers: [${DEFAULT_VERIFIER_ID}]`,
     "          minimum_count: 1",
+    "    # Whether a human must sign this row off in a showcase before release.",
     "    approval_policy:",
     "      mode: none",
     ""
@@ -39552,9 +39681,10 @@ function renderJsVitestTest(runCommand) {
     ""
   ].join("\n");
 }
-function nextSteps() {
+function nextSteps(options = {}) {
   return [
-    "Edit use-cases/example.yml \u2014 replace the example row with a real use case.",
+    ...options.hooksPathSet === false && options.hooksDir === DEFAULT_HOOKS_DIR ? ["Point git at the hooks once the repo is initialised: `git config core.hooksPath .githooks`."] : [],
+    "Copy use-cases/example.yml's row for your first real use case, then delete the example.",
     "Run `uc matrix validate --repo . --json` to confirm the matrix is clean.",
     "Bind the implementing code with `uc bind` \u2014 code-marker grammar in docs/markers-adoption.md.",
     "Wire the `acceptance` verifier in use-cases.yml to your real test command (docs/cli.md).",
@@ -39576,7 +39706,7 @@ function baseNameOf(repoRoot) {
 function toPosix2(path2) {
   return path2.split(sep8).join("/");
 }
-var INIT_TEMPLATES, CONFIG_FILE, USE_CASE_FILE, DEFAULT_VERIFIER_ID, EXAMPLE_ROW_ID, JS_VITEST_SRC_FILE, JS_VITEST_TEST_FILE, PACKAGE_MANAGER_LOCKFILES, GITIGNORE_FILE, GITIGNORE_ENTRIES;
+var INIT_TEMPLATES, CONFIG_FILE, USE_CASE_FILE, DEFAULT_VERIFIER_ID, EXAMPLE_ROW_ID, JS_VITEST_SRC_FILE, JS_VITEST_TEST_FILE, PACKAGE_MANAGER_LOCKFILES, GITIGNORE_FILE, GITIGNORE_ENTRIES, AGENTS_MD_FILE, DECISION_HEADING, DEFAULT_HOOKS_DIR, HOOK_BLOCK_MARKER, UC_LOOKUP;
 var init_scaffold = __esm({
   "packages/core/src/init/scaffold.ts"() {
     "use strict";
@@ -39605,6 +39735,18 @@ var init_scaffold = __esm({
         pattern: ".use-cases/verification-results.jsonl",
         comment: "# use-cases: transient local verification results (the verify -> prove handoff)."
       }
+    ];
+    AGENTS_MD_FILE = "AGENTS.md";
+    DECISION_HEADING = "## Use-case driven development";
+    DEFAULT_HOOKS_DIR = ".githooks";
+    HOOK_BLOCK_MARKER = "# use-cases:";
+    UC_LOOKUP = [
+      "# The plugin puts uc on PATH in Claude sessions; elsewhere set UC to <plugin>/bin/uc.",
+      'uc="${UC:-$(command -v uc 2>/dev/null || true)}"',
+      'if [ -z "$uc" ]; then',
+      '  echo "pre-commit: uc not found \u2014 install the Use Cases plugin (https://github.com/adammcarter/use-cases) or set UC=<plugin>/bin/uc" >&2',
+      "  exit 0",
+      "fi"
     ];
   }
 });
@@ -40973,7 +41115,7 @@ var doctorCommands = [
 ];
 
 // packages/cli/src/commands/evidence.ts
-import { spawnSync as spawnSync3 } from "node:child_process";
+import { spawnSync as spawnSync4 } from "node:child_process";
 import { createHash as createHash7 } from "node:crypto";
 function commandAfterSeparator(argv) {
   const index2 = argv.indexOf("--", 1);
@@ -40995,7 +41137,7 @@ function runPerformedCommand(argv, cwd) {
     };
   }
   const [executable, ...args] = command;
-  const outcome = spawnSync3(executable, args, { cwd, encoding: "utf8" });
+  const outcome = spawnSync4(executable, args, { cwd, encoding: "utf8" });
   const exitCode = typeof outcome.status === "number" ? outcome.status : 127;
   return {
     kind: "performed",
@@ -43900,6 +44042,8 @@ function runInit(argv, wantsJson) {
       `  component: ${result.component_id}`,
       "  created:",
       ...result.created_files.map((file) => `    - ${file}`),
+      `  AGENTS.md: ${result.agents_md?.status ?? "untouched"} (${result.agents_md?.decision ?? "-"})`,
+      `  git hooks: ${result.git_hooks?.hooks_dir ?? "-"}${result.git_hooks?.hooks_path_set ? " (core.hooksPath set)" : ""}`,
       "",
       "Next steps:",
       ...result.next_steps.map((step, index2) => `  ${index2 + 1}. ${step}`),
