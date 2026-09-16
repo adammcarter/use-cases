@@ -1,0 +1,97 @@
+schema_version: 1
+feature:
+  id: security.redaction
+  name: Secret redaction on the way into a ledger
+  summary: >-
+    Evidence summaries, showcase observations and capsule command output all land
+    in append-only ledgers that are committed. A secret written into one cannot be
+    taken back out, so high-confidence secret shapes are redacted at the point of
+    append. This behaviour was tested in four places and described by no row.
+use_cases:
+  - id: security.redaction.secrets_never_reach_an_append_only_ledger
+    title: A secret in a summary or observation is redacted before it is written
+    lifecycle: active
+    value_tier: critical
+    journey_role: negative
+    usage_frequency: common
+    tags:
+      - security
+      - evidence
+      - redaction
+      - append-only
+    source_refs:
+      - kind: file
+        path: packages/core/src/redact.ts
+      - kind: file
+        path: packages/core/src/evidence/appendEvidenceEvent.ts
+      - kind: file
+        path: packages/core/test/redact.test.ts
+    actor: script
+    intent: >-
+      Catch the high-confidence secret shapes on the way into a ledger, because
+      an append-only record cannot be edited afterwards and is usually committed.
+      Conservative on purpose: the cost of mangling legitimate prose is paid on
+      every record, while the cost of missing an exotic secret shape is paid once.
+    preconditions:
+      - Text is about to be appended to an evidence or showcase ledger.
+    trigger: An agent records evidence, an observation, or a capsule command result.
+    scenarios:
+      - id: security.redaction.secrets_never_reach_an_append_only_ledger.golden_labelled_assignments
+        kind: steps
+        steps:
+          - Append a summary containing secret, token, password and api_key assignments.
+          - Read the stored record.
+        observable_outcomes:
+          - Labelled secret, token, password and api_key assignments are redacted, and the label keeps its original case.
+      - id: security.redaction.secrets_never_reach_an_append_only_ledger.golden_vendor_token_shapes
+        kind: steps
+        steps:
+          - Append text containing an OpenAI-style sk- token, GitHub ghp_ and gho_ tokens, and an AWS access key id.
+          - Read the stored record.
+        observable_outcomes:
+          - Each vendor token shape is redacted, with enough prefix left to identify what kind of secret it was.
+      - id: security.redaction.secrets_never_reach_an_append_only_ledger.bad_legitimate_prose_is_not_mangled
+        kind: steps
+        steps:
+          - Append ordinary prose that contains no secret pattern.
+          - Compare the stored text with what was submitted.
+        observable_outcomes:
+          - Text with no secret pattern is stored verbatim, because over-redaction would make every record untrustworthy to read.
+      - id: security.redaction.secrets_never_reach_an_append_only_ledger.edge_multiple_secrets_in_one_string
+        kind: steps
+        steps:
+          - Append a single string carrying several distinct secrets.
+          - Read the stored record.
+        observable_outcomes:
+          - Every distinct secret in one string is redacted, not just the first match.
+    observable_outcomes:
+      - High-confidence secret shapes are redacted before they reach an append-only ledger.
+      - Text with no secret pattern is stored verbatim, so records stay trustworthy to read.
+      - Every distinct secret in one string is redacted, not only the first.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+      - host_surface: claude.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - packages/core/test/redact.test.ts
+          inputs:
+            - packages/core/test/redact.test.ts
+            - packages/core/src/redact.ts
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none
