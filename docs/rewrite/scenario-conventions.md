@@ -44,6 +44,30 @@ Most of row 1b's work is therefore **promotion, not invention**: the rows
 already enumerate the bad and edge behaviours in their outcomes: those outcomes
 become named scenarios that carry them.
 
+## 2b · A deliberate absence is recorded, not left blank
+
+Some rows genuinely have no bad path, and forcing one on them produces padding
+— which is worse than a gap, because it reads as coverage. But an absence that
+looks identical to an oversight cannot be checked either.
+
+So a row that legitimately has no bad or edge path says so in its `tags`, which
+the schema leaves free-form:
+
+```yaml
+tags:
+  - bind
+  - onboarding
+  - no-bad-path
+```
+
+`no-bad-path` and `no-edge-path` are the two. A greppable check can then hold
+every active row to "has a bad path, or says why not" without a schema change.
+
+Used so far on `lifecycle.signals.bind_names_the_next_step` (a bind either
+succeeds and names the next step or fails and is another row's behaviour) and
+`lifecycle.signals.transient_output_stays_out_of_git` (writing a gitignore entry
+has boundaries but no rejection path).
+
 ## 3 · Three buckets, decided per behaviour
 
 Every behaviour a row describes falls into one of three buckets, and the bucket
