@@ -234,10 +234,6 @@ export const showcaseRequestApprovalInputSchema = workspaceSchema({
   statement: { type: "string", description: "Draft approval statement echoed into the suggested CLI command." }
 }, ["run"]);
 
-export const hostDoctorInputSchema = workspaceSchema({
-  host: { type: "string", enum: HOST_NAMES, description: "Host whose profile/projection is checked." }
-}, ["host"]);
-
 export const cliEnvelopeSchema = {
   type: "object",
   required: ["schema_version", "protocol_version", "command", "ok", "complete", "data", "diagnostics", "context"]

@@ -1,7 +1,6 @@
 {
   "name": "@adammcarter/use-cases",
   "version": "0.6.0",
-  "private": false,
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -12,61 +11,11 @@
   "engines": {
     "node": ">=22"
   },
-  "bin": {
-    "uc": "./packages/cli/dist/index.js",
-    "use-cases": "./packages/cli/dist/index.js",
-    "uc-mcp": "./packages/mcp/dist/index.js",
-    "use-cases-mcp": "./packages/mcp/dist/index.js"
-  },
-  "files": [
-    ".agents/skills",
-    "agents",
-    ".claude-plugin/plugin.json",
-    ".claude-plugin/marketplace.json",
-    ".codex-plugin/plugin.json",
-    ".mcp.json",
-    ".opencode/plugin/use-cases.js",
-    "hooks",
-    "README.md",
-    "CHANGELOG.md",
-    "bootstrap",
-    "docs/acceptance.md",
-    "docs/activation.md",
-    "docs/adr",
-    "docs/cli.md",
-    "docs/data-model.md",
-    "docs/hosts.md",
-    "docs/markers-adoption.md",
-    "docs/mcp.md",
-    "docs/migration.md",
-    "docs/release.md",
-    "docs/security.md",
-    "docs/security",
-    "docs/showcase.md",
-    "docs/README.md",
-    "docs/getting-started.md",
-    "docs/reference",
-    "docs/tutorials",
-    "examples",
-    "hosts",
-    "packages/cli/dist",
-    "packages/cli/package.json",
-    "packages/core/dist",
-    "packages/core/package.json",
-    "packages/mcp/dist",
-    "packages/mcp/package.json",
-    "plugin.json",
-    "use-cases.yml",
-    "schemas/v1",
-    "scripts/install-agent-hooks.mjs",
-    "use-cases"
-  ],
   "scripts": {
     "build": "tsc -b packages/core packages/cli packages/mcp && node packages/core/scripts/copy-schemas.mjs && chmod +x packages/cli/dist/index.js packages/mcp/dist/index.js",
     "clean": "rm -rf packages/*/dist coverage",
     "cli": "node packages/cli/dist/index.js",
     "lint": "tsc -b --pretty false --dry",
-    "postinstall": "node scripts/install-agent-hooks.mjs",
     "test": "vitest run",
     "typecheck": "tsc -b --pretty false"
   },
@@ -81,5 +30,6 @@
     "remark-parse": "^11.0.0",
     "unified": "^11.0.5",
     "yaml": "^2.9.0"
-  }
+  },
+  "private": true
 }

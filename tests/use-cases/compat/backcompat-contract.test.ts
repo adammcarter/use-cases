@@ -29,7 +29,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { beforeAll, describe, expect, test } from "vitest";
 
-const repoRoot = resolve(import.meta.dirname, "../..");
+const repoRoot = resolve(import.meta.dirname, "../../..");
 const goldenPath = join(repoRoot, "tests/fixtures/backcompat/contract-0.4.0.json");
 const capture = join(repoRoot, "scripts/capture-cli-contract.mjs");
 const cliBin = join(repoRoot, "packages/cli/dist/index.js");

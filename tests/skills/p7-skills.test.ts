@@ -171,12 +171,6 @@ describe("P7 skills are declared to the Claude host", () => {
     expect(marketplace.name).toBe("use-cases");
     expect(marketplace.plugins?.map((plugin) => plugin.name)).toContain("use-cases");
   });
-
-  test("both shipped manifests stay on the same version", () => {
-    const codex = JSON.parse(readFileSync(join(repoRoot, ".codex-plugin", "plugin.json"), "utf8")) as { version?: string };
-    const claude = claudeManifest as unknown as { version?: string };
-    expect(claude.version).toBe(codex.version);
-  });
 });
 //: @use-case:end skills.assets.host_declaration
 

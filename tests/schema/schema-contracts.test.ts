@@ -29,8 +29,6 @@ const expectedSchemaIds = [
   "https://use-cases.dev/schemas/v1/showcase-event-append-result.schema.json",
   "https://use-cases.dev/schemas/v1/showcase-finish-result.schema.json",
   "https://use-cases.dev/schemas/v1/showcase-approval-result.schema.json",
-  "https://use-cases.dev/schemas/v1/host-profile.schema.json",
-  "https://use-cases.dev/schemas/v1/host-status-result.schema.json",
   "https://use-cases.dev/schemas/v1/workspace-config.schema.json",
   "https://use-cases.dev/schemas/v1/workflow-mode.schema.json",
   "https://use-cases.dev/schemas/v1/matrix-validation-result.schema.json",

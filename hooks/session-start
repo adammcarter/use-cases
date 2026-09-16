@@ -8,7 +8,6 @@
 #   - Claude Code (CLAUDE_PLUGIN_ROOT, not Copilot) -> hookSpecificOutput.additionalContext
 #   - Copilot CLI  (COPILOT_CLI)                    -> top-level additionalContext
 #   - Codex / other                                 -> hookSpecificOutput.additionalContext
-# OpenCode uses a native plugin instead (.opencode/plugin/use-cases.js).
 
 set -euo pipefail
 
@@ -31,12 +30,10 @@ escape_for_json() {
 session_context=$(escape_for_json "$bootstrap_content")
 
 # printf (not heredoc) avoids the bash 5.3+ heredoc hang.
-#: @use-case:hosts.profiles.bootstrap_autoinject
 if [ -n "${COPILOT_CLI:-}" ]; then
   printf '{\n  "additionalContext": "%s"\n}\n' "$session_context"
 else
   printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$session_context"
 fi
-#: @use-case:end hosts.profiles.bootstrap_autoinject
 
 exit 0

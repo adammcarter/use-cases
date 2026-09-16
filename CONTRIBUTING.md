@@ -33,10 +33,10 @@ corepack pnpm cli -- matrix validate --repo . --json   # run the built CLI
 | `packages/core` | `@adammcarter/use-cases-core` | Core domain library: matrix, bindings, verify/prove, freshness, ledger, evidence, showcase, capsule, plan, host. The schemas live under `schemas/v1`. |
 | `packages/cli` | `@adammcarter/use-cases-cli` | The `uc` CLI (alias `use-cases`). Thin command layer over core; owns the `--json` envelopes and exit codes. |
 | `packages/mcp` | `@adammcarter/use-cases-mcp` | The `uc-mcp` MCP server. Wraps the same envelopes for agents over local stdio. |
-| `docs/` | — | Reference, security, and release docs. `docs/reference/stability.md` is the SemVer contract. |
+| `docs/` | — | Reference and security docs. `docs/reference/stability.md` is the SemVer contract. |
 | `tests/` | — | Cross-package and acceptance tests. |
 
-The three packages release **together at the same version**.
+The three packages stay **on the same version**.
 
 ## The trust model in one paragraph
 
@@ -72,7 +72,7 @@ MCP.
   (`feat:`, `fix:`, `docs:`, `test:`, `chore:`, `refactor:`). One logical change
   per commit.
 - **SemVer impact noted.** State whether the change is patch / minor / major per
-  the stability policy, and add a `CHANGELOG.md` entry under `## [Unreleased]`.
+  the stability policy.
 - **Docs updated.** If you change a contract or behaviour, update the relevant
   doc in the same PR.
 - **Tests included** for behavioural changes, as above.

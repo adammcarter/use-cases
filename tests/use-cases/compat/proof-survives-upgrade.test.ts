@@ -17,7 +17,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
-const repoRoot = resolve(import.meta.dirname, "../..");
+const repoRoot = resolve(import.meta.dirname, "../../..");
 const fixture = join(repoRoot, "tests/fixtures/backcompat/proven-0.5.5");
 const cliBin = join(repoRoot, "packages/cli/dist/index.js");
 

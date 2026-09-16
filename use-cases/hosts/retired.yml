@@ -1,0 +1,221 @@
+# Rows retired on 2026-09-16 when npm delivery was removed. They stay in the
+# matrix as lifecycle: removed so the evidence ledger's history for them remains
+# valid; nothing binds to them and nothing is verified against them.
+schema_version: 1
+feature:
+  id: hosts.profiles
+  name: Host profiles and conformance
+  summary: First-class host families with truthful projection, activation, and support status.
+use_cases:
+  - id: hosts.profiles.bootstrap_autoinject
+    title: Trusted bootstrap is auto-injected at session start per host
+    lifecycle: removed
+    value_tier: core
+    journey_role: golden
+    usage_frequency: common
+    tags:
+      - hosts
+      - bootstrap
+      - activation
+    source_refs:
+      - kind: file
+        path: hooks/session-start
+      - kind: file
+        path: hooks/hooks.json
+      - kind: file
+        path: hooks/hooks-codex.json
+      - kind: file
+        path: .opencode/plugin/use-cases.js
+      - kind: file
+        path: bootstrap/use-cases.md
+    actor: agent
+    intent: Deliver the trusted bootstrap into an installed agent's context at session start through
+      each host's real mechanism, so the plugin activates without the agent having to discover it by
+      reading the repo.
+    preconditions:
+      - The plugin is installed in a supported host and the host fires its session-start lifecycle.
+    trigger: A session starts (or resumes / clears / compacts) in a host with the plugin installed.
+    scenarios:
+      - id: hosts.profiles.bootstrap_autoinject.per_host
+        kind: steps
+        steps:
+          - Run the session-start hook under each host's environment (Claude, Copilot, Codex).
+          - Confirm it emits the trusted bootstrap in that host's context shape.
+          - Confirm the OpenCode plugin returns the bootstrap as session.started context.
+    observable_outcomes:
+      - Claude and Codex receive the bootstrap as hookSpecificOutput.additionalContext; Copilot as
+        top-level additionalContext; OpenCode as session.started context.
+      - The injected content is the trusted EXTREMELY_IMPORTANT bootstrap block, delivered whole (no
+        truncation), not arbitrary text.
+    host_applicability:
+      - host_surface: claude.cli
+        supported: true
+      - host_surface: codex.cli
+        supported: true
+      - host_surface: copilot.cli
+        supported: true
+      - host_surface: opencode.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/conformance/bootstrap/session-start.test.ts
+          inputs:
+            - tests/conformance/bootstrap/session-start.test.ts
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none
+  - id: hosts.profiles.plugin_registration
+    title: A global install registers the plugin through the host's own CLI
+    lifecycle: removed
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    tags:
+      - hosts
+      - claude
+      - activation
+      - install
+    source_refs:
+      - kind: file
+        path: scripts/install-agent-hooks.mjs
+      - kind: file
+        path: .claude-plugin/marketplace.json
+      - kind: file
+        path: tests/conformance/bootstrap/agent-hook-installer.test.ts
+    actor: script
+    intent: Make the shipped skills reachable after a global npm install by registering the package as
+      its own single-plugin marketplace through the supported claude plugin CLI, since the
+      session-start hook only injects bootstrap text and never loads skills.
+    preconditions:
+      - The package is installed globally and the claude host is not excluded from AGENT_HOOK_HOSTS.
+    trigger: npm runs the package's install hook during a global install or upgrade.
+    scenarios:
+      - id: hosts.profiles.plugin_registration.global_install
+        kind: steps
+        steps:
+          - Run the installer with a stub claude CLI on PATH.
+          - Confirm it issues plugin marketplace add for the package root at user scope.
+          - Confirm it then issues plugin install use-cases@use-cases at user scope.
+      - id: hosts.profiles.plugin_registration.reinstall
+        kind: steps
+        steps:
+          - Run the installer against a host that rejects an already-added marketplace non-zero.
+          - Confirm the installer still proceeds to install the plugin and reports no failure.
+      - id: hosts.profiles.plugin_registration.non_fatal
+        kind: steps
+        steps:
+          - Run the installer with no claude CLI on PATH, and again with a host CLI that fails.
+          - Confirm the package install still exits zero and only warns.
+          - Confirm a failing marketplace add does not go on to attempt the install.
+          - Confirm the bootstrap session-start hook is installed regardless.
+      - id: hosts.profiles.plugin_registration.skipped
+        kind: steps
+        steps:
+          - Run the installer as a local (non-global) install.
+          - Run the installer with AGENT_HOOK_HOSTS excluding claude.
+          - Confirm no host CLI command is issued in either case.
+    observable_outcomes:
+      - A global install leaves the plugin registered with the host, so the shipped skills are
+        loadable rather than present-but-unreachable.
+      - An upgrade over an existing marketplace still registers the plugin, so skills do not
+        silently go unregistered after the first install.
+      - Registration failure warns and never fails the package install, and never blocks the
+        bootstrap hook.
+      - Local installs and an excluded claude host register nothing.
+    host_applicability:
+      - host_surface: claude.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/conformance/bootstrap/agent-hook-installer.test.ts
+          inputs:
+            - tests/conformance/bootstrap/agent-hook-installer.test.ts
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none
+  - id: hosts.profiles.plugin_state_ownership
+    title: The installer never hand-writes the host's plugin state
+    lifecycle: removed
+    value_tier: core
+    journey_role: negative
+    usage_frequency: common
+    tags:
+      - hosts
+      - claude
+      - boundary
+      - install
+    source_refs:
+      - kind: file
+        path: scripts/install-agent-hooks.mjs
+      - kind: file
+        path: tests/conformance/bootstrap/agent-hook-installer.test.ts
+    actor: script
+    intent: Record the deliberate boundary that writing ~/.claude/plugins/*.json directly is
+      unsupported, because that state belongs to Claude and other tools converge it through the same
+      plugin CLI.
+    preconditions:
+      - The installer is registering the plugin with the claude host.
+    trigger: A global install registers the plugin.
+    scenarios:
+      - id: hosts.profiles.plugin_state_ownership.no_direct_writes
+        kind: steps
+        steps:
+          - Run the installer against an isolated home directory.
+          - Confirm known_marketplaces.json was not written by us.
+          - Confirm installed_plugins.json was not written by us.
+    observable_outcomes:
+      - Registration goes through the host's supported CLI door only; the host's own plugin state
+        files are never authored by this package.
+      - A second writer such as agent-setup can never disagree with the host about what is installed.
+      - This package owns only its own artifacts, .claude-plugin/plugin.json and
+        .claude-plugin/marketplace.json.
+    host_applicability:
+      - host_surface: claude.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/conformance/bootstrap/agent-hook-installer.test.ts
+          inputs:
+            - tests/conformance/bootstrap/agent-hook-installer.test.ts
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none

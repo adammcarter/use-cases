@@ -15,7 +15,6 @@ describe("P9 MCP wrapper contract", () => {
     expect(names).toContain("matrix_validate");
     expect(names).toContain("evidence_record");
     expect(names).toContain("showcase_request_approval");
-    expect(names).toContain("host_doctor");
     expect(names).not.toContain("ucm_upsert_use_case");
     expect(names).not.toContain("showcase_approve");
     expect(names).not.toContain("host_project");

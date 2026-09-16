@@ -74,8 +74,7 @@ describe("P0 MCP wire contract", () => {
       result: {
         tools: expect.arrayContaining([
           expect.objectContaining({ name: "matrix_validate" }),
-          expect.objectContaining({ name: "showcase_request_approval" }),
-          expect.objectContaining({ name: "host_doctor" })
+          expect.objectContaining({ name: "showcase_request_approval" })
         ])
       }
     });

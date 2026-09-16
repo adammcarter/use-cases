@@ -16,7 +16,7 @@ use_cases:
       - future
     source_refs:
       - kind: file
-        path: docs/hosts.md
+        path: docs/activation.md
     actor: script
     intent: Run model-triggering behavioral checks across hosts.
   - id: roadmap.deferred.trusted_host_confirmation_path

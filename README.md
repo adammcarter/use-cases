@@ -69,8 +69,9 @@ Typical workflows: **continuous** (keep the matrix live as you build), **backfil
 ## Quickstart
 
 ```bash
-# Install the CLI + MCP server (provides the `uc` and `uc-mcp` binaries)
-npm i -g use-cases
+# Install: coming with the plugin redesign — the repo installs directly into your
+# agent as a plugin; until then run the CLI from a checkout:
+#   corepack pnpm install && corepack pnpm -s build && alias uc="node $PWD/packages/cli/dist/index.js"
 
 # Scaffold a workspace (creates use-cases/ + config with one example behaviour)
 uc init
@@ -112,7 +113,7 @@ For the technically curious — the high-level shape:
 
 Ships as a single self-contained package: **`use-cases`** (binaries `uc` and `uc-mcp`). The `core` / `cli` / `mcp` workspaces are bundled inside it, not published separately.
 
-Deeper reading: [CLI reference](docs/cli.md) · [data model](docs/data-model.md) · [code markers & freshness](docs/markers-adoption.md) · [evidence & security](docs/security.md) · [showcase runs](docs/showcase.md) · [hosts & activation](docs/hosts.md) · [MCP](docs/mcp.md) · [migration](docs/migration.md).
+Deeper reading: [CLI reference](docs/cli.md) · [data model](docs/data-model.md) · [code markers & freshness](docs/markers-adoption.md) · [evidence & security](docs/security.md) · [showcase runs](docs/showcase.md) · [activation](docs/activation.md) · [MCP](docs/mcp.md) · [migration](docs/migration.md).
 
 ---
 

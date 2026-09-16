@@ -23,9 +23,9 @@ import Ajv2020Module from "ajv/dist/2020.js";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { describe, expect, test } from "vitest";
-import { validateBindingsJsonl } from "../../packages/core/src/markers/registry.js";
+import { validateBindingsJsonl } from "../../../packages/core/src/markers/registry.js";
 
-const repoRoot = resolve(import.meta.dirname, "../..");
+const repoRoot = resolve(import.meta.dirname, "../../..");
 const oldSchema = JSON.parse(
   readFileSync(join(repoRoot, "tests/fixtures/backcompat/binding-registry-event-0.5.5.schema.json"), "utf8")
 ) as Record<string, unknown>;
