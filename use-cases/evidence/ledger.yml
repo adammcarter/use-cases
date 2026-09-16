@@ -74,9 +74,11 @@ use_cases:
             - -s
             - vitest
             - run
-            - tests/use-cases/product_proof_map.test.ts
+            - tests/blackbox/evidence-ledger.test.ts
+            - -t
+            - evidence.ledger.product_proof_map
           inputs:
-            - tests/use-cases/product_proof_map.test.ts
+            - tests/blackbox/evidence-ledger.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -148,9 +150,11 @@ use_cases:
             - -s
             - vitest
             - run
-            - tests/use-cases/append_only_corrections.test.ts
+            - tests/blackbox/evidence-ledger.test.ts
+            - -t
+            - evidence.ledger.append_only_corrections
           inputs:
-            - tests/use-cases/append_only_corrections.test.ts
+            - tests/blackbox/evidence-ledger.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -226,9 +230,11 @@ use_cases:
             - -s
             - vitest
             - run
-            - tests/use-cases/assurance_and_freshness.test.ts
+            - tests/blackbox/evidence-ledger.test.ts
+            - -t
+            - evidence.ledger.assurance_and_freshness
           inputs:
-            - tests/use-cases/assurance_and_freshness.test.ts
+            - tests/blackbox/evidence-ledger.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -297,9 +303,11 @@ use_cases:
             - -s
             - vitest
             - run
-            - tests/use-cases/damaged_ledger_replay.test.ts
+            - tests/blackbox/evidence-ledger.test.ts
+            - -t
+            - evidence.ledger.damaged_ledger_replay
           inputs:
-            - tests/use-cases/damaged_ledger_replay.test.ts
+            - tests/blackbox/evidence-ledger.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:

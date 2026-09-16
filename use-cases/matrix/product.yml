@@ -175,9 +175,11 @@ use_cases:
             - -s
             - vitest
             - run
-            - tests/use-cases/integrity_degraded_nonfatal.test.ts
+            - tests/blackbox/matrix-product.test.ts
+            - -t
+            - matrix.product.integrity_degraded_nonfatal
           inputs:
-            - tests/use-cases/integrity_degraded_nonfatal.test.ts
+            - tests/blackbox/matrix-product.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -240,9 +242,11 @@ use_cases:
             - -s
             - vitest
             - run
-            - tests/use-cases/coverage_by_value_and_journey.test.ts
+            - tests/blackbox/matrix-product.test.ts
+            - -t
+            - matrix.product.coverage_by_value_and_journey
           inputs:
-            - tests/use-cases/coverage_by_value_and_journey.test.ts
+            - tests/blackbox/matrix-product.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
