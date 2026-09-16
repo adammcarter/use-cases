@@ -14,6 +14,7 @@ use_cases:
       - matrix
       - product-behavior
       - dogfood
+      - no-bad-path
     source_refs:
       - kind: file
         path: docs/data-model.md
@@ -25,12 +26,21 @@ use_cases:
       - Product behavior has been identified at feature level.
     trigger: Agent or user needs acceptance, proof, or demo coverage for the product.
     scenarios:
-      - id: matrix.product.product_inventory.cli
+      - id: matrix.product.product_inventory.golden_cli
         kind: steps
         steps:
           - Run matrix list.
-          - Confirm product-level use-cases rows exist alongside primitive support rows.
-          - Confirm each row has value, journey, usage, and scenario data.
+          - Confirm product-level rows exist alongside primitive support rows.
+          - Confirm each row carries value, journey, usage and scenario data.
+        observable_outcomes:
+          - Product behaviour can be selected by row id without reading implementation code.
+      - id: matrix.product.product_inventory.edge_primitive_rows_stay_supporting
+        kind: steps
+        steps:
+          - List the rows and separate product-level from primitive ones.
+          - Read how each is presented.
+        observable_outcomes:
+          - Primitive rows remain available as supporting proof rather than the whole product map.
     observable_outcomes:
       - Product behavior can be selected by row ID without reading implementation code.
       - Primitive rows remain available as supporting proof rather than the whole product map.
@@ -67,12 +77,28 @@ use_cases:
       - A workspace has a `use-cases/` directory.
     trigger: Agent adds, updates, reviews, or repairs use-case rows.
     scenarios:
-      - id: matrix.product.sharded_human_readable_files.layout
+      - id: matrix.product.sharded_human_readable_files.golden_layout
         kind: steps
         steps:
-          - Place related rows in a feature shard.
-          - Keep one feature summary per file.
+          - Place related rows in a feature shard with one feature summary.
           - Validate all shards as one matrix.
+        observable_outcomes:
+          - Users can inspect or edit a feature shard without opening one large matrix file.
+          - Separate files validate as a single matrix.
+      - id: matrix.product.sharded_human_readable_files.bad_damaged_shard_is_named
+        kind: steps
+        steps:
+          - Damage one shard and leave the others intact.
+          - Validate and read the per-file report.
+        observable_outcomes:
+          - Validation reports each loaded or damaged file separately, naming the damaged one.
+      - id: matrix.product.sharded_human_readable_files.edge_one_feature_summary_per_file
+        kind: steps
+        steps:
+          - Read each shard's feature block.
+          - Confirm one feature summary per file.
+        observable_outcomes:
+          - A shard describes one feature area, so the file name predicts what is inside it.
     observable_outcomes:
       - Users can inspect or edit a feature shard without opening one large matrix file.
       - Validation reports each loaded or damaged file separately.
@@ -109,12 +135,29 @@ use_cases:
       - At least one use-case YAML file is damaged, duplicated, or partially invalid.
     trigger: Validation, planning, or status reads a partially damaged matrix.
     scenarios:
-      - id: matrix.product.integrity_degraded_nonfatal.partial
+      - id: matrix.product.integrity_degraded_nonfatal.golden_partial
         kind: steps
         steps:
           - Validate a workspace with one valid shard and one damaged shard.
           - Confirm valid rows are still addressable.
-          - Confirm integrity is partial and diagnostics identify the damaged file.
+        observable_outcomes:
+          - A damaged use-case file keeps valid siblings addressable.
+          - Damaged YAML does not bring down the whole system.
+      - id: matrix.product.integrity_degraded_nonfatal.bad_damage_is_surfaced_not_swallowed
+        kind: steps
+        steps:
+          - Validate the same workspace and read the integrity state and diagnostics.
+          - Confirm the damaged file is identified.
+        observable_outcomes:
+          - Integrity is reported as partial and diagnostics identify the damaged file.
+          - Tolerating damage is never the same as hiding it.
+      - id: matrix.product.integrity_degraded_nonfatal.edge_partial_integrity_precedes_any_claim
+        kind: steps
+        steps:
+          - Produce a plan or status over the partially damaged matrix.
+          - Read what is said before any coverage claim.
+        observable_outcomes:
+          - Plans and status outputs surface partial integrity before any final claim.
     observable_outcomes:
       - Damaged YAML does not bring down the whole system.
       - Plans and status outputs surface partial integrity before any final claim.
@@ -153,6 +196,7 @@ use_cases:
       - matrix
       - coverage
       - prioritization
+      - no-bad-path
     source_refs:
       - kind: file
         path: packages/core/src/useCases/query.ts
@@ -164,12 +208,21 @@ use_cases:
       - Rows are tagged with value, journey, usage, lifecycle, and host applicability.
     trigger: Agent prepares a showcase, walkthrough, acceptance pass, or gap report.
     scenarios:
-      - id: matrix.product.coverage_by_value_and_journey.selection
+      - id: matrix.product.coverage_by_value_and_journey.golden_selection
         kind: steps
         steps:
-          - List rows by value and journey metadata.
+          - List rows by value tier and journey role.
           - Select critical golden rows for a short showcase.
-          - Include alternate, edge, negative, and failure rows for deeper walkthrough coverage.
+        observable_outcomes:
+          - Filtering by value tier and journey role returns sound, non-empty slices.
+          - High-value rows are easy to separate from long-tail or future rows.
+      - id: matrix.product.coverage_by_value_and_journey.edge_deeper_cuts_reach_beyond_golden
+        kind: steps
+        steps:
+          - Include alternate, edge, negative and failure rows for a walkthrough cut.
+          - Read the resulting selection and its exclusions.
+        observable_outcomes:
+          - Showcase and walkthrough cuts can explain why rows were included or excluded.
     observable_outcomes:
       - High-value rows are easy to separate from long-tail or future rows.
       - Showcase and walkthrough cuts can explain why rows were included or excluded.
@@ -266,12 +319,28 @@ use_cases:
       - A use-case matrix exists, possibly with partial or missing evidence.
     trigger: Agent wants a fast readiness read before planning, release, or showcase.
     scenarios:
-      - id: matrix.product.status_summary.report
+      - id: matrix.product.status_summary.golden_report
         kind: steps
         steps:
           - Run matrix status.
-          - Inspect row counts, integrity state, and evidence coverage.
-          - Confirm the summary is derived from current files, not a cached claim.
+          - Inspect row counts, integrity state and evidence coverage.
+        observable_outcomes:
+          - Matrix and evidence health are readable in one command.
+      - id: matrix.product.status_summary.bad_summary_is_never_a_cached_claim
+        kind: steps
+        steps:
+          - Change a use-case file, then run matrix status again without any other step.
+          - Compare the summary with the files on disk.
+        observable_outcomes:
+          - The summary is derived from current files, not a cached claim.
+          - A stale number can never be reported as current health.
+      - id: matrix.product.status_summary.edge_gaps_visible_without_a_full_plan_run
+        kind: steps
+        steps:
+          - Run matrix status on a matrix with integrity or evidence gaps.
+          - Read what is visible without running a plan.
+        observable_outcomes:
+          - Integrity or evidence gaps are visible without a full plan run.
     observable_outcomes:
       - Matrix and evidence health are readable in one command.
       - Integrity or evidence gaps are visible without a full plan run.

@@ -27,13 +27,30 @@ use_cases:
       - A selected plan or ad hoc use-case set exists.
     trigger: Agent is ready to prove work in front of the user or reviewer.
     scenarios:
-      - id: showcase.flow.live_acceptance_flow.cli
+      - id: showcase.flow.live_acceptance_flow.golden_cli
         kind: steps
         steps:
           - Start a showcase run from a selected plan or ad hoc item list.
-          - Record observation events for each item.
-          - Record pass, partial, fail, blocked, or waived verdicts.
+          - Record observation events for each item, then pass, partial, fail, blocked or waived verdicts.
           - Finish the run and inspect status.
+        observable_outcomes:
+          - Run status is derived from events in the JSONL ledger, not from a summary anyone wrote.
+      - id: showcase.flow.live_acceptance_flow.bad_started_is_not_performed
+        kind: steps
+        steps:
+          - Start a run and stop there.
+          - Read the derived status and check for a summary file.
+        observable_outcomes:
+          - A started run derives prepared_not_performed and writes no summary file.
+          - Starting is never mistaken for performing.
+      - id: showcase.flow.live_acceptance_flow.edge_approval_binds_to_the_finish_event
+        kind: steps
+        steps:
+          - Attempt a trusted user approval before the run is finished, then after.
+          - Read what the approval binds to.
+        observable_outcomes:
+          - Trusted user approval requires a finished run and binds to the finish event.
+          - User approval is absent until a trusted approval event exists.
     observable_outcomes:
       - Run status is derived from events in the JSONL ledger.
       - User approval is absent until a trusted approval event exists.
@@ -74,12 +91,30 @@ use_cases:
       - A showcase item can be driven by an agent, user, script, or combination.
     trigger: User preference or feature mechanics determine who should run the demo.
     scenarios:
-      - id: showcase.flow.control_modes.mixed
+      - id: showcase.flow.control_modes.golden_mixed
         kind: steps
         steps:
-          - Choose the control mode for each item.
+          - "Choose the control mode for each item: agent, user, script or mixed."
           - Record the actor for observations and verdicts.
-          - Preserve the same status and approval rules across modes.
+          - Replay the run.
+        observable_outcomes:
+          - Mixed runs still replay from the same JSONL event model.
+          - The same status and approval rules hold across every mode.
+      - id: showcase.flow.control_modes.bad_agent_led_run_cannot_claim_user_approval
+        kind: steps
+        steps:
+          - Have an agent actor record approval for a plan that requires the user.
+          - Read whether it is accepted.
+        observable_outcomes:
+          - Agent-led and script-led runs cannot claim user approval.
+          - An agent actor recording approval for a user-required plan is refused.
+      - id: showcase.flow.control_modes.edge_proof_semantics_do_not_change_with_the_driver
+        kind: steps
+        steps:
+          - Perform the same item under each control mode in turn.
+          - Compare the derived status of each.
+        observable_outcomes:
+          - Who drove the demo changes the recorded actor, never what the proof is worth.
     observable_outcomes:
       - Agent-led and script-led runs cannot claim user approval.
       - Mixed runs still replay from the same JSONL event model.
@@ -117,12 +152,38 @@ use_cases:
       - A showcase item has failed, blocked, or partially satisfied its expected outcome.
     trigger: Agent records a non-pass verdict during a live run.
     scenarios:
-      - id: showcase.flow.failure_decisions.branch
+      - id: showcase.flow.failure_decisions.golden_branch
         kind: steps
         steps:
           - Record a failed or blocked verdict.
-          - Ask for or record a decision to continue, pause, waive, or abort.
-          - Keep final status honest about the decision path.
+          - Record a decision to continue, pause, waive or abort.
+          - Read the final status.
+        observable_outcomes:
+          - Failed items are not silently skipped.
+          - Waivers and pauses are visible in replayed status.
+      - id: showcase.flow.failure_decisions.bad_failed_verdict_without_a_decision
+        kind: steps
+        steps:
+          - Record a failed verdict and attempt an ordinary finish with no failure decision.
+          - Read what happens.
+        observable_outcomes:
+          - A failed verdict without a failure decision prevents an ordinary finish.
+          - A run cannot be closed over an unanswered failure.
+      - id: showcase.flow.failure_decisions.edge_waiver_is_not_an_ordinary_pass
+        kind: steps
+        steps:
+          - Waive a failed item, then finish the run.
+          - Read the derived status.
+        observable_outcomes:
+          - A waive decision derives passed_with_waivers rather than ordinary pass.
+      - id: showcase.flow.failure_decisions.edge_correction_resolves_only_the_targeted_failure
+        kind: steps
+        steps:
+          - In a multi-item run with more than one failure, correct one verdict.
+          - Read the derived status of each item.
+        observable_outcomes:
+          - A verdict correction appends a new event and resolves only the failure it targeted.
+          - Correcting one item never closes another.
     observable_outcomes:
       - Failed items are not silently skipped.
       - Waivers and pauses are visible in replayed status.
@@ -159,12 +220,28 @@ use_cases:
       - A paused or resumed showcase run crosses a relevant revision change.
     trigger: Agent resumes a run after source, matrix, or plan inputs changed.
     scenarios:
-      - id: showcase.flow.revision_epoch_staleness.resume
+      - id: showcase.flow.revision_epoch_staleness.golden_resume
         kind: steps
         steps:
           - Start or resume a run with a revision snapshot.
-          - Detect changed relevant inputs.
-          - Mark affected verdicts stale until re-performed.
+          - Change a relevant input, then resume.
+          - Read which verdicts are marked stale.
+        observable_outcomes:
+          - Affected verdicts are marked stale until they are re-performed.
+      - id: showcase.flow.revision_epoch_staleness.bad_old_verdicts_never_stay_silently_current
+        kind: steps
+        steps:
+          - Change source, matrix or plan inputs under a paused run.
+          - Resume and read the previous verdicts.
+        observable_outcomes:
+          - Old verdicts do not silently remain current after relevant changes.
+      - id: showcase.flow.revision_epoch_staleness.edge_stale_verdicts_are_rerun_or_carried_forward
+        kind: steps
+        steps:
+          - Resume across a revision change, then rerun one stale verdict and carry another forward.
+          - Read the status of each.
+        observable_outcomes:
+          - A stale verdict stays stale until it is either rerun or explicitly carried forward.
     observable_outcomes:
       - Old verdicts do not silently remain current after relevant changes.
     host_applicability:
@@ -203,12 +280,36 @@ use_cases:
       - A showcase run has reached a state where approval might be requested.
     trigger: Agent or MCP attempts to record or request user approval.
     scenarios:
-      - id: showcase.flow.approval_authority_boundary.negative
+      - id: showcase.flow.approval_authority_boundary.golden_trusted_confirmation_path
         kind: steps
         steps:
-          - Attempt noninteractive user approval.
-          - Confirm it is rejected or converted to a trusted confirmation requirement.
-          - Confirm no user approval event is appended by an untrusted path.
+          - Request approval through the trusted interactive confirmation path.
+          - Read what is appended.
+        observable_outcomes:
+          - User approval requires the trusted interactive confirmation path.
+          - MCP can request approval but cannot write it directly.
+      - id: showcase.flow.approval_authority_boundary.bad_untrusted_approval_event
+        kind: steps
+        steps:
+          - Append a raw user approval event by an untrusted path.
+          - Read whether pending user approval is satisfied.
+        observable_outcomes:
+          - An untrusted raw user approval event does not satisfy pending user approval.
+      - id: showcase.flow.approval_authority_boundary.bad_untrusted_rejection_event
+        kind: steps
+        steps:
+          - Append a raw user rejection event by an untrusted path.
+          - Read whether it is honoured.
+        observable_outcomes:
+          - An untrusted raw user rejection event does not satisfy pending user approval either, so the boundary is not one-directional.
+      - id: showcase.flow.approval_authority_boundary.edge_scripted_approval_leaves_the_ledger_untouched
+        kind: steps
+        steps:
+          - Attempt a scripted, noninteractive user approval.
+          - Read the refusal, then read the showcase ledger.
+        observable_outcomes:
+          - A scripted user approval is refused without mutating the showcase ledger.
+          - No user approval event is appended by an untrusted path.
     observable_outcomes:
       - User approval requires the trusted interactive confirmation path.
       - MCP can request approval but cannot write it directly.
@@ -247,12 +348,28 @@ use_cases:
       - A run has observations, verdicts, finish state, or approval state.
     trigger: Agent inspects or reports showcase status.
     scenarios:
-      - id: showcase.flow.status_separation.status
+      - id: showcase.flow.status_separation.golden_status
         kind: steps
         steps:
           - Replay a showcase run.
-          - Report item verdicts, verification gaps, run completion, and approval separately.
-          - Avoid collapsing those states into one pass/fail label.
+          - Read item verdicts, verification gaps, run completion and approval separately.
+        observable_outcomes:
+          - A run can be reported as performed but unapproved, passed but missing user sign-off, or blocked with a clear reason.
+      - id: showcase.flow.status_separation.bad_states_are_never_collapsed
+        kind: steps
+        steps:
+          - Replay a run that passed every item but has no user approval.
+          - Read whether a single pass or fail label is produced.
+        observable_outcomes:
+          - The four states are never collapsed into one pass/fail label.
+          - Passing every item is not reported as acceptance.
+      - id: showcase.flow.status_separation.edge_correction_changes_the_derived_status
+        kind: steps
+        steps:
+          - Correct a verdict in a finished run.
+          - Replay and read the derived status.
+        observable_outcomes:
+          - A correction appends a new event and the derived status changes with it, because status is derived rather than stored.
     observable_outcomes:
       - A run can be performed but unapproved, passed but missing user sign-off, or blocked with a clear reason.
     host_applicability:
