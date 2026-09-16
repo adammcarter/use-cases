@@ -25,12 +25,38 @@ use_cases:
       - A safe proof event exists for a known use-case row.
     trigger: Agent records or reviews evidence for acceptance or showcase planning.
     scenarios:
-      - id: evidence.ledger.product_proof_map.record
+      - id: evidence.ledger.product_proof_map.golden_record
         kind: steps
         steps:
-          - Record evidence against a use-case ID.
+          - Record evidence against a use-case id.
           - Replay evidence status.
-          - Confirm the aggregate links evidence to the current row semantic hash.
+          - Read what the aggregate links the evidence to.
+        observable_outcomes:
+          - Proof can be traced from evidence id to use-case id and row hash.
+          - The aggregate links the evidence to the row's current semantic hash.
+      - id: evidence.ledger.product_proof_map.bad_hash_mismatch
+        kind: steps
+        steps:
+          - Record evidence against a row, then edit that row so its semantic hash changes.
+          - Replay evidence status and read how the link resolves.
+        observable_outcomes:
+          - Evidence whose row hash no longer matches resolves as a mismatch, not as proof.
+          - A row that changed after its evidence was recorded does not keep the old proof.
+      - id: evidence.ledger.product_proof_map.bad_missing_row
+        kind: steps
+        steps:
+          - Record evidence naming a row, then remove that row from the matrix.
+          - Replay evidence status.
+        observable_outcomes:
+          - Evidence naming a row that is not in the matrix resolves as missing.
+          - A dangling link is reported rather than silently dropped.
+      - id: evidence.ledger.product_proof_map.edge_gaps_are_visible_in_plans
+        kind: steps
+        steps:
+          - Leave one selected row with no evidence and another with stale evidence.
+          - Produce a plan and read how each is described.
+        observable_outcomes:
+          - Missing or stale evidence is visible in plans, before a live run starts.
     observable_outcomes:
       - Proof can be traced from evidence ID to use-case ID and row hash.
       - Missing or stale evidence is visible in plans.
@@ -80,12 +106,31 @@ use_cases:
       - An evidence event was recorded incorrectly or no longer represents the accepted state.
     trigger: User or agent discovers mistaken evidence, stale proof, or changed acceptance scope.
     scenarios:
-      - id: evidence.ledger.append_only_corrections.void
+      - id: evidence.ledger.append_only_corrections.golden_void
         kind: steps
         steps:
-          - Append a void or correction event with a reason.
+          - Append a void or correction event with a reason and the correct expected head.
           - Replay the evidence ledger.
-          - Confirm previous history remains visible and current status changes.
+          - Read the current status and the retained history.
+        observable_outcomes:
+          - The void is appended and current evidence status reflects the latest event.
+          - Accidental history is retained and stays visible.
+      - id: evidence.ledger.append_only_corrections.bad_wrong_head_is_refused
+        kind: steps
+        steps:
+          - Append a void naming the wrong expected head.
+          - Read the refusal, then read the ledger.
+        observable_outcomes:
+          - A wrong-head void is refused, so a correction can never be applied to a ledger that moved underneath it.
+          - Nothing is written by a refused correction.
+      - id: evidence.ledger.append_only_corrections.edge_history_survives_the_correction
+        kind: steps
+        steps:
+          - Void an event, then replay the whole ledger from the beginning.
+          - Read whether the original event is still present.
+        observable_outcomes:
+          - Correcting evidence never rewrites or removes the original event.
+          - The ledger is append-only in fact, not only by convention.
     observable_outcomes:
       - Accidental history is retained.
       - Current evidence status reflects the latest append-only event.
@@ -135,12 +180,35 @@ use_cases:
       - Evidence exists for one or more selected rows.
     trigger: Agent produces a plan, walkthrough, release claim, or evidence status report.
     scenarios:
-      - id: evidence.ledger.assurance_and_freshness.review
+      - id: evidence.ledger.assurance_and_freshness.golden_assurance_class
         kind: steps
         steps:
-          - Replay evidence status.
-          - Compare evidence semantic hashes against current rows.
-          - Report current, stale, missing, and mismatched proof separately.
+          - Record evidence captured several different ways.
+          - Replay evidence status and read each record's assurance class.
+        observable_outcomes:
+          - The assurance class reflects how the proof was captured, not what it claims.
+      - id: evidence.ledger.assurance_and_freshness.golden_freshness_keeps_states_distinct
+        kind: steps
+        steps:
+          - Replay evidence status across current, stale, mismatched and invalidated proof.
+          - Read how each is reported.
+        observable_outcomes:
+          - Current, stale, mismatched and invalidated proof are kept distinct from each other.
+      - id: evidence.ledger.assurance_and_freshness.bad_stale_is_not_reported_as_fresh
+        kind: steps
+        steps:
+          - Change a row after its evidence was recorded.
+          - Compare evidence semantic hashes against the current rows and read the report.
+        observable_outcomes:
+          - Fresh evidence is not conflated with stale or mismatched evidence.
+          - A weaker tier is never reported under a stronger one.
+      - id: evidence.ledger.assurance_and_freshness.edge_gaps_explained_before_a_live_run
+        kind: steps
+        steps:
+          - Produce a plan over rows whose evidence is missing or stale.
+          - Read what the plan says about each gap.
+        observable_outcomes:
+          - Plans can explain evidence gaps before a live run starts.
     observable_outcomes:
       - Fresh evidence is not conflated with stale or mismatched evidence.
       - Plans can explain evidence gaps before a live run starts.
@@ -189,12 +257,29 @@ use_cases:
       - An evidence JSONL file contains at least one readable event and one damaged event.
     trigger: Agent runs evidence status on a tampered or partially corrupted ledger.
     scenarios:
-      - id: evidence.ledger.damaged_ledger_replay.partial
+      - id: evidence.ledger.damaged_ledger_replay.golden_partial
         kind: steps
         steps:
-          - Replay a ledger with valid and invalid lines.
-          - Keep valid events available.
-          - Emit diagnostics for invalid lines.
+          - Replay a ledger holding both valid and invalid lines.
+          - Read which events survived and what diagnostics were emitted.
+        observable_outcomes:
+          - Valid proof is not discarded because a neighbouring line is damaged.
+          - Diagnostics are emitted for the invalid lines.
+      - id: evidence.ledger.damaged_ledger_replay.bad_damage_is_never_silently_clean
+        kind: steps
+        steps:
+          - Replay a ledger with a line that fails to parse.
+          - Read the reported integrity state.
+        observable_outcomes:
+          - Evidence integrity becomes partial rather than silently clean.
+          - A damaged ledger never reads as a healthy one.
+      - id: evidence.ledger.damaged_ledger_replay.edge_torn_final_line
+        kind: steps
+        steps:
+          - Replay a ledger whose last line was truncated mid-write.
+          - Read whether the earlier events survived.
+        observable_outcomes:
+          - A torn final line costs only that line; every complete event before it survives.
     observable_outcomes:
       - Evidence integrity becomes partial rather than silently clean.
       - Valid proof is not discarded because a neighboring line is damaged.
@@ -295,12 +380,36 @@ use_cases:
       - An append to an evidence or showcase JSONL ledger is in progress.
     trigger: Agent or script records an evidence or showcase event, possibly on a flaky or interruptible filesystem.
     scenarios:
-      - id: evidence.ledger.crash_durable_ledger_writes.atomic
+      - id: evidence.ledger.crash_durable_ledger_writes.golden_atomic_append
         kind: steps
         steps:
           - Append an event so it is staged and flushed before the live ledger is replaced.
-          - Confirm the ledger either contains the whole event or none of it, never a partial line.
-          - Confirm filesystems that cannot fsync a temp file degrade to best-effort instead of failing the write.
+          - Read the ledger and check for partial lines.
+        observable_outcomes:
+          - Each event is a whole line, never a partial one.
+          - An interrupted append does not corrupt or truncate the existing ledger.
+      - id: evidence.ledger.crash_durable_ledger_writes.bad_non_degradable_fsync_failure_propagates
+        kind: steps
+        steps:
+          - Make the temp-file fsync fail in a way that is not a known unsupported case.
+          - Append an event and read what happens.
+        observable_outcomes:
+          - A non-degradable fsync failure still propagates, so corruption is never silent.
+          - Degrading is a narrow allowance, not a blanket one.
+      - id: evidence.ledger.crash_durable_ledger_writes.bad_best_effort_code_outside_the_temp_root
+        kind: steps
+        steps:
+          - Raise a normally best-effort error code from a path outside the temp root.
+          - Append an event and read what happens.
+        observable_outcomes:
+          - A best-effort code raised outside the temp root still propagates, because the allowance is scoped to the staging file.
+      - id: evidence.ledger.crash_durable_ledger_writes.edge_unsupported_temp_fsync_degrades
+        kind: steps
+        steps:
+          - Append on a filesystem that cannot fsync a temp file.
+          - Read whether the write succeeded.
+        observable_outcomes:
+          - Durability degrades gracefully rather than throwing on unsupported temp-file sync.
     observable_outcomes:
       - An interrupted append does not corrupt or truncate the existing ledger.
       - Durability degrades gracefully rather than throwing on unsupported temp-file sync.
