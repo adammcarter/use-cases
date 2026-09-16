@@ -108,7 +108,7 @@ use_cases:
       - agent-boundary
     source_refs:
       - kind: file
-        path: .agents/skills/use-cases/SKILL.md
+        path: skills/use-cases/SKILL.md
       - kind: file
         path: docs/activation.md
     actor: agent
@@ -198,7 +198,7 @@ use_cases:
       - scope-control
     source_refs:
       - kind: file
-        path: .agents/skills/use-cases/SKILL.md
+        path: skills/use-cases/SKILL.md
       - kind: file
         path: docs/activation.md
     actor: agent

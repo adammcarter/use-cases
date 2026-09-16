@@ -18,7 +18,7 @@ use_cases:
       - kind: file
         path: packages/core/src/skills/validateSkillAssets.ts
       - kind: file
-        path: .agents/skills/use-cases/SKILL.md
+        path: skills/use-cases/SKILL.md
       - kind: file
         path: docs/activation.md
     actor: script
@@ -162,7 +162,7 @@ use_cases:
       - approval
     source_refs:
       - kind: file
-        path: .agents/skills/showcase/SKILL.md
+        path: skills/showcase/SKILL.md
       - kind: file
         path: tests/skills/p7-skills.test.ts
     actor: agent
