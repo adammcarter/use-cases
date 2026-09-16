@@ -850,9 +850,11 @@ use_cases:
             - -s
             - vitest
             - run
-            - packages/core/test/markers/verifyAttestsRuns.test.ts
+            - tests/blackbox/lifecycle-signals.test.ts
+            - -t
+            - lifecycle.signals.local_results_are_attested
           inputs:
-            - packages/core/test/markers/verifyAttestsRuns.test.ts
+            - tests/blackbox/lifecycle-signals.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -970,9 +972,11 @@ use_cases:
             - -s
             - vitest
             - run
-            - packages/core/test/evidence/performedRuns.test.ts
+            - tests/blackbox/lifecycle-signals.test.ts
+            - -t
+            - lifecycle.signals.performed_runs_count
           inputs:
-            - packages/core/test/evidence/performedRuns.test.ts
+            - tests/blackbox/lifecycle-signals.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -1066,9 +1070,11 @@ use_cases:
             - -s
             - vitest
             - run
-            - packages/core/test/markers/runClass.test.ts
+            - tests/blackbox/lifecycle-signals.test.ts
+            - -t
+            - lifecycle.signals.run_class_is_derived
           inputs:
-            - packages/core/test/markers/runClass.test.ts
+            - tests/blackbox/lifecycle-signals.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
