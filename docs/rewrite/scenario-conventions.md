@@ -146,3 +146,47 @@ The target is not a number. It is that every behaviour someone depends on has a
 scenario that can fail. Where a row has no real bad or edge path, the row says
 so rather than carrying an invented one — padding in the oracle is worse than a
 gap, because it reads as coverage.
+
+## 6 · The observation-only half
+
+Measured 2026-09-16, while ordering the remaining feature files:
+
+| active rows | |
+|---|---|
+| with a `verifiers:` block, so something can actually run | 42 |
+| with none — proven by `agent_observation` or `manual_observation` | 47 |
+
+**More than half the matrix has nothing mechanical behind it.** Those rows
+declare `required_verifiers: [agent]` or `[user]` and a `requirements` block,
+but no command, so `uc verify` has nothing to spawn and the row can never reach
+`VERIFIED_LOCAL` on its own evidence.
+
+This matters because ADR 0007 decision 2 says every row is proven through the
+binary before any Swift is written. Forty-seven rows cannot be, as written.
+
+They are not one kind of thing, and the difference decides what row 1b does
+with each:
+
+- **Behaviour the CLI or MCP really does, that simply never got a verifier.**
+  `matrix.core.validate`, `matrix.core.mutate`, `mcp.wrapper.parity`,
+  `migration.importer.*`, `showcase.flow.*`, `planning.cards.*`,
+  `capsule.demos.*`, `diagnostics.contracts.*`. Every one of these is a command
+  with observable JSON. They can have golden/bad/edge scenarios AND a real
+  verifier; the verifier is missing, not impossible.
+- **Doctrine about how an agent should behave**, which no command implements.
+  All five `lifecycle.loop.*` rows, and `lifecycle.loop.user_feature_printout`
+  in particular, describe what an agent should do and when to ask the user.
+  There is no binary behaviour to drive. Writing golden/bad/edge scenarios for
+  them produces scenarios no test can assert — padding in the oracle, which
+  reads as coverage and is worse than a gap.
+- **Rows whose proof is genuinely a person.** `showcase.live.user_signoff` ends
+  in a human approving. The tool's part is drivable; the approval is not, and
+  must not be, since the whole point is that an agent cannot mint it.
+
+The open question this raises is not a detail of wording: **does row 1b deepen
+an observation-only row with scenarios nothing can assert, or does the missing
+verifier get added first?** Adding one is not new behaviour — the behaviour
+already exists and already has a command — but it does change how the row is
+proven, which is row 2's subject rather than row 1b's.
+
+Recorded here rather than decided alone.
