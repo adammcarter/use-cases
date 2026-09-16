@@ -52,7 +52,27 @@ use_cases:
       - host_surface: codex.cli
         supported: true
     verification_policy:
-      mode: none
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/blackbox/mcp-wrapper.test.ts
+            - -t
+            - mcp.wrapper.parity
+          inputs:
+            - tests/blackbox/mcp-wrapper.test.ts
+            - tests/helpers/mcp-server.ts
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
     approval_policy:
       mode: none
   - id: mcp.use_case_mutation.safe
@@ -138,6 +158,26 @@ use_cases:
       - host_surface: opencode.cli
         supported: true
     verification_policy:
-      mode: none
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/blackbox/mcp-wrapper.test.ts
+            - -t
+            - mcp.use_case_mutation.safe
+          inputs:
+            - tests/blackbox/mcp-wrapper.test.ts
+            - tests/helpers/mcp-server.ts
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
     approval_policy:
       mode: none

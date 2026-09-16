@@ -235,3 +235,34 @@ Decision 2 cannot cover these as written. Either they park like the 15 parked
 `roadmap.*` rows, or decision 2 takes a named exception for doctrine. Until
 that is answered they are left untouched rather than deepened, because
 scenarios nothing can assert are padding, and padding reads as coverage.
+
+## 7 · What row 2 actually has left, measured
+
+Measured 2026-09-17, and it corrected a count I had been reporting wrongly for
+several commits. My progress tally asked "does this row's verifier point into
+`tests/blackbox/`?", which under-reports: a row is black-box if the tests it
+names import no product internals, wherever they live.
+
+| of the 98 active rows | |
+|---|---|
+| already black-box, in `tests/blackbox/` | 34 |
+| **already black-box, elsewhere** | 16 |
+| genuinely still white-box | 14 |
+| no runnable verifier at all | 34 |
+
+The 16 matter: `plugin/init`, `plugin/install`, `signing/tier`,
+`plugin.bundle.runs_from_clean_clone` and `evidence.ledger.crash_durable_ledger_writes`
+are already proven by tests that spawn the binary and import nothing. Rewriting
+them would have been churn. They need at most a decision about whether to move
+the files under `tests/blackbox/`, not new tests.
+
+So the remaining work is **14 conversions and 34 rows needing a verifier**, not
+the 36 conversions the old tally implied.
+
+The check to use, rather than the file path:
+
+```bash
+grep -L 'from "\(\.\./\)\+packages/' <the test files a row's verifier names>
+```
+
+A row whose every named test file survives that grep is already an oracle row.

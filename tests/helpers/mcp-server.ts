@@ -13,6 +13,21 @@ import { resolve } from "node:path";
 
 const repoRoot = resolve(import.meta.dirname, "../..");
 
+/**
+ * The v1 result envelope a tool call returns. `diagnostics` sits at the TOP
+ * level, not under `data` — on a refusal `data` is `{}` and the reason is here.
+ */
+export interface McpEnvelope<T = Record<string, unknown>> {
+  schema_version: number;
+  protocol_version: number;
+  command: string;
+  ok: boolean;
+  complete: boolean;
+  data: T;
+  diagnostics: Array<{ code: string; severity: string; message: string }>;
+  context: Record<string, unknown>;
+}
+
 export interface JsonRpcResponse {
   jsonrpc: "2.0";
   id: number;
@@ -101,7 +116,7 @@ export class McpSession {
   async callTool<T = Record<string, unknown>>(
     name: string,
     args: Record<string, unknown>
-  ): Promise<{ envelope: { command: string; ok: boolean; data: T }; raw: JsonRpcResponse }> {
+  ): Promise<{ envelope: McpEnvelope<T>; raw: JsonRpcResponse }> {
     const raw = await this.request("tools/call", { name, arguments: args });
     const content = (raw.result?.content as Array<{ text: string }> | undefined)?.[0]?.text ?? "";
     return { envelope: JSON.parse(content), raw };
