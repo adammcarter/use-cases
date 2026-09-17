@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# `use-cases` — the Swift CLI. The bootstrap beside this script downloads it
+# from the release for this plugin version on first use, verifies its checksum
+# and caches it; afterwards this costs one exec.
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec "$here/use-cases-bootstrap" use-cases "$@"

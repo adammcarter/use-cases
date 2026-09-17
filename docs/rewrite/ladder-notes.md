@@ -531,6 +531,85 @@ across sessions.
   change at the 0.8.0 bump; regenerate them, don't hand-edit. (Found in 3d3,
   3d4a.)
 
+### Built in row 6 (pipeline ready, never fired)
+
+- **`.github/workflows/release.yml`** builds each package universal
+  (`swift build -c release --arch arm64 --arch x86_64`) on `macos-15`, then
+  `lipo -thin`s one archive per architecture, writes `SHA256SUMS` over them and
+  attaches both plus the sums with `gh release create/upload`. Triggers are a
+  `v<semver>` tag push and `workflow_dispatch` only — there is no `branches:`
+  key, so a branch push can never publish while decision 9 stands, and a
+  hand-dispatched run defaults to `--draft`.
+- **Per-architecture assets, not one universal asset.** A single universal
+  asset would make the bootstrap's platform resolution vacuous on the only
+  supported OS — a required behaviour with nothing to resolve and no way to
+  test it — and it doubles every download. `lipo -thin` (not `-extract`, which
+  leaves the fat header on) is what makes the slices genuinely thin; the
+  workflow greps `lipo -info` for `architecture: <arch>` and fails the release
+  if a slice is still fat.
+- **The toolchain says x86_64 is on its way out.** Every universal build prints
+  `warning: The x86_64 architecture is deprecated for your deployment target
+  (macOS 27.0). You should update your ARCHS build setting to remove the x86_64
+  architecture.` The slice still builds, is genuinely thin and archives fine —
+  but it undercuts the per-arch decision above. **Owner question for row 11:**
+  does `macos-x86_64` stay in the published platform list at 0.8.0, or does the
+  release go arm64-only? If it goes arm64-only, four things move together —
+  `PUBLISHED_PLATFORMS` in `bin/use-cases-bootstrap`, the workflow's `for
+  platform in …` loop, `release.distribution.release_publishes_checksummed_assets`
+  (which asserts the list is exactly the two) and row 2's forced-platform
+  scenario.
+- **The x86_64 slice has never been executed.** It was built, sliced thin
+  (`lipo -info` → `architecture: x86_64`) and archived, but running it on the
+  arm64 dev machine gives `arch: posix_spawnp: … Bad CPU type in executable`:
+  Rosetta 2 is not installed here. Half the published assets are therefore
+  proven to exist and to be the right architecture, not proven to run. First
+  real x86_64 run has to be on an Intel Mac or a Rosetta-equipped one.
+- **`runs-on: macos-15` is never exercised by this row.** The release-workflow
+  test only asserts `/^macos-/`, deliberately, so the label does not rot the
+  suite — but check it against GitHub's current runner labels before the
+  workflow is fired for the first time.
+- **The products live at `.build/out/Products/Release`** under the Swift 6.2
+  build system, not `.build/apple/Products/Release`. The workflow asks
+  `swift build … --show-bin-path` rather than hardcoding either.
+- **The naming scheme is `use-cases-<version>-<os>-<arch>.tar.gz`** inside
+  `…/releases/download/v<version>/`, each archive carrying BOTH executables, so
+  one download serves `use-cases` and `use-cases-mcp`. Only
+  `tests/plugin/release-workflow.test.ts` stops the publisher and the
+  downloader drifting apart on the name, the platform list or the tag.
+- **`bin/use-cases-bootstrap` needs no edit at the 0.8.0 bump.** It reads the
+  version from `.claude-plugin/plugin.json`, so bumping the manifest points it
+  at the new release. `USE_CASES_VERSION`, `USE_CASES_RELEASE_BASE_URL`,
+  `USE_CASES_CACHE_DIR` and `USE_CASES_PLATFORM` override version, release
+  root, cache and platform; the first three are what makes the suite hermetic.
+- **SHA256SUMS authenticates transport, not provenance.** It is fetched from
+  the same release as the archive, so anyone who can write the release can
+  write both. That is exactly what decision 3 asks for; a signed manifest would
+  be a contract change and is not in this row.
+- **At 0.7.0 `bin/use-cases` fails by design.** The session-start hook already
+  puts `bin/` on PATH, and release v0.7.0 carries no Swift assets, so typing
+  `use-cases` gets `release v0.7.0 does not carry use-cases-0.7.0-macos-arm64.tar.gz`
+  followed by a line naming `bin/uc`. That fallback line is printed only while
+  `bin/uc` exists, so it removes itself at the rename row. Nothing regresses:
+  `bin/uc` and the Node bundle are untouched.
+- **What the 0.8.0 bump has to touch** (row 11), measured 2026-09-17:
+  `package.json`, `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`,
+  `packages/{core,cli,mcp}/package.json`, `packages/core/src/version.ts`
+  (`UCM_VERSION`), `UseCasesCore/Sources/UseCasesCore/Foundation/ProductVersion.swift`
+  and its `ProductVersionTests`. Then regenerate — do not hand-edit — the four
+  generators `UseCasesCore/Scripts/generate-{markers-ledger,marker-commands,
+  verify-prove,scan-impact}-corpus.mjs` (each pins `0.7.0` in its fixtures) and
+  the nine golden corpora that embed the version:
+  `UseCasesCore/Tests/…/Markers/{MarkersLedgerGoldenCorpus,MarkersFreshnessGoldenCorpus}.swift`,
+  `…/Markers/Commands/{MarkerCommandsGoldenCorpus,VerifyProveGoldenCorpus,ScanImpactGoldenCorpus}.swift`,
+  `…/Skills/SkillsGoldenCorpus.swift`,
+  `UseCasesCLI/Tests/…/Entry/{DispatchGoldenCorpus,MarkerCommandsGoldenCorpus}.swift`
+  and `UseCasesMCP/Tests/…/Server/McpGoldenCorpus.swift`
+  (`SchemaGoldenCorpus.swift` has no generator — see row 10's note). Two prose
+  mentions of "removed in 0.7.0" (`tests/helpers/uc-binary.ts`,
+  `tests/blackbox/agents-roster.test.ts`) are history and stay.
+  `.use-cases/bindings.jsonl` carries `0.7.0` in 75 past `created_by.version`
+  entries: it is append-only and must NOT be rewritten.
+
 ## Row 10 — delete TypeScript
 
 - **Every verification context hash changes.** `verificationContextHash.ts`

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# `use-cases-mcp` — the Swift MCP server, from the same downloaded, checksum
+# verified archive as the CLI.
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec "$here/use-cases-bootstrap" use-cases-mcp "$@"

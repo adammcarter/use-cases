@@ -138,10 +138,19 @@ use_cases:
           - Confirm where the executable was cached.
         observable_outcomes:
           - The cache is per-user state under the user cache directory, keyed by version and platform, and never inside the repository or the plugin checkout.
+      - id: release.distribution.first_run_downloads_and_verifies.edge_a_forced_platform_downloads_that_slice
+        kind: steps
+        steps:
+          - Set USE_CASES_PLATFORM to the other published platform and run bin/use-cases with an empty cache.
+          - Read which asset was asked for and where it was cached.
+        observable_outcomes:
+          - The forced platform decides the asset name and the cache key, so a machine that can run another slice — an Apple Silicon Mac under Rosetta — can be pointed at it.
+          - A forced platform the release does not publish is refused at the checksums, which do not list it — never exec’d as the wrong slice.
     observable_outcomes:
       - A first run downloads the matching archive, verifies its SHA256 against the published sums, caches the executable and execs it.
       - A binary whose checksum does not match is never exec'd and never cached.
       - The cache is per-user state, not repository content.
+      - A forced platform decides the asset and the cache key, and one the release does not publish is refused at the checksums.
     host_applicability:
       - host_surface: claude.cli
         supported: true
@@ -214,10 +223,10 @@ use_cases:
       - id: release.distribution.cached_binary_runs_without_network.edge_cache_is_checked_before_any_url_is_read
         kind: steps
         steps:
-          - Cache the executable, then unset the release base URL and point the version at one that has no release at all.
-          - "Confirm which happens first: the cache lookup or any attempt to read the sums file."
+          - Cache the executable, then delete the release archive and its SHA256SUMS, leaving the base URL pointing at the now-empty release.
+          - Run bin/use-cases again and read the exit code and the output.
         observable_outcomes:
-          - The cache hit short-circuits the whole download path, including the fetch of SHA256SUMS.
+          - The run succeeds, so the cache hit short-circuited the whole download path — the fetch of SHA256SUMS included.
     observable_outcomes:
       - After the first run the bootstrap costs a local exec and needs no network.
       - A cache entry that cannot be exec'd is refetched and verified rather than trusted.
@@ -297,6 +306,13 @@ use_cases:
           - Read the exit code and stderr.
         observable_outcomes:
           - The bootstrap exits non-zero and says the release published no checksums, and refuses the archive rather than running an unverified binary.
+      - id: release.distribution.failed_download_says_what_to_do.bad_sums_file_does_not_list_the_asset
+        kind: steps
+        steps:
+          - Point the bootstrap at a release whose SHA256SUMS lists some other asset but not this platform’s archive.
+          - Read the exit code and stderr.
+        observable_outcomes:
+          - The bootstrap exits non-zero and says the published checksums do not list the asset, rather than downloading it and having nothing to compare against.
       - id: release.distribution.failed_download_says_what_to_do.edge_unsupported_platform_is_refused_before_any_download
         kind: steps
         steps:

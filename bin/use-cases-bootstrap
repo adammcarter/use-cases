@@ -1,0 +1,265 @@
+#!/usr/bin/env bash
+# The first-run bootstrap for the Swift executables (ADR 0007 decision 3):
+# binaries are downloaded from GitHub Releases, not committed to the repo and
+# not built on install. This script resolves the machine's platform, downloads
+# the matching archive, verifies its SHA256 against the release's published
+# SHA256SUMS, caches the executables under the per-user cache directory and
+# execs the one it was asked for.
+#
+#   use-cases-bootstrap <use-cases|use-cases-mcp> [args...]
+#
+# bin/use-cases and bin/use-cases-mcp are one-line wrappers over it. bin/uc is
+# untouched and still runs the committed Node bundle until the plugin cuts over.
+#
+# Nothing here ever execs a binary it has not checksummed: every failure path
+# refuses and says which failure it was.
+#
+# Environment:
+#   USE_CASES_VERSION           which release to fetch (default: the version in
+#                               .claude-plugin/plugin.json)
+#   USE_CASES_RELEASE_BASE_URL  the release downloads root; the tag and asset
+#                               are appended (default: this repo's on GitHub)
+#   USE_CASES_CACHE_DIR         where to cache (default: XDG_CACHE_HOME, else
+#                               ~/Library/Caches/use-cases)
+#   USE_CASES_PLATFORM          force a platform slug, e.g. to run the x86_64
+#                               slice under Rosetta
+set -euo pipefail
+
+readonly PUBLISHED_PLATFORMS="macos-arm64 macos-x86_64"
+readonly PUBLISHED_EXECUTABLES="use-cases use-cases-mcp"
+readonly DEFAULT_DOWNLOAD_ROOT="https://github.com/adammcarter/use-cases/releases/download"
+
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+plugin_root="$(cd "$here/.." && pwd)"
+work=""
+
+cleanup() {
+  # Shell safety: only ever remove a path this script created and can see.
+  if [ -n "${work:-}" ] && [ -d "$work" ]; then
+    rm -rf "$work"
+  fi
+}
+
+# The Node bundle is still shipped until the plugin cuts over, so a failure can
+# name a way to keep working. The hint disappears on its own with bin/uc.
+fallback_hint() {
+  if [ -x "$plugin_root/bin/uc" ]; then
+    printf 'use-cases: the Node bundle is still available at %s/bin/uc.\n' "$plugin_root" >&2
+  fi
+}
+
+die() {
+  local line
+  for line in "$@"; do
+    printf 'use-cases: %s\n' "$line" >&2
+  done
+  fallback_hint
+  cleanup
+  exit 1
+}
+
+# What curl said, flattened onto one line so it reads inside a message.
+curl_error() {
+  if [ -n "${work:-}" ] && [ -s "$work/curl.err" ]; then
+    tr '\n' ' ' <"$work/curl.err" | sed 's/[[:space:]]*$//'
+  else
+    printf 'no further detail'
+  fi
+}
+
+# curl's exit code says WHICH failure this is, and the three cases need three
+# different messages: the network is down, the release lacks the asset, or
+# something else went wrong. Guessing one message for all three is what makes a
+# download failure unactionable.
+failure_kind() {
+  case "$1" in
+    6 | 7 | 28 | 35 | 52 | 55 | 56 | 95 | 96) printf 'unreachable' ;;
+    22 | 37 | 78) printf 'absent' ;;
+    *) printf 'failed' ;;
+  esac
+}
+
+fetch() {
+  local url="$1" dest="$2"
+  set +e
+  curl --fail --silent --show-error --location \
+    --retry 2 --connect-timeout 10 --max-time 600 \
+    --output "$dest" "$url" 2>"$work/curl.err"
+  fetch_rc=$?
+  set -e
+}
+
+sha256_of() {
+  if command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 "$1" | awk '{ print $1 }'
+  elif command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$1" | awk '{ print $1 }'
+  else
+    die "neither shasum nor sha256sum is on PATH, so the download cannot be verified." \
+      "Refusing to run an unverified binary."
+  fi
+}
+
+# --- which executable -------------------------------------------------------
+
+exe="${1:-}"
+if [ -z "$exe" ]; then
+  die "usage: use-cases-bootstrap <${PUBLISHED_EXECUTABLES// /|}> [args...]"
+fi
+shift
+case " $PUBLISHED_EXECUTABLES " in
+  *" $exe "*) ;;
+  *) die "no published executable named $exe; a release carries: ${PUBLISHED_EXECUTABLES// /, }." ;;
+esac
+
+# --- which version ----------------------------------------------------------
+
+version="${USE_CASES_VERSION:-}"
+if [ -z "$version" ]; then
+  manifest="$plugin_root/.claude-plugin/plugin.json"
+  if [ ! -f "$manifest" ]; then
+    die "cannot tell which release to download: $manifest is missing and USE_CASES_VERSION is unset."
+  fi
+  version="$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$manifest" | head -n 1)"
+  if [ -z "$version" ]; then
+    die "cannot read a version from $manifest; set USE_CASES_VERSION to the release to download."
+  fi
+fi
+
+# --- which platform ---------------------------------------------------------
+
+platform="${USE_CASES_PLATFORM:-}"
+if [ -z "$platform" ]; then
+  os_name="$(uname)"
+  machine="$(uname -m)"
+  case "$os_name/$machine" in
+    Darwin/arm64) platform="macos-arm64" ;;
+    Darwin/x86_64) platform="macos-x86_64" ;;
+    *)
+      die "no published binary for $os_name/$machine." \
+        "Published platforms: ${PUBLISHED_PLATFORMS// /, }." \
+        "Set USE_CASES_PLATFORM to force one of them if this machine can run it."
+      ;;
+  esac
+fi
+
+# --- the cache, checked before anything is fetched --------------------------
+
+cache_root="${USE_CASES_CACHE_DIR:-}"
+if [ -z "$cache_root" ]; then
+  if [ -n "${XDG_CACHE_HOME:-}" ]; then
+    cache_root="$XDG_CACHE_HOME/use-cases"
+  elif [ -n "${HOME:-}" ]; then
+    cache_root="$HOME/Library/Caches/use-cases"
+  else
+    die "none of USE_CASES_CACHE_DIR, XDG_CACHE_HOME or HOME is set, so there is nowhere to cache the binary."
+  fi
+fi
+install_dir="$cache_root/bin/$version/$platform"
+target="$install_dir/$exe"
+
+# The whole download path — the SHA256SUMS fetch included — is behind this test,
+# so a warm cache costs one exec and no network at all.
+if [ -x "$target" ]; then
+  exec "$target" "$@"
+fi
+
+# --- download and verify ----------------------------------------------------
+
+base_url="${USE_CASES_RELEASE_BASE_URL:-$DEFAULT_DOWNLOAD_ROOT}"
+base_url="${base_url%/}"
+tag="v$version"
+asset="use-cases-${version}-${platform}.tar.gz"
+release_url="$base_url/$tag"
+sums_url="$release_url/SHA256SUMS"
+asset_url="$release_url/$asset"
+
+if ! command -v curl >/dev/null 2>&1; then
+  die "curl is needed to download $asset and is not on PATH."
+fi
+
+if ! mkdir -p "$cache_root" 2>/dev/null; then
+  die "could not create the cache directory $cache_root."
+fi
+if ! work="$(mktemp -d "$cache_root/.download.XXXXXX")"; then
+  die "could not create a download directory under $cache_root."
+fi
+trap cleanup EXIT INT TERM
+
+# The checksums first: without them there is nothing to verify against, and an
+# archive that cannot be verified is never run.
+fetch "$sums_url" "$work/SHA256SUMS"
+if [ "$fetch_rc" -ne 0 ]; then
+  case "$(failure_kind "$fetch_rc")" in
+    unreachable)
+      die "could not reach $sums_url (curl exit $fetch_rc: $(curl_error))." \
+        "Check the network or a proxy, then run $exe again; the download is retried on the next run."
+      ;;
+    *)
+      die "release $tag published no checksums — $sums_url could not be read (curl exit $fetch_rc: $(curl_error))." \
+        "Refusing to run an unverified binary."
+      ;;
+  esac
+fi
+
+# shasum writes "<hex>  <name>" in text mode and "<hex> *<name>" in binary mode.
+expected="$(awk -v name="$asset" '{ f = $2; sub(/^\*/, "", f); if (f == name) { print $1; exit } }' "$work/SHA256SUMS")"
+if [ -z "$expected" ]; then
+  die "the checksums published for release $tag do not list $asset." \
+    "Refusing to download and run an unverified binary."
+fi
+
+fetch "$asset_url" "$work/$asset"
+if [ "$fetch_rc" -ne 0 ]; then
+  case "$(failure_kind "$fetch_rc")" in
+    unreachable)
+      die "could not reach $asset_url (curl exit $fetch_rc: $(curl_error))." \
+        "Check the network or a proxy, then run $exe again; the download is retried on the next run."
+      ;;
+    *)
+      die "release $tag does not carry $asset — $asset_url could not be read (curl exit $fetch_rc: $(curl_error))." \
+        "Check that the release for this version published an asset for $platform."
+      ;;
+  esac
+fi
+
+actual="$(sha256_of "$work/$asset")"
+if [ "$actual" != "$expected" ]; then
+  die "checksum mismatch for $asset downloaded from $asset_url." \
+    "expected SHA256 $expected" \
+    "actual   SHA256 $actual" \
+    "Refusing to exec an unverified binary; nothing was cached."
+fi
+
+# --- unpack, install, exec --------------------------------------------------
+
+mkdir -p "$work/unpacked"
+if ! tar -xzf "$work/$asset" -C "$work/unpacked" 2>"$work/tar.err"; then
+  die "$asset downloaded from $asset_url could not be unpacked: $(tr '\n' ' ' <"$work/tar.err")."
+fi
+if [ ! -f "$work/unpacked/$exe" ]; then
+  die "$asset does not contain an executable named $exe." \
+    "Refusing to run anything else from it."
+fi
+
+if ! mkdir -p "$install_dir" 2>/dev/null; then
+  die "could not create the cache directory $install_dir."
+fi
+# Both executables come out of one archive, so one download serves both
+# commands. The move is a rename within the cache, so a concurrent bootstrap
+# either sees the old file or the new one, never half of one; both have been
+# checksummed, so last writer wins is safe.
+for name in $PUBLISHED_EXECUTABLES; do
+  if [ -f "$work/unpacked/$name" ]; then
+    chmod +x "$work/unpacked/$name"
+    mv -f "$work/unpacked/$name" "$install_dir/$name"
+  fi
+done
+
+if [ ! -x "$target" ]; then
+  die "$exe was downloaded and verified but could not be installed at $target."
+fi
+
+cleanup
+trap - EXIT INT TERM
+exec "$target" "$@"
