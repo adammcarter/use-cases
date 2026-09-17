@@ -41,6 +41,14 @@ across sessions.
   way (found in 3e). Row 4 must run that void race with 8 separate
   `use-cases` processes against the binary.
 
+- **`plan cards` needs two fallbacks in the CLI's plan-file decoder.** The
+  TypeScript `renderCard` starts from `item.presentation_format ??
+  defaultFormatForDeliveryKind(delivery_kind)` and `evidence_summary?.basis ??
+  "(earlier run)"`, and `plan cards` reads plan files checked only for
+  `schema_version` and a hash — so older or hand-edited plans rely on both.
+  The Swift `PresentationPlanItem` requires the format; row 4's decoder must
+  apply the same defaults. (Found in 3f1.)
+
 ## Row 3e — evidence
 
 - **The concurrent-writer guarantee (decision 10) is tested here** as the
@@ -64,6 +72,25 @@ across sessions.
   reports it. This sits uneasily with ADR decision 10 ("concurrent writers
   never corrupt a ledger") — a lost line rather than a corrupt one. Not a
   porting fault; owner's call whether decision 10 was meant to cover it.
+- **Showcase run ledgers take no lock either.** `showcase/appendShowcaseEvent.ts`
+  reads the run's events, sets `sequence = count + 1` and
+  `event_id = evt.<run>.<sequence>`, then appends with O_APPEND and no lock.
+  Two concurrent records on one run can write two events with the same
+  sequence and id. Same class as the binding-ledger race above; same owner
+  decision. (Found reading 3f2.)
+- **Presentation plans can fail their own published schema.** Recorded from
+  the TypeScript oracle in 3f1, ported as is:
+  1. every partial-input plan (`complete: false`, readiness
+     `partial_due_to_integrity`) omits the `diagnostics` the schema requires
+     when incomplete — this is the ordinary tolerant path;
+  2. a plan that selects zero items still emits sections with empty
+     `item_ids`, which the schema forbids (max_items 0, timebox too short);
+  3. unchecked request values reach frozen fields — a fractional timebox, an
+     empty or malformed `generatedAt` breaking the `plan_id` pattern;
+  4. timebox exclusions, and eligible rows in blocked plans, are reported as
+     `max_items` (the gap row 2 already recorded, wider than first thought).
+  Decision 8 freezes both the schema and the behaviour, and they disagree;
+  which one is right is the owner's call.
 - **SECURITY: `validate-ledger --base-ref` never detects a rewritten ledger
   through the CLI.** The CLI hands `git show <ref>:<path>` an ABSOLUTE ledger
   path, which git always rejects; the base-file reader treats that failure as
