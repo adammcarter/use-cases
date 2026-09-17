@@ -54,11 +54,39 @@ across sessions.
   sound mutation check in isolation, not a guaranteed one under the full
   suite — another reason the cross-process version in row 4 matters.
 
+## Found reading d4 — pre-existing TypeScript behaviour, ported as is
+
+- **Binding and results ledgers are rewritten, not appended.**
+  `markers/cli/io.ts` `appendJsonlLine` reads the whole file, adds a line and
+  replaces the file via temp + rename, with no lock. Two concurrent `bind`
+  (or `verify`) runs can each read the same state and the later rename wins,
+  silently dropping the other's line. The file stays well-formed, so nothing
+  reports it. This sits uneasily with ADR decision 10 ("concurrent writers
+  never corrupt a ledger") — a lost line rather than a corrupt one. Not a
+  porting fault; owner's call whether decision 10 was meant to cover it.
+- **SECURITY: `validate-ledger --base-ref` never detects a rewritten ledger
+  through the CLI.** The CLI hands `git show <ref>:<path>` an ABSOLUTE ledger
+  path, which git always rejects; the base-file reader treats that failure as
+  an empty base, so the append-only comparison runs against nothing and passes.
+  Reproduced on the shipped 0.7.0 CLI: bind a row, commit, rewrite the committed
+  bindings line in place, run `uc validate-ledger --base-ref HEAD` → `ok: true`,
+  no errors. `docs/security.md` names this exact command as the control for
+  "the proof ledger has not been rewritten", and `scripts/use-cases-precommit.sh`
+  relies on it. Ported faithfully (decision 8) and pinned by a test; fixing it
+  is a behaviour change and the owner's call. (Found in 3d4a.)
+- **The marker source walk does not skip `.build/` or `DerivedData/`.**
+  `DEFAULT_SKIP_DIRS` covers node and web build output only. On a Swift repo
+  (this one, once the TypeScript is gone) every scan reads SwiftPM dependency
+  checkouts. Correctness is unaffected unless a vendored file carries marker
+  text; speed is. Revisit at row 10 with the stress thresholds in decision 10.
+
 ## Row 6 — release / 0.8.0
 
-- **Freshness output embeds the tool version** (`freshness.ts` DEFAULT_TOOL).
-  Every golden freshness corpus changes at the 0.8.0 bump; regenerate, don't
-  hand-edit. (Found reading 3d3.)
+- **Tool version is embedded in several golden corpora** — freshness output
+  (`freshness.ts` DEFAULT_TOOL) and every binding-registry event
+  (`created_by.version`, 72 occurrences in the marker-commands corpus). All
+  change at the 0.8.0 bump; regenerate them, don't hand-edit. (Found in 3d3,
+  3d4a.)
 
 ## Row 10 — delete TypeScript
 
