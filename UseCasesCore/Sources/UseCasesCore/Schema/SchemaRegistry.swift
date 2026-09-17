@@ -46,17 +46,40 @@ public struct SchemaRegistry: Sendable {
 
   private let schemas: [String: JSONValue]
 
+  /// Load the schemas embedded in this binary.
+  ///
+  /// This is the default, and the only one a shipped binary can use: ADR 0007
+  /// decision 3 ships one downloadable binary per platform, run inside a user's
+  /// own project, where there is nothing above it to walk up to.
+  /// ``init(schemasDirectory:)`` stays for the tests that read the committed
+  /// files, so a drift between the two is visible rather than silent.
+  public init() throws(SchemaError) {
+    try self.init(origin: "the embedded schemas") { fileName in
+      EmbeddedSchemas.byFileName[fileName]
+    }
+  }
+
   /// Load the schema files out of `schemasDirectory`.
   public init(schemasDirectory: URL) throws(SchemaError) {
+    try self.init(origin: schemasDirectory.path) { fileName in
+      try? String(
+        contentsOf: schemasDirectory.appendingPathComponent(fileName),
+        encoding: .utf8,
+      )
+    }
+  }
+
+  /// The one loader both initialisers run: read each file's text from wherever
+  /// it comes from, parse it, and file it under the `$id` it declares.
+  private init(
+    origin: String,
+    readSchema: (String) -> String?,
+  ) throws(SchemaError) {
     var loaded: [String: JSONValue] = [:]
     for fileName in Self.schemaFileNames {
-      let fileURL = schemasDirectory.appendingPathComponent(fileName)
-      let text: String
-      do {
-        text = try String(contentsOf: fileURL, encoding: .utf8)
-      } catch {
+      guard let text = readSchema(fileName) else {
         throw .schemasUnavailable(
-          message: "unable to read schema \(fileName) from \(schemasDirectory.path)",
+          message: "unable to read schema \(fileName) from \(origin)",
         )
       }
       let schema = try JSONParser.parse(text)

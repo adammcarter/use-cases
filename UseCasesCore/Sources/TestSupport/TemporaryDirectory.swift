@@ -11,8 +11,11 @@ public final class TemporaryDirectory: Sendable {
     let base = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
       .appendingPathComponent("use-cases-tests-\(UUID().uuidString)", isDirectory: true)
     try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
-    // Resolve symlinks once so tests compare against the same realpath the
-    // production containment check sees (macOS /var -> /private/var).
+    // Note the direction: `resolvingSymlinksInPath()` STRIPS `/private`, giving
+    // `/var/folders/…`, while `realpath(3)` — what Node's `realpathSync` answers,
+    // and so what the port must match — gives `/private/var/folders/…`.
+    // Containment checks resolve both sides and converge either way, but a test
+    // comparing a path STRING against production output must realpath it first.
     url = URL(fileURLWithPath: base.path).resolvingSymlinksInPath()
   }
 
