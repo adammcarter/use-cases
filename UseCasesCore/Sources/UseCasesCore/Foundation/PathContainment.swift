@@ -89,7 +89,13 @@ public enum PathContainment {
     return (realpathOfExistingPrefix(parent) as NSString).appendingPathComponent(leaf)
   }
 
-  /// Segment-aware prefix test, so `/a/bc` is never read as inside `/a/b`.
+  /// The TypeScript's rule, reproduced exactly: take node's `relative(root,
+  /// target)` and accept it only when it is empty, or neither absolute nor
+  /// beginning with `..`. For two absolute paths that relative string is the
+  /// remainder beneath the root, or climbs out of it — so a target is inside
+  /// only when it sits beneath the root AND that remainder does not start with
+  /// `..`. The second condition is why an in-root directory whose name begins
+  /// with two dots (`..hooks`) reads as an escape, exactly as in TypeScript.
   private static func isSameOrBeneath(
     root: String,
     target: String,
@@ -99,6 +105,11 @@ public enum PathContainment {
     }
 
     let boundary = root.hasSuffix("/") ? root : root + "/"
-    return target.hasPrefix(boundary)
+    guard target.hasPrefix(boundary) else {
+      return false
+    }
+
+    let remainder = target.dropFirst(boundary.count)
+    return !remainder.hasPrefix("..")
   }
 }

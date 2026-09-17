@@ -76,6 +76,26 @@ struct PathContainmentTests {
   // and the lexical path — still inside the root — is reported as contained.
   // A live link to the same outside directory is refused. Surprising, and
   // frozen by ADR 0007 decision 8, so it is pinned rather than corrected.
+  // Measured against the TypeScript on 2026-09-17: `isPathContained` tests the
+  // node `relative()` string with `startsWith("..")`, so an in-root directory
+  // whose NAME begins with two dots reads as an escape. Found by 3g1's init
+  // oracle (a `core.hooksPath` of `..hooks`); pinned so the port stays faithful.
+  @Test(arguments: ["..hooks", "..hooks/pre-commit", "...dots"])
+  func `an in-root name beginning with two dots is treated as an escape`(name: String) throws {
+    _ = try temporary.makeDirectory("..hooks")
+
+    let target = temporary.url.appendingPathComponent(name).path
+
+    #expect(!PathContainment.isContained(root: temporary.url.path, target: target))
+  }
+
+  @Test
+  func `a name with two dots later in it stays contained`() {
+    let target = temporary.url.appendingPathComponent("hooks..backup").path
+
+    #expect(PathContainment.isContained(root: temporary.url.path, target: target))
+  }
+
   @Test
   func `a broken symlink pointing outside stays contained`() throws {
     let missing = temporary.url
