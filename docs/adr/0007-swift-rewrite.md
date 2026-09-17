@@ -87,3 +87,11 @@ unchanged.
   `uc workflow set-mode` refuses it. A workspace config naming it no longer
   loads. Every recorded showcase run uses `continuous`, so no recorded data is
   invalidated. The 0.8.0 release notes list both retirements as breaking.
+- **2026-09-17 — the MCP SDK carries the transport, not the wire.** Decisions 7
+  and 8 collide: `MCP.Server` encodes every response with
+  `JSONEncoder(.sortedKeys)`, has no `command`/`mutability` on a tool
+  descriptor, answers `initialize` once, and negotiates the protocol version —
+  so it cannot emit the frozen envelope. The owner chose the freeze: the SDK
+  stays a pinned dependency used for its `StdioTransport`, while the JSON-RPC
+  dispatch and the response bytes are ours through `JSONWriter`. Decision 7's
+  library list is unchanged; decision 8 is unbroken.
