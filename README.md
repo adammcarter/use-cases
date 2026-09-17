@@ -66,8 +66,11 @@ Typical workflows: **continuous** (keep the matrix live as you build), **backfil
 ## Quickstart
 
 ```bash
-# No npm, no build: the repo carries a committed, dependency-free bundle and
-# installs straight from GitHub into each host. Pick yours.
+# No npm, no build: the plugin installs straight from GitHub into each host and
+# runs its own bin/ entry points. Those fetch the binary for your machine from
+# the release for the installed version, verify its checksum and cache it; until
+# a release publishes one they run the committed, dependency-free bundle in
+# dist/, which needs nothing but Node. Pick your host.
 
 # Claude Code — next session: /use-cases:* skills, agents, MCP tools, uc on PATH
 /plugin marketplace add adammcarter/use-cases
@@ -84,7 +87,7 @@ codex plugin add use-cases@use-cases
 # OpenCode — the plugin module registers the MCP server, skills and PATH itself
 opencode plugin add 'github:adammcarter/use-cases'
 
-# Anywhere else: clone it and run the committed bundle with Node alone
+# Anywhere else: clone it and call its bin/ entry point; it resolves the runtime
 git clone https://github.com/adammcarter/use-cases.git
 alias uc="$PWD/use-cases/bin/uc"
 

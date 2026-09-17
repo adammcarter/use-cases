@@ -53,7 +53,8 @@ describe("OpenCode installs the plugin from git", () => {
 
   test("setup registers the MCP server, every skill, the bootstrap and uc on PATH", async () => {
     const out = await runSetup(repoRoot);
-    expect(out.mcp["use-cases"]).toEqual({ type: "local", command: ["node", join(repoRoot, "dist/uc-mcp.js")], cwd: repoRoot, enabled: true });
+    expect(out.mcp["use-cases"]).toEqual({ type: "local", command: ["bash", join(repoRoot, "bin/use-cases-mcp")], cwd: repoRoot, enabled: true });
+    expect(readFileSync(modulePath, "utf8"), "the module must not name the committed bundle").not.toContain("dist/uc");
     const skillDirs = readdirSync(join(repoRoot, "skills")).sort();
     expect(out.skills.map((s) => s.name).sort()).toEqual(skillDirs);
     for (const skill of out.skills) {

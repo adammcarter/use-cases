@@ -6,8 +6,9 @@ row **FRESH** only when trusted CI has signed proof that the current code,
 binding, and verifier context still match. Stale claims become visible instead of
 silently trusted.
 
-Ships as a single package, `use-cases`, providing the `uc` CLI and the
-`uc-mcp` MCP server.
+Ships as a single plugin, `use-cases`, providing the `uc` CLI (`bin/uc`) and
+the MCP server (`bin/use-cases-mcp`). Both resolve their runtime themselves —
+see [getting started](./getting-started.md#1-install-the-cli).
 
 ## Start here
 

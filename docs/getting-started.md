@@ -22,9 +22,12 @@ Every command shown here is a real `uc` command. Concepts are linked to the
 
 ## 1. Install the CLI
 
-There is nothing to build or download: the repo carries a committed,
-dependency-free bundle of the CLI and the MCP server in `dist/`, so a clone runs
-with Node alone.
+There is nothing to build. Every host runs the plugin's own `bin/use-cases`
+and `bin/use-cases-mcp`, which resolve the runtime for you: the binary for your
+machine, downloaded from the release for the installed version and checked
+against its published `SHA256SUMS` on first use, or — until a release publishes
+one — the committed, dependency-free bundle in `dist/`, which runs with Node
+alone.
 
 Install it as a plugin into your agent and everything is wired for you:
 skills, the MCP server, the bootstrap, and where `uc` lives.
@@ -42,14 +45,15 @@ OpenCode      opencode plugin add 'github:adammcarter/use-cases'
 Claude also puts `uc` on PATH inside the session; on every host the bootstrap
 names the full path to the plugin's `bin/uc`.
 
-Anywhere else, clone the repo and run the committed bundle:
+Anywhere else, clone the repo and call its entry point:
 
 ```bash
 git clone https://github.com/adammcarter/use-cases.git
 alias uc="$PWD/use-cases/bin/uc"
 ```
 
-The companion MCP server is `dist/uc-mcp.js` — see [the MCP contract](./mcp.md).
+The companion MCP server is `bin/use-cases-mcp`, which every host manifest
+names — see [the MCP contract](./mcp.md).
 
 ## 2. Scaffold the workspace with `uc init`
 

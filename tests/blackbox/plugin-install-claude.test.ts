@@ -5,7 +5,7 @@
 //
 // Self-contained: a shared oracle file means one edit stales every row bound
 // to it.
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterAll, describe, expect, test } from "vitest";
@@ -54,10 +54,15 @@ describe("plugin.install.claude_from_github", () => {
     expect(missingPaths(repoRoot, m), "a declared path that does not exist would break the install").toEqual([]);
 
     const server = m.mcpServers?.["use-cases"];
-    expect(server?.command).toBe("node");
+    expect(server?.command).toBe("bash");
     expect(server?.args.join(" "), "addressed through the plugin root, not a relative path").toContain(
-      "${CLAUDE_PLUGIN_ROOT}/dist/uc-mcp.js"
+      "${CLAUDE_PLUGIN_ROOT}/bin/use-cases-mcp"
     );
+    // The plugin's own entry point, executable in a fresh clone: the manifest
+    // no longer names an interpreter and a bundle path, so what actually runs
+    // is the plugin's decision and not the host's.
+    expect(JSON.stringify(m), "no host manifest names the committed bundle").not.toContain("dist/uc");
+    expect(statSync(join(repoRoot, "bin", "use-cases-mcp")).mode & 0o111, "the wrapper must be executable").not.toBe(0);
 
     // The hook is found by CONVENTION rather than declared in the manifest:
     // hooks/hooks.json is what wires SessionStart. A root Agent Plugins
@@ -75,11 +80,11 @@ describe("plugin.install.claude_from_github", () => {
     tempDirs.push(dir);
     mkdirSync(join(dir, ".claude-plugin"), { recursive: true });
     cpSync(join(repoRoot, "agents"), join(dir, "agents"), { recursive: true });
-    // The manifest also declares the MCP bundle, so the fixture needs a stub for
-    // it — otherwise that path is missing too and the case stops isolating the
-    // agent it is about.
-    mkdirSync(join(dir, "dist"), { recursive: true });
-    writeFileSync(join(dir, "dist", "uc-mcp.js"), "// stub\n");
+    // The manifest also declares the MCP entry point, so the fixture needs a
+    // stub for it — otherwise that path is missing too and the case stops
+    // isolating the agent it is about.
+    mkdirSync(join(dir, "bin"), { recursive: true });
+    writeFileSync(join(dir, "bin", "use-cases-mcp"), "#!/usr/bin/env bash\n");
 
     const intact = { ...manifest(), agents: ["./agents/use-cases-updater.md"] };
     writeFileSync(join(dir, ".claude-plugin", "plugin.json"), JSON.stringify(intact));

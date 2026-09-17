@@ -601,12 +601,14 @@ across sessions.
   anyone who can write the release can write both. That is exactly what
   decision 3 asks for; a signed manifest would be a contract change, not this
   row.
-- **At 0.7.0 `bin/use-cases` fails by design.** The session-start hook already
-  puts `bin/` on PATH, and release v0.7.0 carries no Swift assets, so typing
-  `use-cases` gets `release v0.7.0 does not carry use-cases-0.7.0-macos-arm64.tar.gz`
-  followed by a line naming `bin/uc`. That fallback line is printed only while
-  `bin/uc` exists, so it removes itself at the rename row. Nothing regresses:
-  `bin/uc` and the Node bundle are untouched.
+- **At 0.7.0 `bin/use-cases` failed by design — superseded by row 7.** While
+  row 6 stood, `bin/use-cases` went straight to the bootstrap and got
+  `release v0.7.0 does not carry use-cases-0.7.0-macos-arm64.tar.gz`. Row 7 put
+  `bin/use-cases-runtime` in front of it, so at a pre-0.8.0 version the command
+  runs the committed bundle instead and that refusal is now only reachable by
+  forcing a Swift-era version. The bootstrap's own failure hint moved with it:
+  it names `node <root>/dist/uc.js` (or `dist/uc-mcp.js`), not `bin/uc`, because
+  `bin/uc` now resolves to the same place the failure came from.
 - **The Apple-Silicon-only decision adds nothing to the 0.8.0 bump list.** It
   touches no file that embeds the version, so the list below is unchanged by
   it; the platform list and the version bump are independent edits.
@@ -628,6 +630,103 @@ across sessions.
   `tests/blackbox/agents-roster.test.ts`) are history and stay.
   `.use-cases/bindings.jsonl` carries `0.7.0` in 75 past `created_by.version`
   entries: it is append-only and must NOT be rewritten.
+  Row 7 adds nothing to this list — `bin/use-cases-runtime` reads the manifest
+  version — but if the first release to publish Swift assets is ever NOT 0.8.0,
+  `FIRST_SWIFT_RELEASE` in `bin/use-cases-runtime` is the one place that has to
+  move, and its test fixtures assume a stand-in version above it.
+
+## Row 7 — the plugin cut-over
+
+- **The cut-over is the wiring, and the version is the switch.** Every host
+  manifest now names the plugin's own entry point
+  (`bin/use-cases-mcp`), and `bin/uc`, `bin/use-cases` and `bin/use-cases-mcp`
+  all exec `bin/use-cases-runtime`, which picks the runtime from the plugin
+  version alone: `>= 0.8.0` goes to `bin/use-cases-bootstrap` (download, verify,
+  exec, no fallback out of that path), below it runs the committed Node bundle.
+  So no manifest, hook, skill or doc changes when 0.8.0 publishes — the version
+  bump is the whole flip, and `bin/use-cases-runtime` needs no edit either
+  because it reads `.claude-plugin/plugin.json` exactly as the bootstrap does.
+- **Why a version branch and not a fallback.** Row 6's rule — no automatic
+  fallback to the Node bundle, because it would mask a missing release — is
+  intact and is why the branch is taken BEFORE any download: a release that
+  should carry the assets and does not still exits 1 with nothing cached. A
+  failure-triggered fallback would have broken that rule; a version-triggered
+  branch does not, because it never sees a failure. Measured both ways in
+  `tests/plugin/runtime-resolver.test.ts`.
+- **`FIRST_SWIFT_RELEASE` is the one constant, and it is compared, not listed.**
+  An exact list of pre-Swift versions (`0.7.0`) was rejected: an unanticipated
+  pre-0.8.0 version — a bundle hotfix, say — would fall off the list and try to
+  download, breaking every installed plugin. A `>=` comparison has only the two
+  failure modes we want. `sort -V` is not assumed: three integers are compared
+  in bash after the prerelease suffix is stripped, so `0.8.0-rc1` is Swift-era.
+  An unparseable version is refused rather than guessed — either guess would
+  run something.
+- **`bash <script>`, not the script as the command, on every host.** Claude and
+  Copilot read `{"command": "bash", "args": ["${CLAUDE_PLUGIN_ROOT}/bin/use-cases-mcp"]}`:
+  `${CLAUDE_PLUGIN_ROOT}` interpolation in an `mcpServers` **`args`** entry is
+  proved — the old manifest interpolated it there and was observed live — and is
+  NOT proved in `command`, so the variable stays in `args` and only the
+  interpreter changes. (`hooks.json` also uses the variable, but that is a
+  different code path and is not the evidence for this one.) Codex keeps the shape it was observed working with — a relative script
+  under `cwd: "."` — with `node ./dist/uc-mcp.js` swapped for
+  `bash ./bin/use-cases-mcp`. OpenCode registers `["bash", <abs path>]`. One
+  shape for four hosts, and none of them depends on the exec bit surviving the
+  host's install.
+- **Every link execs.** `bash bin/use-cases-mcp` -> `exec bin/use-cases-runtime`
+  -> `exec node dist/uc-mcp.js` (or `exec <cached binary>`). A missing `exec`
+  would leave a shell holding the server's pipes and swallowing its signals, so
+  it is pinned twice: a stand-in executable that prints its own `$$` must report
+  the spawned pid, and `ps -o comm=` on a live server must name `node` or
+  `use-cases-mcp`, never `bash`.
+- **Three assertions changed shape, none weakened.** (1)
+  `tests/plugin/release-workflow.test.ts`'s "asks for the plugin's own version
+  by default" now drives `entry: "bootstrap"` instead of `bin/use-cases`: it
+  asserts the same thing at the layer that still owns it, because the wrapper
+  now sends 0.7.0 to the bundle. (2) `tests/plugin/bootstrap-failures.test.ts`
+  asserts the hint names `dist/uc.js` and that the named path EXISTS, which the
+  old `bin/uc` assertion did not check. (3) The manifest tests gained
+  `not.toContain("dist/uc")` and an executable-bit check on the wrapper.
+- **The repo's own matrix is snapshotted by three Swift corpora**, so adding
+  `use-cases/plugin/runtime.yml` and editing `install.yml` moves them:
+  `UseCasesRepositoryMatrixCorpus` (the whole `use-cases/` tree),
+  `PresentationGoldenCorpus` (rows feed the planner) and `SkillsGoldenCorpus`
+  (it snapshots `.claude-plugin/plugin.json` verbatim, so ANY manifest edit
+  moves it). Regenerate with `generate-{use-cases,presentation,skills}-corpus.mjs`
+  after `pnpm --filter @adammcarter/use-cases-core build`; never hand-edit.
+  `McpGoldenCorpus` is NOT affected — its only `dist/uc-mcp.js` is in the header.
+- **The row 7 tests are Apple-Silicon-gated in the same way row 6's are, but
+  less of them.** Only the three scenarios that drive a real download are
+  `skipIf(!canRunBootstrap)`; the unparseable-version refusal and every
+  committed-bundle scenario run everywhere. So on a Linux runner
+  `plugin.runtime.pre_swift_versions_run_the_committed_bundle` is fully proved
+  and `plugin.runtime.release_versions_run_the_verified_swift_binary` is proved
+  only in part — the same honest edge as `release.distribution.*`.
+- **What the 0.8.0 bump gains from this row: nothing.** `bin/use-cases-runtime`
+  reads the manifest version, so the bump list below is unchanged. What the bump
+  DOES do, the moment it lands, is move every host onto the downloaded binary —
+  so 0.8.0 must not be tagged before its release workflow has actually published
+  the assets, or the installed plugin fails at the first command.
+- **Left alone deliberately.** `.githooks/pre-commit`, `.githooks/pre-push` and
+  `packages/core/test/init/scaffold-sample.test.ts` run `node dist/uc.js`: they
+  are this repo's own dev tooling, not a host surface, and row 10 owns them with
+  the rest of the TypeScript. `tests/helpers/{uc-binary,mcp-server}.ts` keep
+  their Node defaults with `UC_BIN`/`UC_MCP_BIN` as the seam — the oracle's
+  default is row 10's to move, not this row's. The `uc` command name is
+  untouched: row 8 does the rename, and the session-start bootstrap still names
+  `bin/uc`.
+- **The four hosts' `edge_live_session` observations are now STALE, and this is
+  an owner item.** They were performed on 2026-09-16 against
+  `{"command": "node", "args": ["${CLAUDE_PLUGIN_ROOT}/dist/uc-mcp.js"]}`. The
+  `command` is now `bash`. The by-hand proof simulates each host exactly — the
+  manifest's own command and args, from a clean shipped copy, four hosts, the
+  server answering 19 tools and `ps` naming the server rather than `bash` — but
+  it cannot show that the HOST accepts `command: "bash"`. Both are bare PATH
+  lookups, so the risk is low; the re-observation (install on Claude and
+  Copilot, start a session, list the MCP tools) is still owed. Same "ready but
+  not fired" shape as row 6.
+- **Codex's live MCP observation is still unmade** (the usage cap of 2026-09-16);
+  `edge_live_mcp_not_yet_observed` stays a scenario the row does not claim.
+  Changing the manifest does not turn it into an observation.
 
 ## Row 10 — delete TypeScript
 
@@ -647,7 +746,15 @@ across sessions.
   rebound onto their Swift counterparts before `uc scan` reports coverage
   again.
 - **Retired 2026-09-17:** the four `migration.*` bindings were released
-  (`row_retired`) with `uc migrate test-matrix`, so 82 remain to rebind.
+  (`row_retired`) with `uc migrate test-matrix`, so 82 remained to rebind; row 7
+  added two more (both on `tests/plugin/runtime-resolver.test.ts`), making 84.
+- **One of those two has no Swift counterpart and must be RETIRED, not rebound.**
+  `plugin.runtime.pre_swift_versions_run_the_committed_bundle` pins the
+  committed-bundle branch of `bin/use-cases-runtime`; deleting `dist/` deletes
+  the behaviour. Retire the row and the resolver's Node branch together — at
+  which point `bin/use-cases-runtime` is a one-line exec into the bootstrap and
+  can be folded away entirely, and `bin/use-cases-bootstrap`'s `fallback_hint`
+  (which names `dist/uc.js`) goes with it.
 - **0.8.0 release notes (row 11)** must list as breaking: `uc migrate test-matrix`, the `migration` skill, the `migration-test-matrix-result` schema, the two `UCM_MIGRATION_*` codes, and the `migration` workflow mode (a config naming it stops loading). No CHANGELOG exists yet.
 - **`SchemaGoldenCorpus.swift` has no committed generator** (its header points at the row 3b report); retiring the `migration` workflow mode regenerated its one changed case by re-running `validateBySchemaId` over every case, all other 61 reproducing byte for byte.
 

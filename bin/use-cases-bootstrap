@@ -8,8 +8,9 @@
 #
 #   use-cases-bootstrap <use-cases|use-cases-mcp> [args...]
 #
-# bin/use-cases and bin/use-cases-mcp are one-line wrappers over it. bin/uc is
-# untouched and still runs the committed Node bundle until the plugin cuts over.
+# It is reached through bin/use-cases-runtime, which decides whether a release
+# for this plugin version publishes Swift assets at all; by the time this script
+# runs, that decision is made and a download is the only outcome it will accept.
 #
 # Nothing here ever execs a binary it has not checksummed: every failure path
 # refuses and says which failure it was.
@@ -44,11 +45,20 @@ cleanup() {
   fi
 }
 
-# The Node bundle is still shipped until the plugin cuts over, so a failure can
-# name a way to keep working. The hint disappears on its own with bin/uc.
+# The Node bundle is still shipped, so a failure can name a way to keep working.
+# It names the bundle by its own path, not bin/uc: every bin/ entry point now
+# resolves to whatever this script is being asked for. The hint disappears on
+# its own when dist/ goes.
+#
+# `exe` is only set once the arguments are parsed, and `die` can fire before
+# that, so the CLI bundle is the hint when there is no executable yet.
 fallback_hint() {
-  if [ -x "$plugin_root/bin/uc" ]; then
-    printf 'use-cases: the Node bundle is still available at %s/bin/uc.\n' "$plugin_root" >&2
+  local bundle="dist/uc.js"
+  if [ "${exe:-}" = "use-cases-mcp" ]; then
+    bundle="dist/uc-mcp.js"
+  fi
+  if [ -f "$plugin_root/$bundle" ]; then
+    printf 'use-cases: the committed Node bundle is still available: node %s/%s.\n' "$plugin_root" "$bundle" >&2
   fi
 }
 

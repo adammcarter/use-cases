@@ -34,7 +34,7 @@ function bootstrapContext(stdout: string): string {
 
 //: @use-case:plugin.install.uc_on_path_in_session
 describe("uc is a plain command inside any session", () => {
-  test("bin/uc runs the bundle from any working directory", () => {
+  test("bin/uc runs the resolved runtime from any working directory", () => {
     const cwd = scratch();
     const result = spawnSync(join(repoRoot, "bin/uc"), ["version", "--json"], { cwd, encoding: "utf8" });
     expect(result.status, result.stderr).toBe(0);

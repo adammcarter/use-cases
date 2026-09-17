@@ -25,16 +25,16 @@ use_cases:
     intent: Install the plugin into Claude Code with two commands and have the skills, agents and MCP tools present on the next session, with no npm and no build.
     preconditions:
       - The repo is public on GitHub at adammcarter/use-cases with the manifests at the root.
-      - Node is on PATH on the user's machine.
+      - Node is on PATH on the user's machine, which is what the committed bundle needs until a release publishes the Swift binaries; from then on the plugin needs neither Node nor a build.
     trigger: The user runs /plugin marketplace add adammcarter/use-cases then /plugin install use-cases@use-cases.
     scenarios:
       - id: plugin.install.claude_from_github.golden_manifests_point_at_real_files
         kind: steps
         steps:
           - Read .claude-plugin/plugin.json.
-          - Confirm every declared agent path exists, the MCP server command is node on ${CLAUDE_PLUGIN_ROOT}/dist/uc-mcp.js, and hooks resolve to hooks/hooks.json.
+          - Confirm every declared agent path exists, the MCP server command runs ${CLAUDE_PLUGIN_ROOT}/bin/use-cases-mcp, and hooks resolve to hooks/hooks.json.
         observable_outcomes:
-          - Every entry in the Claude manifest points at a file that exists and at the committed bundle.
+          - Every entry in the Claude manifest points at a file that exists, and the MCP server is the plugin's own entry point rather than an interpreter and a bundle path.
       - id: plugin.install.claude_from_github.golden_marketplace_offers_the_repo_root
         kind: steps
         steps:
@@ -119,7 +119,7 @@ use_cases:
         kind: steps
         steps:
           - Run bin/uc version --json from any working directory.
-          - Confirm it runs dist/uc.js and prints the version envelope.
+          - Confirm it runs whichever runtime plugin.runtime resolves for this plugin version and prints the version envelope.
         observable_outcomes:
           - uc works in a session without any global install, from any working directory.
       - id: plugin.install.uc_on_path_in_session.golden_hook_exports_path
@@ -203,7 +203,7 @@ use_cases:
     intent: Install the plugin into GitHub Copilot CLI with one command and have the skills, bootstrap and MCP tools present, with no npm and no build. Copilot reads the Claude manifest and hook; a root Agent Plugins manifest makes it ignore the hook, so none ships.
     preconditions:
       - The repo is public on GitHub with the Claude manifests and no root plugin.json.
-      - Node is on PATH on the user's machine.
+      - Node is on PATH on the user's machine, which is what the committed bundle needs until a release publishes the Swift binaries; from then on the plugin needs neither Node nor a build.
     trigger: The user runs copilot plugin install adammcarter/use-cases.
     scenarios:
       - id: plugin.install.copilot_from_github.golden_claude_manifest_serves_copilot
@@ -291,7 +291,7 @@ use_cases:
         steps:
           - Read .codex-plugin/plugin.json.
           - Confirm it names the skills directory, points mcpServers at .codex-plugin/mcp.json, declares the SessionStart hook, and matches the Claude manifest's name and version.
-          - Confirm .codex-plugin/mcp.json runs node on ./dist/uc-mcp.js with cwd "." so the path resolves inside the plugin root.
+          - Confirm .codex-plugin/mcp.json runs bash on ./bin/use-cases-mcp with cwd "." so the path resolves inside the plugin root.
         observable_outcomes:
           - The MCP server is declared in Codex's own manifest form.
           - Two commands install the plugin; skills are visible to Codex.
@@ -365,14 +365,14 @@ use_cases:
     intent: Install the plugin into OpenCode with one command and have the MCP server, the skills, the bootstrap and uc on PATH, all registered by the plugin module itself.
     preconditions:
       - The repo is public on GitHub; package.json exports the OpenCode plugin module.
-      - Node is on PATH on the user's machine.
+      - Node is on PATH on the user's machine, which is what the committed bundle needs until a release publishes the Swift binaries; from then on the plugin needs neither Node nor a build.
     trigger: The user runs opencode plugin add 'github:adammcarter/use-cases'.
     scenarios:
       - id: plugin.install.opencode_from_git.golden_module_registers_everything
         kind: steps
         steps:
           - Load opencode/plugin.js and call setup with a fake context.
-          - Confirm it sets an MCP server named use-cases running node on the bundle, adds one skill per skills/<name>/SKILL.md, pushes the bootstrap into the system prompt for context, compaction, generate and title, and puts bin/ first on PATH for shells.
+          - Confirm it sets an MCP server named use-cases running the plugin's own bin/use-cases-mcp, adds one skill per skills/<name>/SKILL.md, pushes the bootstrap into the system prompt for context, compaction, generate and title, and puts bin/ first on PATH for shells.
         observable_outcomes:
           - The plugin module is the single place OpenCode wiring lives.
           - One command installs the plugin; nothing else is configured by hand.

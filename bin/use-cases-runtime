@@ -1,0 +1,124 @@
+#!/usr/bin/env bash
+# Which runtime this plugin checkout executes (ADR 0007 row 7, the plugin
+# cut-over).
+#
+#   use-cases-runtime <use-cases|use-cases-mcp> [args...]
+#
+# Every host-facing entry point in bin/ goes through here, so exactly one file
+# decides what a command actually runs, and the host manifests name a script in
+# this plugin rather than an interpreter and a bundle path.
+#
+# The branch is taken on the VERSION, before anything is fetched:
+#
+#   version >= FIRST_SWIFT_RELEASE  ->  bin/use-cases-bootstrap, which downloads
+#       the release archive for this machine, verifies it against the release's
+#       SHA256SUMS and execs it. There is no fallback out of that path: a
+#       release that should carry the assets and does not must fail loudly.
+#   version <  FIRST_SWIFT_RELEASE  ->  the committed Node bundle in dist/,
+#       because those releases provably published no Swift archive (measured in
+#       ladder row 6 against v0.7.0). Choosing it on the version alone, with no
+#       download attempted, is what keeps it from ever standing in for a
+#       release that should have been there.
+#
+# So the switch flips itself: bumping the version in .claude-plugin/plugin.json
+# to the first Swift release is the whole cut-over, and no manifest, hook or
+# doc changes when it happens. The Node branch retires with dist/.
+set -euo pipefail
+
+# The first release that publishes the Swift archives (ADR 0007 decision 9).
+readonly FIRST_SWIFT_RELEASE="0.8.0"
+readonly RUNTIME_EXECUTABLES="use-cases use-cases-mcp"
+
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+plugin_root="$(cd "$here/.." && pwd)"
+
+die() {
+  local line
+  for line in "$@"; do
+    printf 'use-cases: %s\n' "$line" >&2
+  done
+  exit 1
+}
+
+# --- which executable -------------------------------------------------------
+
+exe="${1:-}"
+if [ -z "$exe" ]; then
+  die "usage: use-cases-runtime <${RUNTIME_EXECUTABLES// /|}> [args...]"
+fi
+shift
+case " $RUNTIME_EXECUTABLES " in
+  *" $exe "*) ;;
+  *) die "no runtime named $exe; this plugin runs: ${RUNTIME_EXECUTABLES// /, }." ;;
+esac
+
+# The committed bundle that answers for each executable, until dist/ goes.
+bundle_for() {
+  case "$1" in
+    use-cases) printf 'dist/uc.js' ;;
+    use-cases-mcp) printf 'dist/uc-mcp.js' ;;
+  esac
+}
+
+# --- which version ----------------------------------------------------------
+
+# USE_CASES_VERSION is the bootstrap's seam for which release to fetch, and it
+# has to mean the same thing here, or the resolver could send a version to one
+# runtime while the bootstrap went looking for another.
+version="${USE_CASES_VERSION:-}"
+if [ -z "$version" ]; then
+  manifest="$plugin_root/.claude-plugin/plugin.json"
+  if [ ! -f "$manifest" ]; then
+    die "cannot tell which runtime to use: $manifest is missing and USE_CASES_VERSION is unset."
+  fi
+  version="$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$manifest" | head -n 1)"
+  if [ -z "$version" ]; then
+    die "cannot read a version from $manifest; set USE_CASES_VERSION to the release this plugin is."
+  fi
+fi
+
+# 1.2.3-rc1+build -> 1.2.3. The prerelease of a Swift release still publishes
+# Swift assets, so only the release numbers decide the branch.
+version_core() {
+  local trimmed="${1%%+*}"
+  printf '%s' "${trimmed%%-*}"
+}
+
+# 0 when $1 >= $2, 1 otherwise. Three integers compared by hand: `sort -V` is
+# not on every machine a plugin gets installed on, and this has to be exact.
+at_least() {
+  local have want h1 h2 h3 w1 w2 w3
+  have="$(version_core "$1")"
+  want="$(version_core "$2")"
+  IFS=. read -r h1 h2 h3 <<<"$have"
+  IFS=. read -r w1 w2 w3 <<<"$want"
+  h1=$((10#${h1:-0})); h2=$((10#${h2:-0})); h3=$((10#${h3:-0}))
+  w1=$((10#${w1:-0})); w2=$((10#${w2:-0})); w3=$((10#${w3:-0}))
+  if [ "$h1" -ne "$w1" ]; then [ "$h1" -gt "$w1" ]; return; fi
+  if [ "$h2" -ne "$w2" ]; then [ "$h2" -gt "$w2" ]; return; fi
+  [ "$h3" -ge "$w3" ]
+}
+
+# A version nobody can read is not guessed at: either branch would be a guess,
+# and one of them runs a binary.
+version_numbers='^[0-9]+(\.[0-9]+){0,2}$'
+if ! [[ $(version_core "$version") =~ $version_numbers ]]; then
+  die "cannot tell which runtime to use: \"$version\" is not a semantic version." \
+    "Set USE_CASES_VERSION to the release this plugin is, for example $FIRST_SWIFT_RELEASE."
+fi
+
+# --- the branch -------------------------------------------------------------
+
+if at_least "$version" "$FIRST_SWIFT_RELEASE"; then
+  exec "$here/use-cases-bootstrap" "$exe" "$@"
+fi
+
+bundle="$plugin_root/$(bundle_for "$exe")"
+if [ ! -f "$bundle" ]; then
+  die "release v$version publishes no Swift binary, and the committed bundle it falls to is missing at $bundle." \
+    "A checkout of this plugin carries $(bundle_for "$exe"); install it again, or set USE_CASES_VERSION to a release from $FIRST_SWIFT_RELEASE on."
+fi
+if ! command -v node >/dev/null 2>&1; then
+  die "release v$version publishes no Swift binary, so $exe runs the committed bundle $(bundle_for "$exe"), and node is not on PATH."
+fi
+exec node "$bundle" "$@"

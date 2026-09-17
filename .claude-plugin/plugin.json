@@ -12,9 +12,9 @@
   ],
   "mcpServers": {
     "use-cases": {
-      "command": "node",
+      "command": "bash",
       "args": [
-        "${CLAUDE_PLUGIN_ROOT}/dist/uc-mcp.js"
+        "${CLAUDE_PLUGIN_ROOT}/bin/use-cases-mcp"
       ]
     }
   }

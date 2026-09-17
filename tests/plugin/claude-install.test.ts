@@ -11,16 +11,21 @@ function readJson(path: string): any {
 
 //: @use-case:plugin.install.claude_from_github
 describe("Claude Code installs the plugin straight from GitHub", () => {
-  test("plugin.json points every entry at a real file and the bundle", () => {
+  test("plugin.json points every entry at a real file and the plugin's own MCP entry point", () => {
     const manifest = readJson(".claude-plugin/plugin.json");
     expect(manifest.name).toBe("use-cases");
     for (const agent of manifest.agents as string[]) {
       expect(existsSync(join(repoRoot, agent)), agent).toBe(true);
     }
+    // The interpreter is bash and the script is the plugin's own wrapper:
+    // ${CLAUDE_PLUGIN_ROOT} is interpolated in args, which is the form this
+    // repo has observed working, and the wrapper decides the runtime.
     const server = manifest.mcpServers["use-cases"];
-    expect(server.command).toBe("node");
-    expect(server.args).toEqual(["${CLAUDE_PLUGIN_ROOT}/dist/uc-mcp.js"]);
-    expect(existsSync(join(repoRoot, "dist/uc-mcp.js"))).toBe(true);
+    expect(server.command).toBe("bash");
+    expect(server.args).toEqual(["${CLAUDE_PLUGIN_ROOT}/bin/use-cases-mcp"]);
+    expect(existsSync(join(repoRoot, "bin/use-cases-mcp"))).toBe(true);
+    // No host manifest may name an interpreter and a bundle path any more.
+    expect(JSON.stringify(manifest)).not.toContain("dist/uc");
     // Hooks come from the default hooks/hooks.json; it must exist and wire the script.
     const hooks = readJson("hooks/hooks.json");
     expect(JSON.stringify(hooks.hooks.SessionStart)).toContain("${CLAUDE_PLUGIN_ROOT}/hooks/session-start");

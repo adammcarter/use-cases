@@ -56,7 +56,7 @@ export function definePlugin(root = defaultRoot) {
     const bootstrap = readBootstrap(root);
 
     await ctx.mcp.transform((editor) => {
-      editor.set("use-cases", { type: "local", command: ["node", join(root, "dist/uc-mcp.js")], cwd: root, enabled: true });
+      editor.set("use-cases", { type: "local", command: ["bash", join(root, "bin/use-cases-mcp")], cwd: root, enabled: true });
     });
 
     const skills = readSkills(root);

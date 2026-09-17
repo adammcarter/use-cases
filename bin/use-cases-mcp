@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# `use-cases-mcp` — the Swift MCP server, from the same downloaded, checksum
-# verified archive as the CLI.
+# `use-cases-mcp` — the MCP server every host manifest names. The resolver
+# beside this script picks the runtime; each link execs, so the process the
+# host spawned is the server itself.
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-exec "$here/use-cases-bootstrap" use-cases-mcp "$@"
+exec "$here/use-cases-runtime" use-cases-mcp "$@"

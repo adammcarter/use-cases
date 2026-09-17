@@ -113,7 +113,12 @@ describe("a release publishes a checksummed archive for every supported platform
     // USE_CASES_VERSION to tell it which version that is.
     const release = publishStandInRelease({ version: pluginVersion, omitArchive: true });
 
+    // Driven at the bootstrap itself: bin/use-cases goes through the runtime
+    // resolver, which sends the plugin's own version to the committed bundle
+    // until a release publishes the Swift archives.
     const result = runBootstrap({
+      entry: "bootstrap",
+      args: ["use-cases"],
       env: {
         USE_CASES_VERSION: undefined,
         USE_CASES_RELEASE_BASE_URL: release.baseUrl,

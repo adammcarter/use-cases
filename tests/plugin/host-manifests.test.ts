@@ -14,7 +14,9 @@ describe("Copilot CLI installs the plugin straight from GitHub", () => {
     // and with it the bootstrap. Observed live 2026-09-16.
     expect(existsSync(join(repoRoot, "plugin.json"))).toBe(false);
     expect(existsSync(join(repoRoot, "mcp.json"))).toBe(false);
-    expect(claude.mcpServers["use-cases"].args).toEqual(["${CLAUDE_PLUGIN_ROOT}/dist/uc-mcp.js"]);
+    expect(claude.mcpServers["use-cases"].command).toBe("bash");
+    expect(claude.mcpServers["use-cases"].args).toEqual(["${CLAUDE_PLUGIN_ROOT}/bin/use-cases-mcp"]);
+    expect(existsSync(join(repoRoot, "bin/use-cases-mcp"))).toBe(true);
     const hooks = read("hooks/hooks.json");
     expect(JSON.stringify(hooks.hooks.SessionStart)).toContain("${CLAUDE_PLUGIN_ROOT}/hooks/session-start");
   });
@@ -49,7 +51,11 @@ describe("Codex installs the plugin from its marketplace", () => {
     const sessionStart = codex.hooks.hooks.SessionStart;
     expect(JSON.stringify(sessionStart)).toContain("${PLUGIN_ROOT}/hooks/session-start");
     const mcp = read(".codex-plugin/mcp.json");
-    expect(mcp.mcpServers["use-cases"]).toEqual({ command: "node", args: ["./dist/uc-mcp.js"], cwd: "." });
+    // Same resolution mechanism Codex was observed to work with — a relative
+    // script under cwd "." — with the interpreter swapped for bash and the
+    // bundle path for the plugin's own entry point.
+    expect(mcp.mcpServers["use-cases"]).toEqual({ command: "bash", args: ["./bin/use-cases-mcp"], cwd: "." });
+    expect(existsSync(join(repoRoot, "bin/use-cases-mcp"))).toBe(true);
     // A root .mcp.json is workspace config to Copilot and overrides the plugin's
     // server there with a path that cannot resolve. Observed live 2026-09-16.
     expect(existsSync(join(repoRoot, ".mcp.json"))).toBe(false);

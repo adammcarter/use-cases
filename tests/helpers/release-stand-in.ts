@@ -78,6 +78,13 @@ export interface StandInOptions {
   omitSumsLine?: boolean;
   /** Leave the requested executable out of the archive. */
   omitExecutable?: string;
+  /**
+   * Publish executables with a body of your own instead of the default
+   * stand-in. Used to prove the bin/ wrapper chain execs all the way through:
+   * an executable that prints its own `$$` reports the SPAWNED pid only when no
+   * shell is left holding the process.
+   */
+  executableBody?: (name: string) => string;
 }
 
 export interface StandIn {
@@ -127,7 +134,7 @@ export function publishStandInRelease(options: StandInOptions = {}): StandIn {
   for (const name of EXECUTABLES) {
     if (options.omitExecutable === name) continue;
     const path = join(stage, name);
-    writeFileSync(path, standInExecutable(name));
+    writeFileSync(path, (options.executableBody ?? standInExecutable)(name));
     chmodSync(path, 0o755);
     members.push(name);
   }
