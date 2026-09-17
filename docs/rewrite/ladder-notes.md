@@ -18,6 +18,19 @@ across sessions.
   schema constrains `message` only to a non-empty string. The black-box
   oracle is the real check: if any oracle test reads that text, it fails here.
 
+- **YAML reading differs from the `yaml` package on exotic input** (found in
+  3c1, all inside `Schema/YamlParser`, which wraps Yams). A quoted value with a
+  raw DEL or C1 control character (U+007F–U+009F) loads in TypeScript and is a
+  `parse_error` in Swift; U+0085 becomes a space; an escaped U+FEFF is dropped;
+  a `null:` key reads as `"null"` where TypeScript gives `""`; surrogate-pair
+  escapes are refused; a doubled leading BOM keeps one BOM in the key in
+  TypeScript and none in Swift. Measured against every `.yml`/ledger file in
+  this repository: none contains these characters. Known limits, not live
+  bugs — revisit only if the black-box oracle or a user file hits one.
+- **One leading BOM is stripped in `UseCases/`** before calling YamlParser, to
+  match the `yaml` lexer. If YamlParser is ever fixed to do this itself, remove
+  the duplicate in UseCases/.
+
 ## Row 3e — evidence
 
 - **The eight-concurrent-writer guarantee (decision 10) is tested here**,
