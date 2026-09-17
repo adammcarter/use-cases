@@ -38,7 +38,7 @@ public struct RegistryError: Equatable, Sendable {
   }
 
   /// `{ code, line, message, binding_slug?, row_id? }`.
-  var jsonValue: JSONValue {
+  public var jsonValue: JSONValue {
     var object = JSONObject([
       ("code", .string(code.rawValue)),
       ("line", JSONValue.optionalNumber(line)),

@@ -452,6 +452,77 @@ across sessions.
   manifest with a lone `\uD800` escape parses in node; the port replaces such
   escapes with `�` before parsing, which keeps every observable outcome.
 
+## Row 5 — MCP server
+
+- **Decision 7 and decision 8 collide, and the wire won.** The MCP Swift SDK's
+  `Server` actor encodes every response with `JSONEncoder` and
+  `.sortedKeys` (`Sources/MCP/Server/Server.swift:371-372`, on a private
+  `send`), so it cannot emit the frozen envelope key order, the declared
+  schemas' property order, or `structuredContent` as the TypeScript writes
+  them. Three more things it cannot express:
+    - `MCP.Tool` has no `command` or `mutability` member — only `_meta` — and
+      the TypeScript emits both on every one of the 19 descriptors, `command`
+      second and `mutability` last.
+    - `initialize` is answered once: a second one is refused
+      `-32600 "Server is already initialized"` (`Server.swift:928`). The
+      TypeScript answers every one, and the black-box helper
+      (`tests/helpers/mcp-server.ts`, `capabilities()`) sends a second
+      handshake and reads its capabilities.
+    - the protocol version is negotiated (`Version.negotiate`), so a client
+      asking for `2024-11-05` is answered `2024-11-05`; the TypeScript always
+      states `2025-11-25`.
+  The port therefore uses the SDK for what it can carry — `StdioTransport`,
+  which frames newline-delimited messages on stdin and stdout with the
+  non-blocking partial-write retry a pipe needs — and writes the response
+  bytes itself through `JSONWriter`. Decision 8 (contract freeze) outranks a
+  library choice, and the brief's own "JSONValue/JSONWriter, never
+  JSONEncoder" says the same. **Owner question:** is "on the MCP Swift SDK"
+  satisfied by using it as the transport, or should the wire contract move to
+  the SDK's shape at 0.8.0?
+- **The SDK pins nothing for `swift-docc-plugin`** (`branch: "main"` in its
+  own manifest), in a repo where every dependency is `exact:`. Nothing of
+  ours builds documentation, so it is inert, but it is in `Package.resolved`.
+- **Divergence (deliberate): a core failure inside a resource read.** The
+  TypeScript lets it escape the `line` handler, which ends the process —
+  a damaged ledger kills the server. The port reports `-32603` with the core
+  error's message instead. Every oracle and corpus case is unaffected; no
+  recorded case reaches it.
+- **The gate order in `callMcpTool` is observable.** `allow_write !== true` is
+  checked BEFORE the server's write mode, so a read-only session that asked
+  for the write is told `mcp.server_write_mode_required` and one that did not
+  ask is told `mcp.write_mode_required`. Two codes, and which one answers says
+  which lock refused.
+- **A refusal envelope carries the SERVER's working directory as its roots**,
+  not the workspace: `errorEnvelope` passes no roots and the factory defaults
+  them to `process.cwd()`. The Swift refusal takes them from
+  `McpEnvironment.workingDirectory` so an in-process replay reproduces it.
+- **A relative `repo` resolves against the server's working directory**
+  (`resolve(process.cwd(), repo)`), and `data_root` against the REPO — not
+  against the working directory as the CLI resolves it.
+- **`evidence_record` is the only appending tool with no timestamp argument.**
+  Its `recorded_at`, `captured_at` and UUIDv7 event id come from the clock, so
+  the corpus normalises those three (and the ledger shard derived from the
+  uuid) for that case alone, naming them in the case's own `clock_fields`.
+  Every other appending tool is given an explicit `recorded_at` and
+  `idempotency_key`, and its ledger ids reproduce byte for byte
+  (`run.corpus_start`, `evt.run.corpus_start.1`...).
+- **`showcase_start` reads the clock twice.** `generated_at` and
+  `freshnessEvaluatedAt` are two separate `new Date().toISOString()` calls in
+  the TypeScript; the port calls its clock twice too, so a caller who pins
+  `generated_at` pins both and one who does not gets whatever the two calls
+  give.
+- **`uc://schemas/{name}` leaves `schema` out when it did not load**, because
+  `JSON.stringify` drops an undefined member rather than writing null. Only
+  reachable if an embedded schema fails to load.
+- **The binding resource orders rows and slugs by `localeCompare`**, not by
+  code unit, while `binding_slugs` within a row uses the default
+  `Array.prototype.sort`. Both are reproduced.
+- **`showcase_request_approval` still suggests `uc approve-run`**, not
+  `use-cases approve-run`: the rename (decision 4) has not reached the MCP
+  prompt text or this suggested command, and the same is true of every `uc`
+  in the four prompts. Frozen as-is for the port; row 6 or the rename row
+  owns it.
+
 ## Row 6 — release / 0.8.0
 
 - **Tool version is embedded in several golden corpora** — freshness output
