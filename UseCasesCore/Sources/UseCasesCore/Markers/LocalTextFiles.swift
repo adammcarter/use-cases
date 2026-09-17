@@ -1,12 +1,17 @@
 import Foundation
 
-/// The filesystem seam the run-key code reads and writes through: exactly the
-/// two operations it uses of the TypeScript's `MarkerFs`.
-public protocol TextFileStoring: Sendable {
+/// The read half of the marker filesystem seam: the TypeScript's
+/// `VerificationContextFs`, the read-only subset of `MarkerFs` the verification
+/// context hash reads declared inputs and the lockfile through.
+public protocol TextFileReading: Sendable {
   /// The file's UTF-8 text, or nil when nothing exists at `path`. Any other
   /// failure is raised.
   func readText(atPath path: String) throws(FileAccessError) -> String?
+}
 
+/// The filesystem seam the run-key code reads and writes through: exactly the
+/// two operations it uses of the TypeScript's `MarkerFs`.
+public protocol TextFileStoring: TextFileReading {
   /// Replace the file with `text`, creating parent directories, atomically.
   func writeText(
     _ text: String,
