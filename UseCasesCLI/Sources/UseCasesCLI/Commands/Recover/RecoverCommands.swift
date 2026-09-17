@@ -1,12 +1,13 @@
-/// The `recover` commands, declared for help and flag checking. Their port is
-/// ladder row 4c; until it lands each one refuses with `cli_not_yet_ported`.
+/// `uc recover` (packages/cli/src/commands/recover.ts): drive a drifted or
+/// unproven row back to green in one command. Run in
+/// `RecoverCommands+Run.swift`.
 enum RecoverCommands {
   static let all = [
     recover,
   ]
 
   static let recover = CommandSpecification(
-    unportedPath: ["recover"],
+    path: ["recover"],
     command: "markers.recover",
     summary: "Drive a drifted / unproven row back to green: re-verify (and optionally "
       + "re-prove), then report.",
@@ -96,6 +97,7 @@ enum RecoverCommands {
         valueName: "<ref>",
       ),
     ],
-    subrow: "4c",
-  )
+  ) { context throws(CommandFailure) in
+    try run(context)
+  }
 }

@@ -79,6 +79,70 @@ across sessions.
   which moves schema diagnostics and the written YAML. A lone-surrogate escape
   that `JSON.parse` accepts is still refused by `JSONParser` (known 3g2 limit).
 
+## Found in 4c — marker commands
+
+- **`precommit` is not a CLI command.** No `packages/cli` source names it; it
+  is reached only through `scripts/use-cases-precommit.sh`, which runs
+  `validate-ledger --base-ref` and `scan --ci` through the CLI and a `node -e`
+  snippet. `Precommit.swift` in the core has no CLI caller, and nothing was
+  ported for it. The hook script itself shells `node` and dies at row 10.
+- **The corpus masks exactly these, on both sides** (`MarkerCommandsMasking`):
+  every `event_id` (bind, unbind, rebind and prove mint `generateUlid` — time
+  plus `Math.random` — and no flag pins it); every millisecond ISO timestamp
+  other than the pinned `--generated-at` and the envelope epoch (registry
+  events' `created_at` is the wall clock; a run without `--generated-at`); a
+  proof's `signature.value` and non-zero `previous_entry_hash` (both cover the
+  random id); run attestations and run-key contents in the cases that mint a
+  key or date a record by the wall clock; the text after `is not valid JSON: `
+  (V8's wording, row 4 precedent); keygen's PEM bodies, replaced in the
+  generator before recording so no minted key lands in the repository.
+- **`--base-ref` is ported with its bug and now pinned end to end through the
+  CLI** (`validate_ledger_base_ref_misses_rewrite`): bind, commit, rewrite the
+  committed bindings line, `validate-ledger --base-ref HEAD` → `ok: true`, and
+  git's own `fatal: path '<abs>' exists on disk, but not in 'HEAD'` on stderr.
+  `scan --base-ref` has the same shape for the proof ledger.
+- **git's stderr is part of the CLI's output.** node's `execFileSync` inherits
+  stderr, so `impact` outside a repository prints git's full `diff` usage text
+  and `validate-ledger --base-ref` prints `fatal:` lines. `GitProcessRunner`
+  now takes the environment and a `ProcessStandardErrorLog`; the dispatcher
+  gives every handler one and emits it as stderr even when the handler throws.
+  The corpus records git 2.54's wording as expected bytes, so a different git
+  fails those cases until the corpus is regenerated — a regeneration trigger,
+  like the tool version in the row 6 note.
+- **Every `process.env` read is threaded from the CLI entry's environment**:
+  the run key's home (`HOME`, `UC_RUN_KEY_FILE`), `--signing-key-env`,
+  `GITHUB_*` producer fields, CI authority detection and
+  `UCM_ALLOW_UNSAFE_VERIFICATION`. Known limit: `VerifyProcessRunner` sets no
+  environment, so the verifier child inherits the real process's (the test
+  host's in the in-process corpus, the shell's through the binary). That is
+  faithful — `spawnSync` inherits too — but the corpus cannot detect an
+  environment divergence in the verifier child.
+- **Divergence — key material checks are ed25519-only.** node's
+  `createPublicKey`/`createPrivateKey` accept RSA, EC and other keys (failing
+  later, at signing or verification) and word each failure with OpenSSL's own
+  detail. The port refuses anything but an ed25519 PEM up front and always
+  gives the decoder detail `error:1E08010C:DECODER routines::unsupported`,
+  which is node's text for non-key input (the only malformation the corpus
+  records). An RSA `--public-key` is `public_key.invalid` in Swift and a later
+  signature failure in node.
+- **Divergence — fractional line flags.** `--line 2.5` is a finite number, so
+  the TypeScript passes 2.5 to the core (where `splice` truncates it); the
+  core port takes whole lines, so the CLI drops a fractional value as absent
+  (`BIND_LINE_REQUIRED` / `BIND_SPAN_REQUIRED`). Not in the corpus.
+- **Thrown core errors map to node's codes where node has one** (errno for
+  files, the matrix loader's own codes) and to `internal_error` for the plain
+  `Error`s (git, canonical JSON, signing, verifier spawn). node's spawn
+  `ERR_*` codes for a verifier argv it rejects are not reproduced (`internal_error`).
+- **Human rendering: `TrustRenderer`** ports `trustRender.ts` whole, including
+  `showcase.status` and the approval-request object view, which nothing
+  reaches until 4e. Only `scan`, `verify`, `impact` and `recover` are pinned by
+  this corpus; 4e must add corpus cases for the other two.
+- **Cannot be pinned in-process: paths relative to the working directory for
+  WRITES.** `--bindings`, `--out` and friends resolve against `process.cwd()`;
+  the in-process corpus test cannot change directory, so only a relative READ
+  that fails (`scan --public-key missing.pem`) is recorded. The by-hand check
+  covers relative `--repo .`.
+
 ## Row 3e — evidence
 
 - **The concurrent-writer guarantee (decision 10) is tested here** as the

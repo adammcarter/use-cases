@@ -46,7 +46,7 @@ public struct UnbindCommandResult: Equatable, Sendable {
   public let errors: [MarkerCommandFailure]
 
   /// The TypeScript result object, in its key order; absent members omitted.
-  var jsonValue: JSONValue {
+  public var jsonValue: JSONValue {
     var object = JSONObject([
       ("exit_code", .number(Double(exitCode))),
       ("ok", .bool(isOK)),

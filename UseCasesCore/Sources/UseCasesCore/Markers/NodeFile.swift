@@ -30,12 +30,14 @@ public enum NodeFile {
     }
   }
 
-  /// `writeFileSync(path, text)`: created or truncated, mode 0666 before umask.
+  /// `writeFileSync(path, text, { mode })`: created or truncated; `mode`
+  /// (before umask) applies only when the file is created.
   public static func writeText(
     _ text: String,
     atPath path: String,
+    mode: mode_t = 0o666,
   ) throws(FileAccessError) {
-    let descriptor = open(path, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0o666)
+    let descriptor = open(path, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, mode)
     guard descriptor >= 0 else {
       throw FileAccessError(errorNumber: errno, operation: "open", path: path)
     }
@@ -72,7 +74,7 @@ public enum NodeFile {
 
   /// `mkdirSync(path, { recursive: true })`. A failure names the path that was
   /// asked for, not the component that failed, as node's does.
-  static func makeDirectories(atPath path: String) throws(FileAccessError) {
+  public static func makeDirectories(atPath path: String) throws(FileAccessError) {
     var prefix = path.hasPrefix("/") ? "" : "."
     for component in path.split(separator: "/", omittingEmptySubsequences: true) {
       prefix += "/\(component)"

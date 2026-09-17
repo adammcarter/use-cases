@@ -6,11 +6,10 @@ import UseCasesCore
 /// a status line, a YAML-ish dump of `data`, the diagnostics with where each
 /// points, and a pointer to `--json`.
 ///
-/// The TypeScript also has bespoke human views for the trust commands (`scan`,
-/// `verify`, `impact`, `recover`, `showcase status`) and for an approval
-/// request. They land with those commands in later subrows; until then those
-/// commands only ever return error envelopes, which the TypeScript renders with
-/// this generic view too.
+/// An approval request and the trust commands (`scan`, `verify`, `impact`,
+/// `recover`, `showcase status`) have their own human views
+/// (``TrustRenderer``); everything else, and a trust command's genuine error
+/// envelope, gets the generic view.
 enum EnvelopeRenderer {
   static let footer = "Add --json for the full machine-readable result envelope."
 
@@ -21,7 +20,9 @@ enum EnvelopeRenderer {
     if isJSON {
       return JSONWriter.encode(envelope) + "\n"
     }
-    return renderHuman(envelope)
+    return TrustRenderer.renderApprovalRequest(envelope)
+      ?? TrustRenderer.render(envelope)
+      ?? renderHuman(envelope)
   }
 
   private static func renderHuman(_ envelope: JSONValue) -> String {

@@ -1,6 +1,6 @@
 extension MarkersCommands {
   static let scan = CommandSpecification(
-    unportedPath: ["scan"],
+    path: ["scan"],
     command: "markers.scan",
     summary: "Scan code markers against the bindings ledger and report freshness.",
     flags: [
@@ -46,11 +46,12 @@ extension MarkersCommands {
         summary: "CI mode (print inferred spans).",
       ),
     ],
-    subrow: "4c",
-  )
+  ) { context throws(CommandFailure) in
+    try runScan(context)
+  }
 
   static let impact = CommandSpecification(
-    unportedPath: ["impact"],
+    path: ["impact"],
     command: "markers.impact",
     summary: "Show which bound behaviours a git change touches (advisory; re-verify the "
       + "impacted ones).",
@@ -79,11 +80,12 @@ extension MarkersCommands {
       ),
       MarkersFlags.generatedAt,
     ],
-    subrow: "4c",
-  )
+  ) { context throws(CommandFailure) in
+    try runImpact(context)
+  }
 
   static let prove = CommandSpecification(
-    unportedPath: ["prove"],
+    path: ["prove"],
     command: "markers.prove",
     summary: "Mint SIGNED proofs from verification results (CI-only signing key).",
     flags: [
@@ -161,11 +163,12 @@ extension MarkersCommands {
       MarkersFlags.generatedAt,
       MarkersFlags.baseRef,
     ],
-    subrow: "4c",
-  )
+  ) { context throws(CommandFailure) in
+    try runProve(context)
+  }
 
   static let verify = CommandSpecification(
-    unportedPath: ["verify"],
+    path: ["verify"],
     command: "markers.verify",
     summary: "Run each bound row's verifier and write an UNSIGNED results ledger.",
     flags: [
@@ -198,11 +201,12 @@ extension MarkersCommands {
       MarkersFlags.generatedAt,
       MarkersFlags.baseRef,
     ],
-    subrow: "4c",
-  )
+  ) { context throws(CommandFailure) in
+    try runVerify(context)
+  }
 
   static let validateLedger = CommandSpecification(
-    unportedPath: ["validate-ledger"],
+    path: ["validate-ledger"],
     command: "markers.validate-ledger",
     summary: "Validate the marker evidence ledger (append-only, signatures, schema).",
     flags: [
@@ -217,6 +221,7 @@ extension MarkersCommands {
       MarkersFlags.keyring,
       MarkersFlags.baseRef,
     ],
-    subrow: "4c",
-  )
+  ) { context throws(CommandFailure) in
+    try runValidateLedger(context)
+  }
 }

@@ -1,6 +1,6 @@
 extension MarkersCommands {
   static let bind = CommandSpecification(
-    unportedPath: ["bind"],
+    path: ["bind"],
     command: "markers.bind",
     summary: "Bind a use-case row to a code marker (inserts the marker into the source).",
     flags: [
@@ -56,11 +56,12 @@ extension MarkersCommands {
         summary: "Preview the marker placement without writing the source or registry.",
       ),
     ],
-    subrow: "4c",
-  )
+  ) { context throws(CommandFailure) in
+    try runBind(context)
+  }
 
   static let unbind = CommandSpecification(
-    unportedPath: ["unbind"],
+    path: ["unbind"],
     command: "markers.unbind",
     summary: "Release a binding: remove its marker from the source and end its "
       + "registration.",
@@ -100,11 +101,12 @@ extension MarkersCommands {
         summary: "Report what would be released without writing the source or registry.",
       ),
     ],
-    subrow: "4c",
-  )
+  ) { context throws(CommandFailure) in
+    try runUnbind(context)
+  }
 
   static let rebind = CommandSpecification(
-    unportedPath: ["rebind"],
+    path: ["rebind"],
     command: "markers.rebind",
     summary: "Move a binding to a different declaration (marker and registration "
       + "together).",
@@ -163,6 +165,7 @@ extension MarkersCommands {
         summary: "Preview the move without writing the source or registry.",
       ),
     ],
-    subrow: "4c",
-  )
+  ) { context throws(CommandFailure) in
+    try runRebind(context)
+  }
 }

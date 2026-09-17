@@ -8,7 +8,8 @@ import Foundation
 public enum CommandLineInterface {
   /// Run one invocation, given the arguments after the program name.
   ///
-  /// `environment` is what child processes run with — git, for `init`.
+  /// `environment` is what the TypeScript reads as `process.env`: what child
+  /// processes run with, the run key's location, signing keys and CI identity.
   public static func run(
     arguments: [String],
     environment: [String: String] = ProcessInfo.processInfo.environment,
@@ -39,7 +40,12 @@ public enum CommandLineInterface {
         exitCode: 2,
       )
     }
-    return CommandDispatcher.run(command, arguments: normalized, isJSON: isJSON)
+    return CommandDispatcher.run(
+      command,
+      arguments: normalized,
+      isJSON: isJSON,
+      environment: environment,
+    )
   }
 
   /// One leading `--` is dropped, as a package runner may pass one through.

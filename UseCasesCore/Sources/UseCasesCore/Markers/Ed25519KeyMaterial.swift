@@ -1,0 +1,20 @@
+/// Whether PEM text is key material the signed tier can use — the up-front
+/// check the CLI makes where the TypeScript calls node's `createPublicKey` and
+/// `createPrivateKey`.
+///
+/// Stricter than node: node also accepts RSA, EC and other key types here and
+/// fails later, at signing or verification; these accept ed25519 only.
+public enum Ed25519KeyMaterial {
+  /// node's OpenSSL detail for text it cannot decode as any key.
+  public static let decoderFailureDetail = "error:1E08010C:DECODER routines::unsupported"
+
+  /// An SPKI `PUBLIC KEY`, or a PKCS#8 `PRIVATE KEY` whose public half is used.
+  public static func isPublicKey(pem: String) -> Bool {
+    Ed25519PEM.publicKey(fromPEM: pem) != nil
+  }
+
+  /// A PKCS#8 `PRIVATE KEY`.
+  public static func isPrivateKey(pem: String) -> Bool {
+    Ed25519PEM.privateKey(fromPEM: pem) != nil
+  }
+}

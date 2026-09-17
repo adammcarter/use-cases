@@ -97,7 +97,7 @@ enum MatrixInitFixtures {
     init(recorded: JSONValue) throws {
       directory = try TemporaryDirectory()
       self.recorded = recorded
-      root = Self.realpathOf(directory.url.path)
+      root = SandboxTree.realpathOf(directory.url.path)
       let setup = try #require(recorded["setup"])
 
       _ = try directory.makeDirectory("outside")
@@ -179,12 +179,7 @@ enum MatrixInitFixtures {
     /// Every entry under the sandbox except `.git` directories, in code-unit
     /// order, as the generator lists them.
     func tree() throws -> String {
-      var entries: [(path: String, value: JSONValue)] = []
-      try walk("", into: &entries)
-      entries.sort { left, right in
-        left.path.utf16.lexicographicallyPrecedes(right.path.utf16)
-      }
-      return MatrixInitFixtures.wire(.array(entries.map(\.value)))
+      try SandboxTree.listing(root: root)
     }
 
     private func substituted(_ text: String) -> String {
@@ -202,70 +197,6 @@ enum MatrixInitFixtures {
       formatter.formatOptions = [.withFullDate]
       formatter.timeZone = TimeZone(identifier: "UTC")
       return formatter.string(from: Date())
-    }
-
-    private static func realpathOf(_ path: String) -> String {
-      guard let resolved = realpath(path, nil) else {
-        return path
-      }
-      defer {
-        free(resolved)
-      }
-      return String(cString: resolved)
-    }
-
-    /// readdir(3)'s names, exactly as stored.
-    private static func names(in directory: String) throws -> [String] {
-      let stream = try #require(opendir(directory))
-      defer {
-        closedir(stream)
-      }
-      var names: [String] = []
-      while let entry = readdir(stream) {
-        let name = withUnsafeBytes(of: entry.pointee.d_name) { raw in
-          String(bytes: raw.prefix { $0 != 0 }, encoding: .utf8) ?? ""
-        }
-        if name != ".", name != ".." {
-          names.append(name)
-        }
-      }
-      return names
-    }
-
-    private func walk(
-      _ relativeDirectory: String,
-      into entries: inout [(path: String, value: JSONValue)],
-    ) throws {
-      let absoluteDirectory = relativeDirectory.isEmpty ? root : root + "/" + relativeDirectory
-      for name in try Self.names(in: absoluteDirectory) where name != ".git" {
-        let path = relativeDirectory.isEmpty ? name : relativeDirectory + "/" + name
-        let absolutePath = root + "/" + path
-        var status = stat()
-        try #require(lstat(absolutePath, &status) == 0)
-        switch status.st_mode & S_IFMT {
-        case S_IFLNK:
-          let target = try FileManager.default.destinationOfSymbolicLink(atPath: absolutePath)
-          entries.append((path, .object(JSONObject([
-            ("path", .string(path)),
-            ("kind", .string("symlink")),
-            ("target", .string(target)),
-          ]))))
-        case S_IFDIR:
-          entries.append((path, .object(JSONObject([
-            ("path", .string(path)),
-            ("kind", .string("directory")),
-          ]))))
-          try walk(path, into: &entries)
-        default:
-          let content = try NodeFile.readText(atPath: absolutePath)
-          entries.append((path, .object(JSONObject([
-            ("path", .string(path)),
-            ("kind", .string("file")),
-            ("mode", .string(String(status.st_mode & 0o777, radix: 8))),
-            ("content", .string(content)),
-          ]))))
-        }
-      }
     }
   }
 }

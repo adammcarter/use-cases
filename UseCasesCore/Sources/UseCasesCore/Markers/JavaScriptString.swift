@@ -1,10 +1,10 @@
 /// The pieces of JavaScript's string behaviour the ledger code depends on,
 /// spelled out over UTF-16 code units.
-enum JavaScriptString {
+public enum JavaScriptString {
   /// `String.prototype.trim`: strips WhiteSpace and LineTerminator code units
   /// from both ends — including U+00A0, U+FEFF and U+2028, which Foundation's
   /// whitespace set does not agree on.
-  static func trim(_ text: String) -> String {
+  public static func trim(_ text: String) -> String {
     let units = Array(text.utf16)
     var start = 0
     var end = units.count
@@ -19,7 +19,7 @@ enum JavaScriptString {
 
   /// `text.split(separator)` for a single code unit: every segment kept,
   /// including empty ones at either end.
-  static func split(
+  public static func split(
     _ text: String,
     on separator: UInt16,
   ) -> [String] {

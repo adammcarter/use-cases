@@ -2,8 +2,8 @@ import Foundation
 
 /// `new Date(milliseconds).toISOString()`: `YYYY-MM-DDTHH:mm:ss.sssZ` in UTC,
 /// with a signed six-digit year outside 0000–9999.
-enum JavaScriptTimestamp {
-  static func isoString(milliseconds: Double) -> String {
+public enum JavaScriptTimestamp {
+  public static func isoString(milliseconds: Double) -> String {
     let total = Int64(milliseconds)
     let millisecondsPerDay: Int64 = 86_400_000
     let days = floorDivision(total, millisecondsPerDay)

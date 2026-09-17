@@ -64,7 +64,7 @@ public struct RebindCommandResult: Equatable, Sendable {
   public let errors: [MarkerCommandFailure]
 
   /// The TypeScript result object, in its key order; absent members omitted.
-  var jsonValue: JSONValue {
+  public var jsonValue: JSONValue {
     var object = JSONObject([
       ("command", .string("rebind")),
       ("row_id", .string(rowIdentifier)),

@@ -1,12 +1,12 @@
-/// The `keygen` commands, declared for help and flag checking. Their port is
-/// ladder row 4c; until it lands each one refuses with `cli_not_yet_ported`.
+/// `uc keygen` (packages/cli/src/commands/keygen.ts): mint an ed25519 keypair
+/// for the opt-in signed proof tier. Run in `KeygenCommands+Run.swift`.
 enum KeygenCommands {
   static let all = [
     keygen,
   ]
 
   static let keygen = CommandSpecification(
-    unportedPath: ["keygen"],
+    path: ["keygen"],
     command: "markers.keygen",
     summary: "Generate an ed25519 keypair for the opt-in signed proof tier.",
     flags: [
@@ -39,6 +39,7 @@ enum KeygenCommands {
         summary: "Emit the machine-readable JSON result envelope.",
       ),
     ],
-    subrow: "4c",
-  )
+  ) { context throws(CommandFailure) in
+    try run(context)
+  }
 }

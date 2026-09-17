@@ -50,13 +50,25 @@ public struct GitProcessRunner: GitRunning {
   /// node's default `maxBuffer`.
   static let maximumOutputBytes = 1024 * 1024
 
-  public init() {}
+  let environment: [String: String]?
+  let standardErrorLog: ProcessStandardErrorLog?
+
+  /// `environment` is what git runs with and whose PATH finds it (this
+  /// process's when nil); git's stderr goes to `standardErrorLog` when given,
+  /// else straight to this process's stderr.
+  public init(
+    environment: [String: String]? = nil,
+    standardErrorLog: ProcessStandardErrorLog? = nil,
+  ) {
+    self.environment = environment
+    self.standardErrorLog = standardErrorLog
+  }
 
   public func run(
     _ arguments: [String],
     workingDirectory: String?,
   ) throws(GitError) -> String {
-    guard let executable = Self.gitExecutable(),
+    guard let executable = gitExecutable(),
           workingDirectory.map(Self.isDirectory) ?? true
     else {
       throw .commandFailed(standardError: nil, description: "spawnSync git ENOENT")
@@ -68,12 +80,16 @@ public struct GitProcessRunner: GitRunning {
     }
     let outputs: CapturedProcess
     do {
-      outputs = try Self.execute(executable, arguments, workingDirectory, capturingIn: capture)
+      outputs = try execute(executable, arguments, workingDirectory, capturingIn: capture)
     } catch {
       throw .commandFailed(standardError: nil, description: "spawnSync git EACCES")
     }
     let standardError = UTF8Text.decodeReplacingInvalid([UInt8](outputs.standardError))
-    FileHandle.standardError.write(outputs.standardError)
+    if let standardErrorLog {
+      standardErrorLog.append(outputs.standardError)
+    } else {
+      FileHandle.standardError.write(outputs.standardError)
+    }
     guard outputs.standardOutput.count <= Self.maximumOutputBytes else {
       throw .commandFailed(standardError: standardError, description: "spawnSync git ENOBUFS")
     }
@@ -88,7 +104,7 @@ public struct GitProcessRunner: GitRunning {
 
   /// Output goes to files rather than pipes, so a large diff can never fill a
   /// pipe buffer and deadlock the wait.
-  private static func execute(
+  private func execute(
     _ executable: URL,
     _ arguments: [String],
     _ workingDirectory: String?,
@@ -104,6 +120,9 @@ public struct GitProcessRunner: GitRunning {
     let process = Process()
     process.executableURL = executable
     process.arguments = arguments
+    if let environment {
+      process.environment = environment
+    }
     if let workingDirectory {
       process.currentDirectoryURL = URL(fileURLWithPath: workingDirectory, isDirectory: true)
     }
@@ -122,8 +141,8 @@ public struct GitProcessRunner: GitRunning {
   }
 
   /// The first executable `git` on PATH, as `execFileSync` resolves it.
-  private static func gitExecutable() -> URL? {
-    let path = ProcessInfo.processInfo.environment["PATH"] ?? "/usr/bin:/bin"
+  private func gitExecutable() -> URL? {
+    let path = (environment ?? ProcessInfo.processInfo.environment)["PATH"] ?? "/usr/bin:/bin"
     return path
       .split(separator: ":", omittingEmptySubsequences: true)
       .map { directory in

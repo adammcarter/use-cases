@@ -1,5 +1,8 @@
-/// The marker commands, declared for help and flag checking. Their port is
-/// ladder row 4c; until it lands each one refuses with `cli_not_yet_ported`.
+/// The marker commands (packages/cli/src/commands/markers.ts). The bindings
+/// commands are specified in `MarkersCommands+Bindings.swift` and run in
+/// `MarkersCommands+BindingRuns.swift`; the trust commands in
+/// `MarkersCommands+Trust.swift`, run in `MarkersCommands+ScanRuns.swift` and
+/// `MarkersCommands+ProveRuns.swift`.
 enum MarkersCommands {
   static let all = [
     bind,

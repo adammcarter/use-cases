@@ -4,8 +4,28 @@ import TestSupport
 @testable import UseCasesCore
 
 /// `NodeFile.rename` is `renameSync`: the file moves, and a failure carries
-/// node's code and node's message naming both paths.
+/// node's code and node's message naming both paths. `writeText`'s mode is
+/// `writeFileSync`'s: it applies only when the file is created.
 struct NodeFileTests {
+  @Test
+  func `creates a file with the mode asked for, and leaves an existing file's mode alone`() throws {
+    let root = try TemporaryDirectory()
+    let created = root.url.appendingPathComponent("created.pem").path
+    let existing = try root.writeFile("existing.pem", contents: "old").path
+
+    try NodeFile.writeText("new", atPath: created, mode: 0o600)
+    try NodeFile.writeText("new", atPath: existing, mode: 0o600)
+
+    let mode = { (path: String) in
+      try FileManager.default.attributesOfItem(atPath: path)[.posixPermissions] as? Int
+    }
+    let createdMode = try mode(created)
+    let existingMode = try mode(existing)
+    #expect(createdMode == 0o600)
+    #expect(existingMode == 0o644)
+    #expect(try NodeFile.readText(atPath: existing) == "new")
+  }
+
   @Test
   func `renames a file over an existing one`() throws {
     let root = try TemporaryDirectory()

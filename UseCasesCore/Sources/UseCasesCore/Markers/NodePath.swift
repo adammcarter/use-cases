@@ -6,14 +6,14 @@
 /// which a `/` followed by a combining mark is not a separator at all. The
 /// verification context hash reads a file at exactly the path node would have
 /// built, so the path is built the way node builds it.
-enum NodePath {
-  static func isAbsolute(_ path: String) -> Bool {
+public enum NodePath {
+  public static func isAbsolute(_ path: String) -> Bool {
     path.utf16.first == CodeUnits.solidus
   }
 
   /// `path.join(...parts)`: the non-empty parts joined with `/`, then
   /// normalized; `"."` when nothing is left.
-  static func join(_ parts: String...) -> String {
+  public static func join(_ parts: String...) -> String {
     let joined = parts.filter { part in
       !part.isEmpty
     }
@@ -23,7 +23,7 @@ enum NodePath {
 
   /// `path.normalize`: `.` and `..` resolved lexically, repeated separators
   /// collapsed, a trailing separator kept.
-  static func normalize(_ path: String) -> String {
+  public static func normalize(_ path: String) -> String {
     let units = Array(path.utf16)
     guard !units.isEmpty else {
       return "."

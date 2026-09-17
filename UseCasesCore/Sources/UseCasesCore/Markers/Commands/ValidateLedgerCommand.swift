@@ -58,7 +58,7 @@ public struct ValidateLedgerCommandResult: Equatable, Sendable {
   public let errors: [LedgerErrorReport]
 
   /// The TypeScript result object, in its key order.
-  var jsonValue: JSONValue {
+  public var jsonValue: JSONValue {
     .object(JSONObject([
       ("exit_code", .number(Double(exitCode))),
       ("ok", .bool(isOK)),
