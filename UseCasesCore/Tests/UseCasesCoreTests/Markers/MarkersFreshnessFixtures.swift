@@ -98,7 +98,8 @@ enum MarkersFreshnessFixtures {
       generatedAt: string(entry, "generated_at"),
     )
     if let name = entry["custom_policy"]?.stringValue {
-      input.customPolicy = try #require(customPolicies[name])
+      let predicate = try #require(customPolicies[name])
+      input.customPolicy = predicate
     }
     input.releaseGate = WorkspaceReleaseGate.normalize(entry["release_gate"])
     input.currentContextHashes = try entry["current_context_hashes"]?.arrayValue.map { pairs in
@@ -182,7 +183,7 @@ enum MarkersFreshnessFixtures {
       rowIdentifier: string(value, "row_id"),
       contextHash: string(value, "context_hash"),
       bindingSetHash: string(value, "binding_set_hash"),
-      passed: #require(value["passed"]?.boolValue),
+      passed: #require(value["passed"]?.boolValue as Bool?),
       attested: value["attested"]?.boolValue,
     )
   }

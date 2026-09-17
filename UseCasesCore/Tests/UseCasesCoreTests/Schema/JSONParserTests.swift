@@ -151,6 +151,6 @@ struct JSONParserTests {
   func `a large integer keeps double precision, exactly as JavaScript does`() throws {
     let value = try JSONParser.parse("12345678901234567890")
 
-    #expect(value.numberValue == 12_345_678_901_234_567_890 as Double)
+    #expect(value.numberValue == 12_345_678_901_234_567_168 as Double)
   }
 }

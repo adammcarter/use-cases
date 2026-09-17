@@ -26,7 +26,7 @@ struct VerifierResolutionTests {
     #expect(try MarkersFreshnessFixtures.wire(expansion.jsonValue)
       == MarkersFreshnessFixtures.wire(#require(entry["expansion"])))
     #expect(try (VerifierPresetIdentifier(identifier: preset) != nil)
-      == #require(entry["is_preset_id"]?.boolValue))
+      == #require(entry["is_preset_id"]?.boolValue as Bool?))
   }
 
   @Test
@@ -36,7 +36,7 @@ struct VerifierResolutionTests {
 
       #expect(
         try VerifierPresets
-          .isTestSuitePreset(preset) == #require(entry["is_test_suite"]?.boolValue),
+          .isTestSuitePreset(preset) == #require(entry["is_test_suite"]?.boolValue as Bool?),
         "\(preset ?? "nil")",
       )
     }

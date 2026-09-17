@@ -92,7 +92,7 @@ struct YamlParserTests {
   func `a large integer keeps double precision`() throws {
     let value = try #require(parse("a: 12345678901234567890\n").value)
 
-    #expect(value["a"]?.numberValue == 12_345_678_901_234_567_890 as Double)
+    #expect(value["a"]?.numberValue == 12_345_678_901_234_567_168 as Double)
   }
 
   @Test
