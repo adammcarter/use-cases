@@ -10,8 +10,11 @@ public enum MarkerCommandError: Error, Equatable, Sendable {
   case git(GitError)
   /// A proof event could not be checked at all.
   case evidenceLedger(EvidenceLedgerError)
-  /// A chained ledger entry carries a number JSON cannot spell.
+  /// A chained ledger entry, or a results-ledger record, carries a number
+  /// JSON cannot spell.
   case canonicalJSON(CodeUnitCanonicalJSONError)
+  /// A row's verification context hash could not be taken.
+  case verificationContextHash(VerificationContextHashError)
 
   public var code: String {
     switch self {
@@ -20,6 +23,7 @@ public enum MarkerCommandError: Error, Equatable, Sendable {
     case let .git(error): error.code
     case let .evidenceLedger(error): error.code
     case .canonicalJSON: "canonical_json_non_finite"
+    case let .verificationContextHash(error): error.code
     }
   }
 
@@ -30,6 +34,9 @@ public enum MarkerCommandError: Error, Equatable, Sendable {
     case let .git(error): error.message
     case let .evidenceLedger(error): error.message
     case let .canonicalJSON(error): error.message
+    case let .verificationContextHash(.fileAccess(error)): error.message
+    case .verificationContextHash(.nonFiniteNumber):
+      "a verifier timeout is not a finite number"
     }
   }
 }
