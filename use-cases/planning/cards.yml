@@ -54,8 +54,22 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/blackbox/planning-cards.test.ts
+            - -t
+            - planning.cards.showcase_selection
+          inputs:
+            - tests/blackbox/planning-cards.test.ts
       requirements:
-        - evidence_kind: command_result
+        - evidence_kind: test_result
           required_verifiers:
             - script
           minimum_count: 1
@@ -112,10 +126,24 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/blackbox/planning-cards.test.ts
+            - -t
+            - planning.cards.walkthrough_coverage
+          inputs:
+            - tests/blackbox/planning-cards.test.ts
       requirements:
-        - evidence_kind: agent_observation
+        - evidence_kind: test_result
           required_verifiers:
-            - agent
+            - script
           minimum_count: 1
     approval_policy:
       mode: ask
@@ -169,6 +197,20 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/blackbox/planning-cards.test.ts
+            - -t
+            - planning.cards.prepared_not_performed
+          inputs:
+            - tests/blackbox/planning-cards.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -221,10 +263,24 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/blackbox/planning-cards.test.ts
+            - -t
+            - planning.cards.audience_timebox_fit
+          inputs:
+            - tests/blackbox/planning-cards.test.ts
       requirements:
-        - evidence_kind: manual_observation
+        - evidence_kind: test_result
           required_verifiers:
-            - user
+            - script
           minimum_count: 1
     approval_policy:
       mode: ask
@@ -277,6 +333,20 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/blackbox/planning-cards.test.ts
+            - -t
+            - planning.cards.partial_matrix_warning
+          inputs:
+            - tests/blackbox/planning-cards.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:

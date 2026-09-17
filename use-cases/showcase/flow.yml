@@ -59,10 +59,24 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/blackbox/showcase-flow.test.ts
+            - -t
+            - showcase.flow.live_acceptance_flow
+          inputs:
+            - tests/blackbox/showcase-flow.test.ts
       requirements:
-        - evidence_kind: live_demo
+        - evidence_kind: test_result
           required_verifiers:
-            - user
+            - script
           minimum_count: 1
     approval_policy:
       mode: predefined
@@ -123,10 +137,24 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/blackbox/showcase-flow.test.ts
+            - -t
+            - showcase.flow.control_modes
+          inputs:
+            - tests/blackbox/showcase-flow.test.ts
       requirements:
-        - evidence_kind: agent_observation
+        - evidence_kind: test_result
           required_verifiers:
-            - agent
+            - script
           minimum_count: 1
     approval_policy:
       mode: ask
@@ -192,10 +220,24 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/blackbox/showcase-flow.test.ts
+            - -t
+            - showcase.flow.failure_decisions
+          inputs:
+            - tests/blackbox/showcase-flow.test.ts
       requirements:
-        - evidence_kind: manual_observation
+        - evidence_kind: test_result
           required_verifiers:
-            - user
+            - script
           minimum_count: 1
     approval_policy:
       mode: ask
@@ -318,6 +360,20 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/blackbox/showcase-flow.test.ts
+            - -t
+            - showcase.flow.approval_authority_boundary
+          inputs:
+            - tests/blackbox/showcase-flow.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -377,10 +433,24 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/blackbox/showcase-flow.test.ts
+            - -t
+            - showcase.flow.status_separation
+          inputs:
+            - tests/blackbox/showcase-flow.test.ts
       requirements:
-        - evidence_kind: agent_observation
+        - evidence_kind: test_result
           required_verifiers:
-            - agent
+            - script
           minimum_count: 1
     approval_policy:
       mode: none

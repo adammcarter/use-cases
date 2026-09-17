@@ -55,8 +55,22 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/blackbox/capsule-demos.test.ts
+            - -t
+            - capsule.demos.persisted_smoke_runbook
+          inputs:
+            - tests/blackbox/capsule-demos.test.ts
       requirements:
-        - evidence_kind: command_result
+        - evidence_kind: test_result
           required_verifiers:
             - script
           minimum_count: 1
@@ -106,10 +120,24 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/blackbox/capsule-demos.test.ts
+            - -t
+            - capsule.demos.adhoc_release_demo
+          inputs:
+            - tests/blackbox/capsule-demos.test.ts
       requirements:
-        - evidence_kind: agent_observation
+        - evidence_kind: test_result
           required_verifiers:
-            - agent
+            - script
           minimum_count: 1
     approval_policy:
       mode: ask
@@ -170,6 +198,20 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/blackbox/capsule-demos.test.ts
+            - -t
+            - capsule.demos.runner_command_safety
+          inputs:
+            - tests/blackbox/capsule-demos.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -226,6 +268,20 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/blackbox/capsule-demos.test.ts
+            - -t
+            - capsule.demos.stale_reference_warning
+          inputs:
+            - tests/blackbox/capsule-demos.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -276,10 +332,24 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/blackbox/capsule-demos.test.ts
+            - -t
+            - capsule.demos.runbook_not_proof
+          inputs:
+            - tests/blackbox/capsule-demos.test.ts
       requirements:
-        - evidence_kind: agent_observation
+        - evidence_kind: test_result
           required_verifiers:
-            - agent
+            - script
           minimum_count: 1
     approval_policy:
       mode: none

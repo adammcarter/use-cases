@@ -54,8 +54,22 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/blackbox/migration-importer.test.ts
+            - -t
+            - migration.importer.reviewable_draft_import
+          inputs:
+            - tests/blackbox/migration-importer.test.ts
       requirements:
-        - evidence_kind: command_result
+        - evidence_kind: test_result
           required_verifiers:
             - script
           minimum_count: 1
@@ -112,6 +126,20 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/blackbox/migration-importer.test.ts
+            - -t
+            - migration.importer.no_legacy_pass_as_proof
+          inputs:
+            - tests/blackbox/migration-importer.test.ts
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -161,10 +189,24 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/blackbox/migration-importer.test.ts
+            - -t
+            - migration.importer.source_traceability
+          inputs:
+            - tests/blackbox/migration-importer.test.ts
       requirements:
-        - evidence_kind: agent_observation
+        - evidence_kind: test_result
           required_verifiers:
-            - agent
+            - script
           minimum_count: 1
     approval_policy:
       mode: none

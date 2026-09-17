@@ -60,6 +60,25 @@ use_cases:
       - host_surface: opencode.cli
         supported: true
     verification_policy:
-      mode: none
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - pnpm
+            - -s
+            - vitest
+            - run
+            - tests/blackbox/capsule-runner.test.ts
+            - -t
+            - capsule.live_runner.scripted
+          inputs:
+            - tests/blackbox/capsule-runner.test.ts
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
     approval_policy:
       mode: none

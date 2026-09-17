@@ -306,3 +306,100 @@ white-box verifier until the Swift cut-over gives it an equivalent.
 These are not failures of the oracle. They are the honest edge of what a
 black-box suite can claim, and naming them is what keeps the coverage number
 meaning something.
+
+## 9 · Facts about the tool, measured — including one I got wrong
+
+Written while converting rows with parallel agents. Each of these cost a cycle
+somewhere, so they are recorded rather than rediscovered.
+
+### The one I got wrong and propagated
+
+I claimed, in three separate agent briefs, that a row needs a real
+`verification_policy` to be selectable for a plan, and that `mode: none` yields
+an empty selection. **That is false.** Measured: a `mode: none` row reports
+`candidate_summary: {considered: 1, eligible: 1, selected: 1, excluded: 0}` and
+`showcase start --adhoc` gives it a proper plan item.
+
+The real gate is `hardEligibilityExclusion` in
+`packages/core/src/presentation/candidates.ts`: `lifecycle === "active"`, a
+host-surface match, and non-empty resolved steps and expected observations.
+Verification policy affects the item's `verification_state` AFTERWARDS, never
+whether it is selected. An agent caught this by probing rather than trusting the
+brief, which is the behaviour to keep.
+
+### Fixture traps
+
+- `use_cases: []` fails `schema.minItems`; the matrix then reads `unusable` and
+  every downstream assertion measures that instead of the behaviour. Always seed
+  one complete active row.
+- Skills fixtures must copy the REAL plugin layout. A hand-built minimal one
+  reports `skills.missing` even when intact.
+- Overwriting a bound source file deletes the `@use-case:` markers `bind`
+  inserted, silently unbinding the row. Edit inside the span instead.
+- A dry-run plan reports `disposition: "run"` even for a command that does not
+  exist — the plan does not stat the binary. `blocked` means no verifier
+  RESOLVES, e.g. `required_verifiers` naming an id nothing defines.
+
+### Shapes worth knowing
+
+- Diagnostics live at the envelope TOP level. On a refusal `data` is `{}`.
+- The envelope's `command` is namespaced by its module: the CLI word `impact`
+  reports as `markers.impact`.
+- `matrix list --json` projects `{id, title, feature_id, lifecycle, value_tier,
+  journey_role, source_path, semantic_hash, host_surfaces, tags}` — NOT
+  `usage_frequency`, and not scenarios.
+- Evidence aggregates carry `freshness_inputs` (the row hashes the evidence was
+  taken against), not a computed `freshness` state. Staleness is visible by
+  comparing those with the row's current `semantic_hash`.
+- MCP write gating is TWO locks with distinct codes:
+  `mcp.server_write_mode_required` (session) and `mcp.write_mode_required`
+  (call).
+
+### Two further product discrepancies found by agents
+
+| what a row claims | what was measured |
+|---|---|
+| `migration.importer` — an import "cannot produce an active row" and rows "stay draft or planned until a human reviews" | a legacy row with both a `Scenario` and an `Expected` column lands `lifecycle: active` on `--write`, with zero evidence and no warning. `testMatrix.ts:280` sets it from `clearBehavior = Boolean(scenario && expected)`, ignoring the legacy status entirely. Mitigated: the row still scans UNBOUND and the acceptance claim stays NOT_SUPPORTED. |
+| `planning.cards.audience_timebox_fit` — exclusions explain themselves | a timebox-forced exclusion is always reported with `reason_code: "max_items"` and the item-cap wording. `selectPlan.ts:68` passes `"max_items"` unconditionally, so the `timebox` branch in `exclusionFor` is unreachable. |
+
+Both are behaviour decisions, so the affected scenarios assert only what is true
+and name the gap rather than passing on a false premise.
+
+## 10 · A bucket (c) found: real behaviour with no CLI affordance
+
+Section 3 says a bucket (c) — a behaviour that would need a NEW command or flag
+to be observable — stops the ladder, because a new affordance is a contract
+change under ADR 0007 decision 8. One has now been found.
+
+**`showcase.flow.revision_epoch_staleness`.** The row says that resuming a
+paused run across a revision change marks the affected verdicts stale. The core
+implements exactly that: `appendShowcaseEpoch` in
+`packages/core/src/showcase/appendShowcaseEvent.ts` writes the epoch event, and
+`replayRun.ts` handles `epoch_started` by setting
+`item_currency: "stale_due_to_epoch_change"`.
+
+**No CLI command ever calls it.** `uc showcase resume` accepts only
+`--run/--reason/--actor/--idempotency-key/--recorded-at` — no changed-path, no
+revision snapshot — and its handler calls `resumeShowcaseRun` alone. Searching
+the whole CLI package for "epoch" returns nothing.
+
+So the behaviour is real, implemented, and unobservable from outside. Its three
+scenarios are `test.todo` and the row is deliberately NOT bound: binding it
+would mark it verified against an oracle that asserts nothing.
+
+**The decision this needs:** either the CLI gains a way to supply a revision
+snapshot on resume — which is a new affordance, so it stops for the owner — or
+the row is rewritten to describe only what is reachable, which is retiring
+behaviour and also the owner's call.
+
+Two rows are now deliberately unbound for the same reason, and both say so where
+the marker pair would otherwise be:
+
+| row | why it is unbound |
+|---|---|
+| `showcase.flow.revision_epoch_staleness` | the epoch machinery has no CLI entry point |
+| `migration.importer.human_review_activation` | there is no CLI review/printout/activate step at all; `migrate test-matrix` offers only `--dry-run` and `--write` |
+
+An unbound row with an honest `test.todo` is better than a bound row with a
+vacuous oracle. The first leaves the coverage number truthful; the second
+inflates it.
