@@ -2,12 +2,14 @@ import { existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
 import {
+  canRunBootstrap,
   cleanupScratch,
   fileTree,
   hostPlatform,
   publishStandInRelease,
   runBootstrap,
-  scratch
+  scratch,
+  unpublishedPlatform
 } from "../helpers/release-stand-in.js";
 
 afterEach(() => {
@@ -19,7 +21,7 @@ function cachedPath(cacheDir: string, version: string, exe: string): string {
 }
 
 //: @use-case:release.distribution.first_run_downloads_and_verifies
-describe("the first run downloads the machine's binary, verifies its checksum and caches it", () => {
+describe.skipIf(!canRunBootstrap)("the first run downloads the machine's binary, verifies its checksum and caches it", () => {
   test("downloads the matching archive, verifies it, caches both executables and execs the one asked for", () => {
     const release = publishStandInRelease();
     const cacheDir = scratch("use-cases-cache-");
@@ -143,8 +145,11 @@ describe("the first run downloads the machine's binary, verifies its checksum an
     expect(existsSync(cachedPath(cacheDir, "2.0.0-standin", "use-cases"))).toBe(true);
   });
 
-  test("a forced platform decides the asset and the cache key", () => {
-    const forced = hostPlatform() === "macos-arm64" ? "macos-x86_64" : "macos-arm64";
+  test("a forced platform decides the asset and the cache key, and one no release publishes is refused", () => {
+    // A well-formed slug that no release carries: Apple Silicon is the only
+    // published platform, so this is what a second platform would be tested
+    // through, and what a user forcing a retired one now gets.
+    const forced = unpublishedPlatform();
     const release = publishStandInRelease({ platform: forced });
     const cacheDir = scratch("use-cases-cache-");
     const env = {

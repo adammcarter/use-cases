@@ -533,37 +533,52 @@ across sessions.
 
 ### Built in row 6 (pipeline ready, never fired)
 
-- **`.github/workflows/release.yml`** builds each package universal
-  (`swift build -c release --arch arm64 --arch x86_64`) on `macos-15`, then
-  `lipo -thin`s one archive per architecture, writes `SHA256SUMS` over them and
-  attaches both plus the sums with `gh release create/upload`. Triggers are a
-  `v<semver>` tag push and `workflow_dispatch` only — there is no `branches:`
+- **`.github/workflows/release.yml`** builds each package thin for the one
+  published platform (`swift build -c release --arch arm64`) on `macos-15`,
+  archives both executables per platform, writes `SHA256SUMS` over the archives
+  and attaches them plus the sums with `gh release create/upload`. Triggers are
+  a `v<semver>` tag push and `workflow_dispatch` only — there is no `branches:`
   key, so a branch push can never publish while decision 9 stands, and a
   hand-dispatched run defaults to `--draft`.
-- **Per-architecture assets, not one universal asset.** A single universal
-  asset would make the bootstrap's platform resolution vacuous on the only
-  supported OS — a required behaviour with nothing to resolve and no way to
-  test it — and it doubles every download. `lipo -thin` (not `-extract`, which
-  leaves the fat header on) is what makes the slices genuinely thin; the
-  workflow greps `lipo -info` for `architecture: <arch>` and fails the release
-  if a slice is still fat.
-- **The toolchain says x86_64 is on its way out.** Every universal build prints
-  `warning: The x86_64 architecture is deprecated for your deployment target
-  (macOS 27.0). You should update your ARCHS build setting to remove the x86_64
-  architecture.` The slice still builds, is genuinely thin and archives fine —
-  but it undercuts the per-arch decision above. **Owner question for row 11:**
-  does `macos-x86_64` stay in the published platform list at 0.8.0, or does the
-  release go arm64-only? If it goes arm64-only, four things move together —
-  `PUBLISHED_PLATFORMS` in `bin/use-cases-bootstrap`, the workflow's `for
-  platform in …` loop, `release.distribution.release_publishes_checksummed_assets`
-  (which asserts the list is exactly the two) and row 2's forced-platform
-  scenario.
-- **The x86_64 slice has never been executed.** It was built, sliced thin
-  (`lipo -info` → `architecture: x86_64`) and archived, but running it on the
-  arm64 dev machine gives `arch: posix_spawnp: … Bad CPU type in executable`:
-  Rosetta 2 is not installed here. Half the published assets are therefore
-  proven to exist and to be the right architecture, not proven to run. First
-  real x86_64 run has to be on an Intel Mac or a Rosetta-equipped one.
+- **Apple Silicon only, decided by the owner 2026-09-17.** Every universal
+  build printed `warning: The x86_64 architecture is deprecated for your
+  deployment target (macOS 27.0). You should update your ARCHS build setting to
+  remove the x86_64 architecture.`, so the x86_64 asset was retired rather than
+  shipped stale. The published platform list now lives in exactly two places —
+  `PUBLISHED_PLATFORMS` in `bin/use-cases-bootstrap` and the workflow's `for
+  platform in …` loop — and
+  `release.distribution.release_publishes_checksummed_assets` fails unless both
+  are exactly `macos-arm64` and neither file mentions the other architecture.
+  Both kept their loop/list shape, so adding a platform back is one line each.
+- **No `lipo` slicing, because there is nothing to slice.** A single `--arch
+  arm64` build is already a thin Mach-O; building universal and cutting back
+  down would be a round trip whose only contribution is a way to get it wrong.
+  `lipo -info` stays as a CHECK — the workflow greps for
+  `Non-fat file.*architecture: <arch>`, so a universal product can never slip
+  out under a per-platform asset name.
+- **Platform resolution stayed meaningful with one platform.** `Darwin/arm64`
+  is the only mapped case, so an Intel Mac and a non-Mac both fall to the
+  refusal, which names what it found and the published list: `no published
+  binary for Darwin/x86_64.` / `Published platforms: macos-arm64.` Covered by
+  `release.distribution.failed_download_says_what_to_do.edge_unsupported_platform_is_refused_before_any_download`,
+  which drives both cases through a PATH-stubbed `uname`.
+- **`USE_CASES_PLATFORM` is still the seam a second platform gets tested
+  through.** Forcing a slug no release publishes is refused at the checksums
+  (`the checksums published for release v… do not list use-cases-…-macos-x86_64.tar.gz`),
+  not exec'd as the wrong slice — row 2's edge scenario.
+- **The bootstrap suites are Apple-Silicon-gated, because `ci.yml` runs on
+  `ubuntu-latest`.** `vitest.config.ts` includes `tests/**/*.test.ts` with no
+  platform filter, and the stand-in helper's `hostPlatform()` throws off
+  darwin/arm64 — so without a gate the ~24 download tests would THROW on the CI
+  runner, not skip. The three bootstrap suites and the two release-workflow
+  tests that drive a real download are `skipIf(!canRunBootstrap)`; the
+  workflow's text assertions still run everywhere. Measured by forcing the flag
+  false: `6 files passed | 3 skipped`, `25 passed | 24 skipped`, nothing failed.
+  **The consequence is deliberate and must not be forgotten:** those four rows'
+  script verifiers exit 0 on Linux having asserted nothing, so a green
+  `uc verify` from a Linux runner does not prove `release.distribution.*`. Same
+  honest edge as scenario-conventions §8c; the rows are provable on Apple
+  Silicon only.
 - **`runs-on: macos-15` is never exercised by this row.** The release-workflow
   test only asserts `/^macos-/`, deliberately, so the label does not rot the
   suite — but check it against GitHub's current runner labels before the
@@ -581,16 +596,20 @@ across sessions.
   at the new release. `USE_CASES_VERSION`, `USE_CASES_RELEASE_BASE_URL`,
   `USE_CASES_CACHE_DIR` and `USE_CASES_PLATFORM` override version, release
   root, cache and platform; the first three are what makes the suite hermetic.
-- **SHA256SUMS authenticates transport, not provenance.** It is fetched from
-  the same release as the archive, so anyone who can write the release can
-  write both. That is exactly what decision 3 asks for; a signed manifest would
-  be a contract change and is not in this row.
+- **SHA256SUMS authenticates transport, not provenance** — accepted by the
+  owner 2026-09-17. It is fetched from the same release as the archive, so
+  anyone who can write the release can write both. That is exactly what
+  decision 3 asks for; a signed manifest would be a contract change, not this
+  row.
 - **At 0.7.0 `bin/use-cases` fails by design.** The session-start hook already
   puts `bin/` on PATH, and release v0.7.0 carries no Swift assets, so typing
   `use-cases` gets `release v0.7.0 does not carry use-cases-0.7.0-macos-arm64.tar.gz`
   followed by a line naming `bin/uc`. That fallback line is printed only while
   `bin/uc` exists, so it removes itself at the rename row. Nothing regresses:
   `bin/uc` and the Node bundle are untouched.
+- **The Apple-Silicon-only decision adds nothing to the 0.8.0 bump list.** It
+  touches no file that embeds the version, so the list below is unchanged by
+  it; the platform list and the version bump are independent edits.
 - **What the 0.8.0 bump has to touch** (row 11), measured 2026-09-17:
   `package.json`, `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`,
   `packages/{core,cli,mcp}/package.json`, `packages/core/src/version.ts`

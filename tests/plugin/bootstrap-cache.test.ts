@@ -2,6 +2,7 @@ import { chmodSync, existsSync, rmSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
 import {
+  canRunBootstrap,
   cleanupScratch,
   fileTree,
   hostPlatform,
@@ -23,7 +24,7 @@ function cachedPath(cacheDir: string, version: string, exe = "use-cases"): strin
 }
 
 //: @use-case:release.distribution.cached_binary_runs_without_network
-describe("a cached binary runs without touching the network", () => {
+describe.skipIf(!canRunBootstrap)("a cached binary runs without touching the network", () => {
   test("the second run succeeds against a host that refuses connections, and caches nothing new", () => {
     const release = publishStandInRelease();
     const cacheDir = scratch("use-cases-cache-");

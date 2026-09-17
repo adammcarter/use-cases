@@ -2,7 +2,16 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
 import { parse as parseYaml } from "yaml";
-import { cleanupScratch, hostPlatform, publishStandInRelease, repoRoot, runBootstrap, scratch } from "../helpers/release-stand-in.js";
+import {
+  canRunBootstrap,
+  cleanupScratch,
+  hostPlatform,
+  PUBLISHED_PLATFORMS,
+  publishStandInRelease,
+  repoRoot,
+  runBootstrap,
+  scratch
+} from "../helpers/release-stand-in.js";
 
 const releaseWorkflowPath = join(repoRoot, ".github/workflows/release.yml");
 const bootstrapSource = () => readFileSync(join(repoRoot, "bin/use-cases-bootstrap"), "utf8");
@@ -31,8 +40,8 @@ afterEach(() => {
 });
 
 //: @use-case:release.distribution.release_publishes_checksummed_assets
-describe("a release publishes checksummed per-architecture archives", () => {
-  test("the workflow builds both executables in release configuration for both architectures", () => {
+describe("a release publishes a checksummed archive for every supported platform", () => {
+  test("the workflow builds both executables in release configuration for the published platform", () => {
     const source = releaseSource();
     const workflow = parseYaml(source) as Record<string, unknown>;
     const jobs = workflow.jobs as Record<string, { "runs-on"?: string; permissions?: Record<string, string> }>;
@@ -44,10 +53,13 @@ describe("a release publishes checksummed per-architecture archives", () => {
 
     expect(source).toMatch(/swift build .*-c release/);
     expect(source).toContain("--arch arm64");
-    expect(source).toContain("--arch x86_64");
     expect(source).toContain("UseCasesCLI");
     expect(source).toContain("UseCasesMCP");
-    expect(source).toContain("lipo");
+    // One thin arm64 build, so there is nothing to slice: lipo stays only as
+    // the check that the product really is thin arm64.
+    expect(source).toContain("lipo -info");
+    expect(source).not.toContain("lipo -thin");
+    expect(source).not.toContain("lipo -extract");
   });
 
   test("the workflow writes SHA256SUMS and attaches every archive to the release", () => {
@@ -72,7 +84,7 @@ describe("a release publishes checksummed per-architecture archives", () => {
     expect(assetTemplate(bootstrap)).toBe(assetTemplate(workflow));
 
     expect(platformSlugs(bootstrap)).toEqual(platformSlugs(workflow));
-    expect(platformSlugs(workflow)).toEqual(["macos-arm64", "macos-x86_64"]);
+    expect(platformSlugs(workflow)).toEqual([...PUBLISHED_PLATFORMS]);
 
     // Both resolve the release by the same v-prefixed tag as every existing tag.
     expect(workflow).toMatch(/v\$\{?[A-Za-z_][A-Za-z_0-9]*\}?/);
@@ -80,7 +92,21 @@ describe("a release publishes checksummed per-architecture archives", () => {
     expect(bootstrap).toContain("https://github.com/adammcarter/use-cases/releases/download");
   });
 
-  test("the bootstrap asks for the plugin's own version by default", () => {
+  test("Apple Silicon is the only published platform, in both files", () => {
+    const workflow = releaseSource();
+    const bootstrap = bootstrapSource();
+
+    // The owner retired the x86_64 asset for 0.8.0: the toolchain warns the
+    // architecture is deprecated for the deployment target. Nothing may build,
+    // slice or attach one, and the bootstrap may not offer one.
+    expect(platformSlugs(workflow)).toEqual(["macos-arm64"]);
+    expect(platformSlugs(bootstrap)).toEqual(["macos-arm64"]);
+    expect(workflow).not.toContain("x86_64");
+    expect(bootstrap).not.toContain("x86_64");
+    expect(PUBLISHED_PLATFORMS).toEqual(["macos-arm64"]);
+  });
+
+  test.skipIf(!canRunBootstrap)("the bootstrap asks for the plugin's own version by default", () => {
     const pluginVersion = (JSON.parse(readFileSync(join(repoRoot, ".claude-plugin/plugin.json"), "utf8")) as { version: string }).version;
     // A local release AT the manifest's version, carrying only its checksums:
     // the bootstrap then names the asset it wanted, with no network and no
@@ -126,7 +152,7 @@ describe("a release publishes checksummed per-architecture archives", () => {
     }
   });
 
-  test("a stand-in release laid out the way the workflow publishes one satisfies the bootstrap", () => {
+  test.skipIf(!canRunBootstrap)("a stand-in release laid out the way the workflow publishes one satisfies the bootstrap", () => {
     // The naming agreement above is text; this is the same layout end to end.
     const release = publishStandInRelease();
     const result = runBootstrap({

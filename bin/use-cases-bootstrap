@@ -21,11 +21,15 @@
 #                               are appended (default: this repo's on GitHub)
 #   USE_CASES_CACHE_DIR         where to cache (default: XDG_CACHE_HOME, else
 #                               ~/Library/Caches/use-cases)
-#   USE_CASES_PLATFORM          force a platform slug, e.g. to run the x86_64
-#                               slice under Rosetta
+#   USE_CASES_PLATFORM          force a platform slug, for a platform this
+#                               machine can run but uname does not report
 set -euo pipefail
 
-readonly PUBLISHED_PLATFORMS="macos-arm64 macos-x86_64"
+# Apple Silicon only from 0.8.0 (owner decision, 2026-09-17): the toolchain
+# warns that the other architecture is deprecated for the deployment target, so
+# its asset was retired rather than shipped stale. Adding a platform back means
+# this list and the workflow's loop, together.
+readonly PUBLISHED_PLATFORMS="macos-arm64"
 readonly PUBLISHED_EXECUTABLES="use-cases use-cases-mcp"
 readonly DEFAULT_DOWNLOAD_ROOT="https://github.com/adammcarter/use-cases/releases/download"
 
@@ -134,11 +138,10 @@ if [ -z "$platform" ]; then
   machine="$(uname -m)"
   case "$os_name/$machine" in
     Darwin/arm64) platform="macos-arm64" ;;
-    Darwin/x86_64) platform="macos-x86_64" ;;
     *)
       die "no published binary for $os_name/$machine." \
         "Published platforms: ${PUBLISHED_PLATFORMS// /, }." \
-        "Set USE_CASES_PLATFORM to force one of them if this machine can run it."
+        "Set USE_CASES_PLATFORM to force a published platform if this machine can run it."
       ;;
   esac
 fi

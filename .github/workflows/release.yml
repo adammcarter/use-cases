@@ -11,6 +11,11 @@ name: release
 # no releases happen during the rewrite, so publishing takes either a v<semver>
 # tag or a deliberate workflow_dispatch — never a merge.
 #
+# Apple Silicon is the only published platform from 0.8.0 (owner decision,
+# 2026-09-17): the toolchain warns the other architecture is deprecated for the
+# deployment target, so its asset was retired rather than shipped stale. The
+# per-platform loop below stays a loop so adding a platform back is one list.
+#
 # ci.yml and use-cases.yml are untouched: this is a separate pipeline that adds
 # no step to the gates that already run on every push.
 
@@ -74,41 +79,43 @@ jobs:
           echo "tag=v$version" >>"$GITHUB_OUTPUT"
           echo "publishing version $version as tag v$version"
 
-      # One universal build per package, then one thin slice per architecture.
-      # Building universal once (rather than twice on two runners) means both
-      # slices provably come out of the same compile.
+      # One thin build per package, for the one published platform. There is
+      # nothing to slice, so nothing does: building universal and then slicing
+      # back down would be a round trip whose only contribution is a way to get
+      # it wrong. lipo is used below to CHECK the product, never to cut it.
       - name: build both executables in release configuration
         run: |
           set -euo pipefail
           for package in UseCasesCLI UseCasesMCP; do
-            swift build --package-path "$package" -c release --arch arm64 --arch x86_64
+            swift build --package-path "$package" -c release --arch arm64
           done
 
-      # Per-architecture assets rather than one universal asset: the bootstrap's
-      # platform resolution has to resolve to something, and a per-arch download
-      # is half the bytes. `lipo -thin` (not -extract) leaves a genuinely thin
-      # Mach-O, and the grep below fails the release if it did not.
-      - name: slice per-architecture archives and write SHA256SUMS
+      # One archive per published platform, each carrying both executables so a
+      # single download serves the CLI and the MCP server. `lipo -info` stays as
+      # the check that the product really is thin and really is this
+      # architecture — a universal product must not slip out under a
+      # per-platform asset name.
+      - name: archive for each published platform and write SHA256SUMS
         id: assets
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           set -euo pipefail
-          cli_bin="$(swift build --package-path UseCasesCLI -c release --arch arm64 --arch x86_64 --show-bin-path)"
-          mcp_bin="$(swift build --package-path UseCasesMCP -c release --arch arm64 --arch x86_64 --show-bin-path)"
+          cli_bin="$(swift build --package-path UseCasesCLI -c release --arch arm64 --show-bin-path)"
+          mcp_bin="$(swift build --package-path UseCasesMCP -c release --arch arm64 --show-bin-path)"
           out="$RUNNER_TEMP/release"
           mkdir -p "$out"
-          for platform in macos-arm64 macos-x86_64; do
+          for platform in macos-arm64; do
             arch="${platform#macos-}"
             stage="$RUNNER_TEMP/stage/$platform"
             rm -rf "$stage"
             mkdir -p "$stage"
-            lipo -thin "$arch" "$cli_bin/use-cases" -output "$stage/use-cases"
-            lipo -thin "$arch" "$mcp_bin/use-cases-mcp" -output "$stage/use-cases-mcp"
+            cp "$cli_bin/use-cases" "$stage/use-cases"
+            cp "$mcp_bin/use-cases-mcp" "$stage/use-cases-mcp"
             chmod +x "$stage/use-cases" "$stage/use-cases-mcp"
             for binary in "$stage/use-cases" "$stage/use-cases-mcp"; do
               lipo -info "$binary"
-              lipo -info "$binary" | grep -q "architecture: $arch"
+              lipo -info "$binary" | grep -q "Non-fat file.*architecture: $arch"
             done
             tar -czf "$out/use-cases-${VERSION}-${platform}.tar.gz" -C "$stage" use-cases use-cases-mcp
           done

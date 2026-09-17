@@ -2,10 +2,10 @@ schema_version: 1
 feature:
   id: release.distribution
   name: Release distribution
-  summary: The Swift executables are published as checksummed per-architecture archives on a GitHub release, and a bin/ bootstrap resolves the machine's platform, downloads the matching archive, verifies its SHA256, caches it under the user cache directory and execs it.
+  summary: The Swift executables are published as a checksummed archive per supported platform on a GitHub release — Apple Silicon only at 0.8.0 — and a bin/ bootstrap resolves the machine’s platform, downloads the matching archive, verifies its SHA256, caches it under the user cache directory and execs it.
 use_cases:
   - id: release.distribution.release_publishes_checksummed_assets
-    title: A release publishes checksummed per-architecture archives
+    title: A release publishes a checksummed archive for every supported platform
     lifecycle: active
     value_tier: critical
     journey_role: golden
@@ -20,20 +20,22 @@ use_cases:
       - kind: file
         path: bin/use-cases-bootstrap
     actor: maintainer
-    intent: Cut a release whose assets a bootstrap on any supported Mac can find by name and verify by checksum, without the repo carrying a binary and without anything being built on the user's machine.
+    intent: Cut a release whose assets a bootstrap on any supported Mac can find by name and verify by checksum, without the repo carrying a binary and without anything being built on the user’s machine.
     preconditions:
       - The release workflow is present at .github/workflows/release.yml.
       - The version scheme is a v-prefixed semver tag, as every existing tag is.
+      - Apple Silicon is the only published platform at 0.8.0 (owner decision, 2026-09-17).
     trigger: A maintainer pushes a v<major>.<minor>.<patch> tag, or dispatches the release workflow by hand.
     scenarios:
       - id: release.distribution.release_publishes_checksummed_assets.golden_workflow_builds_archives_and_sums
         kind: steps
         steps:
           - Read .github/workflows/release.yml.
-          - Confirm it runs on macOS, builds both Swift executables in release configuration, slices one archive per supported architecture, writes SHA256SUMS over every archive and attaches all of them to the GitHub release.
+          - Confirm it runs on macOS, builds both Swift executables in release configuration for arm64, archives them per supported platform, writes SHA256SUMS over every archive and attaches all of them to the GitHub release.
         observable_outcomes:
-          - A release carries one archive per supported architecture plus a SHA256SUMS file covering every archive.
-          - Nothing is built on the user's machine and no binary is committed to the repo.
+          - A release carries one archive per supported platform plus a SHA256SUMS file covering every archive.
+          - Each archive carries both executables, so one download serves the CLI and the MCP server.
+          - Nothing is built on the user’s machine and no binary is committed to the repo.
       - id: release.distribution.release_publishes_checksummed_assets.golden_naming_scheme_matches_the_bootstrap
         kind: steps
         steps:
@@ -41,6 +43,14 @@ use_cases:
           - Confirm both are use-cases-<version>-<os>-<arch>.tar.gz over the same platform list, and that both resolve the release by the same v<version> tag.
         observable_outcomes:
           - The publisher and the downloader cannot drift apart on the asset name, the platform list or the tag.
+      - id: release.distribution.release_publishes_checksummed_assets.edge_apple_silicon_is_the_only_published_platform
+        kind: steps
+        steps:
+          - Read the platform list in .github/workflows/release.yml and in bin/use-cases-bootstrap.
+          - Confirm both are exactly macos-arm64, and that no x86_64 asset is built, sliced or attached.
+        observable_outcomes:
+          - "0.8.0 publishes Apple Silicon only: the owner retired the x86_64 asset after the toolchain began warning that the architecture is deprecated for the deployment target."
+          - Adding a platform back means changing one list in each file, and this scenario fails until both agree again.
       - id: release.distribution.release_publishes_checksummed_assets.bad_never_fires_on_a_branch_push
         kind: steps
         steps:
@@ -56,8 +66,9 @@ use_cases:
         observable_outcomes:
           - Adding the release pipeline changes nothing about the gates that already run on every push.
     observable_outcomes:
-      - A release carries one archive per supported architecture plus a SHA256SUMS file covering every archive.
+      - A release carries one archive per supported platform plus a SHA256SUMS file covering every archive.
       - The publisher and the downloader agree on the asset name, the platform list and the tag.
+      - Apple Silicon is the only published platform at 0.8.0, in both files.
       - A push to a branch never publishes a release.
     host_applicability:
       - host_surface: claude.cli
@@ -112,7 +123,7 @@ use_cases:
     intent: Run use-cases on a machine that has never run it before, with nothing installed and nothing built, and have the binary that arrives be provably the published one.
     preconditions:
       - The plugin is installed and its bin/ directory is on PATH or reachable by path.
-      - A release for the plugin's version carries the archive for this machine's platform and a SHA256SUMS file.
+      - A release for the plugin’s version carries the archive for this machine’s platform and a SHA256SUMS file.
     trigger: An agent or a user runs bin/use-cases (or bin/use-cases-mcp) for the first time on the machine.
     scenarios:
       - id: release.distribution.first_run_downloads_and_verifies.golden_downloads_verifies_caches_and_execs
@@ -138,14 +149,14 @@ use_cases:
           - Confirm where the executable was cached.
         observable_outcomes:
           - The cache is per-user state under the user cache directory, keyed by version and platform, and never inside the repository or the plugin checkout.
-      - id: release.distribution.first_run_downloads_and_verifies.edge_a_forced_platform_downloads_that_slice
+      - id: release.distribution.first_run_downloads_and_verifies.edge_a_forced_platform_the_release_does_not_publish_is_refused
         kind: steps
         steps:
-          - Set USE_CASES_PLATFORM to the other published platform and run bin/use-cases with an empty cache.
-          - Read which asset was asked for and where it was cached.
+          - Set USE_CASES_PLATFORM to a platform the release does not publish and run bin/use-cases with an empty cache.
+          - Read the exit code, stderr and the cache directory.
         observable_outcomes:
-          - The forced platform decides the asset name and the cache key, so a machine that can run another slice — an Apple Silicon Mac under Rosetta — can be pointed at it.
-          - A forced platform the release does not publish is refused at the checksums, which do not list it — never exec’d as the wrong slice.
+          - The forced platform decides the asset name and the cache key, so the override is what a second platform would be tested through.
+          - A forced platform the release does not publish is refused at the checksums, which do not list it — never exec’d as the wrong slice, and never cached.
     observable_outcomes:
       - A first run downloads the matching archive, verifies its SHA256 against the published sums, caches the executable and execs it.
       - A binary whose checksum does not match is never exec'd and never cached.
@@ -316,12 +327,13 @@ use_cases:
       - id: release.distribution.failed_download_says_what_to_do.edge_unsupported_platform_is_refused_before_any_download
         kind: steps
         steps:
-          - Run the bootstrap on a machine whose operating system and architecture have no published archive.
-          - Read the exit code and stderr.
+          - Run the bootstrap on an Intel Mac, and again on a machine that is not a Mac at all.
+          - Read the exit code and stderr for each.
         observable_outcomes:
-          - The bootstrap names the operating system and architecture it found and the platforms that are published, and refuses before any request is made.
+          - Each names the operating system and architecture it found and the platform that is published, and refuses before any request is made.
+          - An Intel Mac is told plainly that no binary is published for it rather than being handed an Apple Silicon one.
     observable_outcomes:
-      - Each failure mode — unreachable, asset missing, no checksums, unsupported platform — has its own message naming the URL or the platform.
+      - Each failure mode — unreachable, asset missing, no checksums, unsupported machine — has its own message naming the URL or the platform.
       - No failure path ever execs an unverified binary or leaves one in the cache.
       - Every failure exits non-zero.
     host_applicability:

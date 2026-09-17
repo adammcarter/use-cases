@@ -29,12 +29,40 @@ export function cleanupScratch(): void {
   for (const dir of dirs.splice(0)) rmSync(dir, { recursive: true, force: true });
 }
 
+/**
+ * Every platform a release publishes. Apple Silicon only from 0.8.0 (owner
+ * decision, 2026-09-17): the toolchain warns that x86_64 is deprecated for the
+ * deployment target, so the x86_64 asset was retired rather than shipped stale.
+ */
+export const PUBLISHED_PLATFORMS = ["macos-arm64"] as const;
+
+/**
+ * Whether this machine can be a download target at all.
+ *
+ * ci.yml runs the suite on ubuntu-latest, where there is no published archive
+ * and no `use-cases` to exec, so the suites that drive a real download are
+ * skipped there rather than throwing. The consequence is deliberate and worth
+ * knowing: `release.distribution.*` is provable on Apple Silicon only, so a
+ * green run on a Linux runner does not prove those four rows.
+ */
+export const canRunBootstrap = platform() === "darwin" && arch() === "arm64";
+
 /** The platform slug the bootstrap must resolve on the machine running the suite. */
 export function hostPlatform(): string {
-  if (platform() !== "darwin") {
-    throw new Error(`the release bootstrap is macOS-only (ADR 0007); this machine is ${platform()}`);
+  if (platform() !== "darwin" || arch() !== "arm64") {
+    throw new Error(
+      `a release publishes ${PUBLISHED_PLATFORMS.join(", ")} only; this machine is ${platform()}/${arch()}`
+    );
   }
-  return arch() === "arm64" ? "macos-arm64" : "macos-x86_64";
+  return "macos-arm64";
+}
+
+/**
+ * A well-formed slug that no release publishes — what USE_CASES_PLATFORM is
+ * pointed at to prove the override decides the asset and is still refused.
+ */
+export function unpublishedPlatform(): string {
+  return "macos-x86_64";
 }
 
 export interface StandInOptions {
