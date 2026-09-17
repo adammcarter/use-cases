@@ -52,7 +52,7 @@
           "additionalProperties": false,
           "properties": {
             "effective_mode": {
-              "enum": ["continuous", "backfill", "showcase_only", "audit_only", "migration", "custom"]
+              "enum": ["continuous", "backfill", "showcase_only", "audit_only", "custom"]
             },
             "source": { "enum": ["default", "workspace_config"] },
             "advisory": { "const": true }

@@ -1,4 +1,4 @@
-import { cpSync, mkdtempSync, readFileSync, realpathSync } from "node:fs";
+import { cpSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -199,6 +199,46 @@ describe("P4 CLI contract", () => {
     const matrix = runCli(["matrix", "validate", "--repo", workspaceRoot, "--json"]);
     expect(matrix.status).toBe(0);
     expect(JSON.parse(matrix.stdout).complete).toBe(true);
+  });
+
+  // The `migration` workflow mode is retired: set-mode refuses it with the same
+  // envelope as any other unsupported mode, and leaves the config untouched.
+  test("workflow set-mode refuses the retired migration mode", () => {
+    build();
+    const workspaceRoot = copyFixture("minimal-valid");
+    const configPath = join(workspaceRoot, "use-cases.yml");
+    const before = readFileSync(configPath, "utf8");
+    const result = runCli(["workflow", "set-mode", "--repo", workspaceRoot, "--mode", "migration", "--json"]);
+
+    expect(result.status).toBe(2);
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      command: "workflow.set-mode",
+      ok: false,
+      diagnostics: [{ code: "workflow_mode_invalid", message: "Unsupported workflow mode." }]
+    });
+    expect(readFileSync(configPath, "utf8")).toBe(before);
+  });
+
+  test("a workspace config naming the retired migration mode is refused by the schema", () => {
+    build();
+    const workspaceRoot = copyFixture("minimal-valid");
+    const configPath = join(workspaceRoot, "use-cases.yml");
+    writeFileSync(
+      configPath,
+      readFileSync(configPath, "utf8").replace(
+        /^default_workflow_mode: continuous$/m,
+        "default_workflow_mode: migration"
+      )
+    );
+    expect(readFileSync(configPath, "utf8")).toContain("default_workflow_mode: migration");
+
+    const result = runCli(["doctor", "roots", "--repo", workspaceRoot, "--json"]);
+    expect(result.status).not.toBe(0);
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      command: "doctor.roots",
+      ok: false,
+      diagnostics: [{ code: "workspace_config.schema_error", message: "Invalid use-cases.yml." }]
+    });
   });
 
   test("doctor roots is read-only and matrix status composes matrix and evidence state", () => {

@@ -81,3 +81,9 @@ unchanged.
   too. This is a deliberate retirement, not a change made under the freeze, so
   decision 8 does not apply to it. As a result swift-markdown leaves decision
   7's library list, and the schema count frozen by decisions 7 and 8 is 27.
+- **2026-09-17 — migration workflow mode retired.** With the importer gone, the
+  owner also retired the `migration` value of the workflow mode: it leaves the
+  enums in `workflow-mode`, `workspace-config` and `presentation-plan`, and
+  `uc workflow set-mode` refuses it. A workspace config naming it no longer
+  loads. Every recorded showcase run uses `continuous`, so no recorded data is
+  invalidated. The 0.8.0 release notes list both retirements as breaking.

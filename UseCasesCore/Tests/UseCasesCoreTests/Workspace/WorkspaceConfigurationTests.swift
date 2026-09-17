@@ -299,4 +299,21 @@ struct WorkspaceConfigurationTests {
   func `a release gate that is not an object resolves to nothing`(raw: JSONValue) {
     #expect(WorkspaceReleaseGate.normalize(raw) == nil)
   }
+
+  // MARK: - Workflow mode
+
+  @Test(arguments: ["continuous", "backfill", "showcase_only", "audit_only", "custom"])
+  func `a supported workflow mode resolves`(mode: String) throws {
+    _ = try resolve("default_workflow_mode: \(mode)")
+  }
+
+  @Test
+  func `the retired migration workflow mode is a schema error`() throws {
+    let error = #expect(throws: WorkspaceError.self) {
+      try resolve("default_workflow_mode: migration")
+    }
+
+    #expect(error?.code == "workspace_config.schema_error")
+    #expect(error?.message == "Invalid use-cases.yml.")
+  }
 }

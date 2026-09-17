@@ -69,6 +69,21 @@ describe("P1 schema registry", () => {
       expect.arrayContaining(["schema_version.required", "additional_property"])
     );
   });
+
+  test("the retired migration workflow mode is not an allowed mode", () => {
+    const workflowMode = validateBySchemaId("https://use-cases.dev/schemas/v1/workflow-mode.schema.json", {
+      schema_version: 1,
+      mode: "migration"
+    });
+    expect(workflowMode.ok).toBe(false);
+    expect(workflowMode.diagnostics.map((diagnostic) => diagnostic.json_pointer)).toContain("/mode");
+
+    for (const mode of ["continuous", "backfill", "showcase_only", "audit_only", "custom"]) {
+      expect(
+        validateBySchemaId("https://use-cases.dev/schemas/v1/workflow-mode.schema.json", { schema_version: 1, mode }).ok
+      ).toBe(true);
+    }
+  });
 });
 
 describe("P1 YAML profile", () => {

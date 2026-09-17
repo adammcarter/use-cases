@@ -155,6 +155,8 @@ across sessions.
   again.
 - **Retired 2026-09-17:** the four `migration.*` bindings were released
   (`row_retired`) with `uc migrate test-matrix`, so 82 remain to rebind.
+- **0.8.0 release notes (row 11)** must list as breaking: `uc migrate test-matrix`, the `migration` skill, the `migration-test-matrix-result` schema, the two `UCM_MIGRATION_*` codes, and the `migration` workflow mode (a config naming it stops loading). No CHANGELOG exists yet.
+- **`SchemaGoldenCorpus.swift` has no committed generator** (its header points at the row 3b report); retiring the `migration` workflow mode regenerated its one changed case by re-running `validateBySchemaId` over every case, all other 61 reproducing byte for byte.
 
 ## Candidate hardening (contract change — owner's call, after 0.8.0)
 

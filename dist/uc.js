@@ -30638,7 +30638,7 @@ function canonicalWorkflowMode(value) {
     return null;
   }
   const normalized = value.replaceAll("-", "_");
-  return ["continuous", "backfill", "showcase_only", "audit_only", "migration", "custom"].includes(normalized) ? normalized : null;
+  return ["continuous", "backfill", "showcase_only", "audit_only", "custom"].includes(normalized) ? normalized : null;
 }
 var workflowSetModeCommand = {
   path: ["workflow", "set-mode"],

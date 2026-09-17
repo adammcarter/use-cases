@@ -852,7 +852,7 @@ const planCases = [
     name: "workflow_line_separator_starts_a_line",
     mode: "walkthrough",
     tree: basicRows,
-    after: [file("use-cases.yml", "x: 1 default_workflow_mode: migration\n")],
+    after: [file("use-cases.yml", "x: 1 default_workflow_mode: backfill\n")],
     request: request()
   },
   {

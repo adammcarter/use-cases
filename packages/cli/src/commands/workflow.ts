@@ -31,7 +31,7 @@ function canonicalWorkflowMode(value: string | undefined): string | null {
     return null;
   }
   const normalized = value.replaceAll("-", "_");
-  return ["continuous", "backfill", "showcase_only", "audit_only", "migration", "custom"].includes(normalized)
+  return ["continuous", "backfill", "showcase_only", "audit_only", "custom"].includes(normalized)
     ? normalized
     : null;
 }
