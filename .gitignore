@@ -15,3 +15,10 @@ packages/*/*.tsbuildinfo
 .DS_Store
 **/.DS_Store
 .cowork-receipts/
+
+# Swift / Xcode build state (ADR 0007)
+.build/
+DerivedData/
+xcuserdata/
+*.xcuserdatad
+.swiftpm/

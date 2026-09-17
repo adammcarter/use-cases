@@ -1,0 +1,64 @@
+included:
+  - UseCasesCore
+excluded:
+  - .build
+  - DerivedData
+
+opt_in_rules:
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - empty_count
+  - first_where
+  - last_where
+  - contains_over_filter_count
+  - contains_over_filter_is_empty
+  - explicit_init
+  - redundant_nil_coalescing
+  - toggle_bool
+  - fatal_error_message
+  - yoda_condition
+  - multiline_parameters
+  - multiline_arguments
+
+# swiftformat owns these; disabled so the two tools never fight.
+disabled_rules:
+  - trailing_comma
+  - opening_brace
+  - vertical_whitespace
+  - attributes
+
+multiline_parameters:
+  allows_single_line: false
+
+line_length:
+  warning: 100
+  error: 120
+type_body_length:
+  warning: 300
+  error: 400
+file_length:
+  warning: 500
+  error: 700
+function_body_length:
+  warning: 50
+  error: 80
+cyclomatic_complexity:
+  warning: 10
+  error: 15
+
+custom_rules:
+  legacy_concurrency:
+    name: "Legacy concurrency"
+    regex: '\b(DispatchQueue|NSLock|NSRecursiveLock|Thread|OperationQueue|DispatchSemaphore|DispatchGroup|DispatchWorkItem)\b'
+    message: "Swift Concurrency only — use async/await or an actor."
+    severity: error
+  unchecked_sendable:
+    name: "@unchecked Sendable"
+    regex: '@unchecked\s+Sendable'
+    message: "State needing @unchecked Sendable should be an actor."
+    severity: error
+  single_line_closure_body:
+    name: "Single-line closure body"
+    regex: '\{\s*[^}\n]*\([^}\n]*\)[^}\n]*\}'
+    message: "A closure that does something opens onto its own lines."
+    severity: warning

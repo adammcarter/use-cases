@@ -1,4 +1,19 @@
 #!/usr/bin/env bash
+# swift: format staged Swift files (re-staging the result), then lint strictly.
+staged_swift="$(git diff --cached --name-only --diff-filter=ACM -- '*.swift')"
+if [ -n "$staged_swift" ]; then
+    if command -v swiftformat >/dev/null 2>&1; then
+        echo "$staged_swift" | tr '\n' '\0' | xargs -0 swiftformat --quiet \
+            || { echo "pre-commit: swiftformat failed" >&2; exit 1; }
+        echo "$staged_swift" | tr '\n' '\0' | xargs -0 git add
+    fi
+    if command -v swiftlint >/dev/null 2>&1; then
+        echo "$staged_swift" | tr '\n' '\0' \
+            | xargs -0 swiftlint lint --strict --quiet -- \
+            || { echo "pre-commit: swiftlint found issues (strict) — fix them and re-stage." >&2; exit 1; }
+    fi
+fi
+
 # use-cases: the matrix and its ledgers have to be well-formed to land at all.
 # Blocking, fast, deterministic. Stale rows are fine here; INVALID is not.
 set -u
