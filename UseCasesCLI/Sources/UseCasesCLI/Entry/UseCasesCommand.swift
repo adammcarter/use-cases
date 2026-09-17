@@ -10,7 +10,7 @@ import Foundation
 /// for the entry alone, with its own help, version and completion flags out of
 /// the way, and every raw argument is forwarded to ``CommandLineInterface``,
 /// which ports the TypeScript parser as it is.
-public struct UseCasesCommand: ParsableCommand {
+public struct UseCasesCommand: AsyncParsableCommand {
   public static let configuration = CommandConfiguration(
     commandName: "uc",
     helpNames: [],
@@ -24,12 +24,12 @@ public struct UseCasesCommand: ParsableCommand {
 
   /// Parse the process arguments with everything behind a leading `--`, so the
   /// library reads them all as values and none as its own flags.
-  public static func main() {
-    main(forwardedPrefix + CommandLine.arguments.dropFirst())
+  public static func main() async {
+    await main(forwardedPrefix + CommandLine.arguments.dropFirst())
   }
 
-  public func run() throws {
-    let outcome = CommandLineInterface.run(arguments: Self.stripped(arguments))
+  public func run() async throws {
+    let outcome = await CommandLineInterface.run(arguments: Self.stripped(arguments))
     FileHandle.standardOutput.write(Data(outcome.standardOutput.utf8))
     FileHandle.standardError.write(Data(outcome.standardError.utf8))
     guard outcome.exitCode == 0 else {

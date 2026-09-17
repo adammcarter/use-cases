@@ -13,7 +13,7 @@ public enum CommandLineInterface {
   public static func run(
     arguments: [String],
     environment: [String: String] = ProcessInfo.processInfo.environment,
-  ) -> CliOutcome {
+  ) async -> CliOutcome {
     let normalized = normalized(arguments)
     let isJSON = normalized.contains("--json")
 
@@ -40,7 +40,7 @@ public enum CommandLineInterface {
         exitCode: 2,
       )
     }
-    return CommandDispatcher.run(
+    return await CommandDispatcher.run(
       command,
       arguments: normalized,
       isJSON: isJSON,

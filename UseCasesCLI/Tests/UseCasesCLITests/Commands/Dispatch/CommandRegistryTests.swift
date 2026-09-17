@@ -92,17 +92,20 @@ struct CommandRegistryTests {
     "markers.validate-ledger",
     "markers.recover",
     "markers.keygen",
+    "evidence.record",
+    "evidence.status",
+    "evidence.void",
   ])
-  func `marks the row 4a, 4b and 4c commands as ported`(command: String) throws {
+  func `marks the row 4a to 4d commands as ported`(command: String) throws {
     let specification = try #require(CommandRegistry.allCommands.first { $0.command == command })
 
     #expect(specification.isPorted)
   }
 
   @Test
-  func `marks exactly the row 4a, 4b and 4c commands as ported`() {
+  func `marks exactly the row 4a to 4d commands as ported`() {
     let ported = CommandRegistry.allCommands.filter(\.isPorted)
 
-    #expect(ported.count == 21)
+    #expect(ported.count == 24)
   }
 }

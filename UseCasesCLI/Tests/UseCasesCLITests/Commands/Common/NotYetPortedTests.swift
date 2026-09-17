@@ -10,8 +10,8 @@ struct NotYetPortedTests {
   }
 
   @Test(arguments: unportedCommands)
-  func `refuses an unported command with a non-zero exit`(path: [String]) {
-    let outcome = CommandLineInterface.run(arguments: path + ["--json"])
+  func `refuses an unported command with a non-zero exit`(path: [String]) async {
+    let outcome = await CommandLineInterface.run(arguments: path + ["--json"])
 
     #expect(outcome.exitCode == 1)
     #expect(outcome.standardError.isEmpty)
@@ -21,11 +21,11 @@ struct NotYetPortedTests {
   }
 
   @Test
-  func `names the command in the human rendering`() {
-    let outcome = CommandLineInterface.run(arguments: ["evidence", "status"])
+  func `names the command in the human rendering`() async {
+    let outcome = await CommandLineInterface.run(arguments: ["plan", "cards"])
 
     #expect(outcome.exitCode == 1)
-    #expect(outcome.standardOutput.contains("evidence status"))
-    #expect(outcome.standardOutput.hasPrefix("\u{2717} evidence.status"))
+    #expect(outcome.standardOutput.contains("plan cards"))
+    #expect(outcome.standardOutput.hasPrefix("\u{2717} plan.cards"))
   }
 }

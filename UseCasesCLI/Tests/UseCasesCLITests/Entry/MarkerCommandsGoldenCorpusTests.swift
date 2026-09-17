@@ -13,11 +13,11 @@ struct MarkerCommandsGoldenCorpusTests {
   @Test(arguments: MarkerCommandsGoldenCorpus.caseNames)
   func `reproduces the TypeScript CLI, its ledgers and its files byte for byte`(
     caseName: String,
-  ) throws {
+  ) async throws {
     let recorded = try MarkerCommandsFixtures.testCase(caseName)
     let sandbox = try MarkerCommandsFixtures.Sandbox(recorded: recorded)
 
-    let runs = try sandbox.replay()
+    let runs = try await sandbox.replay()
 
     try #require(runs.count == recorded["runs"]?.arrayValue?.count)
     for (index, run) in runs.enumerated() {

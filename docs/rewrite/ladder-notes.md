@@ -143,6 +143,90 @@ across sessions.
   that fails (`scan --public-key missing.pem`) is recorded. The by-hand check
   covers relative `--repo .`.
 
+## Found in 4d — evidence commands
+
+- **The CLI is async from the entry down.** `EvidenceAppender.append` is
+  `async` (the lock polls through the injected clock), and no legal bridge
+  makes it synchronous — a semaphore would block the very cooperative pool the
+  poll suspends on. So `CommandHandler`, `CommandDispatcher.run`,
+  `CommandLineInterface.run` and `UseCasesCommand` (now
+  `AsyncParsableCommand`) are all async; the 4a–4c corpora replay through
+  `await` and are unchanged otherwise. `evidence status` stays a synchronous
+  handler, because replay is synchronous. The corpora only ever await
+  `CommandLineInterface.run` in process, so the new entry (`UseCasesMain.main()
+  async`, and `ExitCode` thrown out of an async `run()`) is proven through the
+  BINARY: `version`, `version --json`, `matrix validate` on a missing
+  workspace, an unknown command and `evidence status` on a missing workspace
+  are byte-identical to node with the same exit codes (0, 0, 2, 2, 2).
+- **The eight-process void race is pinned** (`EvidenceVoidRaceTests`, row 4's
+  standing item): eight `use-cases` processes void the SAME evidence, exactly
+  one appends, seven answer `evidence_invalid_transition` (exit 6) and replay
+  afterwards is clean. Two things had to be right for it to be a real check:
+  every process is STARTED before any is waited for, and the history is seeded
+  with 400 extra ledgers so a replay takes tens of milliseconds — wider than
+  the launch stagger. Without the seeding the mutation (`withAppendLock`
+  calling its work directly) passed 2 of 3 attempts, the same luck the row 3e
+  note records in-process; with it, all eight appended and replay reported
+  `evidence_sequence_conflict` on 3 of 3. The same race through eight
+  `node dist/uc.js` processes behaves identically (1 winner, 7 losers, clean
+  replay, 3 of 3 runs).
+- **The losers' code depends on the order of two checks.** `voidUnderLock`
+  tests the aggregate's status before the idempotency key, and all eight
+  writers derive the SAME default key `cli:void:<id>:<head>`. Reversing those
+  checks would turn the seven refusals into seven silent `appended: false`
+  successes, so the race test asserts the code as well as the count.
+- **A void's `intent_digest` cannot be compared across runs** and is masked on
+  both sides of the corpus: the void intent's target is the evidence id itself,
+  which is a random uuidv7. A recorded event's digest does not cover the id and
+  is compared byte for byte. The by-hand node/Swift comparison shows exactly
+  this one difference and nothing else.
+- **Divergence — a performed run whose output passes `spawnSync`'s 1 MiB
+  `maxBuffer`.** node keeps the 64 KiB read that crosses the limit (1 MiB +
+  65,536 bytes, digest `sha256:cd2d309f…`) and the port keeps the 8 KiB one its
+  socket pair delivered (1 MiB + 8,192 bytes, `sha256:94896abb…`); both are
+  stable across runs, and the exit code (127, from `status: null`) agrees. The
+  divergence is in the shared `CapsuleProcessSpawner`, so it is a capsule
+  question as much as an evidence one; the corpus records the largest output
+  that stays under the limit instead. Owner's call whether matching node's read
+  size is worth it. That recorded case (`perform_large_output_under_the_buffer`,
+  1,000,000 bytes) sits about 48 KB under `maxBuffer` — inside ONE of node's
+  64 KiB reads of the limit — so if a future node changes its read size it can
+  cross the limit and fail for this recorded reason rather than a real one.
+- **Divergence — the performed child's environment order.** `spawnSync`
+  inherits `process.env` in its own order; the port sorts the CLI's environment
+  by key when it builds `environ`. Only a command that prints its whole
+  environment could see it, and nothing in the corpus does.
+- **`--perform` redacts the summary only.** `appendEvidenceEvent` redacts the
+  summary before digesting it, so a secret in the argv is recorded verbatim in
+  `method.executable`, `method.argv` and (through the output digest) the
+  idempotency key. Pinned as is (`perform_secret_in_argv_is_kept`); same class
+  as the showcase-redaction note below.
+- **A performed run is identified by its output.** The default idempotency key
+  is `cli:run:<row>:<stdout digest>:<exit>`, so re-running a command whose
+  output changed writes a NEW aggregate rather than deduplicating, and
+  re-running one whose output is identical is deduplicated even if the failure
+  was intermittent. Pinned (`perform_changed_output_is_a_new_record`,
+  `perform_idempotent_repeat`).
+- **`record` throws where `void` catches.** The TypeScript `record` handler has
+  no catch, so a damaged history, a reused key or a lock timeout comes out of
+  the entry-level catch as exit 1; `void` maps its own failures (stale head 1,
+  damaged history 3, anything else 6). Ported as is — the exit codes differ for
+  the same underlying error.
+- **`evidence_parse_error` wording is masked, as in rows 3 and 4b**: V8's
+  `JSON.parse` message (`Unexpected token 'o', "not json" is not valid JSON`)
+  against the port's (`Unexpected token in JSON at position 1.`). The code, the
+  `source_path` naming the line and everything else are compared.
+- **Not in the corpus: a lock held by someone else.** A pre-existing
+  `evidence/.locks/append.lock` directory makes every appender wait the full
+  30 seconds, which is too slow for a 106-case corpus; the corpus instead pins
+  the immediate `evidence_lock_timeout` a non-EEXIST `mkdir` failure gives (an
+  unwritable `.locks`, exit 1 for record and 6 for void).
+- **The Debug binary now lands in `DerivedData/use-cases-*`**, not
+  `DerivedData/UseCasesCLI-*`: adding the executable to the test target's
+  dependencies (so the race test always has a binary) moved Xcode's derived
+  data to the package name. The stale `UseCasesCLI-*` copy is still there and
+  is NOT rebuilt — check the mtime of the one you run.
+
 ## Row 3e — evidence
 
 - **The concurrent-writer guarantee (decision 10) is tested here** as the

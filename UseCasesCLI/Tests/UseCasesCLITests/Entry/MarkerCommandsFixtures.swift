@@ -112,12 +112,12 @@ enum MarkerCommandsFixtures {
     }
 
     /// Every step in order; the CLI steps' results in order.
-    func replay() throws -> [Run] {
+    func replay() async throws -> [Run] {
       var runs: [Run] = []
       for step in recorded["steps"]?.arrayValue ?? [] {
         switch step["kind"]?.stringValue {
         case "uc":
-          runs.append(runCommand(step))
+          await runs.append(runCommand(step))
         case "write":
           try directory.writeFile(
             #require(step["path"]?.stringValue),
@@ -174,7 +174,7 @@ enum MarkerCommandsFixtures {
       try #require(outcome.exitStatus == 0, "git \(arguments) failed")
     }
 
-    private func runCommand(_ step: JSONValue) -> Run {
+    private func runCommand(_ step: JSONValue) async -> Run {
       let arguments = (step["args"]?.arrayValue ?? []).compactMap { argument in
         argument.stringValue.map(substituted)
       }
@@ -183,7 +183,7 @@ enum MarkerCommandsFixtures {
       for key in extra.keys {
         environment[key] = extra[key]?.stringValue.map(substituted)
       }
-      let outcome = CommandLineInterface.run(arguments: arguments, environment: environment)
+      let outcome = await CommandLineInterface.run(arguments: arguments, environment: environment)
       return Run(arguments: arguments, outcome: outcome)
     }
 

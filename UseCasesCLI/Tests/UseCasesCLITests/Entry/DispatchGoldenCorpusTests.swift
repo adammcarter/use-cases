@@ -8,11 +8,11 @@ import UseCasesCore
 /// byte for byte: stdout, stderr, exit status and the config left on disk.
 struct DispatchGoldenCorpusTests {
   @Test(arguments: DispatchGoldenCorpus.caseNames)
-  func `reproduces the TypeScript CLI byte for byte`(caseName: String) throws {
+  func `reproduces the TypeScript CLI byte for byte`(caseName: String) async throws {
     let recorded = try DispatchFixtures.testCase(caseName)
     let sandbox = try DispatchFixtures.Sandbox(recorded: recorded)
 
-    let outcome = CommandLineInterface.run(arguments: sandbox.arguments)
+    let outcome = await CommandLineInterface.run(arguments: sandbox.arguments)
 
     #expect(outcome.standardOutput == sandbox.expected("stdout"))
     #expect(outcome.standardError == sandbox.expected("stderr"))

@@ -1,5 +1,6 @@
-/// The evidence commands, declared for help and flag checking. Their port is
-/// ladder row 4d; until it lands each one refuses with `cli_not_yet_ported`.
+/// `evidence record|status|void` (packages/cli/src/commands/evidence.ts).
+/// Recording is in `EvidenceCommands+Record.swift`, with the performed run in
+/// ``EvidencePerformedCommand``; status and void each have their own file.
 enum EvidenceCommands {
   static let all = [
     record,
@@ -8,7 +9,7 @@ enum EvidenceCommands {
   ]
 
   static let record = CommandSpecification(
-    unportedPath: ["evidence", "record"],
+    path: ["evidence", "record"],
     command: "evidence.record",
     summary: "Record an evidence event for a use case.",
     flags: [
@@ -61,11 +62,12 @@ enum EvidenceCommands {
           + "is only your word for it.",
       ),
     ],
-    subrow: "4d",
-  )
+  ) { context async throws(CommandFailure) in
+    try await runRecord(context)
+  }
 
   static let status = CommandSpecification(
-    unportedPath: ["evidence", "status"],
+    path: ["evidence", "status"],
     command: "evidence.status",
     summary: "Replay and report evidence-ledger completeness.",
     flags: [
@@ -74,11 +76,12 @@ enum EvidenceCommands {
       CommonFlags.component,
       CommonFlags.json,
     ],
-    subrow: "4d",
-  )
+  ) { context throws(CommandFailure) in
+    try runStatus(context)
+  }
 
   static let void = CommandSpecification(
-    unportedPath: ["evidence", "void"],
+    path: ["evidence", "void"],
     command: "evidence.void",
     summary: "Void an evidence aggregate at its expected head.",
     flags: [
@@ -118,6 +121,30 @@ enum EvidenceCommands {
         valueName: "<key>",
       ),
     ],
-    subrow: "4d",
-  )
+  ) { context async throws(CommandFailure) in
+    try await runVoid(context)
+  }
+
+  /// Every evidence event the CLI appends names this host surface.
+  static let hostSurface = "codex.cli"
+
+  /// A string flag's value, or nil when absent.
+  static func string(_ value: ParsedFlagValue?) -> String? {
+    guard case let .string(text) = value else {
+      return nil
+    }
+    return text
+  }
+
+  /// An error envelope with exit 2.
+  static func refusal(
+    _ command: String,
+    _ code: String,
+    _ message: String,
+  ) -> CommandOutput {
+    CommandOutput(
+      result: ErrorEnvelope.make(command: command, code: code, message: message),
+      exitCode: 2,
+    )
+  }
 }

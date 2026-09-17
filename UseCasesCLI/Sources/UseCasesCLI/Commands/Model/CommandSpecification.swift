@@ -1,6 +1,6 @@
 /// Runs a matched command. It returns the output rather than writing it, so
 /// rendering stays in one place.
-typealias CommandHandler = @Sendable (HandlerContext) throws(CommandFailure) -> CommandOutput
+typealias CommandHandler = @Sendable (HandlerContext) async throws(CommandFailure) -> CommandOutput
 
 /// One leaf command as data: its token path, envelope id, help and flags, and
 /// the handler that runs it.

@@ -2,7 +2,7 @@ import UseCasesCLI
 
 @main
 enum UseCasesMain {
-  static func main() {
-    UseCasesCommand.main()
+  static func main() async {
+    await UseCasesCommand.main()
   }
 }

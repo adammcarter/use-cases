@@ -11,12 +11,12 @@ enum CommandDispatcher {
     arguments: [String],
     isJSON: Bool,
     environment: [String: String],
-  ) -> CliOutcome {
+  ) async -> CliOutcome {
     let output: CommandOutput
     let standardError = ProcessStandardErrorLog()
     do throws(CommandFailure) {
       let flags = ArgumentScanner.parseFlags(arguments, specifications: command.flags)
-      output = try command.handler(
+      output = try await command.handler(
         HandlerContext(
           arguments: arguments,
           flags: flags,

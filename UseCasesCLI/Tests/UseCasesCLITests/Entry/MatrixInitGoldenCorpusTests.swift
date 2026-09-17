@@ -9,11 +9,11 @@ import UseCasesCore
 /// file left in the sandbox and git's core.hooksPath afterwards.
 struct MatrixInitGoldenCorpusTests {
   @Test(arguments: MatrixInitGoldenCorpus.caseNames)
-  func `reproduces the TypeScript CLI and its files byte for byte`(caseName: String) throws {
+  func `reproduces the TypeScript CLI and its files byte for byte`(caseName: String) async throws {
     let recorded = try MatrixInitFixtures.testCase(caseName)
     let sandbox = try MatrixInitFixtures.Sandbox(recorded: recorded)
 
-    let outcome = CommandLineInterface.run(
+    let outcome = await CommandLineInterface.run(
       arguments: sandbox.arguments,
       environment: MatrixInitFixtures.isolatedEnvironment,
     )

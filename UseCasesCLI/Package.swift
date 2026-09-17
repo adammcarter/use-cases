@@ -27,6 +27,8 @@ let package = Package(
       name: "UseCasesCLITests",
       dependencies: [
         "UseCasesCLI",
+        // The built binary: the void race needs eight real processes.
+        "use-cases",
         .product(name: "UseCasesCore", package: "UseCasesCore"),
         .product(name: "TestSupport", package: "UseCasesCore"),
       ],
