@@ -91,6 +91,27 @@ across sessions.
      `max_items` (the gap row 2 already recorded, wider than first thought).
   Decision 8 freezes both the schema and the behaviour, and they disagree;
   which one is right is the owner's call.
+- **Showcase redaction covers observations only.** `appendShowcaseEvent.ts`
+  runs `redactSecrets` on observation text and nothing else: failure-decision
+  reasons, approval and rejection statements and actions reach the run ledger
+  as typed. A secret pasted into a rejection reason is recorded verbatim.
+  Ported as is and pinned. (Found in 3f2.)
+- **WebAuthn approval never checks the relying party or origin.** Verification
+  checks the challenge, the UP and UV flags and `type: webauthn.get`, but not
+  `rpIdHash` or `clientDataJSON.origin`, so an assertion made for another site
+  with the same credential and challenge verifies. Ported as is. (Found
+  reading 3f2.)
+- **Swift refuses some WebAuthn key types node accepts.** node verifies with
+  whatever key type the credential's SPKI holds, ignoring the declared alg,
+  so it accepts secp256k1, Ed448, RSA and DSA keys; swift-crypto cannot verify
+  secp256k1 or Ed448 and the port refuses them (pinned with real signatures).
+  The keyring schema allows only alg -7 and -8, so this is reachable only when
+  a keyring entry's key contradicts its declared alg. The one place the port
+  is stricter than the TypeScript; owner's call to accept. (Found in 3f2.)
+- **Showcase dead or never-produced values:** nothing produces a `partial`
+  run_outcome or a `resolution_required` approval_state; `assuranceFloor` is
+  accepted and ignored (the floor always comes from the plan); a second epoch
+  rewrites the same `epoch.1 -> epoch.2` transition. Ported as is. (3f2.)
 - **SECURITY: `validate-ledger --base-ref` never detects a rewritten ledger
   through the CLI.** The CLI hands `git show <ref>:<path>` an ABSOLUTE ledger
   path, which git always rejects; the base-file reader treats that failure as
