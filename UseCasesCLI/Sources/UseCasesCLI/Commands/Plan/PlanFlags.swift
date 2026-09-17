@@ -55,4 +55,13 @@ enum PlanFlags {
     kind: .boolean,
     summary: "Fail when the matrix/evidence is incomplete.",
   )
+
+  static let planFile = FlagSpecification(
+    key: "planFile",
+    name: "--plan-file",
+    kind: .string,
+    summary: "Saved presentation plan file (inside the workspace).",
+    valueName: "<path>",
+    isRequired: true,
+  )
 }

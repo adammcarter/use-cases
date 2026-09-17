@@ -38,7 +38,7 @@ public enum JavaScriptString {
   }
 
   /// JavaScript's `===` on strings: code units, not canonical equivalence.
-  static func identical(
+  public static func identical(
     _ left: String,
     _ right: String,
   ) -> Bool {

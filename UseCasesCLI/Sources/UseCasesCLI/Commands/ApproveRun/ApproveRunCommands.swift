@@ -1,12 +1,14 @@
-/// The `approve-run` commands, declared for help and flag checking. Their port is
-/// ladder row 4e; until it lands each one refuses with `cli_not_yet_ported`.
+/// `approve-run` (packages/cli/src/commands/approveRun.ts): the out-of-band
+/// human signer. It is deliberately WORKSPACE-FREE — it reads a request file
+/// and a private key and prints a token, and never touches a run ledger. The
+/// handler is in `ApproveRunCommands+Run.swift`.
 enum ApproveRunCommands {
   static let all = [
     approveRun,
   ]
 
   static let approveRun = CommandSpecification(
-    unportedPath: ["approve-run"],
+    path: ["approve-run"],
     command: "showcase.approve_run",
     summary: "Sign a plugin-minted approval request out-of-band (human, own shell, "
       + "out-of-scope key).",
@@ -78,6 +80,7 @@ enum ApproveRunCommands {
         summary: "Emit the machine-readable JSON result envelope.",
       ),
     ],
-    subrow: "4e",
-  )
+  ) { context throws(CommandFailure) in
+    try runSign(context)
+  }
 }

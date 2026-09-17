@@ -68,10 +68,10 @@ struct ShowcaseStepRunner {
       milliseconds: #require(step["clock_ms"]?.numberValue),
     ))
     runIdentifier = arguments["run_id"]?.stringValue ?? ""
-    recording = try ShowcaseRecording(
+    recording = ShowcaseRecording(
       context: context,
-      actorType: #require(ShowcaseActorType(rawValue: arguments["actor_type"]?
-          .stringValue ?? "agent")),
+      actorType: ShowcaseActorType(rawValue: arguments["actor_type"]?
+        .stringValue ?? "agent"),
       hostSurface: arguments["host_surface"]?.stringValue ?? "codex.cli",
       idempotencyKey: arguments["idempotency_key"]?.stringValue ?? "",
       recordedAt: arguments["recorded_at"]?.stringValue,
@@ -199,7 +199,7 @@ struct ShowcaseStepRunner {
       return try recorder.recordVerdict(
         runIdentifier: runIdentifier,
         planItemIdentifier: string("plan_item_id"),
-        verdict: #require(ShowcaseVerdict(rawValue: string("verdict"))),
+        verdict: ShowcaseVerdict(rawValue: string("verdict")),
         observationEventIdentifiers: arguments["observation_event_ids"]?.arrayValue?
           .compactMap(\.stringValue) ?? [],
         recording: recording,
@@ -208,7 +208,7 @@ struct ShowcaseStepRunner {
       return try recorder.recordFailureDecision(
         runIdentifier: runIdentifier,
         verdictEventIdentifier: string("verdict_event_id"),
-        decision: #require(ShowcaseFailureDecision(rawValue: string("decision"))),
+        decision: ShowcaseFailureDecision(rawValue: string("decision")),
         reason: string("reason"),
         recording: recording,
       ).jsonValue
@@ -216,7 +216,7 @@ struct ShowcaseStepRunner {
       return try recorder.correctVerdict(
         runIdentifier: runIdentifier,
         targetEventIdentifier: string("target_event_id"),
-        correctedVerdict: #require(ShowcaseVerdict(rawValue: string("corrected_verdict"))),
+        correctedVerdict: ShowcaseVerdict(rawValue: string("corrected_verdict")),
         reason: string("reason"),
         recording: recording,
       ).jsonValue

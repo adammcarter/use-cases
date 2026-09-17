@@ -1,6 +1,8 @@
+/// The showcase verbs that read or decide a run: status, the approval
+/// request, approve, reject and correct.
 extension ShowcaseCommands {
   static let status = CommandSpecification(
-    unportedPath: ["showcase", "status"],
+    path: ["showcase", "status"],
     command: "showcase.status",
     summary: "Replay and report a showcase run's status.",
     flags: [
@@ -26,11 +28,12 @@ extension ShowcaseCommands {
         valueName: "<path>",
       ),
     ],
-    subrow: "4e",
-  )
+  ) { context throws(CommandFailure) in
+    try runStatus(context)
+  }
 
   static let requestApproval = CommandSpecification(
-    unportedPath: ["showcase", "request-approval"],
+    path: ["showcase", "request-approval"],
     command: "showcase.request-approval",
     summary: "Mint an unsigned approval request for a finished showcase run.",
     flags: [
@@ -40,11 +43,12 @@ extension ShowcaseCommands {
       CommonFlags.json,
       ShowcaseFlags.run,
     ],
-    subrow: "4e",
-  )
+  ) { context throws(CommandFailure) in
+    try runRequestApproval(context)
+  }
 
   static let approve = CommandSpecification(
-    unportedPath: ["showcase", "approve"],
+    path: ["showcase", "approve"],
     command: "showcase.approve",
     summary: "Record an approval for a showcase run.",
     flags: [
@@ -80,11 +84,12 @@ extension ShowcaseCommands {
         valueName: "<iso>",
       ),
     ],
-    subrow: "4e",
-  )
+  ) { context throws(CommandFailure) in
+    try runApprove(context)
+  }
 
   static let reject = CommandSpecification(
-    unportedPath: ["showcase", "reject"],
+    path: ["showcase", "reject"],
     command: "showcase.reject",
     summary: "Record a rejection for a showcase run.",
     flags: [
@@ -120,11 +125,12 @@ extension ShowcaseCommands {
         valueName: "<iso>",
       ),
     ],
-    subrow: "4e",
-  )
+  ) { context throws(CommandFailure) in
+    try runReject(context)
+  }
 
   static let correct = CommandSpecification(
-    unportedPath: ["showcase", "correct"],
+    path: ["showcase", "correct"],
     command: "showcase.correct",
     summary: "Correct a previously recorded showcase verdict.",
     flags: [
@@ -167,6 +173,7 @@ extension ShowcaseCommands {
         valueName: "<iso>",
       ),
     ],
-    subrow: "4e",
-  )
+  ) { context throws(CommandFailure) in
+    try runCorrect(context)
+  }
 }

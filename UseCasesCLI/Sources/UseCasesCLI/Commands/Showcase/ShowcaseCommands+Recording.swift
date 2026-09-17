@@ -1,6 +1,8 @@
+/// The showcase verbs that append to a run's ledger: start, the two
+/// recordings, the failure decision, pause, resume and finish.
 extension ShowcaseCommands {
   static let start = CommandSpecification(
-    unportedPath: ["showcase", "start"],
+    path: ["showcase", "start"],
     command: "showcase.start",
     summary: "Start a showcase run from a plan file or an ad hoc selection.",
     flags: [
@@ -58,11 +60,12 @@ extension ShowcaseCommands {
         valueName: "<iso>",
       ),
     ],
-    subrow: "4e",
-  )
+  ) { context throws(CommandFailure) in
+    try runStart(context)
+  }
 
   static let recordObservation = CommandSpecification(
-    unportedPath: ["showcase", "record-observation"],
+    path: ["showcase", "record-observation"],
     command: "showcase.record-observation",
     summary: "Append an observation to a showcase run plan item.",
     flags: [
@@ -89,11 +92,12 @@ extension ShowcaseCommands {
         valueName: "<iso>",
       ),
     ],
-    subrow: "4e",
-  )
+  ) { context throws(CommandFailure) in
+    try runRecordObservation(context)
+  }
 
   static let recordVerdict = CommandSpecification(
-    unportedPath: ["showcase", "record-verdict"],
+    path: ["showcase", "record-verdict"],
     command: "showcase.record-verdict",
     summary: "Append a verdict to a showcase run plan item.",
     flags: [
@@ -121,11 +125,12 @@ extension ShowcaseCommands {
         valueName: "<iso>",
       ),
     ],
-    subrow: "4e",
-  )
+  ) { context throws(CommandFailure) in
+    try runRecordVerdict(context)
+  }
 
   static let decide = CommandSpecification(
-    unportedPath: ["showcase", "decide"],
+    path: ["showcase", "decide"],
     command: "showcase.decide",
     summary: "Record a failure decision against a showcase verdict event.",
     flags: [
@@ -168,71 +173,36 @@ extension ShowcaseCommands {
         valueName: "<iso>",
       ),
     ],
-    subrow: "4e",
-  )
+  ) { context throws(CommandFailure) in
+    try runDecide(context)
+  }
 
   static let pause = CommandSpecification(
-    unportedPath: ["showcase", "pause"],
+    path: ["showcase", "pause"],
     command: "showcase.pause",
     summary: "Pause a showcase run.",
-    flags: [
-      CommonFlags.repository,
-      CommonFlags.dataRoot,
-      CommonFlags.component,
-      CommonFlags.json,
-      ShowcaseFlags.run,
-      FlagSpecification(
-        key: "reason",
-        name: "--reason",
-        kind: .string,
-        summary: "Pause reason (defaults to 'Paused by operator.').",
-        valueName: "<text>",
-      ),
-      ShowcaseFlags.actor,
-      ShowcaseFlags.idempotencyKey,
-      FlagSpecification(
-        key: "recordedAt",
-        name: "--recorded-at",
-        kind: .string,
-        summary: "Recorded-at timestamp for the pause event.",
-        valueName: "<iso>",
-      ),
-    ],
-    subrow: "4e",
-  )
+    flags: transitionFlags(
+      reasonSummary: "Pause reason (defaults to 'Paused by operator.').",
+      eventName: "pause",
+    ),
+  ) { context throws(CommandFailure) in
+    try runPause(context)
+  }
 
   static let resume = CommandSpecification(
-    unportedPath: ["showcase", "resume"],
+    path: ["showcase", "resume"],
     command: "showcase.resume",
     summary: "Resume a paused showcase run.",
-    flags: [
-      CommonFlags.repository,
-      CommonFlags.dataRoot,
-      CommonFlags.component,
-      CommonFlags.json,
-      ShowcaseFlags.run,
-      FlagSpecification(
-        key: "reason",
-        name: "--reason",
-        kind: .string,
-        summary: "Resume reason (defaults to 'Resumed by operator.').",
-        valueName: "<text>",
-      ),
-      ShowcaseFlags.actor,
-      ShowcaseFlags.idempotencyKey,
-      FlagSpecification(
-        key: "recordedAt",
-        name: "--recorded-at",
-        kind: .string,
-        summary: "Recorded-at timestamp for the resume event.",
-        valueName: "<iso>",
-      ),
-    ],
-    subrow: "4e",
-  )
+    flags: transitionFlags(
+      reasonSummary: "Resume reason (defaults to 'Resumed by operator.').",
+      eventName: "resume",
+    ),
+  ) { context throws(CommandFailure) in
+    try runResume(context)
+  }
 
   static let finish = CommandSpecification(
-    unportedPath: ["showcase", "finish"],
+    path: ["showcase", "finish"],
     command: "showcase.finish",
     summary: "Finish a showcase run.",
     flags: [
@@ -250,6 +220,37 @@ extension ShowcaseCommands {
         valueName: "<iso>",
       ),
     ],
-    subrow: "4e",
-  )
+  ) { context throws(CommandFailure) in
+    try runFinish(context)
+  }
+
+  /// Pause and resume declare the same flags, worded for the verb.
+  private static func transitionFlags(
+    reasonSummary: String,
+    eventName: String,
+  ) -> [FlagSpecification] {
+    [
+      CommonFlags.repository,
+      CommonFlags.dataRoot,
+      CommonFlags.component,
+      CommonFlags.json,
+      ShowcaseFlags.run,
+      FlagSpecification(
+        key: "reason",
+        name: "--reason",
+        kind: .string,
+        summary: reasonSummary,
+        valueName: "<text>",
+      ),
+      ShowcaseFlags.actor,
+      ShowcaseFlags.idempotencyKey,
+      FlagSpecification(
+        key: "recordedAt",
+        name: "--recorded-at",
+        kind: .string,
+        summary: "Recorded-at timestamp for the \(eventName) event.",
+        valueName: "<iso>",
+      ),
+    ]
+  }
 }

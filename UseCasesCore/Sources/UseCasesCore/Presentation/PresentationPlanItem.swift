@@ -82,12 +82,30 @@ public struct ItemEvidenceSummary: Sendable, Equatable {
   public let readiness: EvidenceReadiness
   public let activeEvidenceIdentifiers: [String]
   public let basis: String
+
+  public init(
+    readiness: EvidenceReadiness,
+    activeEvidenceIdentifiers: [String],
+    basis: String,
+  ) {
+    self.readiness = readiness
+    self.activeEvidenceIdentifiers = activeEvidenceIdentifiers
+    self.basis = basis
+  }
 }
 
 /// An item's freshness, summarised.
 public struct ItemFreshnessSummary: Sendable, Equatable {
   public let state: FreshnessState
   public let basis: String
+
+  public init(
+    state: FreshnessState,
+    basis: String,
+  ) {
+    self.state = state
+    self.basis = basis
+  }
 }
 
 /// The ranking a candidate was scored with. A rank is nil when the row's value
@@ -98,6 +116,18 @@ public struct ScoreComponents: Sendable, Equatable {
   public let value: Int?
   public let journey: Int?
   public let frequency: Int?
+
+  public init(
+    changed: Int,
+    value: Int?,
+    journey: Int?,
+    frequency: Int?,
+  ) {
+    self.changed = changed
+    self.value = value
+    self.journey = journey
+    self.frequency = frequency
+  }
 
   var jsonValue: JSONValue {
     var object = JSONObject()

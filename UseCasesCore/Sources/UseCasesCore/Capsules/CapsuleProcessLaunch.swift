@@ -16,6 +16,16 @@ struct CapsuleProcessLaunch {
   private static let longestName = 255
   /// libuv's `_PATH_DEFPATH`.
   private static let defaultSearchPath = "/usr/bin:/bin"
+  /// How much each stream's socket pair holds, so one read can deliver a whole
+  /// ``CapsuleOutputCapture/readChunkBytes`` chunk as node's does.
+  ///
+  /// macOS gives a `socketpair` 8 KiB by default (`net.local.stream.recvspace`),
+  /// which caps every read at 8 KiB. node's output past `maxBuffer` KEEPS the
+  /// read that crossed the limit, so the chunk size is observable: with 8 KiB
+  /// reads a 1,200,000-byte stream records 1 MiB + 8,192 bytes where node
+  /// records 1 MiB + 65,536, and every digest past the limit differs. Measured
+  /// against node 26 and pinned by `CapsuleProcessSpawnerTests`.
+  private static let streamBufferBytes = Int32(CapsuleOutputCapture.readChunkBytes)
 
   /// Start the child as libuv's `uv__spawn_and_init_child_posix_spawn` does.
   static func start(_ request: CapsuleSpawnRequest) -> Result<CapsuleProcessLaunch, Failure> {
@@ -38,7 +48,20 @@ struct CapsuleProcessLaunch {
       for descriptor in descriptors {
         _ = fcntl(descriptor, F_SETFD, FD_CLOEXEC)
       }
-      pairs.append(descriptors)
+      // A pair that cannot take node's buffer size would read in 8 KiB chunks
+      // and silently record different bytes past `maxBuffer`, so it fails the
+      // start outright rather than degrading.
+      guard let errorNumber = enlarge(descriptors) else {
+        pairs.append(descriptors)
+        continue
+      }
+      for descriptor in descriptors {
+        close(descriptor)
+      }
+      for pair in pairs {
+        close(pair[0])
+      }
+      return .failure(Failure(errorNumber: errorNumber))
     }
     // The parent never writes to stdin: closing its end is the end of input.
     close(pairs[0][0])
@@ -55,6 +78,21 @@ struct CapsuleProcessLaunch {
       close(pairs[2][0])
       return .failure(failure)
     }
+  }
+
+  /// Give both ends of a pair node's read size in both directions, or the
+  /// errno that refused it.
+  private static func enlarge(_ descriptors: [Int32]) -> Int32? {
+    var size = streamBufferBytes
+    let length = socklen_t(MemoryLayout<Int32>.size)
+    for descriptor in descriptors {
+      for option in [SO_RCVBUF, SO_SNDBUF] {
+        guard setsockopt(descriptor, SOL_SOCKET, option, &size, length) == 0 else {
+          return errno
+        }
+      }
+    }
+    return nil
   }
 
   /// The file as given when it holds `/`; otherwise the `PATH` search.

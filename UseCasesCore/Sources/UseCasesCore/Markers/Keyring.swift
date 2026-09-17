@@ -198,6 +198,27 @@ public struct Keyring: Equatable, Sendable {
     try load(filePath: filePath).publicKeyResolver()
   }
 
+  /// A validated keyring file's `keys` as the JSON they were read from, for a
+  /// caller that merges several sources before re-parsing them — what the
+  /// CLI's `approval_trust` anchor does with `loadKeyring(path).keys`. The
+  /// failures, and their wording, are ``load(filePath:)``'s.
+  public static func loadKeys(filePath: String) throws(KeyringError) -> [JSONValue] {
+    let text: String
+    do throws(FileAccessError) {
+      text = try NodeFile.readText(atPath: filePath)
+    } catch {
+      throw .unreadable(message: "could not read keyring file \(filePath): \(error.message)")
+    }
+    let value: JSONValue
+    do throws(SchemaError) {
+      value = try JSONParser.parse(text)
+    } catch {
+      throw .invalidJSON(message: "keyring file \(filePath) is not valid JSON: \(error.message)")
+    }
+    _ = try parse(value, sourcePath: filePath)
+    return value["keys"]?.arrayValue ?? []
+  }
+
   /// A key id resolves to its PEM only when active and in-window at `createdAt`.
   public func publicKeyResolver() -> PublicKeyResolver {
     let index = ed25519Index()

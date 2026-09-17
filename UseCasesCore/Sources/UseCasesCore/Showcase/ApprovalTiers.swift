@@ -72,7 +72,7 @@ public enum AssuranceMethod: String, CaseIterable, Sendable {
   }
 
   /// `isAssuranceMethod`.
-  static func recognised(_ value: JSONValue?) -> AssuranceMethod? {
+  public static func recognised(_ value: JSONValue?) -> AssuranceMethod? {
     guard let text = value?.stringValue else {
       return nil
     }

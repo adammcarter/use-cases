@@ -30,6 +30,46 @@ public enum JSONWriter {
     }
   }
 
+  /// `JSON.stringify(value, null, 2)`: two spaces per level, `": "` between a
+  /// key and its value, and an empty object or array kept on one line.
+  ///
+  /// Only files a human is meant to read are written this way — an approval
+  /// token `approve-run --out` writes, and a scaffolded keyring. The wire form
+  /// stays ``encode(_:sortingKeys:)``.
+  public static func encodePretty(
+    _ value: JSONValue,
+    depth: Int = 0,
+  ) -> String {
+    let indent = String(repeating: "  ", count: depth + 1)
+    switch value {
+    case let .array(values) where !values.isEmpty:
+      let members = values.map { element in
+        indent + encodePretty(element, depth: depth + 1)
+      }
+      return indented(members, brackets: "[]", depth: depth)
+    case let .object(object) where !object.isEmpty:
+      let members = object.pairs.map { pair in
+        indent + encodeString(pair.key) + ": " + encodePretty(pair.value, depth: depth + 1)
+      }
+      return indented(members, brackets: "{}", depth: depth)
+    default:
+      return encode(value)
+    }
+  }
+
+  /// The members between their brackets, one per line, the closing bracket
+  /// back at this level's indentation.
+  private static func indented(
+    _ members: [String],
+    brackets: String,
+    depth: Int,
+  ) -> String {
+    let closing = String(repeating: "  ", count: depth)
+    let opening = String(brackets.prefix(1))
+    let closingBracket = String(brackets.suffix(1))
+    return opening + "\n" + members.joined(separator: ",\n") + "\n" + closing + closingBracket
+  }
+
   private static func encodeArray(
     _ values: [JSONValue],
     sortingKeys: Bool,

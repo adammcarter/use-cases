@@ -46,11 +46,14 @@
 // precedent in docs/rewrite/ladder-notes.md). Its code, its `source_path` and
 // everything around it are compared.
 //
-// NOT recorded: a performed command whose output passes `spawnSync`'s 1 MiB
-// `maxBuffer`. node keeps the 64 KiB read that crosses the limit and the Swift
-// spawner keeps the 8 KiB one its socket delivered, so the digests differ by
-// construction — measured and recorded in the ladder notes. The largest
-// performed output here stays just under the limit.
+// Recorded since row 4e: a performed command whose output PASSES `spawnSync`'s
+// 1 MiB `maxBuffer` (`perform_output_past_the_buffer`). node keeps the 64 KiB
+// read that crossed the limit — 1 MiB + 65,536 bytes — and the port now gives
+// its socket pairs the same 64 KiB buffers, so the kept bytes and the output
+// digest agree. Only a writer that fills the buffer faster than it is read can
+// be recorded: `head -c … /dev/zero | tr` is one, and `/usr/bin/yes` is not
+// (node's own kept bytes move run to run). The case beside it,
+// `perform_large_output_under_the_buffer`, stays just under the limit.
 import { spawnSync } from "node:child_process";
 import {
   chmodSync,
@@ -246,6 +249,7 @@ const performCases = [
   ["perform_killed_by_signal", workspace(), [perform("--json", "--", "/bin/sh", "-c", "kill -TERM $$")]],
   ["perform_invalid_utf8_output", workspace(), [perform("--json", "--", "/bin/sh", "-c", "printf '\\377\\376ok'")]],
   ["perform_large_output_under_the_buffer", workspace(), [perform("--json", "--", "/bin/sh", "-c", "head -c 1000000 /dev/zero | tr '\\000' a")]],
+  ["perform_output_past_the_buffer", workspace(), [perform("--json", "--", "/bin/sh", "-c", "head -c 1200000 /dev/zero | tr '\\000' a")]],
   ["perform_explicit_kind_result_summary", workspace(), [perform("--kind", "test_result", "--result", "pass", "--summary", "Mine.", "--json", "--", "/bin/sh", "-c", "exit 1")]],
   ["perform_secret_in_argv_is_kept", workspace(), [perform("--json", "--", "/bin/echo", "token=abc123secret")]],
   ["perform_idempotent_repeat", workspace(), [perform("--json", "--", "/bin/echo", "same"), perform("--json", "--", "/bin/echo", "same")]],

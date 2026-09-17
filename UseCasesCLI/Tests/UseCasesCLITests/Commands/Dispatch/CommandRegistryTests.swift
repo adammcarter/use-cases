@@ -70,42 +70,22 @@ struct CommandRegistryTests {
     #expect(hidden == ["doctor.skills"])
   }
 
-  @Test(arguments: [
-    "schema.list",
-    "schema.validate-fixtures",
-    "workflow.set-mode",
-    "workflow.get-mode",
-    "doctor.skills",
-    "doctor.roots",
-    "matrix.validate",
-    "matrix.list",
-    "matrix.status",
-    "matrix.upsert",
-    "matrix.remove",
-    "markers.bind",
-    "markers.unbind",
-    "markers.rebind",
-    "markers.scan",
-    "markers.impact",
-    "markers.prove",
-    "markers.verify",
-    "markers.validate-ledger",
-    "markers.recover",
-    "markers.keygen",
-    "evidence.record",
-    "evidence.status",
-    "evidence.void",
-  ])
-  func `marks the row 4a to 4d commands as ported`(command: String) throws {
-    let specification = try #require(CommandRegistry.allCommands.first { $0.command == command })
+  /// Rows 4a to 4e ported all 44, so nothing answers `cli_not_yet_ported` any
+  /// more — the refusal itself is gone. Each command is run against a
+  /// workspace that is not there: some refuse it and some (the three that read
+  /// no workspace) answer anyway, but none of them refuses as unported.
+  @Test(arguments: CommandRegistry.allCommands.map(\.path))
+  func `runs every command it declares`(path: [String]) async {
+    let outcome = await CommandLineInterface.run(
+      arguments: path + ["--repo", "/nonexistent/use-cases-probe", "--json"],
+    )
 
-    #expect(specification.isPorted)
+    #expect(!outcome.standardOutput.contains("cli_not_yet_ported"))
+    #expect(outcome.standardOutput.hasSuffix("\n"))
   }
 
   @Test
-  func `marks exactly the row 4a to 4d commands as ported`() {
-    let ported = CommandRegistry.allCommands.filter(\.isPorted)
-
-    #expect(ported.count == 24)
+  func `declares all forty-four commands`() {
+    #expect(CommandRegistry.allCommands.count == 44)
   }
 }

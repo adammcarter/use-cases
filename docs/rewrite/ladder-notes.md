@@ -180,18 +180,26 @@ across sessions.
   which is a random uuidv7. A recorded event's digest does not cover the id and
   is compared byte for byte. The by-hand node/Swift comparison shows exactly
   this one difference and nothing else.
-- **Divergence — a performed run whose output passes `spawnSync`'s 1 MiB
-  `maxBuffer`.** node keeps the 64 KiB read that crosses the limit (1 MiB +
-  65,536 bytes, digest `sha256:cd2d309f…`) and the port keeps the 8 KiB one its
-  socket pair delivered (1 MiB + 8,192 bytes, `sha256:94896abb…`); both are
-  stable across runs, and the exit code (127, from `status: null`) agrees. The
-  divergence is in the shared `CapsuleProcessSpawner`, so it is a capsule
-  question as much as an evidence one; the corpus records the largest output
-  that stays under the limit instead. Owner's call whether matching node's read
-  size is worth it. That recorded case (`perform_large_output_under_the_buffer`,
-  1,000,000 bytes) sits about 48 KB under `maxBuffer` — inside ONE of node's
-  64 KiB reads of the limit — so if a future node changes its read size it can
-  cross the limit and fail for this recorded reason rather than a real one.
+- **CLOSED in 4e — a performed run whose output passes `spawnSync`'s 1 MiB
+  `maxBuffer`.** As found in 4d: node kept the 64 KiB read that crossed the
+  limit (1 MiB + 65,536 bytes, digest `sha256:cd2d309f…`) and the port kept the
+  8 KiB one its socket pair delivered (1 MiB + 8,192 bytes,
+  `sha256:94896abb…`). The cause was the socket, not the loop:
+  `CapsuleOutputCapture` already read in 64 KiB chunks, but macOS gives a
+  `socketpair` 8 KiB (`net.local.stream.recvspace`), which caps every `read`
+  at 8 KiB. `CapsuleProcessLaunch` now sets `SO_RCVBUF` and `SO_SNDBUF` to
+  64 KiB on both ends of both pairs, and a pair that cannot take them fails the
+  start rather than degrading silently. Pinned twice: `CapsuleProcessSpawnerTests`
+  compares node's own kept bytes and digests for four scripts (over the limit on
+  stdout, on stderr, on both, and exactly at it), and the evidence corpus now
+  records the over-limit `--perform` run it used to avoid
+  (`perform_output_past_the_buffer`, 1 MiB + 65,536 bytes,
+  `sha256:cd2d309f…`). Only a writer that fills the buffer faster than it is
+  read can be pinned: `head -c … /dev/zero | tr` is one, and `/usr/bin/yes` is
+  not — node's own kept bytes move run to run for it (1,081,080 / 1,105,650 /
+  1,113,840 over five runs), because how much a read delivers is then the
+  child's timing, not the chunk size. `perform_large_output_under_the_buffer`
+  (1,000,000 bytes) is unchanged.
 - **Divergence — the performed child's environment order.** `spawnSync`
   inherits `process.env` in its own order; the port sorts the CLI's environment
   by key when it builds `environ`. Only a command that prints its whole
@@ -225,7 +233,103 @@ across sessions.
   `DerivedData/UseCasesCLI-*`: adding the executable to the test target's
   dependencies (so the race test always has a binary) moved Xcode's derived
   data to the package name. The stale `UseCasesCLI-*` copy is still there and
-  is NOT rebuilt — check the mtime of the one you run.
+  is NOT rebuilt — check the mtime of the one you run. (In 4e the freshest was
+  `UseCasesCLI-*` again, because that is the workspace Xcode had open; the note
+  stands as "check the mtime", not "prefer one path".)
+
+## Found in 4e — plan, capsule, showcase and approve-run
+
+- **Nothing in the CLI answers `cli_not_yet_ported` any more.** All 44 commands
+  run, so `NotYetPorted`, the `unportedPath` initialiser and `isPorted` are
+  gone; `CommandRegistryTests` now runs every declared command against a
+  workspace that is not there and asserts none of them refuses as unported.
+  Row 5's MCP binary is a separate executable and is unaffected.
+- **Three CLI-facing enums had to widen, because the TypeScript passes an
+  unrecognised flag value straight through to the ledger.** `showcase
+  record-verdict --verdict maybe`, `--actor robot` and `showcase decide
+  --decision waive` are all recorded as given by node (measured), so
+  `ShowcaseVerdict`, `ShowcaseActorType` and `ShowcaseFailureDecision` each
+  gained an `other(String)` case with a hand-written `RawRepresentable`. Only
+  `user` and the four known decisions are ever compared in the core, so nothing
+  else changed. Without this the port would have had to invent a refusal the
+  TypeScript does not have.
+- **`plan cards` reads plan files through its own lenient decoder**
+  (``PlanCardItem``), as the row 3f1 note required: `presentation_format ??
+  defaultFormatForDeliveryKind(delivery_kind)` and `evidence_summary?.basis ??
+  "(earlier run)"` are both applied, and BOTH are pinned by corpus cases whose
+  plan files are the real plan with that member deleted and the content hash
+  recomputed. Where the TypeScript would instead read a property of
+  `undefined`, the port raises V8's own message — `Cannot read properties of
+  undefined (reading 'emoji')` for a format or delivery kind the tables do not
+  know, `(reading 'length')` for an absent `resolved_steps` — and the reads are
+  format-specific, so `Reviewing` never looks at `resolved_steps` and
+  `Explaining` looks at it only when there are no expected observations. The
+  echoed `presentation_format` is the value AS READ: absent stays absent.
+- **`showcase request-approval` returns the minted request itself**, not a
+  result envelope: no `ok`, no `complete`, no `context`. Its human rendering is
+  `TrustRenderer.renderApprovalRequest`, and `showcase status`'s is
+  `showcaseStatusLines` — the two renderings the 4c note left unpinned. Both
+  are now corpus cases (`request_approval_text`, and the `approved by user ·
+  tier trusted_host_user_presence` line in `signed_approval_text_and_status`).
+- **A run is user-required only under `approval_policy: mode: predefined` with
+  a `user` approver.** `mode: ask` makes an item `user_led` in presentation and
+  changes nothing about approval, so a corpus that only used `none` and `ask`
+  would never exercise the F3 gate. The showcase corpus has a row with a
+  predefined user requirement, which is what makes
+  `showcase.user_required_approval` (agent refused),
+  `showcase.trusted_user_confirmation_required` (no token),
+  `showcase.approval_nonce_burned`, `showcase.approval_decision_mismatch` and
+  `showcase.approval_assurance_too_low` reachable.
+- **`approve-run` signs with the DEFAULTED assurance method.** The TypeScript
+  passes `assuranceMethodFlag ?? "os_presence"` to `signApprovalToken`, so a
+  token minted without `--assurance-method` still carries
+  `assurance_method: os_presence` and its tier — and that tier is what meets a
+  plan's floor. Passing the flag through as `undefined` instead produces a
+  token that verifies as `untrusted_automation`.
+- **Divergence — `approve_run.sign_failed` wording for key material.** node
+  lets OpenSSL's own message through `createPrivateKey`; the port refuses
+  anything but an ed25519 PEM up front (the row 4c divergence) and reports
+  node's decoder text for non-key input,
+  `error:1E08010C:DECODER routines::unsupported`, which is what node gives for
+  the only malformation the corpus records.
+- **Key material is minted per case, never committed.** Each showcase case that
+  signs runs a `keys` step: the generator and the Swift replay each mint their
+  OWN ed25519 pair (as `tests/blackbox/showcase-flow.test.ts` does), so every
+  PEM body, every `signature.value` and the `intent_digest` of every
+  `approval_recorded`, `approval_rejected` and `approval_nonce_burned` event are
+  masked on both sides — those intents carry the token, nonce included. Every
+  other event's digest, and every approval state, tier and capture method, is
+  compared byte for byte. The mask matches `approval_[a-z_]+`, which is exactly
+  those three event types today; widen the note (and check nothing else is
+  swallowed) if a fourth `approval_*` event type is ever added, because its
+  digest would be masked silently and stop being compared.
+- **Pinning `--idempotency-key` pins the whole ledger.** A showcase run id is
+  `run.<key>` and its events are `evt.run.<key>.<n>`, so the showcase corpus
+  needs no id masking at all. The one place a clock still reaches the output is
+  `capsule run` without `--idempotency-key`, whose derived key ends in
+  `Date.now()`: that epoch is masked in the plan/capsule corpus (delimiters
+  kept), and the intent digests of those events do not cover the key.
+- **The unknown-flag check reads EVERY command's flags.** `capsule list --all`
+  and `capsule plan --mode showcase` are accepted and ignored, because `--all`
+  and `--mode` are declared by `verify` and `workflow set-mode`; only a
+  spelling no command declares (`--everything`, `--capsuls`) is
+  `cli_unknown_flag`. Pinned as is, both ways
+  (`capsule_list_flag_declared_by_another_command`).
+- **`JSONWriter.encodePretty` is new**, for the two places a human-readable
+  JSON file is written: the token `approve-run --out` writes and the keyring a
+  test mints. The wire form is untouched.
+- **swiftlint's `single_line_closure_body` false-fires on regex literals, and
+  the cure is placement.** The rule's pattern is
+  `\{\s*[^}\n]*\([^}\n]*\)[^}\n]*\}`, and `\s*` crosses newlines, so an
+  opening brace whose FIRST statement is a regex literal containing both a
+  group and `[^{}]` matches: the `(`, the `)` and the `}` of the character
+  class are all on that one line. Putting any non-regex statement immediately
+  after the brace (`var masked = text`) breaks the span and needs no change to
+  the pattern being masked. Both masking files do this.
+- **Cannot be pinned: a plan file whose `use_case_title` is not a string.** The
+  TypeScript's `?.trim()` raises on a number; the port's decoder reads a
+  non-string title as absent, which falls back to the id. No corpus case, and
+  no plan the CLI writes can hold one.
 
 ## Row 3e — evidence
 

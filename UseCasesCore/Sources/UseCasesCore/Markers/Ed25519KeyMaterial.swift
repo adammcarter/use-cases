@@ -17,4 +17,23 @@ public enum Ed25519KeyMaterial {
   public static func isPrivateKey(pem: String) -> Bool {
     Ed25519PEM.privateKey(fromPEM: pem) != nil
   }
+
+  /// `samePublicKey`: the same text, or the same key once decoded — the
+  /// comparison the TypeScript makes by re-exporting both through
+  /// `createPublicKey`. Two PEMs that are not ed25519 keys are never the same
+  /// key here, where node would compare whatever it could decode.
+  public static func isSamePublicKey(
+    _ left: String,
+    _ right: String,
+  ) -> Bool {
+    if JavaScriptString.identical(left, right) {
+      return true
+    }
+    guard let decodedLeft = Ed25519PEM.publicKey(fromPEM: left),
+          let decodedRight = Ed25519PEM.publicKey(fromPEM: right)
+    else {
+      return false
+    }
+    return decodedLeft.rawRepresentation == decodedRight.rawRepresentation
+  }
 }

@@ -1,5 +1,8 @@
-/// The plan commands, declared for help and flag checking. Their port is
-/// ladder row 4e; until it lands each one refuses with `cli_not_yet_ported`.
+/// `plan showcase|walkthrough|cards` (packages/cli/src/commands/plan.ts).
+///
+/// Selection is in `PlanCommands+Selection.swift` and the cards in
+/// `PlanCommands+Cards.swift`, which reads a saved plan file through
+/// ``PlanCardItem``.
 enum PlanCommands {
   static let all = [
     showcase,
@@ -8,63 +11,50 @@ enum PlanCommands {
   ]
 
   static let showcase = CommandSpecification(
-    unportedPath: ["plan", "showcase"],
+    path: ["plan", "showcase"],
     command: "plan.showcase",
     summary: "Select a showcase presentation plan.",
-    flags: [
-      CommonFlags.repository,
-      CommonFlags.dataRoot,
-      CommonFlags.component,
-      CommonFlags.json,
-      PlanFlags.audience,
-      PlanFlags.timebox,
-      PlanFlags.maxItems,
-      PlanFlags.host,
-      PlanFlags.changedPath,
-      PlanFlags.generatedAt,
-      PlanFlags.strict,
-    ],
-    subrow: "4e",
-  )
+    flags: selectionFlags,
+  ) { context throws(CommandFailure) in
+    try runSelection(context, mode: .showcase)
+  }
 
   static let walkthrough = CommandSpecification(
-    unportedPath: ["plan", "walkthrough"],
+    path: ["plan", "walkthrough"],
     command: "plan.walkthrough",
     summary: "Select a walkthrough presentation plan.",
-    flags: [
-      CommonFlags.repository,
-      CommonFlags.dataRoot,
-      CommonFlags.component,
-      CommonFlags.json,
-      PlanFlags.audience,
-      PlanFlags.timebox,
-      PlanFlags.maxItems,
-      PlanFlags.host,
-      PlanFlags.changedPath,
-      PlanFlags.generatedAt,
-      PlanFlags.strict,
-    ],
-    subrow: "4e",
-  )
+    flags: selectionFlags,
+  ) { context throws(CommandFailure) in
+    try runSelection(context, mode: .walkthrough)
+  }
 
   static let cards = CommandSpecification(
-    unportedPath: ["plan", "cards"],
+    path: ["plan", "cards"],
     command: "plan.cards",
     summary: "Render presentation cards from a saved plan file.",
     flags: [
       CommonFlags.repository,
       CommonFlags.dataRoot,
       CommonFlags.component,
-      FlagSpecification(
-        key: "planFile",
-        name: "--plan-file",
-        kind: .string,
-        summary: "Saved presentation plan file (inside the workspace).",
-        valueName: "<path>",
-        isRequired: true,
-      ),
+      PlanFlags.planFile,
       CommonFlags.json,
     ],
-    subrow: "4e",
-  )
+  ) { context throws(CommandFailure) in
+    try runCards(context)
+  }
+
+  /// Both selection commands declare the same flags.
+  static let selectionFlags = [
+    CommonFlags.repository,
+    CommonFlags.dataRoot,
+    CommonFlags.component,
+    CommonFlags.json,
+    PlanFlags.audience,
+    PlanFlags.timebox,
+    PlanFlags.maxItems,
+    PlanFlags.host,
+    PlanFlags.changedPath,
+    PlanFlags.generatedAt,
+    PlanFlags.strict,
+  ]
 }

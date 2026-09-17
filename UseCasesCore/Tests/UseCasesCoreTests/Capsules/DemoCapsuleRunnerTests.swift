@@ -77,7 +77,7 @@ struct DemoCapsuleRunnerTests {
       options.isExecutingCommands = isExecuting
     }
     if let actor = value?["actorType"]?.stringValue {
-      options.actorType = try #require(ShowcaseActorType(rawValue: actor))
+      options.actorType = ShowcaseActorType(rawValue: actor)
     }
     if let host = value?["hostSurface"]?.stringValue {
       options.hostSurface = host

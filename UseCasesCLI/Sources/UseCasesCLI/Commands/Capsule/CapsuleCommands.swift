@@ -1,5 +1,5 @@
-/// The capsule commands, declared for help and flag checking. Their port is
-/// ladder row 4e; until it lands each one refuses with `cli_not_yet_ported`.
+/// `capsule list|validate|plan|run` (packages/cli/src/commands/capsule.ts).
+/// The handlers are in `CapsuleCommands+Runs.swift`.
 enum CapsuleCommands {
   static let all = [
     list,
@@ -9,7 +9,7 @@ enum CapsuleCommands {
   ]
 
   static let list = CommandSpecification(
-    unportedPath: ["capsule", "list"],
+    path: ["capsule", "list"],
     command: "capsule.list",
     summary: "List demo capsules.",
     flags: [
@@ -18,11 +18,12 @@ enum CapsuleCommands {
       CommonFlags.component,
       CommonFlags.json,
     ],
-    subrow: "4e",
-  )
+  ) { context throws(CommandFailure) in
+    try runList(context)
+  }
 
   static let validate = CommandSpecification(
-    unportedPath: ["capsule", "validate"],
+    path: ["capsule", "validate"],
     command: "capsule.validate",
     summary: "Validate demo capsules.",
     flags: [
@@ -31,11 +32,12 @@ enum CapsuleCommands {
       CommonFlags.component,
       CommonFlags.json,
     ],
-    subrow: "4e",
-  )
+  ) { context throws(CommandFailure) in
+    try runValidate(context)
+  }
 
   static let plan = CommandSpecification(
-    unportedPath: ["capsule", "plan"],
+    path: ["capsule", "plan"],
     command: "capsule.plan",
     summary: "Plan a demo capsule.",
     flags: [
@@ -45,11 +47,12 @@ enum CapsuleCommands {
       CommonFlags.json,
       CapsuleFlags.capsule,
     ],
-    subrow: "4e",
-  )
+  ) { context throws(CommandFailure) in
+    try runPlan(context)
+  }
 
   static let run = CommandSpecification(
-    unportedPath: ["capsule", "run"],
+    path: ["capsule", "run"],
     command: "capsule.run",
     summary: "Run a demo capsule.",
     flags: [
@@ -86,6 +89,10 @@ enum CapsuleCommands {
         valueName: "<ms>",
       ),
     ],
-    subrow: "4e",
-  )
+  ) { context throws(CommandFailure) in
+    try runRun(context)
+  }
+
+  /// Every capsule run the CLI records names this host surface.
+  static let hostSurface = "codex.cli"
 }

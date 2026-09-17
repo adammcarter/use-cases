@@ -35,11 +35,38 @@ public struct SystemShowcaseUUIDSource: ShowcaseUUIDSource {
 }
 
 /// Who recorded an event.
-public enum ShowcaseActorType: String, CaseIterable, Sendable {
+///
+/// `other` carries a value the CLI passed through unchecked: `showcase
+/// record-verdict --actor robot` reaches the ledger as `robot` in the
+/// TypeScript, which never validates the flag, so the port must be able to
+/// record it too. Only `user` is ever compared, and an `other` actor is not
+/// one.
+public enum ShowcaseActorType: RawRepresentable, Equatable, Sendable {
   case user
   case agent
   case script
   case system
+  case other(String)
+
+  public init(rawValue: String) {
+    switch rawValue {
+    case "user": self = .user
+    case "agent": self = .agent
+    case "script": self = .script
+    case "system": self = .system
+    default: self = .other(rawValue)
+    }
+  }
+
+  public var rawValue: String {
+    switch self {
+    case .user: "user"
+    case .agent: "agent"
+    case .script: "script"
+    case .system: "system"
+    case let .other(value): value
+    }
+  }
 }
 
 /// Who leads the run.
@@ -51,20 +78,72 @@ public enum ShowcaseControlMode: String, CaseIterable, Sendable {
 }
 
 /// A verdict on one plan item.
-public enum ShowcaseVerdict: String, CaseIterable, Sendable {
+///
+/// `other` carries a value the CLI passed through unchecked, as
+/// ``ShowcaseActorType/other(_:)`` does: `--verdict maybe` is recorded as
+/// `maybe` in the TypeScript and replays as neither a pass nor a failure.
+public enum ShowcaseVerdict: RawRepresentable, Equatable, Sendable {
   case pass
   case partial
   case fail
   case waived
   case blocked
+  case other(String)
+
+  public init(rawValue: String) {
+    switch rawValue {
+    case "pass": self = .pass
+    case "partial": self = .partial
+    case "fail": self = .fail
+    case "waived": self = .waived
+    case "blocked": self = .blocked
+    default: self = .other(rawValue)
+    }
+  }
+
+  public var rawValue: String {
+    switch self {
+    case .pass: "pass"
+    case .partial: "partial"
+    case .fail: "fail"
+    case .waived: "waived"
+    case .blocked: "blocked"
+    case let .other(value): value
+    }
+  }
 }
 
 /// What to do about a failed or blocked verdict.
-public enum ShowcaseFailureDecision: String, CaseIterable, Sendable {
+///
+/// `other` carries a value the CLI passed through unchecked, as
+/// ``ShowcaseVerdict/other(_:)`` does: `--decision waive` is recorded as
+/// `waive`, which is not one of the four the replay acts on.
+public enum ShowcaseFailureDecision: RawRepresentable, Equatable, Sendable {
   case `continue`
-  case pauseToFix = "pause_to_fix"
-  case waiveWithReason = "waive_with_reason"
+  case pauseToFix
+  case waiveWithReason
   case abort
+  case other(String)
+
+  public init(rawValue: String) {
+    switch rawValue {
+    case "continue": self = .continue
+    case "pause_to_fix": self = .pauseToFix
+    case "waive_with_reason": self = .waiveWithReason
+    case "abort": self = .abort
+    default: self = .other(rawValue)
+    }
+  }
+
+  public var rawValue: String {
+    switch self {
+    case .continue: "continue"
+    case .pauseToFix: "pause_to_fix"
+    case .waiveWithReason: "waive_with_reason"
+    case .abort: "abort"
+    case let .other(value): value
+    }
+  }
 }
 
 /// Why an epoch started.
