@@ -266,3 +266,43 @@ grep -L 'from "\(\.\./\)\+packages/' <the test files a row's verifier names>
 ```
 
 A row whose every named test file survives that grep is already an oracle row.
+
+## 8 · The rows that need an owner decision
+
+Three kinds, all parked rather than papered over. None has a passing test written
+around it; each is a `test.todo` in the oracle carrying its reason, so nothing
+reads as covered when it is not.
+
+### a. Eight doctrine rows — no command implements them
+
+The five `lifecycle.loop.*` rows, `evidence.ledger.untrusted_content_boundary`,
+`matrix.product.claim_guardrails`, and `showcase.live.user_signoff`. These
+describe how an AGENT should behave, or end in a person's judgement. There is no
+`uc` command whose output could prove them, so ADR 0007 decision 2 cannot cover
+them as written.
+
+**The question:** park them like the 15 `roadmap.*` rows, or give decision 2 a
+named exception for doctrine? Agreed 2026-09-17 to settle this at the end rather
+than mid-ladder.
+
+### b. Two rows asserting behaviour the tool does not have
+
+Found while writing their oracles. Both are matrix-versus-product discrepancies,
+not test bugs, and correcting either is a behaviour decision:
+
+| row | what it claims | what was measured |
+|---|---|---|
+| `agents.roster.shipped_with_plugin` | "the published package files list includes agents" | `package.json` has no `files` key; it is `private`, and npm distribution was removed in 0.7.0 |
+| `skills.assets.unreachable_skills_fail_doctor` | a manifest declaring a directory that does not hold the canonical skills "does not count as declared" | pointing the `skills` key at a nonexistent directory still reports `ok: true`, `declares_skill_root: true`, zero diagnostics — skills are found by CONVENTION at `skills/<name>/SKILL.md`, so the key is not what makes them reachable |
+
+### c. Scenarios no test can drive
+
+`plugin.install.claude_from_github.edge_live_session` and the other host
+live-session scenarios need a real host session and a person watching.
+`diagnostics.contracts.missing_build_hint` fires on the path where the compiled
+core is absent, which the self-contained bundle never takes; it stays on its
+white-box verifier until the Swift cut-over gives it an equivalent.
+
+These are not failures of the oracle. They are the honest edge of what a
+black-box suite can claim, and naming them is what keeps the coverage number
+meaning something.
