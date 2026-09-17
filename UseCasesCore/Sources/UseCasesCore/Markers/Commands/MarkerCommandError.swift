@@ -15,6 +15,13 @@ public enum MarkerCommandError: Error, Equatable, Sendable {
   case canonicalJSON(CodeUnitCanonicalJSONError)
   /// A row's verification context hash could not be taken.
   case verificationContextHash(VerificationContextHashError)
+  /// node refused to start a verifier (`verify`).
+  case verifierSpawn(VerifySpawnError)
+  /// A proof event could not be signed (`prove`).
+  case proofSignature(ProofSignatureError)
+  /// A verification result `prove` was handed cannot be read the way the
+  /// TypeScript reads it; `message` is the TypeError V8 raises.
+  case verificationResultUnreadable(message: String)
 
   public var code: String {
     switch self {
@@ -24,6 +31,9 @@ public enum MarkerCommandError: Error, Equatable, Sendable {
     case let .evidenceLedger(error): error.code
     case .canonicalJSON: "canonical_json_non_finite"
     case let .verificationContextHash(error): error.code
+    case let .verifierSpawn(error): error.code
+    case let .proofSignature(error): error.code
+    case .verificationResultUnreadable: "verification_result_unreadable"
     }
   }
 
@@ -37,6 +47,9 @@ public enum MarkerCommandError: Error, Equatable, Sendable {
     case let .verificationContextHash(.fileAccess(error)): error.message
     case .verificationContextHash(.nonFiniteNumber):
       "a verifier timeout is not a finite number"
+    case let .verifierSpawn(error): error.message
+    case let .proofSignature(error): error.message
+    case let .verificationResultUnreadable(message): message
     }
   }
 }
