@@ -6,7 +6,7 @@ import Testing
 /// command help.
 struct NotYetPortedTests {
   static var unportedCommands: [[String]] {
-    CommandRegistry.allCommands.filter { !$0.isPorted }.map(\.path) + [["init"]]
+    CommandRegistry.allCommands.filter { !$0.isPorted }.map(\.path)
   }
 
   @Test(arguments: unportedCommands)
@@ -22,10 +22,10 @@ struct NotYetPortedTests {
 
   @Test
   func `names the command in the human rendering`() {
-    let outcome = CommandLineInterface.run(arguments: ["matrix", "validate"])
+    let outcome = CommandLineInterface.run(arguments: ["evidence", "status"])
 
     #expect(outcome.exitCode == 1)
-    #expect(outcome.standardOutput.contains("matrix validate"))
-    #expect(outcome.standardOutput.hasPrefix("\u{2717} matrix.validate"))
+    #expect(outcome.standardOutput.contains("evidence status"))
+    #expect(outcome.standardOutput.hasPrefix("\u{2717} evidence.status"))
   }
 }

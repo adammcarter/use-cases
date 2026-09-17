@@ -49,6 +49,36 @@ across sessions.
   The Swift `PresentationPlanItem` requires the format; row 4's decoder must
   apply the same defaults. (Found in 3f1.)
 
+## Found in 4b — init and matrix commands
+
+- **Parser wording is masked in the CLI corpus, and nothing else.**
+  `matrix upsert` puts `JSON.parse`'s own message into
+  `matrix.mutation_invalid_json` (e.g. `Unexpected token 'o', "not json" is
+  not valid JSON`, with V8's position, line/column and context elision); the
+  port's `JSONParser` words it differently. The same holds for the core's
+  `parse_error` (the `yaml` package) and `evidence_parse_error` (V8), already
+  masked in the row 3 corpora. `MatrixInitGoldenCorpusTests` replaces those
+  three messages on both sides and compares everything else byte for byte:
+  codes, `ok`/`complete`, exit codes, the rest of stdout, stderr and every
+  file. Porting V8's `JSON.parse` error formatter would close it; no test in
+  `tests/` reads the text (`cli-ergonomics.test.ts` asserts the code only).
+- **`matrix upsert` cannot create a file**: a `--file` that does not exist is
+  `matrix.mutation_file_missing` (exit 1), so the first row of a new feature
+  file cannot be added through the CLI. Ported as is.
+- **`init` is a builtin, so its flags are never checked**: `uc init --bogus`
+  scaffolds. A thrown scaffold failure (a `core.hooksPath` outside the repo, a
+  `--repo` that is a file) is the entry-level catch's envelope, labelled by the
+  leading tokens (`init`), exit 1, even in the human rendering; a blocked one
+  goes to stderr in the human rendering. Ported as is.
+- **The CLI entry now takes the child-process environment**
+  (`CommandLineInterface.run(arguments:environment:)`, default the process's).
+  Only `init`'s git calls read it; the corpus test passes one with git's global
+  and system config off so a user's own `core.hooksPath` cannot leak in.
+- **`JSON.parse` property order is applied to `--use-case-json` input**
+  (`JavaScriptPropertyOrder`, now public in the core): index-like keys first,
+  which moves schema diagnostics and the written YAML. A lone-surrogate escape
+  that `JSON.parse` accepts is still refused by `JSONParser` (known 3g2 limit).
+
 ## Row 3e — evidence
 
 - **The concurrent-writer guarantee (decision 10) is tested here** as the

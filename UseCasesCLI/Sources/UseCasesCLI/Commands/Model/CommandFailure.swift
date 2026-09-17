@@ -30,6 +30,18 @@ struct CommandFailure: Error, Sendable, Equatable {
     self.init(code: error.code, message: error.message)
   }
 
+  init(_ error: UseCaseMatrixError) {
+    self.init(code: error.code, message: error.message)
+  }
+
+  init(_ error: EvidenceEventError) {
+    self.init(code: error.code, message: error.message)
+  }
+
+  init(_ error: WorkspaceScaffoldError) {
+    self.init(code: error.code, message: error.message)
+  }
+
   init(_ error: SkillAssetValidationError) {
     self.init(code: error.code ?? Self.internalErrorCode, message: error.message)
   }

@@ -77,17 +77,22 @@ struct CommandRegistryTests {
     "workflow.get-mode",
     "doctor.skills",
     "doctor.roots",
+    "matrix.validate",
+    "matrix.list",
+    "matrix.status",
+    "matrix.upsert",
+    "matrix.remove",
   ])
-  func `marks the row 4a commands as ported`(command: String) throws {
+  func `marks the row 4a and 4b commands as ported`(command: String) throws {
     let specification = try #require(CommandRegistry.allCommands.first { $0.command == command })
 
     #expect(specification.isPorted)
   }
 
   @Test
-  func `marks exactly the row 4a commands as ported`() {
+  func `marks exactly the row 4a and 4b commands as ported`() {
     let ported = CommandRegistry.allCommands.filter(\.isPorted)
 
-    #expect(ported.count == 6)
+    #expect(ported.count == 11)
   }
 }

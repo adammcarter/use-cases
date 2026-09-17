@@ -1,5 +1,9 @@
-/// The matrix commands, declared for help and flag checking. Their port is
-/// ladder row 4b; until it lands each one refuses with `cli_not_yet_ported`.
+import UseCasesCore
+
+/// `matrix validate|list|status|upsert|remove`
+/// (packages/cli/src/commands/matrix.ts). The queries are in
+/// `MatrixCommands+Queries.swift`, the mutations in
+/// `MatrixCommands+Mutations.swift`.
 enum MatrixCommands {
   static let all = [
     validate,
@@ -10,7 +14,7 @@ enum MatrixCommands {
   ]
 
   static let validate = CommandSpecification(
-    unportedPath: ["matrix", "validate"],
+    path: ["matrix", "validate"],
     command: "matrix.validate",
     summary: "Validate the use-case matrix.",
     flags: [
@@ -19,11 +23,12 @@ enum MatrixCommands {
       CommonFlags.component,
       CommonFlags.json,
     ],
-    subrow: "4b",
-  )
+  ) { context throws(CommandFailure) in
+    try runValidate(context)
+  }
 
   static let list = CommandSpecification(
-    unportedPath: ["matrix", "list"],
+    path: ["matrix", "list"],
     command: "matrix.list",
     summary: "Query and list use cases.",
     flags: [
@@ -86,11 +91,12 @@ enum MatrixCommands {
         summary: "Fail when the matrix is incomplete.",
       ),
     ],
-    subrow: "4b",
-  )
+  ) { context throws(CommandFailure) in
+    try runList(context)
+  }
 
   static let status = CommandSpecification(
-    unportedPath: ["matrix", "status"],
+    path: ["matrix", "status"],
     command: "matrix.status",
     summary: "Compose matrix and evidence completeness.",
     flags: [
@@ -99,11 +105,12 @@ enum MatrixCommands {
       CommonFlags.component,
       CommonFlags.json,
     ],
-    subrow: "4b",
-  )
+  ) { context throws(CommandFailure) in
+    try runStatus(context)
+  }
 
   static let upsert = CommandSpecification(
-    unportedPath: ["matrix", "upsert"],
+    path: ["matrix", "upsert"],
     command: "matrix.upsert",
     summary: "Add or update a single use-case row.",
     flags: [
@@ -141,11 +148,12 @@ enum MatrixCommands {
         valueName: "<hash>",
       ),
     ],
-    subrow: "4b",
-  )
+  ) { context throws(CommandFailure) in
+    try runUpsert(context)
+  }
 
   static let remove = CommandSpecification(
-    unportedPath: ["matrix", "remove"],
+    path: ["matrix", "remove"],
     command: "matrix.remove",
     summary: "Soft-remove a use-case row.",
     flags: [
@@ -177,6 +185,7 @@ enum MatrixCommands {
       ),
       CommonFlags.json,
     ],
-    subrow: "4b",
-  )
+  ) { context throws(CommandFailure) in
+    try runRemove(context)
+  }
 }

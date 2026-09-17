@@ -7,7 +7,10 @@ import UseCasesCore
 /// branches here; the registry always matches those first, so they can never
 /// run and are not ported.
 enum BuiltinCommands {
-  static func run(arguments: [String]) -> CliOutcome {
+  static func run(
+    arguments: [String],
+    environment: [String: String],
+  ) -> CliOutcome {
     let normalized = CommandLineInterface.normalized(arguments)
     let isJSON = normalized.contains("--json")
 
@@ -20,11 +23,7 @@ enum BuiltinCommands {
       return HelpPresenter.present(arguments: normalized, isUnknown: false, isJSON: isJSON)
     }
     if normalized.first == "init" {
-      let output = NotYetPorted.output(command: "init", invocation: "init", subrow: "4b")
-      return CliOutcome(
-        standardOutput: EnvelopeRenderer.render(output.envelope, isJSON: isJSON),
-        exitCode: output.exitCode,
-      )
+      return InitCommand.run(arguments: normalized, isJSON: isJSON, environment: environment)
     }
     return HelpPresenter.present(arguments: normalized, isUnknown: true, isJSON: isJSON)
   }

@@ -34,8 +34,8 @@ extension JavaScriptValue {
 /// keys first in ascending numeric order, then every other key in the order it
 /// arrived. `JSON.stringify` writes them back in that order, so a parsed event
 /// is reordered once, as it is read.
-enum JavaScriptPropertyOrder {
-  static func reordered(_ value: JSONValue) -> JSONValue {
+public enum JavaScriptPropertyOrder {
+  public static func reordered(_ value: JSONValue) -> JSONValue {
     switch value {
     case let .array(items):
       return .array(items.map(reordered))

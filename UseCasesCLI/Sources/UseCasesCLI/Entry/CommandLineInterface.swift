@@ -1,3 +1,5 @@
+import Foundation
+
 /// The CLI entry dispatcher (packages/cli/src/index.ts `runCli`).
 ///
 /// Help and version win wherever they appear, so `matrix upsert --help` is
@@ -5,15 +7,20 @@
 /// flags (exit 2) and then dispatched; anything else goes to the builtins.
 public enum CommandLineInterface {
   /// Run one invocation, given the arguments after the program name.
-  public static func run(arguments: [String]) -> CliOutcome {
+  ///
+  /// `environment` is what child processes run with — git, for `init`.
+  public static func run(
+    arguments: [String],
+    environment: [String: String] = ProcessInfo.processInfo.environment,
+  ) -> CliOutcome {
     let normalized = normalized(arguments)
     let isJSON = normalized.contains("--json")
 
     if isHelpOrVersion(normalized) {
-      return BuiltinCommands.run(arguments: arguments)
+      return BuiltinCommands.run(arguments: arguments, environment: environment)
     }
     guard let command = CommandMatcher.match(normalized, in: CommandRegistry.allCommands) else {
-      return BuiltinCommands.run(arguments: arguments)
+      return BuiltinCommands.run(arguments: arguments, environment: environment)
     }
 
     let unknown = UnknownFlagFinder.unknownFlags(
