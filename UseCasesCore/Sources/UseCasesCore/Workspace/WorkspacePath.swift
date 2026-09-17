@@ -9,7 +9,7 @@ import Foundation
 /// lexical pieces: `resolve`, `dirname`, and a containment test that
 /// deliberately does NOT follow symlinks, because the roots check compares two
 /// paths that have already been resolved.
-enum WorkspacePath {
+public enum WorkspacePath {
   /// True for a POSIX absolute path.
   static func isAbsolute(_ path: String) -> Bool {
     path.hasPrefix("/")
@@ -46,7 +46,7 @@ enum WorkspacePath {
 
   /// Node's `path.resolve(base, value)`: make `value` absolute against `base`,
   /// then normalize. An empty `value` therefore resolves to `base` itself.
-  static func absolute(
+  public static func absolute(
     _ value: String,
     relativeTo base: String,
   ) -> String {
@@ -78,7 +78,7 @@ enum WorkspacePath {
 
   /// True when `child` is `root` or sits beneath it, comparing whole segments
   /// so `/a/bc` is never read as inside `/a/b`.
-  static func isContained(
+  public static func isContained(
     root: String,
     child: String,
   ) -> Bool {

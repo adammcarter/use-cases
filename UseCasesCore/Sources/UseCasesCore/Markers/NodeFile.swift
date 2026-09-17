@@ -2,10 +2,10 @@ import Foundation
 
 /// File operations that fail the way node's synchronous `fs` calls fail, so
 /// the error text a caller embeds is node's.
-enum NodeFile {
+public enum NodeFile {
   /// `readFileSync(path, "utf8")`: invalid bytes replaced, a byte-order mark
   /// kept.
-  static func readText(atPath path: String) throws(FileAccessError) -> String {
+  public static func readText(atPath path: String) throws(FileAccessError) -> String {
     let descriptor = open(path, O_RDONLY | O_CLOEXEC)
     guard descriptor >= 0 else {
       throw FileAccessError(errorNumber: errno, operation: "open", path: path)
@@ -31,7 +31,7 @@ enum NodeFile {
   }
 
   /// `writeFileSync(path, text)`: created or truncated, mode 0666 before umask.
-  static func writeText(
+  public static func writeText(
     _ text: String,
     atPath path: String,
   ) throws(FileAccessError) {
@@ -51,6 +51,22 @@ enum NodeFile {
         throw FileAccessError(errorNumber: errno, operation: "write", path: nil)
       }
       bytes = bytes.dropFirst(written)
+    }
+  }
+
+  /// `renameSync(source, destination)`: a failure names both paths, as node's
+  /// does.
+  public static func rename(
+    from source: String,
+    to destination: String,
+  ) throws(FileAccessError) {
+    guard Foundation.rename(source, destination) == 0 else {
+      throw FileAccessError(
+        errorNumber: errno,
+        operation: "rename",
+        path: source,
+        destination: destination,
+      )
     }
   }
 

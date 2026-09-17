@@ -5,9 +5,9 @@ import Foundation
 /// Semantic hashes are taken over `JSON.stringify` output, so a number that is
 /// spelled `1.0` instead of `1`, or `1e-07` instead of `1e-7`, changes a digest
 /// that is written into evidence ledgers.
-enum JavaScriptNumber {
+public enum JavaScriptNumber {
   /// The `JSON.stringify` spelling of `value` — `null` when it is not finite.
-  static func text(_ value: Double) -> String {
+  public static func text(_ value: Double) -> String {
     guard value.isFinite else {
       return "null"
     }

@@ -7,10 +7,10 @@ import Foundation
 /// covers: it builds a dictionary, so the key order an `encode(to:)` asks for is
 /// lost. The envelope's eight keys are contract (ADR 0007 decision 8), so the
 /// bytes are produced here instead.
-enum JSONWriter {
+public enum JSONWriter {
   /// `sortingKeys` gives the canonical form the semantic hash is taken over;
   /// document order gives the wire form.
-  static func encode(
+  public static func encode(
     _ value: JSONValue,
     sortingKeys: Bool = false,
   ) -> String {

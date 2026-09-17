@@ -6,6 +6,7 @@ let package = Package(
   platforms: [.macOS(.v14)],
   products: [
     .library(name: "UseCasesCore", targets: ["UseCasesCore"]),
+    .library(name: "TestSupport", targets: ["TestSupport"]),
   ],
   dependencies: [
     .package(url: "https://github.com/jpsim/Yams.git", from: "5.1.0"),

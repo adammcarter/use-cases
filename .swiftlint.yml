@@ -1,10 +1,13 @@
 included:
   - UseCasesCore
+  - UseCasesCLI
 excluded:
   - .build
   - DerivedData
   - UseCasesCore/.build
   - UseCasesCore/.swiftpm
+  - UseCasesCLI/.build
+  - UseCasesCLI/.swiftpm
 
 opt_in_rules:
   - force_unwrapping

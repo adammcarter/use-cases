@@ -22,3 +22,6 @@ DerivedData/
 xcuserdata/
 *.xcuserdatad
 .swiftpm/
+
+# Coverage profiles written by instrumented debug binaries
+default.profraw
