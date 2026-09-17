@@ -18,6 +18,11 @@ struct UseCasesBinary {
 
   /// The binary next to the test bundle, or next to a products directory
   /// Xcode named.
+  ///
+  /// Two layouts have to work. Under Xcode the products directory holds both
+  /// the `.xctest` bundle and the executable; under `swift test` there is no
+  /// `.xctest` in `Bundle.allBundles`, and the executable sits beside the test
+  /// runner itself in `.build/<configuration>`.
   static func located() throws -> UseCasesBinary {
     let bundles = Bundle.allBundles.map(\.bundlePath).filter { bundle in
       bundle.hasSuffix(".xctest")
@@ -25,7 +30,7 @@ struct UseCasesBinary {
     let named = ProcessInfo.processInfo.environment["__XCODE_BUILT_PRODUCTS_DIR_PATHS"] ?? ""
     let directories = bundles.map { bundle in
       (bundle as NSString).deletingLastPathComponent
-    } + named.split(separator: " ").map(String.init)
+    } + named.split(separator: " ").map(String.init) + swiftBuildDirectories()
     let path = directories
       .map { directory in directory + "/use-cases" }
       .first { candidate in
@@ -34,6 +39,18 @@ struct UseCasesBinary {
     return try UseCasesBinary(
       path: #require(path, "no built use-cases binary beside \(directories)"),
     )
+  }
+
+  /// Where `swift test` leaves the executable. Its runner lives in the
+  /// toolchain, not in the build directory, so the only reliable anchor is
+  /// this file: five directories up is the package.
+  private static func swiftBuildDirectories() -> [String] {
+    let package = (0 ..< 5).reduce(URL(fileURLWithPath: #filePath)) { url, _ in
+      url.deletingLastPathComponent()
+    }
+    return ["debug", "release"].map { configuration in
+      package.appending(path: ".build/\(configuration)").path
+    }
   }
 
   /// Start one run. Both streams go to files under `outputDirectory`, so no
