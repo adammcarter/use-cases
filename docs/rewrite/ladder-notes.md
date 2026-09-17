@@ -31,12 +31,28 @@ across sessions.
   match the `yaml` lexer. If YamlParser is ever fixed to do this itself, remove
   the duplicate in UseCases/.
 
+- **The eight-writer ledger test must also run across processes.** Each
+  evidence event lives in its own file (`evidence/by-id/<xx>/<event_id>.jsonl`),
+  so writers recording DIFFERENT events never contend and cannot reveal a
+  broken lock. The contention the lock exists for is several writers voiding
+  the SAME evidence: with the lock, one succeeds and the rest throw
+  `evidence_invalid_transition`; without it, all append and replay reports
+  `evidence_sequence_conflict`. Measured with 8 node processes, 3 runs each
+  way (found in 3e). Row 4 must run that void race with 8 separate
+  `use-cases` processes against the binary.
+
 ## Row 3e — evidence
 
-- **The eight-concurrent-writer guarantee (decision 10) is tested here**,
-  not in 3d2: `markers/appendOnly.ts` writes nothing. The real appenders are
+- **The concurrent-writer guarantee (decision 10) is tested here** as the
+  void race described under row 4, in-process; not as distinct events, which
+  cannot fail. `markers/appendOnly.ts` writes nothing — the appenders are
   `evidence/appendEvidenceEvent.ts` and `showcase/jsonlLedger.ts`, with
-  `durableWrite.ts`. (Found in 3d2.)
+  `durableWrite.ts`. (Found in 3d2 and 3e.)
+  Measured on the Swift port: with the `mkdir` lock disabled, the void-race
+  test fails 5 of 5 when run on its own, but passed once inside a full
+  parallel suite run, where load serialised the writers. The test is a
+  sound mutation check in isolation, not a guaranteed one under the full
+  suite — another reason the cross-process version in row 4 matters.
 
 ## Row 6 — release / 0.8.0
 
