@@ -128,6 +128,48 @@ across sessions.
   checkouts. Correctness is unaffected unless a vendored file carries marker
   text; speed is. Revisit at row 10 with the stress thresholds in decision 10.
 
+## Found in 3g2 — capsules and skill assets, ported as is
+
+- **A timed-out command that ignores SIGTERM records a pass.** `spawnSync`
+  sends SIGTERM at the timeout and then waits for the child; one that traps
+  SIGTERM and exits 0 comes back `status: 0, signal: null`, and the capsule
+  verdict reads only the exit code. The timeout is invisible to the run.
+  Measured with node 26 and pinned (corpus case
+  `timed_out_command_that_ignores_sigterm_passes`).
+- **A retry after a failed command records a pass on the failed item.** On a
+  second `capsule run` with the same idempotency key, the failed command is
+  not re-run (its verdict key is committed), so the item has no command
+  result this time; the item-verdict pass then fires on the old observation.
+  The run reports `run_outcome: passed` with `unresolved_failure_count: 1`.
+  Pinned (`retry_after_a_failure_records_an_item_pass`).
+- **Some spawn refusals throw halfway through a run.** A fractional
+  `commandTimeoutMs` passes the runner's own 1..300000 check, and the schema
+  lets a NUL into `executable`, `argv` or `working_directory`; `spawnSync`
+  then throws `ERR_OUT_OF_RANGE` / `ERR_INVALID_ARG_VALUE` after `run_started`
+  and every earlier step are already on the ledger. Pinned.
+- **`itemHasFailure` in the item-verdict loop reads as dead by inspection**: it implies
+  `itemHasCommandVerdict`. Not ported as a separate term.
+- **Empty or `~` skill frontmatter crashes `validateSkillAssets`** with V8's
+  `Cannot read properties of null (reading 'name')` instead of a diagnostic.
+  Ported as `SkillAssetValidationError.nullFrontmatter`.
+- **The capsule runner does not reuse `VerifyProcessRunner`.** That runner
+  maps every start failure to exit 1 with no output and has no signal; the
+  capsule result needs `exit_code: null`, the signal's name and node's
+  `spawnSync <file> <ERRNO>` text. `CapsuleProcessSpawner` is libuv's
+  `posix_spawn` path (PATH search on the child's environment, socket pairs,
+  SIGTERM before the streams close). Row 4 may want to converge the two.
+- **Divergence (not closable): output cut through a surrogate pair.**
+  Truncation at 16,384 UTF-16 units can split a pair. TypeScript keeps the
+  lone high surrogate (`…s\ud83d\n[truncated]`, written to the ledger as that
+  escape, and hashed into the intent digest); a Swift `String` cannot hold
+  one, so the port has `…s\u{FFFD}\n[truncated]` and a different ledger line
+  and digest. The corpus records the result with U+FFFD and skips that case's
+  ledger comparison.
+- **`JSON.parse` wording** in a capsule `.json` `parse_error` is V8's own; the
+  corpus comparison masks it (row 4 precedent above). A marketplace or plugin
+  manifest with a lone `\uD800` escape parses in node; the port replaces such
+  escapes with `�` before parsing, which keeps every observable outcome.
+
 ## Row 6 — release / 0.8.0
 
 - **Tool version is embedded in several golden corpora** — freshness output
