@@ -31,7 +31,7 @@ struct FixtureWorkspaceValidatorTests {
   }
 
   @Test
-  func `the minimal valid workspace exercises all twenty eight schemas, in order`() throws {
+  func `the minimal valid workspace exercises all twenty seven schemas, in order`() throws {
     let result = try validate("minimal-valid")
 
     #expect(result.validatedSchemaIdentifiers == SchemaRegistry.publicSchemaIdentifiers)
@@ -220,7 +220,6 @@ struct FixtureWorkspaceValidatorTests {
     ("demo-capsules/capsule.yml", "demo-capsule.schema.json"),
     ("presentation-plans/plan.json", "presentation-plan.schema.json"),
     ("showcase-runs/run.jsonl", "showcase-event.schema.json"),
-    ("migrations/test-matrix.json", "migration-test-matrix-result.schema.json"),
   ])
   func `a path picks the schema it is validated against`(
     relativePath: String,

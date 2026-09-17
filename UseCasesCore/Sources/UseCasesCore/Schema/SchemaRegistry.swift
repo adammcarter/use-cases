@@ -29,7 +29,6 @@ public struct SchemaRegistry: Sendable {
     "matrix-mutation-result.schema.json",
     "evidence-append-result.schema.json",
     "evidence-status-result.schema.json",
-    "migration-test-matrix-result.schema.json",
     "marker.schema.json",
     "release-gate-result.schema.json",
     "ledger.schema.json",

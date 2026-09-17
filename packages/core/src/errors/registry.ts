@@ -28,7 +28,6 @@ export type UcmErrorSurface =
   | "signature"
   | "swift"
   | "workspace"
-  | "migration"
   | "showcase"
   | "path";
 
@@ -313,18 +312,6 @@ const REGISTRY = {
     "UCM_INVALID_ID"
   ),
 
-  // --- migration test matrix (surface: migration) -------------------------
-  UCM_MIGRATION_UNSAFE_SOURCE_PATH: entry(
-    "migration",
-    "Migration source path must stay inside the repository.",
-    "UCM_MIGRATION_UNSAFE_SOURCE_PATH"
-  ),
-  UCM_MIGRATION_UNSAFE_OUTPUT_PATH: entry(
-    "migration",
-    "Migration output path must stay inside the data root.",
-    "UCM_MIGRATION_UNSAFE_OUTPUT_PATH"
-  ),
-
   // --- showcase lifecycle (surface: showcase) -----------------------------
   UCM_SHOWCASE_PLAN_UNREADABLE: entry(
     "showcase",
@@ -520,8 +507,6 @@ export const LEGACY_STRING_CODE_MAP: Readonly<Record<string, UcmErrorCode>> = Ob
   "workspace_config.schema_error": "UCM_WORKSPACE_CONFIG_INVALID",
   "path.escape": "UCM_PATH_ESCAPE",
   "path.invalid_id": "UCM_INVALID_ID",
-  migration_unsafe_source_path: "UCM_MIGRATION_UNSAFE_SOURCE_PATH",
-  migration_unsafe_output_path: "UCM_MIGRATION_UNSAFE_OUTPUT_PATH",
   showcase_plan_file_unreadable: "UCM_SHOWCASE_PLAN_UNREADABLE",
   showcase_plan_placeholder_hash: "UCM_SHOWCASE_PLAN_PLACEHOLDER_HASH",
   showcase_plan_hash_mismatch: "UCM_SHOWCASE_PLAN_HASH_MISMATCH",

@@ -22,9 +22,6 @@ recorded host evidence exists (see Host Support Language below).
 ## Decision Tree
 
 ```text
-User wants to bring an existing acceptance/behaviour doc (markdown table, checklist, CSV, spreadsheet, TEST-MATRIX, QA sheet, …) INTO the matrix?
-  -> migration
-
 User asks about behavior inventory, matrix health, or evidence records?
   -> use-cases
 
@@ -40,7 +37,6 @@ No repo/workspace context, trivial Q&A, pure formatting, sensitive cleanup, or u
 
 ## Skill Selection
 
-- `migration`: bring an existing hand-rolled acceptance doc (any format — md table, checklist, CSV, spreadsheet export, TEST-MATRIX, QA sheet) into the matrix as reviewable draft rows, without laundering old status into proof.
 - `use-cases`: create or update use cases, validate matrix health, and attach safe evidence.
 - `showcase`: prepare or perform a live, high-value proof run from selected use cases.
 - `walkthrough`: produce extensive explanation with provenance, caveats, gaps, edge cases, and failure cases.

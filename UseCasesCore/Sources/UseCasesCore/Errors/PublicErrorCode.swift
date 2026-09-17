@@ -54,8 +54,6 @@ public enum PublicErrorCode: String, CaseIterable, Sendable {
   case workspaceConfigInvalid = "UCM_WORKSPACE_CONFIG_INVALID"
   case pathEscape = "UCM_PATH_ESCAPE"
   case invalidIdentifier = "UCM_INVALID_ID"
-  case migrationUnsafeSourcePath = "UCM_MIGRATION_UNSAFE_SOURCE_PATH"
-  case migrationUnsafeOutputPath = "UCM_MIGRATION_UNSAFE_OUTPUT_PATH"
   case showcasePlanUnreadable = "UCM_SHOWCASE_PLAN_UNREADABLE"
   case showcasePlanPlaceholderHash = "UCM_SHOWCASE_PLAN_PLACEHOLDER_HASH"
   case showcasePlanHashMismatch = "UCM_SHOWCASE_PLAN_HASH_MISMATCH"

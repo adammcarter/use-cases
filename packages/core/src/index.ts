@@ -17,7 +17,6 @@ export * from "./showcase/index.js";
 export * from "./skills/index.js";
 export * from "./agents/index.js";
 export * from "./cli/index.js";
-export * from "./migration/index.js";
 // Phase 7: use-case-marker CLI command cores (bind / scan / prove / validate-ledger).
 export * from "./markers/cli/index.js";
 // Public-v1: opt-in multi-key keyring resolver (rotation / revocation).

@@ -17,7 +17,6 @@ const SHIPPED_DOCS = new Set([
   "docs/data-model.md",
   "docs/markers-adoption.md",
   "docs/mcp.md",
-  "docs/migration.md",
   "docs/security.md",
   "docs/showcase.md"
 ]);

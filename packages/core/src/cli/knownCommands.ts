@@ -27,7 +27,6 @@ export const KNOWN_CLI_COMMANDS = new Set([
   "matrix status",
   "matrix upsert",
   "matrix validate",
-  "migrate test-matrix",
   "plan cards",
   "plan showcase",
   "plan walkthrough",

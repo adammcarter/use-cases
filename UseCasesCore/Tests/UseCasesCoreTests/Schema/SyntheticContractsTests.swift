@@ -68,7 +68,6 @@ struct SyntheticContractsTests {
     "showcase-event.schema.json",
     "workspace-config.schema.json",
     "workflow-mode.schema.json",
-    "migration-test-matrix-result.schema.json",
   ])
   func `a schema with a real fixture is not covered synthetically`(fileName: String) throws {
     let outcome = try run()

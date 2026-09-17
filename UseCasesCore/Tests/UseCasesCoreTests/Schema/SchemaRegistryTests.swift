@@ -3,13 +3,13 @@ import Testing
 import TestSupport
 @testable import UseCasesCore
 
-/// The registry is the catalogue of the 28 published schemas. Their ids, their
+/// The registry is the catalogue of the 27 published schemas. Their ids, their
 /// order and the fact that every one of them loads are frozen contract (ADR 0007
 /// decision 8): the MCP server lists them and the CLI validates against them.
 struct SchemaRegistryTests {
   @Test
-  func `there are twenty eight public schema ids`() {
-    #expect(SchemaRegistry.publicSchemaIdentifiers.count == 28)
+  func `there are twenty seven public schema ids`() {
+    #expect(SchemaRegistry.publicSchemaIdentifiers.count == 27)
   }
 
   @Test
@@ -24,7 +24,7 @@ struct SchemaRegistryTests {
 
   @Test
   func `no id is listed twice`() {
-    #expect(Set(SchemaRegistry.publicSchemaIdentifiers).count == 28)
+    #expect(Set(SchemaRegistry.publicSchemaIdentifiers).count == 27)
   }
 
   @Test
@@ -68,7 +68,7 @@ struct SchemaRegistryTests {
     )
 
     #expect(result.isValid)
-    #expect(result.schemaCount == 28)
+    #expect(result.schemaCount == 27)
     #expect(result.diagnostics.isEmpty)
   }
 

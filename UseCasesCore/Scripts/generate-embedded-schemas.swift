@@ -1,6 +1,6 @@
 import Foundation
 
-// Regenerates `Sources/UseCasesCore/Schema/EmbeddedSchemas.swift` from the 28
+// Regenerates `Sources/UseCasesCore/Schema/EmbeddedSchemas.swift` from the 27
 // frozen schema files in `schemas/v1`, and
 // `Sources/UseCasesCore/Markers/EmbeddedMarkerSchemas.swift` from the three
 // INTERNAL marker validator schemas in `packages/core/src/markers/schemas`.
@@ -17,7 +17,7 @@ import Foundation
 // (ADR 0007 decision 8).
 //
 // The marker schemas are NOT published: they never join `SchemaRegistry` or
-// `schema list`, which stay the frozen 28. Their source lives under `packages/`,
+// `schema list`, which stay the frozen 27. Their source lives under `packages/`,
 // which the final ladder step deletes; at that point the generated file becomes
 // the source of truth and the drift test's input has to move.
 //
@@ -123,7 +123,7 @@ let markerSource = """
 //
 // The INTERNAL marker validator schemas (binding registry events, proof events,
 // freshness status). They are not published: they never appear in
-// `SchemaRegistry` or `schema list`, whose 28 ids are frozen contract.
+// `SchemaRegistry` or `schema list`, whose 27 ids are frozen contract.
 //
 // Regenerate with `swift UseCasesCore/Scripts/generate-embedded-schemas.swift`.
 // `EmbeddedMarkerSchemasTests` fails the suite when this file drifts from disk.

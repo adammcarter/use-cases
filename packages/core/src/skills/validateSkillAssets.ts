@@ -121,7 +121,7 @@ export function validateSkillAssets(options: { context: ResolvedWorkspaceContext
     diagnostics.push(diagnostic("skills.activation_missing", "Missing activation docs.", activationPath));
   } else {
     const source = readFileSync(activationFullPath, "utf8");
-    for (const marker of ["Decision Tree", "-> use-cases", "-> showcase", "-> walkthrough", "-> migration", "-> do not activate"]) {
+    for (const marker of ["Decision Tree", "-> use-cases", "-> showcase", "-> walkthrough", "-> do not activate"]) {
       if (!source.includes(marker)) {
         diagnostics.push(diagnostic("skills.activation_tree_missing", `Activation docs missing '${marker}'.`, activationPath));
       }

@@ -365,6 +365,10 @@ brief, which is the behaviour to keep.
 Both are behaviour decisions, so the affected scenarios assert only what is true
 and name the gap rather than passing on a false premise.
 
+Retired 2026-09-17: `migration.importer.*`, `migration.test_matrix.draft` and
+`uc migrate test-matrix` were removed by the owner (ADR 0007 amendments); the
+migration entries in this document are history.
+
 ## 10 · A bucket (c) found: real behaviour with no CLI affordance
 
 Section 3 says a bucket (c) — a behaviour that would need a NEW command or flag

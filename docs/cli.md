@@ -147,10 +147,3 @@ signing key must be a PKCS8 ed25519 PEM — see
 
 - `doctor roots|skills --repo <path> --json` checks workspace roots and
   canonical skills.
-
-## Migration
-
-- `migrate test-matrix --repo <path> --source TEST-MATRIX.md --dry-run --json`
-  previews draft use cases.
-- `migrate test-matrix --repo <path> --source TEST-MATRIX.md --out use-cases/_migrated --write --json`
-  writes reviewed draft YAML. Old status and evidence stay review context only.

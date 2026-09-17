@@ -70,3 +70,14 @@ unchanged.
 - Node stays in the plugin until the cut-over step; the plugin keeps working
   throughout.
 - The 15 `roadmap.*` rows are parked, not ported.
+
+## Amendments
+
+- **2026-09-17 — migration retired.** The owner retired the TEST-MATRIX import
+  command (`uc migrate`) and the `migration` skill (agent-driven import of any
+  old acceptance document) entirely: the command, the skill, their docs, the
+  command's result schema, the two `UCM_MIGRATION_*` error codes
+  and the five `migration.*` rows are removed, and the Swift port drops them
+  too. This is a deliberate retirement, not a change made under the freeze, so
+  decision 8 does not apply to it. As a result swift-markdown leaves decision
+  7's library list, and the schema count frozen by decisions 7 and 8 is 27.

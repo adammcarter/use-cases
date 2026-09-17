@@ -5,7 +5,6 @@ import { evidenceCommands } from "../commands/evidence.js";
 import { keygenCommands } from "../commands/keygen.js";
 import { markersCommands } from "../commands/markers.js";
 import { matrixCommands } from "../commands/matrix.js";
-import { migrateCommands } from "../commands/migrate.js";
 import { planCommands } from "../commands/plan.js";
 import { recoverCommands } from "../commands/recover.js";
 import { schemaCommands } from "../commands/schema.js";
@@ -24,7 +23,6 @@ export const allCommands: CliCommand[] = [
   ...capsuleCommands,
   ...evidenceCommands,
   ...workflowCommands,
-  ...migrateCommands,
   ...doctorCommands,
   ...markersCommands,
   ...keygenCommands,

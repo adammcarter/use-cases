@@ -3,7 +3,7 @@ import Testing
 import TestSupport
 @testable import UseCasesCore
 
-/// The 28 frozen schema files travel INSIDE the binary (ADR 0007 decision 3:
+/// The 27 frozen schema files travel INSIDE the binary (ADR 0007 decision 3:
 /// one downloadable binary per platform). A shipped binary runs inside a user's
 /// own project, where walking up the filesystem finds nothing — so the embedded
 /// copy is the only one it has, and these tests are what stops it rotting.
@@ -25,8 +25,8 @@ struct EmbeddedSchemasTests {
   }
 
   @Test
-  func `the embedded set is exactly the twenty eight published files`() {
-    #expect(EmbeddedSchemas.byFileName.count == 28)
+  func `the embedded set is exactly the twenty seven published files`() {
+    #expect(EmbeddedSchemas.byFileName.count == 27)
     #expect(Set(EmbeddedSchemas.byFileName.keys) == Set(SchemaRegistry.schemaFileNames))
   }
 
@@ -105,6 +105,6 @@ struct EmbeddedSchemasTests {
 
     let registry = try SchemaRegistry()
 
-    #expect(registry.publicSchemas().count == 28)
+    #expect(registry.publicSchemas().count == 27)
   }
 }

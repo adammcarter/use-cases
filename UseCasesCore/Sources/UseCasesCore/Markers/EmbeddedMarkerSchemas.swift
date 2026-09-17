@@ -5,7 +5,7 @@
 //
 // The INTERNAL marker validator schemas (binding registry events, proof events,
 // freshness status). They are not published: they never appear in
-// `SchemaRegistry` or `schema list`, whose 28 ids are frozen contract.
+// `SchemaRegistry` or `schema list`, whose 27 ids are frozen contract.
 //
 // Regenerate with `swift UseCasesCore/Scripts/generate-embedded-schemas.swift`.
 // `EmbeddedMarkerSchemasTests` fails the suite when this file drifts from disk.

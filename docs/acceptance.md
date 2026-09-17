@@ -4,9 +4,9 @@ This repo dogfoods use-cases through `use-cases/`.
 
 The rows cover matrix loading and mutation, evidence recording, live showcase
 sign-off, command-backed demo capsules, generated-plan proof binding, host
-projection conformance, MCP stdio parity and mutation, TEST-MATRIX migration,
-installable package checks, and the sequential release gate. They are intended
-behavior rows, not proof.
+projection conformance, MCP stdio parity and mutation, installable package
+checks, and the sequential release gate. They are intended behavior rows, not
+proof.
 
 Proof remains in append-only ledgers or command output:
 

@@ -124,9 +124,6 @@ uc scan --repo <repo> --gate                          # dev bar: VERIFIED_LOCAL
 
 ## Defer To
 
-- `migration` when bringing an existing hand-rolled acceptance doc (markdown
-  table, checklist, CSV, spreadsheet export, TEST-MATRIX, or QA sheet) INTO the
-  matrix.
 - `showcase` when the user asks for a live demo, sign-off flow, or user-visible
   acceptance run.
 - `walkthrough` when the user asks for a broad explanation, caveats, or evidence

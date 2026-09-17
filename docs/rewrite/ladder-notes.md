@@ -153,6 +153,8 @@ across sessions.
 - **All 86 bindings point at TypeScript** tests or sources and must be
   rebound onto their Swift counterparts before `uc scan` reports coverage
   again.
+- **Retired 2026-09-17:** the four `migration.*` bindings were released
+  (`row_retired`) with `uc migrate test-matrix`, so 82 remain to rebind.
 
 ## Candidate hardening (contract change — owner's call, after 0.8.0)
 

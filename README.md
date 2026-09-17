@@ -38,9 +38,6 @@ Append-only, content-addressed history of what was actually observed. It grades 
 ### 🎬 Live showcases with un-fakeable sign-off
 Perform a behaviour live — observe, verdict, finish — recorded as an event-sourced run. An agent can drive the whole show **but is structurally barred from approving it as the user**: user sign-off requires a trusted confirmation path the agent can't command. "Approved by a human" finally means it.
 
-### ♻️ Bring what you already have
-You already track behaviour *somewhere* — a markdown table, a checklist, a CSV, a spreadsheet export, a `TEST-MATRIX.md`, a QA sign-off sheet. The bundled **`migration` skill** lets the agent read **any** of those formats and map each item into a reviewable draft use case, preserving the original text and provenance — while explicitly refusing to turn old `PASS` marks into evidence. (For a standard `TEST-MATRIX.md` there's also a deterministic `uc migrate test-matrix` fast path.) Review the drafts, activate the keepers.
-
 ### 🔌 Works inside your agent
 Ships for **Claude Code, Codex, Copilot, and OpenCode** as a CLI (`uc`) and an MCP server, with the same JSON contract on both. On install it auto-injects a trusted bootstrap at session start, so the agent knows how to use it without being told.
 
@@ -60,9 +57,9 @@ Dispatch them by name; each owns one part of the loop and hands off to the next.
 - **Teams building with AI agents** who want acceptance to stay true as the agent (and the code) churns.
 - **Anyone who needs pre-merge proof** — a signed, demonstrable record that the behaviours a PR claims actually hold.
 - **Demos & sign-offs** — turn "trust me" into a performed, human-approved showcase.
-- **Inheriting a messy repo** — migrate its `TEST-MATRIX.md`, or backfill behaviours and audit current risk.
+- **Inheriting a messy repo** — backfill behaviours and audit current risk.
 
-Typical workflows: **continuous** (keep the matrix live as you build), **backfill** (adopt onto an existing codebase), **showcase-only** (just perform a few high-value demos), **audit-only** (load and inspect risk), **migration** (import a legacy matrix safely).
+Typical workflows: **continuous** (keep the matrix live as you build), **backfill** (adopt onto an existing codebase), **showcase-only** (just perform a few high-value demos), and **audit-only** (load and inspect risk).
 
 ---
 
@@ -131,7 +128,7 @@ For the technically curious — the high-level shape:
 
 Ships as a single self-contained package: **`use-cases`** (binaries `uc` and `uc-mcp`). The `core` / `cli` / `mcp` workspaces are bundled inside it, not published separately.
 
-Deeper reading: [CLI reference](docs/cli.md) · [data model](docs/data-model.md) · [code markers & freshness](docs/markers-adoption.md) · [evidence & security](docs/security.md) · [showcase runs](docs/showcase.md) · [activation](docs/activation.md) · [MCP](docs/mcp.md) · [migration](docs/migration.md).
+Deeper reading: [CLI reference](docs/cli.md) · [data model](docs/data-model.md) · [code markers & freshness](docs/markers-adoption.md) · [evidence & security](docs/security.md) · [showcase runs](docs/showcase.md) · [activation](docs/activation.md) · [MCP](docs/mcp.md).
 
 ---
 

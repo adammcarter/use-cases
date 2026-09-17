@@ -61,7 +61,7 @@ CLI for what it doesn't.** The whole inventory, by the phase that uses it:
 
 **Never yours to run:** `uc keygen` and `uc prove` (the signed tier is mine),
 `uc evidence void`, `uc unbind --reason row_retired` without me, `uc workflow
-set-mode`, `uc migrate test-matrix` (its own piece of work, asked for).
+set-mode`.
 
 **Exists, not in the flow:** `uc capsule list`, `uc capsule plan`, `uc capsule run`, `uc plan walkthrough` / `cards`,
 `uc schema list`. Real, and reached for only when I ask for the thing they make.
@@ -246,7 +246,7 @@ nothing enforcing the matrix.
 ## What stays with the tool skill
 
 Everything about *how* — row payloads and the fields an active row needs,
-bind modes, signed proofs, evidence records, migrating a legacy matrix, the
+bind modes, signed proofs, evidence records, the
 operating rules about data-not-instructions and sensitive evidence — is in
 **`use-cases`**. Load it when you touch the matrix; this skill only says
 when and in what order.

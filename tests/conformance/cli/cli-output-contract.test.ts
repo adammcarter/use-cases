@@ -142,7 +142,6 @@ const CANONICAL_COMMANDS = [
   "showcase.correct",
   "workflow.set-mode",
   "workflow.get-mode",
-  "migrate.test-matrix",
   "doctor.skills",
   "doctor.roots",
   "markers.bind",
@@ -258,20 +257,6 @@ const independentCases: IndependentCase[] = [
     command: "workflow.get-mode",
     // `workflow mode` → command "workflow.get-mode"; advisory shape, envelope only.
     build: () => ["workflow", "mode", "--repo", join(fixturesRoot, "minimal-valid"), "--json"]
-  },
-  {
-    command: "migrate.test-matrix",
-    dataSchema: "migration-test-matrix-result",
-    // Default --dry-run; reads migrations/test-matrix.json shipped in the fixture.
-    build: () => [
-      "migrate",
-      "test-matrix",
-      "--repo",
-      join(fixturesRoot, "minimal-valid"),
-      "--source",
-      "migrations/test-matrix.json",
-      "--json"
-    ]
   },
   {
     command: "doctor.skills",
@@ -788,8 +773,8 @@ describe("v1 CLI output conformance", () => {
   // Coverage gate: every canonical v1 command must have been exercised above. If a
   // command is added to the CLI surface, add it to CANONICAL_COMMANDS and cover it
   // here — otherwise this assertion (and the surface inventory) goes stale loudly.
-  test("covers every command in the canonical v1 CLI surface (40)", () => {
-    expect(CANONICAL_COMMANDS).toHaveLength(40);
+  test("covers every command in the canonical v1 CLI surface (39)", () => {
+    expect(CANONICAL_COMMANDS).toHaveLength(39);
     const expected = [...CANONICAL_COMMANDS].sort();
     const actual = [...covered].sort();
     expect(actual).toEqual(expected);

@@ -35,7 +35,6 @@ export const {
   renderCard,
   resolveContainedPath,
   isValidId,
-  migrateTestMatrix,
   validateSkillAssets,
   runBindCommand,
   runUnbindCommand,

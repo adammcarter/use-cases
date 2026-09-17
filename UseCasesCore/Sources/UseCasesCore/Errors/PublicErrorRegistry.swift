@@ -7,7 +7,6 @@ public enum PublicErrorSurface: String, CaseIterable, Sendable {
   case signature
   case swift
   case workspace
-  case migration
   case showcase
   case path
 
@@ -20,7 +19,6 @@ public enum PublicErrorSurface: String, CaseIterable, Sendable {
     case .signature: "Signature / proof verification"
     case .swift: "Swift function recognizer"
     case .workspace: "Workspace config"
-    case .migration: "Migration"
     case .showcase: "Showcase lifecycle"
     case .path: "Path safety"
     }
@@ -233,16 +231,6 @@ public enum PublicErrorRegistry {
       .invalidIdentifier,
       .path,
       "Identifier is not a canonical id; refusing to use it as a path segment.",
-    ),
-    PublicErrorEntry(
-      .migrationUnsafeSourcePath,
-      .migration,
-      "Migration source path must stay inside the repository.",
-    ),
-    PublicErrorEntry(
-      .migrationUnsafeOutputPath,
-      .migration,
-      "Migration output path must stay inside the data root.",
     ),
     PublicErrorEntry(
       .showcasePlanUnreadable,

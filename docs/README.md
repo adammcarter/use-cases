@@ -25,9 +25,6 @@ Ships as a single package, `use-cases`, providing the `uc` CLI and the
   dogfooded binding.
 - **[Acceptance matrix](./acceptance.md)** — how this repo dogfoods its own
   use-case matrix through `use-cases/`.
-- **[TEST-MATRIX migration](./migration.md)** — importing an existing
-  `TEST-MATRIX.md` into the matrix (behaviour coverage is preserved; proof is
-  not).
 - Runnable examples live under [`examples/`](../examples) — including
   [`examples/python-pytest`](../examples/python-pytest), a pure-Python project
   that reaches a signed **FRESH** row with `pytest` and no pnpm/vitest.

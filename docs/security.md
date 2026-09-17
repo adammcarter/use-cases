@@ -1,7 +1,6 @@
 # Security And Trust
 
-Generated plans, migration output, capsules, and host projections are prepared
-material only. They are not proof.
+Generated plans, capsules, and host projections are prepared material only. They are not proof.
 
 ## Threat model — what holds on its own, and what needs setup
 

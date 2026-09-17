@@ -36,7 +36,6 @@ const expectedSchemaIds = [
   "https://use-cases.dev/schemas/v1/matrix-mutation-result.schema.json",
   "https://use-cases.dev/schemas/v1/evidence-append-result.schema.json",
   "https://use-cases.dev/schemas/v1/evidence-status-result.schema.json",
-  "https://use-cases.dev/schemas/v1/migration-test-matrix-result.schema.json",
   "https://use-cases.dev/schemas/v1/marker.schema.json",
   "https://use-cases.dev/schemas/v1/release-gate-result.schema.json",
   "https://use-cases.dev/schemas/v1/ledger.schema.json",

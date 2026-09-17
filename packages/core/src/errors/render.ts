@@ -11,7 +11,6 @@ const SURFACE_TITLES: Record<UcmErrorSurface, string> = {
   signature: "Signature / proof verification",
   swift: "Swift function recognizer",
   workspace: "Workspace config",
-  migration: "Migration",
   showcase: "Showcase lifecycle",
   path: "Path safety"
 };
@@ -24,7 +23,6 @@ const SURFACE_ORDER: UcmErrorSurface[] = [
   "signature",
   "swift",
   "workspace",
-  "migration",
   "showcase",
   "path"
 ];

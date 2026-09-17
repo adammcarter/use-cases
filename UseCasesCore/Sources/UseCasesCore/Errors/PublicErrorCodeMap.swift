@@ -42,8 +42,6 @@ public enum PublicErrorCodeMap {
     ("workspace_config.schema_error", .workspaceConfigInvalid),
     ("path.escape", .pathEscape),
     ("path.invalid_id", .invalidIdentifier),
-    ("migration_unsafe_source_path", .migrationUnsafeSourcePath),
-    ("migration_unsafe_output_path", .migrationUnsafeOutputPath),
     ("showcase_plan_file_unreadable", .showcasePlanUnreadable),
     ("showcase_plan_placeholder_hash", .showcasePlanPlaceholderHash),
     ("showcase_plan_hash_mismatch", .showcasePlanHashMismatch),

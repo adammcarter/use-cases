@@ -12,7 +12,7 @@ Why this exists:
 - Implementation progress where use cases, variants, edge cases, or evidence should stay current.
 - The keyless daily loop: bind a behavior to code, verify it, and confirm `local_status: VERIFIED_LOCAL` (`uc bind` → `uc verify` → `uc scan`) — no keys, no CI. Recover a drifted row with `uc recover`.
 - Acceptance/evidence gathering, live demo/sign-off, or pre-merge proof. Signing to `FRESH` (`uc keygen` + `uc prove` in trusted CI) is the opt-in release/audit upgrade.
-- Matrix migration/backfill from TEST-MATRIX-style lists.
+- Matrix backfill onto an existing codebase.
 
 ## When not to apply
 

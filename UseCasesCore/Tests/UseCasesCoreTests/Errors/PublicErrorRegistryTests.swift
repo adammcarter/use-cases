@@ -15,7 +15,7 @@ struct PublicErrorRegistryTests {
   func `every entry matches the TypeScript registry, in declaration order`() throws {
     let expected = try #require(Self.registry()["entries"]?.arrayValue)
 
-    #expect(PublicErrorRegistry.entries.count == 68)
+    #expect(PublicErrorRegistry.entries.count == 66)
     #expect(PublicErrorRegistry.entries.count == expected.count)
     for (entry, oracle) in zip(PublicErrorRegistry.entries, expected) {
       #expect(entry.code.rawValue == oracle["code"]?.stringValue)
@@ -128,7 +128,7 @@ struct PublicErrorRegistryTests {
       "\(pair.code)=\(pair.publicCode.rawValue)"
     }
     #expect(actual.sorted() == expected.sorted())
-    #expect(actual.count == 27)
+    #expect(actual.count == 25)
     for pair in PublicErrorCodeMap.stringCodes {
       #expect(PublicErrorCodeMap.publicCode(forStringCode: pair.code) == pair.publicCode)
     }

@@ -3,8 +3,8 @@ import Testing
 @testable import UseCasesCore
 
 /// The three INTERNAL marker validator schemas travel inside the binary beside
-/// the 28 published ones, and must never leak into the published catalogue:
-/// `schema list` and its 28 ids are frozen contract (ADR 0007 decision 8).
+/// the 27 published ones, and must never leak into the published catalogue:
+/// `schema list` and its 27 ids are frozen contract (ADR 0007 decision 8).
 ///
 /// Their source is `packages/core/src/markers/schemas`. The final ladder step
 /// deletes `packages/`; the drift test's input has to move then.
@@ -52,8 +52,8 @@ struct EmbeddedMarkerSchemasTests {
     ])
     let registry = try SchemaRegistry()
 
-    #expect(SchemaRegistry.publicSchemaIdentifiers.count == 28)
-    #expect(registry.publicSchemas().count == 28)
+    #expect(SchemaRegistry.publicSchemaIdentifiers.count == 27)
+    #expect(registry.publicSchemas().count == 27)
     #expect(markerIdentifiers.isDisjoint(with: SchemaRegistry.publicSchemaIdentifiers))
     #expect(markerIdentifiers.isDisjoint(with: registry.publicSchemas().map(\.identifier)))
     for identifier in markerIdentifiers {

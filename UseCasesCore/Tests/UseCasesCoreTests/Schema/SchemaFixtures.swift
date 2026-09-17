@@ -57,7 +57,7 @@ enum SchemaFixtures {
       .deletingLastPathComponent() // <repository root>
   }
 
-  /// `schemas/v1`, the 28 frozen schema files.
+  /// `schemas/v1`, the 27 frozen schema files.
   static var schemasDirectory: URL {
     repositoryRoot.appendingPathComponent("schemas/v1", isDirectory: true)
   }

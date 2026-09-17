@@ -1,7 +1,7 @@
 import Testing
 @testable import UseCasesCore
 
-/// The validator is a port of AJV's behaviour, driven by the 28 schema files
+/// The validator is a port of AJV's behaviour, driven by the 27 schema files
 /// (ADR 0007 decision 7). Everything it emits is frozen contract: the codes, the
 /// messages, the pointers, the entity ids and the ORDER the diagnostics arrive
 /// in. The golden corpus is the TypeScript's own output, so these tests fail the

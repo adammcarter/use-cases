@@ -1,4 +1,4 @@
-/// The JSON-schema evaluator the 28 published schemas are run through
+/// The JSON-schema evaluator the 27 published schemas are run through
 /// (ADR 0007 decision 7: "a small JSON-schema validator of our own").
 ///
 /// It is a port of AJV's behaviour in the configuration the TypeScript uses

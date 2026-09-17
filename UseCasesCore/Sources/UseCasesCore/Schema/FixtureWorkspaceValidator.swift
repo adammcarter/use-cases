@@ -125,10 +125,6 @@ public enum FixtureWorkspaceValidator {
     if relativePath.hasPrefix("showcase-runs/") {
       return SchemaRegistry.schemaIdentifier(forFileName: "showcase-event.schema.json")
     }
-    if relativePath.hasPrefix("migrations/") {
-      return SchemaRegistry
-        .schemaIdentifier(forFileName: "migration-test-matrix-result.schema.json")
-    }
     return nil
   }
 

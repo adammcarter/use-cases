@@ -221,9 +221,6 @@ function schemaIdForFixturePath(relPath: string): string | undefined {
   if (relPath.startsWith("showcase-runs/")) {
     return schemaIdForName("showcase-event.schema.json");
   }
-  if (relPath.startsWith("migrations/")) {
-    return schemaIdForName("migration-test-matrix-result.schema.json");
-  }
   return undefined;
 }
 

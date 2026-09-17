@@ -41,7 +41,7 @@ describe("plugin.init.loop_skill_ported", () => {
       cwd: repoRoot
     });
     expect(envelope.ok, "the shipped skill set must be healthy").toBe(true);
-    expect(envelope.data.skill_count).toBeGreaterThanOrEqual(6);
+    expect(envelope.data.skill_count).toBeGreaterThanOrEqual(5);
   });
 
   // bad_nothing_host_specific. These bodies ship to every host, so anything
