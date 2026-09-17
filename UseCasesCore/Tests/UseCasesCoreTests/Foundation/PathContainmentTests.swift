@@ -71,6 +71,32 @@ struct PathContainmentTests {
     #expect(PathContainment.isContained(root: temporary.url.path, target: link.path))
   }
 
+  // Measured against the TypeScript on 2026-09-17: `existsSync` follows a
+  // symlink, so a BROKEN one fails the existence check, realpath never runs,
+  // and the lexical path — still inside the root — is reported as contained.
+  // A live link to the same outside directory is refused. Surprising, and
+  // frozen by ADR 0007 decision 8, so it is pinned rather than corrected.
+  @Test
+  func `a broken symlink pointing outside stays contained`() throws {
+    let missing = temporary.url
+      .deletingLastPathComponent()
+      .appendingPathComponent("definitely-not-here-\(UUID().uuidString)")
+    let broken = try temporary.makeSymlink("broken-link", to: missing)
+
+    #expect(PathContainment.isContained(root: temporary.url.path, target: broken.path))
+  }
+
+  @Test
+  func `a child of a broken symlink stays contained`() throws {
+    let missing = temporary.url
+      .deletingLastPathComponent()
+      .appendingPathComponent("definitely-not-here-\(UUID().uuidString)")
+    try temporary.makeSymlink("broken-link", to: missing)
+    let child = temporary.url.appendingPathComponent("broken-link/child.json").path
+
+    #expect(PathContainment.isContained(root: temporary.url.path, target: child))
+  }
+
   @Test
   func `resolving a contained relative path returns an absolute path`() throws {
     let resolved = try PathContainment.resolveContained(
