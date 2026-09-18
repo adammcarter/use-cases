@@ -5,7 +5,14 @@ import UseCasesCore
 /// (packages/cli/src/commands/schema.ts). Both exit 0; a fixture that fails
 /// validation says so in the envelope.
 enum SchemaCommands {
-  static let defaultFixture = "tests/fixtures/workspaces/minimal-valid"
+  /// The bundled workspace `schema validate-fixtures` reaches for when the
+  /// caller names none. It moved with the directory: `tests/` held nothing but
+  /// fixture data after row 10d deleted the TypeScript suite, so it is now
+  /// `fixtures/`. A default filesystem path is not part of ADR 0007 decision
+  /// 8's freeze — that covers the envelope, the schemas, the marker syntax and
+  /// the ledger formats — so the string moves and the recorded outputs that
+  /// echo it move with it.
+  static let defaultFixture = "fixtures/workspaces/minimal-valid"
 
   static let all = [list, validateFixtures]
 

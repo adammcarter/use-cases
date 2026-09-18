@@ -62,9 +62,11 @@ enum SchemaFixtures {
     repositoryRoot.appendingPathComponent("schemas/v1", isDirectory: true)
   }
 
-  /// The bundled fixture workspaces the TypeScript suite validates.
+  /// The bundled fixture workspaces. They outlived the TypeScript suite that
+  /// once sat beside them, so the directory is `fixtures/` rather than
+  /// `tests/fixtures/`.
   static func fixtureWorkspace(_ name: String) -> URL {
-    repositoryRoot.appendingPathComponent("tests/fixtures/workspaces/\(name)", isDirectory: true)
+    repositoryRoot.appendingPathComponent("fixtures/workspaces/\(name)", isDirectory: true)
   }
 
   /// A registry over the checked-in schemas.

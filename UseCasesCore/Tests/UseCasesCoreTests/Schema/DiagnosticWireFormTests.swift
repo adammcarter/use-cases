@@ -86,9 +86,9 @@ struct DiagnosticWireFormTests {
     )
 
     #expect(
-      JSONWriter.encode(result.envelopeData(fixture: "tests/fixtures/workspaces/minimal-valid"))
+      JSONWriter.encode(result.envelopeData(fixture: "fixtures/workspaces/minimal-valid"))
         == #"""
-        {"fixture":"tests/fixtures/workspaces/minimal-valid",\#
+        {"fixture":"fixtures/workspaces/minimal-valid",\#
         "validated_schema_ids":["https://use-cases.dev/schemas/v1/common.schema.json"],\#
         "expected_state":{"rows":1}}
         """#,

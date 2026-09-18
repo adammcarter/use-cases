@@ -8,6 +8,22 @@ They are conventions, not schema changes. Decision 8 of ADR 0007 freezes the
 contract, and `use-case-file.schema.json` sets `additionalProperties: false` on
 both scenario shapes — so nothing here adds a field.
 
+> **Where the enforcement now lives (2026-09-18).** These rules were checked by
+> `scripts/check-scenario-conventions.mjs`, a manual script nothing ever ran —
+> not CI, not a hook, not the gate — which made the convention decoration. The
+> script was ported to Swift as
+> `UseCasesOracle/Tests/OracleTests/Matrix/ScenarioConventions.swift` and
+> deleted; `swift test --package-path UseCasesOracle` now runs it, and
+> `.github/workflows/swift.yml` runs that on every push and pull request, so
+> the rules are enforced by CI rather than by someone remembering. The port is
+> a transliteration and was diffed against the script's last
+> run over the live matrix: **34 findings, identical strings**. The eight
+> doctrine rows of §8a are pinned in `ScenarioConventions.doctrineRows`, each
+> with its reason, and §8a's question is still the owner's to settle — the
+> exemption list is the place to settle it. Sections 6 to 10 below are the
+> measurements and open questions of the ladder and are left as the record
+> they are; where they say "the script prints", read "the test asserts".
+
 ## 1 · The scenario id carries the kind
 
 A scenario's `kind` field is its *format* (`steps` or `gherkin`), not its role.

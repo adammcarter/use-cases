@@ -1,314 +1,357 @@
-# Design — Variant parametrization of use-cases
+# Design
 
-> Author: orchestrator (PM), direct — Cowork/Codex backend stalled with zero model
-> output across two runs, so this design was written in-repo against the real files.
-> Grounded in: `verify.ts`, `verifierResolver.ts`, `verifierPresets.ts`,
-> `useCases/types.ts`, `examples/basic-product/use-cases/product.yml`.
+How Use Cases is built, and why it is built that way.
 
-## AS BUILT — final model (supersedes §5/§6 below where they differ)
+This is the architecture document. It describes the repository as it stands: a
+pure-Swift product in four packages, distributed as an agent plugin that
+downloads and verifies its own binaries. It is **not** a history — how the
+repository got here is `docs/adr/0007-swift-rewrite.md` and `CHANGELOG.md` — and
+it is not the pitch, which is `README.md`. What it tries to answer is: *if I
+have to change this, where does the change go, and what will it break?*
 
-Mid-build, the marker/slug grammar (`markerLine.ts`: `row-id ["#" suffix]`) surfaced a
-hard constraint: a variant id like `family::key` is not a legal bindable slug, so
-variants cannot be first-class bound rows. With the user's direction ("the code slug is
-the code slug — the use-cases YAML should have the parameters"), the shipped model is
-the **hybrid**:
+---
 
-- **The family is the one bindable row.** One marker in code, one binding, the slug
-  grammar untouched. `variants[]` ride along on the row as parameters.
-- **verify fans out**: `--row <family>` (or `--all`, or `--dry-run`) resolves the shared
-  verifier once per variant with `{variant}` substituted; each spawn's exit code is that
-  variant's verdict; each variant gets its own ledger record `family::key` with its own
-  `row_hash`/`binding_set_hash` (mixed over the shared family span) + `variant_key`.
-  A family command lacking `{variant}` is a surfaced `VARIANT_TOKEN_MISSING` spec error.
-- **scan aggregates**: the family's keyless `local_status` is `VERIFIED_LOCAL` iff every
-  declared variant's record currently matches; otherwise the weakest variant status
-  wins and `local_reason` names the failing variant(s). A `variant_local_status`
-  breakdown array (additive) is emitted per family row.
-- Ledger merge, ordinary rows, old matrices, old ledgers: all byte-identical to 0.4.1
-  (pinned by the golden-hash + regression suites; 599+ core tests green).
+## 1. The shape
 
-## 1. Problem framing
+```
+                        the agent host (Claude Code, Codex, Copilot, OpenCode)
+                                        │
+                  host manifest names a script in this checkout
+                                        ▼
+   bin/use-cases ─┐                                    ┌─ bin/use-cases-mcp
+                  ├──► bin/use-cases-runtime ──────────┤
+                  │      (which runtime? decided on    │
+                  │       the plugin's VERSION)        │
+                  └──► bin/use-cases-bootstrap ────────┘
+                         download the release asset for this machine,
+                         verify it against the release's SHA256SUMS,
+                         cache it, exec it
+                                        │
+            ┌───────────────────────────┴──────────────────────────┐
+            ▼                                                      ▼
+   ┌──────────────────┐                                  ┌──────────────────┐
+   │  use-cases       │  UseCasesCLI                     │  use-cases-mcp   │  UseCasesMCP
+   │  argv → envelope │  swift-argument-parser           │  JSON-RPC/stdio  │  swift-sdk (transport only)
+   └────────┬─────────┘                                  └─────────┬────────┘
+            └────────────────────┬─────────────────────────────────┘
+                                 ▼
+                    ┌────────────────────────────┐
+                    │        UseCasesCore        │   Yams · swift-crypto
+                    │  every rule, every shape,  │
+                    │  every byte of JSON we emit│
+                    └─────────────┬──────────────┘
+                                  │ reads and appends
+                                  ▼
+        use-cases/*.yml   ·   .use-cases/*.jsonl   ·   schemas/v1/*.json
+        the matrix            bindings, proofs,        the frozen contract
+                              verification results
 
-Today one `use-cases verify` invocation proves N **independent** rows: it loops rows and,
-per row, resolves that row's own verifier, spawns it, and records one verdict. A
-single logical use-case that should fan into many **variants** — same behaviour,
-different inputs (`0/1/many`, `empty/null`, boundary, negative) — has no first-class
-representation: you either cram them into one row (losing per-variant evidence) or
-author N hand-copied rows with N duplicated verifiers. We want a use-case to declare
-its variants once, share ONE verifier, and have a SINGLE invocation emit a verdict
-**per variant**, each recorded as its own row with its own integrity hashes.
+   ┌──────────────────────────────────────────────────────────────────┐
+   │  UseCasesOracle — depends on NOTHING. Reaches both binaries as   │
+   │  processes (UC_BIN / UC_MCP_BIN) and compares their JSON.        │
+   └──────────────────────────────────────────────────────────────────┘
+```
 
-## 2. Design decision summary
+Four `Package.swift` files in one repository, each buildable on its own. Two
+executables ship; the third and fourth packages are a library and a test suite.
+Everything targets macOS 14 and Swift 6.
 
-**Chosen approach — "variant family": additive `variants[]` on the use-case; ONE
-shared verifier command with a `{variant}` token, spawned once per declared variant;
-exit code is the verdict; all N records land in a single merge-write.**
+---
 
-A use-case may declare `variants: [{ key, ... }]`. Each variant is an **addressable
-row** with id `family.id::variant_key`, inheriting the family's binding span but
-computing its **own** `binding_set_hash`/`row_hash` (both already keyed by row_id).
-The family declares ONE verifier. `use-cases verify` substitutes each variant's `key` into the
-shared command's `{variant}` token and spawns it once per variant; **exit 0 = pass,
-non-zero = fail** — the same verdict rule ordinary rows already use. All variant result
-records are written in **one merge-write**. `use-cases scan` lists each variant row with its
-own `local_status`. Non-variant use-cases and older `use-cases` binaries are wholly unaffected
-because the use-case schema is open (`[key: string]: unknown`) and every new field is
-optional.
+## 2. UseCasesCore — the product
 
-Why exit-code-per-variant over a structured stdout report: it reuses the verifier
-preset substitution machinery that already exists for `{slug}`, speaks the universal
-verdict language (exit code) so any existing test command adopts with near-zero
-friction, and adds **no new parser and no new schema**. The 0.4.1 merge already records
-all N variants together in one atomic write regardless of spawn count, so "prove the
-family in one command, all recorded together" holds without a report format.
+`UseCasesCore/Sources/UseCasesCore` is the whole product. The CLI and the MCP
+server are two ways of calling it and nothing else: neither holds a rule, a
+default or a message the other does not. That is the property the oracle exists
+to keep true, and the reason `mcp.wrapper.parity` is a row in the matrix.
 
-| Rejected alternative | Why rejected |
+It has one library dependency for reading YAML (Yams) and one for cryptography
+(swift-crypto: SHA-256 and Ed25519). Nothing else.
+
+The areas, each a directory:
+
+| area | what lives there |
 |---|---|
-| **One process emits a JSONL per-variant report** (`ucase-variant-report-v1`; exit code is NOT the verdict) | More power than v1 needs: invents a new stdout schema + a tolerant parser (the riskiest component) + an exit-code-isn't-verdict subtlety. Its one real win — a single-process binary that shares setup across variants — is a minority case. **Deferred, not dead:** it becomes an opt-in verifier mode later IF a real user hits the re-setup cost. |
-| **Variants as sub-verdicts inside ONE row's record** (one `row_id`, array of variant statuses) | Breaks per-variant integrity: one `row_hash`/`binding_set_hash` can't represent N variants; `use-cases scan`'s row→proof derivation and the merge key (`row_id`) would need reworking; a partial-fail row has no honest single verdict. |
-| **Reuse the existing `scenarios[]` axis** | `scenarios` are step-narratives with NO verifier and NO verdict; overloading them with verifier I/O muddies a shipped concept and would change `scenario` semantics for every existing matrix. Variants need verdict-bearing identity `scenarios` deliberately lack. |
+| `Schema/` | The JSON substrate: a hand-written JSON parser and writer, canonical JSON, a JSON-Schema validator driven by the 27 published schemas, the CLI result envelope, semantic hashing. |
+| `UseCases/` | The matrix: loading `use-cases/**/*.yml`, validating rows against the schema, listing, upserting, soft-removing. |
+| `Markers/` | The trust core: the `@use-case:` marker grammar, the append-only binding registry, verifier resolution and presets, `verify`, `prove`, `scan`, `impact`, `recover`, and the freshness derivation that turns all of it into a status. |
+| `Evidence/` | The append-only evidence ledger: recording, replay, completeness, voiding, assurance tiers. |
+| `Showcase/` | Event-sourced live runs: start, observe, verdict, decide, pause, resume, finish, approval. |
+| `Presentation/` | Plan selection — which rows a showcase or walkthrough should cover, and why the others were excluded. |
+| `Capsules/`, `Skills/`, `Agents/`, `Initialization/`, `Workspace/`, `Errors/`, `Foundation/` | Demo capsules, the shipped skill and agent assets, `init` scaffolding, root resolution and path containment, the public error-code registry, and the small shared primitives (`ProductVersion`, `Redactor`, `CanonicalIdentifier`). |
 
-## 3. Matrix representation (additive YAML)
+### Why the JSON is written by hand
 
-**Before** (a normal row, unchanged and still valid):
+`JSONWriter` and `CanonicalJSON` exist because `JSONEncoder` cannot promise the
+bytes. Key order, number formatting and escaping are part of the contract: a
+`semantic_hash` is a SHA-256 over canonical JSON, and a proof that hashes
+differently on a different Foundation version is not a proof. Every envelope the
+product emits goes through `JSONWriter`, and `JavaScriptNumber` exists so a
+number round-trips the way the published schemas were written to expect.
+
+### Everything is derived, nothing is asserted
+
+The matrix, the binding registry, the evidence ledger and showcase runs are all
+append-only. No file records a status. `scan` recomputes every row's freshness
+from the code on disk, the registry and the proofs, every time. This is the
+single decision the rest of the design falls out of: it is why there is a
+canonical JSON writer, why hashes are everywhere, and why a correction is a new
+event rather than an edit.
+
+---
+
+## 3. UseCasesCLI — argv to envelope
+
+`UseCasesCLI` builds one executable, `use-cases`, with about fifty commands.
+
+Every command is a `CommandSpecification`: a path (`["matrix", "upsert"]`), a
+command name for the envelope (`matrix.upsert`), a summary, its flags, and a
+closure that produces `data` or throws a `CommandFailure`. The help text, the
+dispatch table and the unknown-flag diagnostics are all generated from those
+specifications, so a command cannot exist and be undiscoverable.
+
+`Arguments/` scans argv *before* swift-argument-parser sees it. The reason is
+the contract: an unknown flag, an unknown subcommand and a bare invocation each
+have a defined envelope and a defined exit code, and a parser that exits on its
+own would replace them with its own message. swift-argument-parser is used for
+the typed flag surface behind that scan, not as the front door.
+
+Output is human-readable by default. `--json` emits the envelope — `ok`,
+`complete`, `data`, `diagnostics`, `context` — and `Rendering/` owns the
+human-readable form of it (`EnvelopeRenderer`, and `TrustRenderer` for the
+scan/verify/impact/recover/showcase surfaces), so the text and the JSON are
+two views of one value rather than two things that can disagree.
+
+---
+
+## 4. UseCasesMCP — the same envelopes over stdio
+
+`UseCasesMCP` builds `use-cases-mcp`. Its tools are the CLI's commands: the
+same `UseCasesCore` call, the same envelope, so an agent gets identical answers
+whichever transport it reaches for.
+
+It depends on the official MCP Swift SDK, **for its `StdioTransport` only**.
+The SDK's `Server` encodes responses with its own `JSONEncoder`, has no
+`command`/`mutability` fields on a tool descriptor, and negotiates the protocol
+version — so it cannot emit the frozen envelope. ADR 0007's amendment of
+2026-09-17 records the owner's choice: keep the freeze, keep the SDK for the
+pipe, and own the JSON-RPC dispatch and the response bytes ourselves
+(`Server/`, writing through `JSONWriter`).
+
+Writes are gated twice, with distinct error codes: the session must be in write
+mode (`mcp.server_write_mode_required`) and the call must ask for it
+(`mcp.write_mode_required`). `Resources/` and `Prompts/` expose the matrix,
+the schemas and the loop's guidance as MCP resources and prompts.
+
+---
+
+## 5. UseCasesOracle — the suite that links nothing
+
+`UseCasesOracle` is a test target with **no dependencies at all**, and that is
+the design.
+
+An oracle that linked `UseCasesCore` could shortcut an assertion through the
+very code it is meant to hold to account — assert that the product's parser
+reads what the product's writer wrote, and prove nothing. So it reaches the
+product the only honest way: as processes named by `UC_BIN` and `UC_MCP_BIN`,
+compared on their JSON. It carries its own JSON reader (`OracleJson`) and its
+own YAML reader (`OracleYaml`), both small and both loud — `OracleYaml` throws
+on anything it does not understand rather than returning an empty mapping,
+because a reader that quietly returns nothing makes every "this key is absent"
+assertion pass having read no file.
+
+The cost is that `swift test` here does not build the binaries: they must exist
+and be pointed at, and a missing one fails loudly instead of falling back.
+`HarnessTests` pins exactly that.
+
+It also holds the checks that are about the repository rather than the product —
+the CI and release workflows are parsed, not grepped; the host manifests are
+joined to the binary's reported version; and
+`Matrix/ScenarioConventions.swift` holds the matrix to the scenario naming rules
+in `docs/rewrite/scenario-conventions.md`.
+
+---
+
+## 6. The plugin — download, verify, exec
+
+There is no npm package, no committed binary and nothing to build on install. A
+host installs this repository as a plugin and its manifest names a script in
+`bin/`.
+
+- **`bin/use-cases` / `bin/use-cases-mcp`** are two-line entry points. The
+  session-start hook puts `bin/` on `PATH`, so a skill or agent just runs
+  `use-cases …`.
+- **`bin/use-cases-runtime`** is the single place that decides what actually
+  runs, so no manifest, hook or doc has to know. It branches on the plugin's
+  own version, read from `.claude-plugin/plugin.json`, *before* anything is
+  fetched: at or above the first Swift release it goes to the bootstrap; below
+  it, nothing runs and it says so, because those releases provably published no
+  Swift archive and the Node bundle they used to fall back to has been deleted.
+  **The version bump is the cut-over** — that is the whole switch.
+- **`bin/use-cases-bootstrap`** resolves the machine's platform, downloads the
+  release archive for the installed version, verifies its SHA-256 against the
+  release's published `SHA256SUMS`, caches the executables under the per-user
+  cache directory and execs the one it was asked for. It never execs a binary
+  it has not checksummed, and there is no fallback out of that path: a release
+  that should carry assets and does not must fail loudly rather than quietly
+  running something older.
+
+Published platform: `macos-arm64` only. Adding one back means the bootstrap's
+list and the release workflow's loop, together.
+
+The host manifests — `.claude-plugin/`, `.codex-plugin/`, `opencode/` with its
+`package.json` — each declare the same plugin to a different host. A test joins
+them to the binary: each declares what the binary reports, they agree with each
+other, and the version is never below the first Swift release, which would mean
+the plugin refusing to run itself.
+
+---
+
+## 7. The matrix is the spec
+
+`use-cases/**/*.yml` is not documentation about the product. It is the product's
+specification, and this repository is its own first user.
+
+A row is a behaviour: intent, preconditions, trigger, scenarios, observable
+outcomes, value tier, journey role, host applicability, and a
+`verification_policy` saying what would count as proof. Scenarios carry their
+role in their id — `<row-id>.golden|bad|edge|stress[_<qualifier>]` — so
+"every active row has a bad path" is a check rather than an assertion; the rules
+are in `docs/rewrite/scenario-conventions.md` and the check is a Swift test.
+
+The chain from a row to a trustworthy claim:
+
+```
+  row in use-cases/*.yml
+        │  use-cases bind   (writes @use-case: markers into the source)
+        ▼
+  a code span, registered in .use-cases/bindings.jsonl        (append-only)
+        │  use-cases verify (runs the row's verifier)
+        ▼
+  an UNSIGNED result in .use-cases/verification-results.jsonl
+        │  use-cases prove  (trusted CI only; Ed25519 key held as a secret)
+        ▼
+  a SIGNED proof event in the evidence ledger                  (append-only)
+        │  use-cases scan   (recomputes, every time)
+        ▼
+  FRESH / SUSPECT / UNPROVEN / UNBOUND / INVALID
+```
+
+Edit the bound code and the span's hash moves, so the signed proof no longer
+matches and the row reads `SUSPECT` on its own. No one can type `FRESH`. The
+local half of the loop (`verify` → `VERIFIED_LOCAL`) needs no key and is what a
+developer or an agent runs; only CI can mint the signed tier.
+
+`use-cases scan --gate` is what a release leans on: required rows must reach the
+policy's floor or the gate fails.
+
+---
+
+## 8. Variant families
+
+One logical behaviour often has many input shapes — `0/1/many`, empty, boundary,
+negative — that share a verifier. A row may declare them:
 
 ```yaml
-use_cases:
-  - id: cart.quantity.golden
-    title: Cart accepts a valid quantity
-    verification_policy:
-      mode: requirements
-      requirements:
-        - evidence_kind: test_result
-          required_verifiers: [script]
-          minimum_count: 1
+- id: cart.quantity
+  title: Cart quantity handling across input shapes
+  variants:
+    - key: zero
+      title: Rejects a zero quantity
+    - key: many
+      title: Accepts a large quantity
 ```
 
-**After** (a parametrized family — everything below `variants` is new + optional):
+The **family is the one bindable row**. That is forced rather than chosen: the
+marker grammar is `row-id ["#" suffix]`, so `cart.quantity::zero` is not a legal
+slug and a variant cannot carry a marker. One marker in code, one binding, the
+slug grammar untouched.
 
-```yaml
-use_cases:
-  - id: cart.quantity
-    title: Cart quantity handling across input shapes
-    verification_policy:
-      mode: requirements
-      requirements:
-        - evidence_kind: test_result
-          required_verifiers: [script]
-          minimum_count: 1
-    variants:                        # NEW, optional
-      - key: zero                    # required, [a-z0-9_-], unique within family
-        title: Rejects a zero quantity      # optional, defaults to key
-      - key: one
-        title: Accepts a single unit
-      - key: many
-        title: Accepts a large quantity
-      - key: negative
-        title: Rejects a negative quantity
-```
+Everything else fans out from there:
 
-Rules: `key` is stable and unique within the family; adding/removing a variant is a
-matrix edit like adding/removing a row. A family with `variants` present and non-empty
-is a "variant family"; absent/empty ⇒ ordinary row (today's behaviour, byte-for-byte).
+- **verify** resolves the family's single verifier once per declared variant,
+  substituting the key into a `{variant}` token exactly as `{slug}` is
+  substituted (`VerifierPresets`). Each spawn's exit code is that variant's
+  verdict — the same rule an ordinary row already uses, so no new report
+  format and no new parser. A family whose command omits `{variant}` is a
+  surfaced spec error, because a command that cannot tell the variants apart
+  must not silently prove them all identically.
+- **Identity.** Each variant is addressable as `family::key`. It inherits the
+  family's binding span but computes its own `row_hash` and
+  `binding_set_hash` from its own id, so editing one variant invalidates only
+  that variant's evidence.
+- **The ledger.** N spawns produce N records written in **one** merge-write,
+  keyed by `row_id` as it always was. Variant rows are simply more ids in the
+  same keyspace; siblings and unrelated rows are preserved untouched.
+- **scan** gives each variant its own `local_status` and the family is green
+  only when every variant is; the weakest variant wins and the reason names it.
+- **Targeting is family-level.** `verify --row cart.quantity::zero` answers
+  `ROW_NOT_FOUND` (measured): a variant is addressable in the ledger, not on the
+  command line. `recover` is the one command that accepts a `::` id, and only
+  because it is handed one by `scan` — it reduces it to the family before acting
+  (`RecoverCommands+Run.familyRowIdentifier`), which is not variant targeting
+  either.
 
-## 4. Verifier→variant contract (`{variant}` token + exit code)
+A row with no `variants` key behaves exactly as it did before the feature
+existed, byte for byte. That is load-bearing, and it rests on one rule: **only
+ever hash what the author literally wrote.** `semantic_hash` covers the whole
+row value, so materialising a default — injecting `variants: []` onto a row that
+omits it — would silently move that row's hash and invalidate its stored
+evidence. Optional fields are pass-through on load, and a test pins it.
 
-The family declares ONE verifier command. `use-cases verify` iterates the declared variants and,
-for each, substitutes the variant's `key` into the `{variant}` token before spawning —
-exactly as `{slug}` is substituted today. Each spawn's **exit code is that variant's
-verdict** (0 → pass, non-zero → fail), and its stdout/stderr sha256 are recorded per
-variant as they already are for ordinary rows.
+The version floor is the honest cost: `use-case-file.schema.json` sets
+`additionalProperties: false`, so an older binary reading a `variants`-bearing
+matrix rejects it with a loud `schema_error`. Safe — never a misread — but
+adopting variants means everyone on that repository upgrades.
 
-```yaml
-# family verifier (declared once); {slug} and {variant} both substitute
-verifier:
-  kind: script
-  command: ["npx", "vitest", "run", "tests/use-cases/{slug}.test.ts", "-t", "{variant}"]
-```
+---
 
-```
-use-cases verify --row cart.quantity
-  → spawn: vitest … cart.quantity.test.ts -t zero      → exit 0 → pass
-  → spawn: vitest … cart.quantity.test.ts -t one       → exit 0 → pass
-  → spawn: vitest … cart.quantity.test.ts -t many      → exit 0 → pass
-  → spawn: vitest … cart.quantity.test.ts -t negative  → exit 1 → fail
-```
+## 9. What is frozen
 
-- A command with **no `{variant}` token** but a variant family is a spec error surfaced
-  at verify time (`errors[]`): the family declared variants the command can't distinguish.
-- No new stdout schema, no parser: the verdict rule is the existing per-row exit-code path,
-  applied once per variant.
-- **Deferred power (not in v1):** a single-process report mode (one spawn emits all
-  verdicts) is a clean future addition for verifiers that share setup across variants —
-  see the rejected-alternatives note in §2. v1 does not build it.
+ADR 0007 decision 8 freezes four things, and a change that needs one of them
+stops and asks the owner:
 
-## 5. Row identity & hashes
+1. the CLI JSON envelope,
+2. the 27 published schemas under `schemas/v1/`,
+3. the marker syntax,
+4. the ledger formats.
 
-- **Row id:** `"<family.id>::<variant.key>"` (e.g. `cart.quantity::negative`). The `::`
-  separator is not otherwise legal in ids, so variant rows never collide with authored
-  ids.
-- **Binding:** variants **inherit the family's registered binding** (bind once, at
-  `cart.quantity`). `use-cases verify` synthesizes each variant row's binding view from the
-  family's span but computes `binding_set_hash` with the **variant row_id** (the hash
-  fn already takes `rowId`), so each variant record has a distinct, correct hash.
-- **`row_hash`:** computed from the variant's own loaded-row projection (family fields +
-  the variant's `key`/`title`), so editing one variant only invalidates that variant.
-- Net: N variants ⇒ N records, each with independent `row_hash`, `binding_set_hash`,
-  `span_sha256s` (shared span, distinct set-hash), `verification_context_hash`.
+Everything else is ordinary code. Notably **not** frozen: internal module
+boundaries, the human-readable rendering, help text, and filesystem layout — the
+default fixture path `schema validate-fixtures` reaches for is a path, not a
+contract, and it moved with its directory in the 0.8.0 clean-up.
 
-## 6. CLI / UX
+The three internal marker schemas live in `schemas/markers/`, deliberately a
+sibling of `schemas/v1/` rather than inside it: everything that enumerates the
+published set names `schemas/v1` exactly, so the internal ones cannot leak into
+the 27. `EmbeddedSchemas.swift` is generated from the files by
+`UseCasesCore/Scripts/generate-embedded-schemas.swift`, and a drift test is the
+only thing stopping the embedded copies and the committed files parting.
 
-- `use-cases verify --row cart.quantity` → detects a variant family, resolves the ONE shared
-  verifier, spawns it ONCE, parses the report, writes N variant records.
-- `use-cases verify --all` → families expand to their variant rows automatically; each family
-  still spawns its verifier once.
-- ~~`use-cases verify --row cart.quantity::negative` single-variant targeting~~ — NOT built
-  (review-corrected): `--row` targets are family-level only; a `::`-suffixed id is
-  `ROW_NOT_FOUND`. Single-variant targeting is a possible future addition.
-- `use-cases scan` → lists each variant row (`cart.quantity::zero …`) with its own
-  `local_status`. A family is VERIFIED_LOCAL-complete only when every variant row is.
-- `use-cases bind cart.quantity …` binds the family; variants inherit. (`use-cases bind` on a
-  variant id is allowed for an override but not required.)
-- `--dry-run` reports one planned entry per variant with the shared command.
+---
 
-## 7. Ledger write semantics
+## 10. Where everything lives
 
-Unchanged merge, more records. The per-variant spawns yield a
-`VerificationResultRecord[]` whose `row_id`s are the variant ids. The existing merge
-(keyed by `row_id`, write-temp-then-rename) already:
-- replaces exactly the variant rows this run produced,
-- preserves every other row (variant siblings NOT targeted, and unrelated rows),
-- stays atomic.
-
-N spawns → N records → **one** merge-write (results are collected in-memory across the
-per-variant spawns, then written once). The 0.4.1 truncation fix carries over verbatim;
-variant rows are just more `row_id`s in the same keyspace.
-
-## 8. Backward-compat analysis (every schema touch)
-
-**Correction (verified against the real validator):** the runtime validator is the
-JSON Schema `use-case-file.schema.json`, and its use-case object is
-`"additionalProperties": false` — NOT the permissive TS type `[key:string]:unknown`.
-So compat is directional:
-
-- **Forward — new `use-cases` reads any matrix:** fully compatible. An old (no-`variants`)
-  matrix loads byte-identically (hash guard below). This is the direction that matters
-  for existing users upgrading. ✓
-- **Backward — OLD `use-cases` reads a NEW (`variants`-bearing) matrix:** the strict schema
-  rejects the unknown `variants` key with a **loud `schema_error`** — safe (no silent
-  corruption, no misread) but it means **adopting variants requires everyone on that
-  repo to be on `use-cases ≥ 0.5.0`.** That is a documented version floor, not a break of any
-  existing repo. It cannot be retrofitted into already-shipped 0.4.1 regardless.
-
-| Touch | Kind | Safe because |
-|---|---|---|
-| `variants` added to `use-case-file.schema.json` (use-case object) + `variants?` on `UseCaseV1` | additive to the schema | New `use-cases` accepts it; no existing no-`variants` matrix is affected. Old `use-cases` rejects it loudly (version floor above), never misreads it. |
-| `variant_key?: string` on `ucase-verification-result-v1` | additive, optional | Result records are validated by their own schema; add `variant_key` as optional there too. Records for ordinary rows omit it, so existing ledgers validate unchanged. Schema id stays v1. |
-| `{variant}` token in verifier command substitution | additive | Only expands when present; existing `{slug}`-only commands are untouched. |
-| Row id `::` convention | additive | Only produced for variant families; authored ids can't contain `::`. |
-
-### The one hash trap, and the guard
-
-`computeSemanticHash(useCase)` = `sha256(canonicalJson(the WHOLE use-case value))` — it
-hashes **every** field, including ones the type doesn't name. Consequence: the ONLY way
-0.5.0 could break an existing matrix is by **materialising a default** (e.g. injecting
-`variants: []`, or any normalised field) onto rows the author didn't write — that would
-change their `semantic_hash` silently and invalidate stored evidence.
-
-**Build rule (enforced by test):** only ever hash what the author literally wrote; never
-normalise `variants` (or anything) onto a row that omits it. Load is
-pass-through for absent optional fields.
-
-Three invariants pinned with tests: **(a)** a matrix with no `variants` produces
-byte-identical `semantic_hash` + scan/verify output under 0.5.0 vs 0.4.1; **(b)** a
-`variants`-bearing matrix loads cleanly under 0.5.0 AND the schema addition doesn't
-change validation of any no-`variants` file; **(c)** an existing
-`verification-results.jsonl` (no `variant_key`) still validates and drives `scan`
-unchanged.
-
-**Versioning:** additive for existing repos ⇒ **0.4.1 → 0.5.0 minor bump, no migration
-step for old matrices** (they load unchanged under new `use-cases`). The one caveat is the
-**version floor**: a repo that *adopts* variants requires its collaborators to be on
-`use-cases ≥ 0.5.0`, because older clients reject the new key (strict schema). Call this out in
-release notes. A `use-cases migrate` path is only needed if a *breaking* restructure of
-existing fields is ever chosen — this design avoids that.
-
-## 9. Failure semantics
-
-| Situation | Behaviour |
+| path | what it is |
 |---|---|
-| **Partial pass** (some variants fail) | Each variant row records its own `pass`/`fail` from its own spawn's exit code; family isn't "green" until all pass. This is the whole point — no conflation. |
-| **Unbound family** | Every variant row records `blocked` (mirrors today's unbound-row path); scan shows them UNVERIFIED_LOCAL. No spawn happens. |
-| **Command lacks a `{variant}` token** but the row is a variant family | Spec error surfaced in `errors[]` before any spawn — the command can't distinguish variants, so it must not silently prove them all identically. |
-| **A variant's spawn times out** | That variant row records `fail` (exit 124 path, as ordinary rows), siblings unaffected. |
-| **Verifier resolves to `mode:none` / no verifier** | Every variant row records `blocked` — same as an ordinary bound-but-unverifiable row today. |
+| `UseCasesCore/`, `UseCasesCLI/`, `UseCasesMCP/`, `UseCasesOracle/` | the four Swift packages |
+| `bin/` | the plugin entry points, the runtime switch and the download-and-verify bootstrap |
+| `.claude-plugin/`, `.codex-plugin/`, `opencode/`, `package.json` | one host manifest each; `package.json` is OpenCode's, not a build manifest |
+| `skills/`, `agents/`, `hooks/`, `bootstrap/` | what the plugin installs into a host |
+| `schemas/v1/` | the 27 published schemas — frozen |
+| `schemas/markers/` | three internal schemas, embedded into the binary |
+| `use-cases/` | this repository's own matrix — the spec |
+| `.use-cases/` | its bindings, proofs and verification results — append-only |
+| `evidence/`, `showcase-runs/` | recorded evidence and performed showcase runs |
+| `fixtures/` | data, not tests: the conformance workspaces and captures of published 0.4.x/0.5.5 binaries |
+| `examples/`, `demo-capsules/` | runnable examples and packaged demos |
+| `docs/` | the documentation index, the concepts, the ADRs and the rewrite record |
 
-Note how much smaller this table is than the report-based design: reusing the
-exit-code verdict path means variant failure modes ARE the existing row failure modes,
-applied per variant. No new "malformed report / missing line / duplicate line" class exists.
-
-## 10. Phased TDD build plan (each increment led by its failing test)
-
-1. **Schema (additive):** `variants?` on `UseCaseV1` + loader validation (unique keys,
-   key charset), pass-through (NO default materialised). *Failing tests:* load a family
-   (0/1/many variants); reject dup keys; reject bad key charset; a no-`variants` matrix
-   loads with an unchanged `semantic_hash`.
-2. **Row expansion:** a family expands to variant rows in the row set feeding
-   verify/scan. *Failing tests:* `many`→N rows with ids `family::key`; `0 variants`⇒the
-   family itself as one ordinary row (no `::` rows); ids are stable/sorted.
-3. **`{variant}` substitution:** extend the existing `{slug}` substitution to also
-   substitute `{variant}`. *Failing tests:* token expands per variant; a family whose
-   command omits `{variant}` is a surfaced spec error.
-4. **verify integration:** one spawn PER variant → N records with correct per-variant
-   hashes, collected then written once. *Failing tests:* spy the injected runner → one
-   spawn per declared variant; N records; each record's `binding_set_hash`/`row_hash`
-   distinct + matches recompute; `variant_key` populated; **exit-code→verdict per variant**
-   (parametrised: all-pass / partial-fail / all-fail).
-5. **Ledger merge across variants:** verifying family A leaves family B + ordinary rows
-   intact; re-verifying one variant supersedes only itself. *Failing tests:* the 0.4.1
-   merge property extended to variant siblings; N spawns still yield exactly one write.
-6. **scan derivation:** each variant row surfaces its own `local_status`; family
-   "complete" only when all variants VERIFIED_LOCAL. *Failing tests:* mixed variant
-   states; all-green family.
-7. **CLI surface:** `--row family`, `--row family::key`, `--all`, `--dry-run`.
-   *Failing tests:* targeting + dry-run plan lists per-variant entries, spawns nothing.
-8. **Compat guards:** the three invariants from §8 as explicit regression tests
-   (extend the existing cross-version release test).
-9. **use-cases matrix:** add rows proving the new behaviour; `use-cases bind`/`verify`/`scan`
-   the real feature (dogfood).
-
-Parametrised coverage called out: variant counts `0 / 1 / many`; verdict outcomes
-`all-pass / partial-fail / all-fail`; degenerate `unbound / no-{variant}-token /
-timeout / mode:none`.
-
-## 11. Flow
-
-```
-          matrix use-case (family)
-          id: cart.quantity
-          variants: [zero, one, many, negative]
-          verifier: [... "{slug}.test.ts" "-t" "{variant}"]   (declared ONCE)
-                    │
-                    │  use-cases verify --row cart.quantity
-                    ▼
-          resolve shared verifier, substitute {variant} per declared key
-                    │
-       ┌────────────┼───────────┬───────────┬───────────────┐
-       ▼            ▼           ▼           ▼    (one spawn per variant;
-   -t zero      -t one      -t many    -t negative  exit code = verdict)
-   exit 0       exit 0      exit 0      exit 1
-       │            │           │           │
-       ▼            ▼           ▼           ▼
-   ┌─────────── N result records collected in-memory ───────────┐
-   │ cart.quantity::zero      pass   hashes(row_id=…::zero)      │
-   │ cart.quantity::one       pass   hashes(row_id=…::one)       │
-   │ cart.quantity::many      pass   hashes(row_id=…::many)      │
-   │ cart.quantity::negative  fail   hashes(row_id=…::negative)  │
-   └────────────────────────────┬───────────────────────────────┘
-                    │  ONE merge-write (keyed by row_id, atomic)
-                    ▼
-       .use-cases/verification-results.jsonl   (siblings + other rows preserved)
-                    │
-                    ▼
-          use-cases scan → per-variant local_status; family green iff all variants green
-```
+Corpus files (`*GoldenCorpus.swift`) are a category of their own and worth
+knowing about before editing one. They are recorded bytes — argv in, stdout and
+written files out — and their generators were retired with the TypeScript, so
+they are **not regenerable**. Each says so in its header. A case that has to
+change is changed by hand, deliberately, with the reason written down, and the
+question to answer first is always the same: is this value an **output** the
+binary produces now, or a **record** of what some earlier install wrote? Outputs
+move with the product. Records do not.

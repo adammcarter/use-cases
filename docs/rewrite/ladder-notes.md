@@ -2323,6 +2323,127 @@ joining them is a test somebody has to design.
 `docs/release/publishing.md` and described npm Trusted Publishing, and still said
 the release line was `0.0.x`. Row 10d's "docs repointed" list missed all three.
 
+## The 0.8.0 clean-up — four leftovers, before sign-off
+
+Owner-approved, 2026-09-18, after looking over the finished tree. Nothing here
+is new behaviour; every change is a leftover of the rewrite.
+
+### 1 · The last JavaScript was ported, not deleted
+
+`scripts/check-scenario-conventions.mjs` — the one `.mjs` row 10d kept, above —
+is gone, and `UseCasesOracle/Tests/OracleTests/Matrix/ScenarioConventions.swift`
+is what it became. Porting rather than deleting was the point: **nothing ever
+ran it.** Not CI, not a hook, not the gate. The convention in
+`docs/rewrite/scenario-conventions.md` was therefore decoration, and the fix is
+not to delete the rule but to make something check it.
+
+The port is a **transliteration**, including the small line reader the script
+used instead of a YAML parser. That was deliberate twice over: the script's own
+comment gives the first reason (a git hook cannot afford to parse the whole
+matrix), and the second is that the oracle links nothing, so its only YAML
+reader is `OracleYaml`, which throws on flow collections and anchors by design —
+a file carrying one would raise instead of producing a finding, and the count
+would stop matching. Diffed against the script's last run over the live matrix
+before deleting it: **34 findings, byte-identical strings**.
+
+**The 34 do not go to zero, and the test is still green.** That needs saying
+plainly rather than being buried:
+
+- **32 of them are eight rows × four findings**, and the eight are precisely the
+  set `scenario-conventions.md` §8a already names as an OPEN OWNER DECISION —
+  the five `lifecycle.loop.*` rows, `evidence.ledger.untrusted_content_boundary`,
+  `matrix.product.claim_guardrails` and `showcase.live.user_signoff`. They are
+  agent doctrine no command implements, or proof that is genuinely a person.
+  §8a says the choice between parking them like the `roadmap.*` rows and giving
+  ADR 0007 decision 2 a named exception was deliberately left until the end of
+  the ladder. It is still unmade.
+- **2 are the verifier half**, which was row 2's progress instrument and which
+  row 2 drove from 30 to 2: `showcase.flow.revision_epoch_staleness` (§10 —
+  implemented in the core, unreachable from the CLI, deliberately unbound) and
+  `showcase.live.user_signoff` again.
+
+So they are pinned by ROW ID, each with its reason, in
+`ScenarioConventions.doctrineRows` (8) and `.rowsWithNothingRunnable` (2) —
+**nine distinct rows**, because `showcase.live.user_signoff` is in both lists
+and genuinely is both: its proof is a person, so it has neither a
+golden/bad/edge scenario nor a command to name as a verifier. **Every other
+active row is held to zero findings.** That is the enforcement the
+document always claimed: a feature file that drifts fails `swift test`. The
+list cannot grow silently (a ninth row fails), and it cannot outlive its rows
+either — a second test fails if an exempted row stops needing the exemption.
+
+What was NOT done: tagging those eight rows `no-bad-path`/`no-edge-path`, or
+renaming their scenarios `golden_*`. Either would make the check green by
+editing the matrix — eight `semantic_hash`es move, the evidence taken against
+them goes stale, and the owner's open question gets answered by sleight of hand.
+
+Proved load-bearing rather than assumed: renaming
+`planning.cards.partial_matrix_warning.golden_strict` to `.strict` turns the
+suite red with both expected findings named, and reverting it turns it green.
+
+`scripts/` held nothing else and is gone.
+
+### 2 · `tests/` → `fixtures/`
+
+The directory held no tests — every `.ts` under it went at row 10d — and a
+directory called `tests` holding none misleads every reader who opens it. Moved
+with `git mv` so all 55 files are staged renames, and collapsed rather than
+nested: `tests/fixtures/x` → `fixtures/x`.
+
+The same output-versus-record split row 11 used, applied again:
+
+| reference | category |
+|---|---|
+| `SchemaCommands.defaultFixture` | **Product behaviour → moved.** The note above says decision 8 freezes it. It does not: decision 8 freezes the envelope, the 27 schemas, the marker syntax and the ledger formats, and a default filesystem path is none of those. The owner pre-empted the reading and approved the move; recording the overrule rather than the silence. |
+| `DispatchGoldenCorpus`, the four `schema_validate_fixtures_*` cases (8 strings) | **Output → moved.** Four are the argv a case feeds the binary and must name a directory that exists; four are the binary's own echo in `data.fixture` and `context.data_root`. A note in the corpus header says so, as its "changed by hand, deliberately" rule requires. |
+| `DiagnosticWireFormTests` (2) | **Output → moved.** The value under test and the expected bytes. |
+| `SchemaFixtures.fixtureWorkspace` | **Live code → moved.** |
+| `use-cases/planning/cards.yml`, one `source_refs` path | **Row input → moved, through the binary.** `matrix upsert --use-case-file`, which produced a one-line diff; `scan --gate` stayed exit 0 and the row stayed `VERIFIED_LOCAL`. |
+| `fixtures/README.md` | **Live doc → rewritten** to describe the tree as it is. |
+| `PresentationGoldenCorpus` (7), `UseCasesRepositoryMatrixCorpus` (2) | **Record → untouched.** Both embed a frozen snapshot of `cards.yml` text fed in as INPUT, exactly like `SkillsGoldenCorpus`'s `shipped` map. Editing an input snapshot to match a later tree is the mistake row 11 named. |
+| `OpencodePluginTests.swift:195` | **Record → untouched.** The comment says what *the TypeScript* pointed at. |
+| `LifecycleNestedWorkspaceTests.swift` (2) | **Not a reference at all.** `"tests/fixtures/nested"` is an arbitrary location inside a temporary workspace; nothing reads the repository there. |
+| `ladder-notes.md` (7), `0.8.0-sign-off.md` (2) | **Records → untouched**, including the sign-off's §3 table, which classifies `docs/rewrite/*` as records in its own right. The mapping lives here instead. |
+
+Falsified rather than trusted: reverting one of the four `stdout` occurrences in
+`DispatchGoldenCorpus` turns `UseCasesCLITests` red, so the corpus is
+load-bearing and the move was required, not merely tidy.
+
+### 3 · Two dated documents deleted
+
+`docs/rewrite/gap-audit-2026-09-16.md` — a snapshot of "where are the gaps?",
+taken before row 1b and answered by the whole ladder since. Its method was the
+keyword classification §1 of the conventions document exists to replace.
+
+`docs/acceptance/0.3.0/` (three files) — acceptance notes for a release five
+versions back, which said themselves that they were "historical release notes,
+not current proof". `docs/acceptance/` is now empty and gone; `docs/acceptance.md`
+is a different, live file and stays.
+
+Nothing linked to either. The only mentions left are two lines in this file
+classifying `docs/acceptance/0.3.0/` as a record for the version bump, and one
+sentence in `scenario-conventions.md` referring to "the gap audit of 2026-09-16"
+in prose. Both are records of what was true when written and neither is a link,
+so both stay.
+
+### 4 · `DESIGN.md` now describes this repository
+
+It was a feature design for variant parametrization, written against
+`verify.ts`, `selectPlan.ts` and `candidates.ts`, with an "AS BUILT —
+supersedes §5/§6" banner, a rejected-alternatives table and a phased TDD plan.
+Rewritten as the architecture document: the four packages and what each is for,
+why `UseCasesOracle` depends on nothing, why the JSON is written by hand, the
+`bin/` runtime switch and the download-and-verify bootstrap, the matrix as the
+spec and the row → marker → binding → proof → freshness chain, what decision 8
+freezes and what it does not, and where everything lives.
+
+Variants **survived the rewrite intact** and are described as the live mechanism
+they are — `{variant}` substitution in `VerifierPresets`, `family::key` in
+`VerifiedRowInputs`, per-variant hashes, one merge-write — rather than as a
+proposal. What went is the process: the rejected-alternatives table, the TDD
+phase list and the supersession banner belong to the ADR and the changelog, not
+to a document that answers "where does my change go?".
+
 ## Candidate hardening (contract change — owner's call, after 0.8.0)
 
 - `keyring.schema.json` puts no pattern on `key_id`. Without exact-byte key

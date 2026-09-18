@@ -294,7 +294,7 @@ use_cases:
       - kind: file
         path: packages/core/src/presentation/selectPlan.ts
       - kind: file
-        path: tests/fixtures/workspaces/presentation-partial/use-cases/damaged.yml
+        path: fixtures/workspaces/presentation-partial/use-cases/damaged.yml
     actor: agent
     intent: Make damaged or incomplete matrix state visible before a plan is used for a demo.
     preconditions:
