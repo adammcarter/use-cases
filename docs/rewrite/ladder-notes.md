@@ -758,7 +758,292 @@ across sessions.
 - **0.8.0 release notes (row 11)** must list as breaking: `uc migrate test-matrix`, the `migration` skill, the `migration-test-matrix-result` schema, the two `UCM_MIGRATION_*` codes, and the `migration` workflow mode (a config naming it stops loading). No CHANGELOG exists yet.
 - **`SchemaGoldenCorpus.swift` has no committed generator** (its header points at the row 3b report); retiring the `migration` workflow mode regenerated its one changed case by re-running `validateBySchemaId` over every case, all other 61 reproducing byte for byte.
 
-## Row 8 — the hard rename (`uc` → `use-cases`)
+### The marker AND the verifier both have to move (measured in row 9, 2026-09-18)
+
+Rebinding a row is only half the job: every row's verifier still runs
+`pnpm -s vitest …`. A row whose marker moves onto Swift while its verifier runs
+a deleted suite goes green having proved nothing.
+
+Measured from `scan --json` `current_bindings[].file_path` and the rows' own
+`verification_policy.verifiers`, over 117 rows:
+
+- **29 rows are bound into `packages/`**; 24 of them are ALSO bound into
+  `tests/blackbox/`, so for those the rebind is "drop the `packages/**/src`
+  span, keep the black-box one". Five are bound ONLY into `packages/`:
+  `diagnostics.contracts.missing_build_hint`,
+  `evidence.ledger.crash_durable_ledger_writes` and the three `plugin.init.*`
+  below.
+- **Only 3 marker spans live in a `packages/*/test` file at all**:
+  `packages/core/test/init/scaffold-{agents-md,git-hooks,sample}.test.ts`.
+- **8 rows have a verifier COMMAND naming a `packages/*/test` file.** These are
+  the ones that silently lose their proof, and five of them are **unbound**, so
+  nothing in `scan` will flag them:
+
+  | row | verifier names | Swift carrier | `--filter` selector |
+  |---|---|---|---|
+  | `plugin.init.records_decision_in_agents_md` | `…/init/scaffold-agents-md.test.ts` | `WorkspaceScaffoldTests` + `InitializationGoldenCorpus` `agents_md_*` | `swift test --package-path UseCasesCore --filter WorkspaceScaffoldTests` |
+  | `plugin.init.wires_git_hooks` | `…/init/scaffold-git-hooks.test.ts` | `WorkspaceScaffoldTests` + `configured_hooks_path_*` | same |
+  | `plugin.init.vends_sample_matrix` | `…/init/scaffold-sample.test.ts` | `ScaffoldedWorkspaceTests` (new in row 9) | `swift test --package-path UseCasesCore --filter ScaffoldedWorkspaceTests` |
+  | `signing.tier.keygen_keeps_the_private_key_out_of_the_tree` (UNBOUND) | `…/markers/keygen.test.ts` | `SigningKeyGenerationTests` | `swift test --package-path UseCasesCore --filter SigningKeyGenerationTests` |
+  | `signing.tier.prove_never_signs_what_it_cannot_recompute` (UNBOUND) | `…/markers/prove{Consumes,Authority}.test.ts` | `VerifyProveTests` (`proveCaseNames`) | `swift test --package-path UseCasesCore --filter VerifyProveTests` |
+  | `signing.tier.validate_ledger_holds_the_append_only_line` (UNBOUND) | `…/markers/ledgerChainValidate.test.ts` | `EvidenceLedgerTests` + `LedgerChainRulesTests` (new in row 9) | `swift test --package-path UseCasesCore --filter EvidenceLedgerTests --filter LedgerChainRulesTests` (two flags — see the trap below) |
+  | `signing.tier.recover_never_fakes_green` (UNBOUND) | `packages/cli/test/commands/recoverVariants.test.ts` | `MarkerCommandsGoldenCorpusTests` case `recover_variant_family` | `swift test --package-path UseCasesCLI --filter MarkerCommandsGoldenCorpusTests` |
+  | `signing.tier.approve_run_keeps_the_key_out_of_agent_scope` (UNBOUND) | `packages/cli/test/commands/approveRun.test.ts` | `ShowcaseCommandsGoldenCorpusTests` | `swift test --package-path UseCasesCLI --filter ShowcaseCommandsGoldenCorpusTests` |
+
+  Every selector above was run in row 9, in exactly the `--package-path` form
+  written, and each selects a non-zero number of tests — in table order: 8, 8,
+  5, 4, 3, 9, 4, 2.
+
+- **TRAP: `swift test --filter` matching nothing exits 0.** Measured:
+  `swift test --package-path UseCasesCore --filter 'EvidenceLedgerTests\|LedgerChainRulesTests'`
+  prints `warning: No matching test cases were run` and **exits 0** — so a
+  verifier whose selector is misspelled records a PASS having run nothing. That
+  is the same silent-green this whole table exists to prevent, and there is no
+  guard against it: a selector is a string in a YAML file.
+  Two ways to get it wrong that were both hit here:
+  `--filter` takes an ICU regex, so `\|` is an escaped LITERAL pipe and matches
+  no suite; and a bare `|` cannot sit in a markdown table cell. **Pass `--filter`
+  twice instead of alternating** — repeated flags union their patterns
+  (measured: 9 tests in 2 suites). Run every selector once after editing it and
+  read the test COUNT, not the exit code.
+
+- **80 rows name a `packages/**` path in `source_refs`.** Those are
+  documentation pointers, not proof, but they all rot at row 10 and should be
+  repointed onto the Swift sources in the same pass.
+- **Verifier inputs move too.** The three `plugin.init.*` verifiers list
+  `packages/core/src/init/scaffold.ts` as an input, which feeds the
+  verification context hash. Swapping the command without swapping the inputs
+  leaves the hash pinned to a deleted file.
+
+## Row 9 — the white-box TypeScript tests, carried into Swift
+
+### The count is 133, not 87
+
+ADR 0007's consequences section estimated "~87 white-box files"; it also says
+the count is measured, not assumed. Measured 2026-09-18: **155 test files total**
+(the number `pnpm test` reports), of which **22 are the black-box oracle**
+(everything in `tests/blackbox/`, 21 reaching the product through
+`tests/helpers/{uc-binary,mcp-server}.ts` and `plugin-install-claude.test.ts`
+reaching only the shipped manifests). That leaves **133 non-black-box files**:
+72 under `packages/*/test/**` and 61 under `tests/**`. The ADR's estimate
+predates the suite growth decision 2 caused; the delta is growth, not an error.
+
+### Three buckets were not enough — there is a fourth
+
+`tests/plugin/*`, `tests/conformance/bootstrap/session-start.test.ts` and
+`tests/skills/init-skill.test.ts` test bash scripts, YAML manifests and
+markdown — they import no TypeScript at all and are untouched by deleting
+`packages/`. They are **SURVIVES-ROW-10**, not "dies with the TypeScript".
+They do still need the vitest harness, which is the owner question below.
+
+### Findings
+
+- **A derived freshness status can fail its own published schema, and the
+  TypeScript's does too.** Nothing on either side ever validated a DERIVED
+  status, so this was invisible. Two shapes are refused by
+  `ucase-freshness-status-v1`: a row carrying `variant_local_status`
+  (`/rows/0` "must NOT have additional properties" — the schema has no member
+  for the variant roll-up) and a row whose `row_id` is the empty string
+  (`/rows/0/row_id` "must NOT have fewer than 1 characters"). Measured by
+  feeding the corpus's own node-recorded wire back through node's
+  `validateFreshnessStatus`: node gives the identical verdict and the identical
+  message. Same class as the "presentation plans can fail their own published
+  schema" note above — decision 8 freezes both the schema and the behaviour and
+  they disagree. Pinned as is by `FreshnessContractTests`, which asserts the
+  RULE (these two shapes are refused, everything else validates) so a third
+  shape starting to fail still breaks the suite. **Owner's call** which side is
+  wrong.
+- **A whole CLI rendering branch was dead to the suite.** No recorded corpus
+  case carries a non-empty `gate.ungated_below_bar`, so the
+  "⚠ `<row>` is `<state>` but NOT gated" warning loop in
+  `TrustRenderer+Scan.swift` could have been deleted with every test still
+  green. Now pinned by `TrustRendererGateTests`.
+- **The row 4c note "nothing was ported for `precommit`" is half wrong.** It is
+  true of the CLI surface — `precommit` is not a command — but `Precommit.decide`
+  and `Precommit.pullRequestSummary` ARE ported and pinned by 20 corpus cases in
+  `ScanImpactGoldenCorpus.precommitCaseNames`. Only
+  `scripts/use-cases-precommit.sh` itself dies at row 10.
+
+### Written in row 9
+
+Four new Swift test files, 15 test functions (154 test cases with
+parameterisation), all mutation-proven:
+
+- `UseCasesCore/…/Initialization/ScaffoldedWorkspaceTests.swift` — the vended
+  sample's SHAPE (a scenario of each kind, a comment above every documented
+  field, "one test"), and that a freshly scaffolded workspace loads, validates
+  clean and scans with every row UNBOUND and nothing INVALID. The init corpus
+  records the scaffolded bytes; no case had ever read the tree back as a
+  workspace. This also closes one of the two gaps in
+  `tests/conformance/cli/init-contract.test.ts` ("the scaffolded workspace
+  immediately passes `matrix validate`") — no `MatrixInitGoldenCorpus` case
+  chains `init` to anything, they are all one argv. The other half of that file
+  (the generated `use-cases.yml` and row file validating against
+  `workspace-config.schema.json` / `use-case-file.schema.json`) is still open.
+- `UseCasesCore/…/Markers/Commands/LedgerChainRulesTests.swift` — a chain break
+  as the ONLY fault driving `validate-ledger` to exit 4 with just
+  `UCM_LEDGER_CHAIN_BROKEN`, an untouched chain verifying all three entries, and
+  a legacy proof with the chain fields stripped and re-signed still validating
+  and still reading FRESH through `scan`.
+- `UseCasesCore/…/Markers/FreshnessContractTests.swift` — the schema finding
+  above, plus a keyless `scan` in feature mode exiting 0 with `evidence_valid`
+  true (every recorded keyless case runs in release mode behind the gate, so the
+  corpus only ever pinned exit 1), plus an unrecognised CI falling back to
+  `local`/`generic` (every recorded `local` case passes an EMPTY environment).
+- `UseCasesCLI/…/Rendering/TrustRendererGateTests.swift` — the dead warning
+  branch above, including that the GATE's list decides, not the status rows'.
+
+### Left undone, and it is a real list
+
+Row 9 enumerated all 133 files but wrote tests for only the highest-value gaps.
+The following behaviours are pinned by nothing in Swift today. None of them is
+on a row whose verifier command names a `packages/` path, which is why they were
+ranked below the eight rows above — but they all disappear with `packages/`.
+
+- `lieGuard.test.ts`: an internally CONSISTENT unsigned proof (hashes all
+  recompute, only `signature` absent) driven through `scan`; and the forbidden
+  marker payloads `proven=true`, `row_hash=`, `span_hash=`, `role=`, `tier1`
+  (only `sha256=` and `fresh=` are driven).
+- `walkingSkeleton.test.ts`: the a–f ladder as ONE sequence (bind → UNPROVEN →
+  prove → FRESH → edit the body → SUSPECT → reprove → FRESH → delete the marker
+  → ALL_BINDINGS_REMOVED), and the re-slug + `--register-existing` pair read in
+  one scan.
+- `rebind.test.ts`: VERIFIED_LOCAL does not survive a rebind, and is restored by
+  re-verifying; after an unbind nothing still claims it.
+- `keyringFreshnessE2e.test.ts`: key ROTATION end to end — two active keys, a
+  refresh-prove under the new one, the newest proof winning.
+- `verify.test.ts`: a `--public-key` that RESOLVES but REJECTS, giving exit 4
+  with `BAD_SIGNATURE` (the corpus only ever passes the right PEM or no key).
+- `scanGate.test.ts`: a non-required VERIFIED_LOCAL row reported in
+  `ungated_below_bar` under the RELEASE bar.
+- `verificationPolicySchema.test.ts` / `workspaceConfigVerifiersSchema.test.ts` /
+  `v1NewSchemas.test.ts`: the accept/reject pairs for verifier `kind`, preset
+  references, unknown preset ids, `default` values, and the `authority`,
+  `ledger`, `release-gate-result` and `approval-token` refusals.
+- `markers.test.ts`: the marker/registry/proof schemas refusing their
+  required-property and enum violations (today only the ledger RULES are
+  pinned, so a schema regression would pass).
+- `approvalTokenAppend.test.ts`: the replay regression guard — a hand-written
+  `approval_recorded` with `capture_method: trusted_user_interactive_cli` and no
+  token must be IGNORED; and the accept direction of a lowered assurance floor.
+- `showcaseApprove.test.ts`: approving an epoch-staled run exits non-zero in
+  both modes; a lowered floor end to end through the CLI; `--keyring` narrowing
+  to a pinned SUBSET and succeeding.
+- `matrixValidate.test.ts`: `approval_policy.minimum_assurance_tier` and
+  `approval_trust.public_keys` validating clean through `matrix validate`.
+- `useCases/matrix.test.ts`: the snapshot surfacing the workspace's pinned
+  `approval_trust`. `useCases/variants.test.ts`: an illegal variant key making
+  the row non-addressable.
+- `scaffold-git-hooks.test.ts`: the EMITTED `.githooks/pre-commit`, run under
+  bash with no `use-cases` on PATH, exits 0 and warns — nothing in Swift ever
+  runs the script it writes. `scaffold-path-containment.test.ts`: an absolute
+  `--repo` under a symlinked parent SUCCEEDS.
+- `redact.test.ts`: the label's case is preserved (`API-KEY:` → `API-KEY=`);
+  a short `AKIA` look-alike survives.
+- `roots/idValidation.test.ts`: the runtime id regex and
+  `common.schema.json#/$defs/id` do not drift apart.
+- `ciAuthority.test.ts` is done; `ledgerChain.test.ts` is done.
+- `mcp/showcaseRequestApproval.test.ts`: `exp` strictly after `iat` (the corpus
+  normalises both away), and two requests minting distinct nonces.
+- `tests/agents/canonical-agents.test.ts`, `tests/skills/{loop-skill,p7-skills}.test.ts`:
+  the LIVE `agents/` and `skills/` trees. `SkillsGoldenCorpus` validates a
+  FROZEN `shipped` snapshot embedded in the corpus, so editing a real skill or
+  agent body today fails no Swift test. `agents/` is read by nothing in Swift at
+  all.
+- `tests/e2e/p11-product-lifecycle.test.ts`: the shipped `examples/` workspaces
+  are referenced by zero Swift tests, and `examples/python-pytest` by nothing in
+  either language.
+- `tests/use-cases/compat/proof-survives-upgrade.test.ts`: the
+  `tests/fixtures/backcompat/proven-0.5.5/` workspace — a real artifact of the
+  published 0.5.5 binary — is touched by nothing in Swift. Its four literal
+  hashes appear nowhere in the Swift tree. This is the upgrade contract, and it
+  is the highest-value item on this list.
+- `tests/use-cases/compat/ledger-migration.test.ts`: today's `bind` /
+  `bind --register-existing` events still validating against the committed
+  0.5.5 event schema, and that schema refusing `binding_released`.
+- `tests/schema/{evidence,matrix,schema}-cli.test.ts`: each command's `data`
+  against its OWN result schema (the envelope is pinned, the payload is not).
+- `tests/schema/schema-contracts.test.ts`: a timestamp-looking YAML scalar
+  (`name: 2026-06-25`) staying a string.
+- `tests/plugin/claude-install.test.ts`: `plugin.json.name == "use-cases"`
+  exactly, the `mcpServers` args being exactly the one-element array, and
+  `.agents/skills` not existing.
+
+And from `tests/cli/**` and `tests/conformance/**`, which mostly spawn a
+hardcoded `node packages/cli/dist/index.js` and so cannot be re-pointed:
+
+- **Nothing schema-validates real command output.** The CLI corpora compare
+  bytes; `CliResultTests` validates one hand-built envelope. Uncovered: every
+  command's real `--json` stdout against `cli-result.schema.json`, and each
+  command's `data` against its own v1 data schema (matrix-mutation-result,
+  evidence-append-result, showcase-*-result, presentation-plan-result, …), plus
+  the gate that the set of commands exercised IS the canonical surface.
+  (`cli-output-contract`, `p5-plan-contract`, `p6-showcase-contract`,
+  `schema/{evidence,matrix,schema}-cli`.)
+- **Two anti-drift joins have both halves in Swift and no test joining them.**
+  `KnownCliCommands` (Core) × `CommandRegistry.allCommands` (CLI) — the
+  skill/agent allowlist must equal what the registry dispatches; and
+  `McpToolCatalog.descriptors` × `CommandRegistry.allCommands` — every MCP tool
+  id must exist as a CLI command, and the CLI-only trust surface
+  (`markers.bind`, `markers.scan`, `markers.verify`, `markers.validate-ledger`)
+  must never become a tool. `rg KnownCliCommands UseCasesCLI UseCasesMCP` is
+  empty today. Both tests need a target that can see both modules.
+- **The `use-cases-mcp` EXECUTABLE has no test at all.** `McpGoldenCorpusTests`
+  calls `McpStdioServer.response(to:)` in process; nothing launches the binary,
+  so `--stdio`, newline framing over real pipes, silent
+  `notifications/initialized`, id matching across interleaved lines,
+  `result.structuredContent`, and "closing stdin ends the process" are pinned by
+  nothing. (`p13-stdio-parity`.) The CLI has the equivalent already —
+  `EvidenceVoidRaceTests` runs the real binary.
+- **CLI/MCP envelope equality is asserted nowhere** — `matrix_validate` and
+  `doctor_roots` over MCP versus the same commands on the CLI, and a missing
+  repo giving a byte-identical `workspace.not_found` on both. (`p9-mcp`.)
+- **Four MCP-surface path-safety cases** absent from `McpGoldenCorpus`:
+  `showcase_record_observation` with a traversal `run` and with a traversal
+  `item`, and `showcase_start` with an absolute out-of-workspace `plan_file`
+  and with a `plan_file` symlink pointing outside. The CLI equivalents are
+  pinned; the MCP ones are not.
+- **A SUCCESSFUL `capsule_run` over MCP** — every `capsule_run` case in
+  `McpGoldenCorpus` is a refusal. (`p14-mcp-capsule-runner`.)
+- **The shipped `skills/use-cases/SKILL.md` is read by no Swift test** — same
+  frozen-snapshot problem as the skills corpus. (`conformance/agents/skill-currency`,
+  whose MCP-prompt half IS covered by `McpGoldenCorpus`.)
+- **No Swift test runs a real verifier toolchain.** Four `tests/cli/*` files
+  drive real `pytest` through `verify`/`recover`/`scan --gate`; every Swift
+  verifier is a scripted stub, so `python.pytest`'s actual command line is
+  proved nowhere. `examples/python-pytest` survives row 10 and is the fixture.
+  Their `pnpm pack` → `npm install` → `node_modules/.bin` harness dies with the
+  TypeScript regardless.
+
+### Dies with the TypeScript, deliberately
+
+- `tests/plugin/bundle.test.ts` and `tests/smoke/build-concurrency.test.ts` —
+  the Node bundle and the `copy-schemas.mjs` race. Swift embeds the schemas;
+  `EmbeddedSchemasTests` already carries the surviving idea.
+- `tests/use-cases/compat/backcompat-contract.test.ts` — its capture script
+  (`scripts/capture-cli-contract.mjs`) spawns `node <cli>` and cannot be
+  re-pointed. The FIXTURE `contract-0.4.0.json` survives as data; only the
+  mechanism dies. Whether the superset property is worth a Swift harness is an
+  owner call.
+- `tests/plugin/runtime-resolver.test.ts`'s second describe — already a planned
+  retirement (see the row 10 note above).
+- `errors/registry.test.ts`'s "throws for an unknown enum code" — unrepresentable
+  in Swift. `markers.test.ts`'s "drops undefined-valued keys" — JS `undefined`
+  has no `JSONValue`. `scaffold.test.ts`'s npm `files` set — npm went at 0.7.0.
+- `packages/core/test/markers/precommit.test.ts`'s acceptance 7 only (the shell
+  script's existence and exec bit).
+
+### Owner question — does the vitest harness survive row 10?
+
+The row 10 note says deleting the TypeScript toolchain deletes `pnpm-lock.yaml`.
+If that means `package.json`, `pnpm` and `vitest` go too, then the 22 black-box
+oracle files and the ~11 SURVIVES-ROW-10 files (the bash bootstrap, the host
+manifests, the release workflow, the session hook, `opencode/plugin.js`, the
+init skill) lose their runner as well, and each needs a Swift home — which is a
+much larger job than row 10 as written, and is NOT row 9's. If instead the root
+`package.json`/vitest stay as a test harness with `packages/` gone, those files
+need no work at all. Row 9 did not pick a side.
+
 
 - **This file, `docs/adr/`, `docs/acceptance/0.3.0/`, the two `.use-cases/`
   ledgers, `showcase-runs/` and `tests/fixtures/backcompat/` are RECORDS and
