@@ -1,7 +1,7 @@
 {
   "_comment": "Not a build manifest. ADR 0007 row 10d deleted the TypeScript and its toolchain; what is left is the HOST manifest OpenCode needs, and it sits beside .claude-plugin/plugin.json and .codex-plugin/ rather than beside a build. OpenCode installs this plugin as a package (`opencode plugin add 'github:adammcarter/use-cases'`) and resolves it through `exports`; `type: module` is what makes opencode/plugin.js load as the ES module it is. Nothing here is installed, built or published: there are no scripts, no dependencies and no package manager, and `private` keeps it off npm (publishing went at 0.7.0). Removing this file would break the OpenCode install and the row plugin.install.opencode_from_git that pins it.",
   "name": "@adammcarter/use-cases",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "license": "MIT",
   "repository": {
     "type": "git",

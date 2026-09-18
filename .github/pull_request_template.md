@@ -4,9 +4,11 @@
 
 ## Checklist
 
-- [ ] Tests added or updated for behavioural changes (`tests/` / package tests).
-- [ ] `corepack pnpm -s test` is green locally.
-- [ ] `corepack pnpm -s build` is clean.
+- [ ] Tests added or updated for behavioural changes (the package test suites).
+- [ ] All four suites are green locally: `swift test --package-path` for
+      `UseCasesCore`, `UseCasesCLI`, `UseCasesMCP` and `UseCasesOracle` (the
+      oracle needs `UC_BIN` / `UC_MCP_BIN` — see CONTRIBUTING.md).
+- [ ] `swiftformat --lint .` and `swiftlint --strict` are clean.
 - [ ] Docs updated (if a contract or behaviour changed).
 - [ ] `CHANGELOG.md` updated under `## [Unreleased]`.
 

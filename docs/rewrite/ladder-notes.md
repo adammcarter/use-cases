@@ -2250,6 +2250,79 @@ need no work at all. Row 9 did not pick a side.
   `suggested_signer_command` is now `["use-cases","approve-run",…]`, and no `uc`
   survives in the four MCP prompt bodies.
 
+## Row 11 — the 0.8.0 bump
+
+The owner's packet is `docs/rewrite/0.8.0-sign-off.md`: what changed, what is
+proven, what is knowingly unproven, and the steps that would cut the release.
+The user-facing breaking list is `CHANGELOG.md`, which this row created — none
+existed, and both `.github/pull_request_template.md` and
+`docs/reference/stability.md` already named one, so the convention was already
+written down and merely unimplemented. ADR 0007 gained its closing amendments.
+
+### The bump list of row 6 was right, minus everything that died
+
+Row 6 listed the files to touch and said "regenerate the corpora, don't
+hand-edit". Half that list is gone: `packages/{core,cli,mcp}/package.json`,
+`packages/core/src/version.ts` and all four named generators went with row 10d.
+What was left is `ProductVersion.swift` + its test, and the three host
+manifests. `bin/use-cases-runtime` and `bin/use-cases-bootstrap` needed no edit,
+exactly as rows 6 and 7 predicted — both read the version from the Claude
+manifest.
+
+### Nothing joined the four version declarations, so a test now does
+
+`ProductVersionManifestParityTests` (Core, 3 tests): each manifest declares what
+`ProductVersion` reports, the manifests agree with each other, and the version
+is not below `FIRST_SWIFT_RELEASE` in `bin/use-cases-runtime` — which would mean
+the plugin refuses to run itself. Proved by setting `.codex-plugin/plugin.json`
+back to 0.7.0 and watching both parity tests go red. Core is **608**, not 605,
+and these three are the whole delta.
+
+It compares release numbers as integers rather than strings, mirroring
+`at_least` in `bin/use-cases-runtime`, so `0.10.0` will sort above `0.8.0` when
+that day comes.
+
+### The corpora: the split is measured, not guessed
+
+Bump the source of truth first, run everything, and let each failure name a
+value that is an OUTPUT. Across the nine corpora **503 occurrences moved and 455
+stayed**; outside them nothing moved at all — 338 in the append-only binding
+ledger and four in prose about history. The table of which, and why, is in the
+sign-off packet. The sharpest
+case is `VerifyProveGoldenCorpus`: **11 outputs against 214 records** in the same
+JSON path (`steps[].files[]`), separated by whether the line also appears in the
+case's own input `entries[]` — an echoed pre-existing ledger line is a record,
+a line the command appended is an output.
+
+**Both directions were falsified**, and this is the part worth repeating on any
+future bump:
+
+- bump a record → `VerifyProveTests` fails (so leaving them was required, not
+  merely safe);
+- revert an output → `VerifyProveTests` fails (so bumping them was required).
+
+A file where nothing moved is evidence too: `MarkersLedgerGoldenCorpus` has 76
+occurrences and needed none, because no case in it makes the binary mint an
+event — every one is registry text fed *in*.
+
+### `.use-cases/bindings.jsonl` was not touched, and `SkillsGoldenCorpus` was not either
+
+The ledger's 338 past `created_by.version` entries are append-only; row 6 said
+so and it stands. `SkillsGoldenCorpus`'s two are subtler: its `shipped` map is a
+TypeScript-era snapshot of this repository's own files, used as an INPUT fixture,
+and `SkillHostRegistration` never reads `version` — so the value is inert and no
+test moved when the real manifest did. Left as the record it is. It is also the
+row 9 finding made visible: nothing joins that snapshot to the live tree, so it
+will keep drifting. Raised as an owner question rather than fixed, because
+joining them is a test somebody has to design.
+
+### Three stale docs fixed in passing
+
+`.github/pull_request_template.md` still asked for `corepack pnpm -s test` and
+`pnpm -s build`; `docs/reference/stability.md` still linked a deleted
+`docs/release/publishing.md` and described npm Trusted Publishing, and still said
+the release line was `0.0.x`. Row 10d's "docs repointed" list missed all three.
+
 ## Candidate hardening (contract change — owner's call, after 0.8.0)
 
 - `keyring.schema.json` puts no pattern on `key_id`. Without exact-byte key

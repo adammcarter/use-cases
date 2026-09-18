@@ -6,16 +6,20 @@ change in breaking ways across a **major** version bump. This page is the
 authoritative declaration of what is stable, what is experimental, and how
 versions move.
 
-> **Pre-1.0 (beta).** The current release line is `0.0.x` — beta software. The
+> **Pre-1.0 (beta).** The current release line is `0.x` — beta software. The
 > contracts below describe the *intended* shape that becomes binding **at
-> `1.0.0`**; until then they may still change between `0.0.x` releases. Adopt
-> with that in mind.
+> `1.0.0`**; until then they may still change between `0.x` releases. Adopt with
+> that in mind. 0.8.0 is a case in point: it renamed the command and retired
+> five behaviours, all listed in [CHANGELOG.md](../../CHANGELOG.md).
 
-> Ships as a single package, `use-cases` (binaries `use-cases` and `use-cases-mcp`);
-> the `core` / `cli` / `mcp` workspaces are bundled inside it, not published
-> separately. See the [publishing runbook](../release/publishing.md) for how a
-> release is cut (npm Trusted Publishing + provenance) and the owner one-time npm
-> setup.
+> Ships as one release carrying both binaries, `use-cases` and `use-cases-mcp`;
+> the core / CLI / MCP packages are linked inside them, not published
+> separately. From 0.8.0 a release publishes checksum-verified archives to
+> GitHub Releases for `macos-arm64`, and the plugin's `bin/` bootstrap downloads,
+> verifies and caches the one it needs on first run
+> ([ADR 0007](../adr/0007-swift-rewrite.md) decision 3). npm publishing was
+> removed at 0.7.0. `.github/workflows/release.yml` is the pipeline; it triggers
+> on a `v<semver>` tag push or a manual dispatch, and nothing else can publish.
 
 ## SemVer policy
 
@@ -122,6 +126,11 @@ promoted. They are called out here so adopters can depend on them with eyes open
 
 ## Changing a contract
 
-A breaking change to anything above requires: a major version bump, a CHANGELOG
-entry, and a migration note under `docs/migration/`. Additive changes ship in a
-minor with a CHANGELOG entry.
+A breaking change to anything above requires: a major version bump, an entry in
+[CHANGELOG.md](../../CHANGELOG.md) saying what breaks and how to fix it, and a
+migration note under `docs/migration/`. Additive changes ship in a minor with a
+CHANGELOG entry.
+
+Pre-1.0 the major-bump half is relaxed — a breaking change may ship in a minor,
+as 0.8.0 did — but the changelog entry is not optional, and it must say plainly
+what an adopter has to change.

@@ -87,6 +87,9 @@ MCP.
   the stability policy.
 - **Docs updated.** If you change a contract or behaviour, update the relevant
   doc in the same PR.
+- **CHANGELOG entry.** Anything an adopter would notice goes in
+  [CHANGELOG.md](CHANGELOG.md) under `## [Unreleased]`. A breaking change must
+  say what breaks and what the adopter has to change, not just what was removed.
 - **Tests included** for behavioural changes, as above.
 
 Open a draft PR early if you'd like feedback on direction before polishing.

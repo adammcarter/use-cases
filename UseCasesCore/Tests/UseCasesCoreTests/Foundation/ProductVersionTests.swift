@@ -10,8 +10,8 @@ struct ProductVersionTests {
   }
 
   @Test
-  func `reports the version the TypeScript build reports`() {
-    #expect(ProductVersion.version == "0.7.0")
+  func `reports the published version`() {
+    #expect(ProductVersion.version == "0.8.0")
   }
 
   @Test

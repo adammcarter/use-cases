@@ -4,9 +4,12 @@ public enum ProductVersion {
   /// The public product name.
   public static let productName = "@adammcarter/use-cases"
 
-  /// The published version. Bumped to 0.8.0 only at the release row, so the
-  /// Swift binary reports exactly what the TypeScript build reports until then.
-  public static let version = "0.7.0"
+  /// The published version. Bumped to 0.8.0 at the release row (ADR 0007
+  /// decision 9, ladder row 11); up to that point the Swift binary reported
+  /// exactly what the TypeScript build reported, which is how the port was
+  /// held to byte parity. It must stay equal to the version in the three host
+  /// manifests — `ProductVersionManifestParityTests` is what joins them.
+  public static let version = "0.8.0"
 
   /// The workspace component id used when a repository's config sets none.
   /// This is matrix DATA, distinct from ``productName``.

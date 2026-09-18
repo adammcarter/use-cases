@@ -134,3 +134,71 @@ unchanged.
   absent, so the toolchain cannot grow back through it. It now sits beside
   `.claude-plugin/plugin.json` and `.codex-plugin/`, and nothing installs,
   builds or publishes from it.
+- **2026-09-18 — decision 4 reaches the MCP URI scheme and the prompt names,
+  and the old ones are refused (row 8).** `uc://` is now `use-cases://` and the
+  four `uc/<prompt>` prompts are now `use-cases/<prompt>`. Decision 8 freezes
+  the CLI JSON envelope, the 27 schemas, the marker syntax and the ledger
+  formats; a resource URI scheme and a prompt name are on none of those lists
+  and are squarely inside decision 4's "the MCP server". Checked first that
+  `use-cases` is a legal scheme `new URL` splits identically, so the host/path
+  split is unchanged. The owner approved the rename **and the refusal**: the old
+  scheme answers `-32002 Unknown resource` and the old prompt names `-32602
+  Unknown prompt`, rather than aliasing.
+- **2026-09-18 — decision 4's "no alias" is read strictly: `bin/uc` is deleted,
+  with no tombstone (row 8).** A tombstone — a `bin/uc` that execs nothing,
+  prints "the command is now `use-cases`" and exits 2 — was built and then
+  removed at the owner's direction. The consequence is accepted and is the
+  point: a 0.7.0-era `.githooks/pre-commit` in an adopter's repo that calls `uc`
+  now fails with the shell's own `command not found: uc`, and the plugin says
+  nothing to them, because nothing of the plugin is reached. The cure for such a
+  repo is re-running `use-cases init`, which rewrites the hook block. Env vars
+  did NOT move: `UCM_*` are error codes in the frozen envelope, and `UC_BIN` /
+  `UC_MCP_BIN` / `UC_RUN_KEY_FILE` are test and environment knobs rather than
+  the surfaces decision 4 names.
+- **2026-09-18 — decision 6's toolchain clause is superseded in practice (rows
+  1–11).** Decision 6 says packages are opened, built and tested through the
+  Xcode MCP tools. The whole ladder was in fact built and tested with
+  `swift build` / `swift test --package-path <package>` from the command line,
+  and that is what `AGENTS.md`, `CONTRIBUTING.md` and
+  `.github/workflows/swift.yml` all now say. The platform half of the decision
+  stands unchanged (macOS, Swift 6.4, Apple Silicon). Recorded so the decision
+  and the repository agree.
+- **2026-09-18 — the white-box count is 133, not ~87 (row 9).** The Consequences
+  section estimated "~87 white-box files" and said the count is measured, not
+  assumed. Measured: **155 test files**, of which **22 are the black-box
+  oracle**, leaving **133 non-black-box files** (72 under `packages/*/test/**`,
+  61 under `tests/**`). The delta is suite growth caused by decision 2, not an
+  error in the estimate. Row 9 carried the highest-value gaps into Swift and
+  wrote down the rest; what it knowingly left unwritten is enumerated in
+  `docs/rewrite/ladder-notes.md` and is the honest list of what 0.8.0 does not
+  pin.
+- **2026-09-18 — the Swift suites are the CI gate, and the vitest gate is gone
+  (rows 10b, 10d).** The row 10a/10b question — wire the Swift suites into CI
+  as part of 10b, or let 10d land with no gate — was answered by building the
+  gate first: `.github/workflows/swift.yml` runs on `macos-15`, builds the three
+  products, runs all four suites, lints, and then gates the matrix with the
+  binary it just built (`verify --repo . --all`, `scan --repo . --gate`).
+  `.github/workflows/ci.yml` was deleted with the TypeScript. A macOS runner is
+  required rather than preferred: the oracle drives the real binaries and the
+  bootstrap suites are Apple-Silicon-gated.
+- **2026-09-18 — the corpus generators are gone, and the recorded corpora are
+  now the source of truth (row 10d).** All 20 `.mjs` generators ran the built
+  TypeScript and were deleted with it; each of the 21 corpus files whose header
+  said "regenerate with …" now says NOT REGENERABLE and names the generator that
+  was retired. This changes how decision 2's oracle works for good: a corpus
+  case that must change is changed **by hand, deliberately, with the reason
+  written down**, and the suite failing is what tells you a value was an output
+  rather than a record. `generate-embedded-schemas.swift` is the one survivor —
+  it is Swift and reads `schemas/`.
+- **2026-09-18 — decision 9 is discharged: 0.8.0 is prepared, not cut (row
+  11).** `ProductVersion.version` and the three host manifests are at 0.8.0, and
+  the recorded corpora were moved with them where the version was an OUTPUT the
+  binary produces — never where it was a historical record (a pre-existing
+  ledger line, a `"tool":"uc"` event, a frozen fixture). A new test,
+  `ProductVersionManifestParityTests`, joins the four so they cannot drift
+  again. **Nothing is tagged, released or published**: decision 9 says 0.8.0 is
+  cut once the owner has signed it all off, and the sign-off package is
+  `docs/rewrite/0.8.0-sign-off.md`. Note the ordering this release forces —
+  because the runtime resolver branches on the manifest version, the release
+  must publish its assets before or as part of the tag, or every installed
+  plugin fails at the first command.
