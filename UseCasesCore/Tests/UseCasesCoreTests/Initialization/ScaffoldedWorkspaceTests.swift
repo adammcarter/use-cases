@@ -3,6 +3,7 @@ import Testing
 import TestSupport
 @testable import UseCasesCore
 
+//: @use-case:plugin.init.vends_sample_matrix
 /// What `use-cases init` leaves behind, read as a workspace rather than as bytes.
 ///
 /// `InitializationGoldenCorpus` pins the scaffolded bytes; these pin what those
@@ -163,3 +164,5 @@ private struct ScaffoldedWorkspace {
     )
   }
 }
+
+//: @use-case:end plugin.init.vends_sample_matrix

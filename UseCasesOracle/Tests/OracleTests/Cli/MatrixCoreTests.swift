@@ -98,6 +98,7 @@ enum MatrixCoreWorkspace {
   }
 }
 
+//: @use-case:matrix.core.validate#blackbox
 /// The black-box oracle for matrix/core.yml, row `validate`.
 ///
 /// These two rows are among the eight that carry `verification_policy: mode:
@@ -140,6 +141,9 @@ struct MatrixCoreValidateTests {
   }
 }
 
+//: @use-case:end matrix.core.validate#blackbox
+
+//: @use-case:matrix.core.mutate#blackbox
 /// The black-box oracle for matrix/core.yml, row `mutate`.
 struct MatrixCoreMutateTests {
   // golden_upsert. A mutation returns before and after hashes so a caller can
@@ -278,3 +282,5 @@ struct MatrixCoreMutateTests {
     #expect(blocked.data["status"]?.stringValue == "blocked")
   }
 }
+
+//: @use-case:end matrix.core.mutate#blackbox

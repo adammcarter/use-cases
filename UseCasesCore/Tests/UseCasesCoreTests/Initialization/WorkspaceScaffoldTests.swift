@@ -6,6 +6,7 @@ import TestSupport
 /// `use-cases init`'s scaffolding, against what the TypeScript's `scaffoldWorkspace`
 /// returned, threw and left on disk for the same sandbox.
 struct WorkspaceScaffoldTests {
+  //: @use-case:plugin.init.wires_git_hooks
   @Test(arguments: InitializationGoldenCorpus.caseNames)
   func `a workspace is scaffolded as the TypeScript scaffolded it`(caseName: String) throws {
     let testCase = try InitializationFixtures.testCase(caseName)
@@ -48,6 +49,8 @@ struct WorkspaceScaffoldTests {
     #expect(hooksPath == expectedHooksPath)
   }
 
+  //: @use-case:end plugin.init.wires_git_hooks
+
   @Test
   func `the templates are the TypeScript's, in its order`() throws {
     let templates = try #require(InitializationFixtures.corpus.get()["templates"]?.arrayValue)
@@ -71,6 +74,7 @@ struct WorkspaceScaffoldTests {
       .wire(entry["steps"]))
   }
 
+  //: @use-case:plugin.init.records_decision_in_agents_md
   @Test(arguments: 0 ..< 7)
   func `the AGENTS decision is dated from the clock when no day is given`(index: Int) throws {
     let entries = try #require(InitializationFixtures.corpus.get()["today_from_clock"]?.arrayValue)
@@ -90,6 +94,8 @@ struct WorkspaceScaffoldTests {
     #expect(agents
       .split(separator: "\n", omittingEmptySubsequences: false)[4] == "yes \u{2014} \(today)")
   }
+
+  //: @use-case:end plugin.init.records_decision_in_agents_md
 
   @Test
   func `a relative repository root resolves against the given working directory`() throws {

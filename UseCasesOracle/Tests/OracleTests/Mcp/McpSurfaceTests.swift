@@ -111,6 +111,7 @@ enum McpSurfaceWorkspace {
   }
 }
 
+//: @use-case:mcp.surface.cli_contract_transport#blackbox
 /// The black-box oracle for mcp/surface.yml, row `cli_contract_transport`.
 ///
 /// Driven over real stdio through ``McpSession``, so these assert the wrapper
@@ -190,6 +191,9 @@ struct McpSurfaceTransportTests {
   }
 }
 
+//: @use-case:end mcp.surface.cli_contract_transport#blackbox
+
+//: @use-case:mcp.surface.write_gating#blackbox
 /// The black-box oracle for mcp/surface.yml, row `write_gating`.
 struct McpSurfaceWriteGatingTests {
   // bad_read_only_session_cannot_mutate. TWO independent locks, and this is the
@@ -281,6 +285,9 @@ struct McpSurfaceWriteGatingTests {
   }
 }
 
+//: @use-case:end mcp.surface.write_gating#blackbox
+
+//: @use-case:mcp.surface.approval_request_only#blackbox
 /// The black-box oracle for mcp/surface.yml, row `approval_request_only`.
 struct McpSurfaceApprovalTests {
   // golden_boundary and edge_no_event_is_appended. MCP may ASK; it may never
@@ -322,6 +329,9 @@ struct McpSurfaceApprovalTests {
   }
 }
 
+//: @use-case:end mcp.surface.approval_request_only#blackbox
+
+//: @use-case:mcp.surface.domain_results_not_transport_failures#blackbox
 /// The black-box oracle for mcp/surface.yml, row
 /// `domain_results_not_transport_failures`.
 struct McpSurfaceDomainResultsTests {
@@ -350,6 +360,9 @@ struct McpSurfaceDomainResultsTests {
   }
 }
 
+//: @use-case:end mcp.surface.domain_results_not_transport_failures#blackbox
+
+//: @use-case:mcp.surface.declared_tool_schemas#blackbox
 /// The black-box oracle for mcp/surface.yml, row `declared_tool_schemas`.
 struct McpSurfaceToolSchemasTests {
   static func inputProperties(
@@ -391,3 +404,5 @@ struct McpSurfaceToolSchemasTests {
     }
   }
 }
+
+//: @use-case:end mcp.surface.declared_tool_schemas#blackbox

@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 
+//: @use-case:release.distribution.release_publishes_checksummed_assets
 /// The black-box oracle for release.distribution.release_publishes_checksummed_assets —
 /// the Swift shape of `tests/plugin/release-workflow.test.ts`.
 ///
@@ -237,3 +238,5 @@ struct ReleaseWorkflowTests {
     )
   }
 }
+
+//: @use-case:end release.distribution.release_publishes_checksummed_assets
