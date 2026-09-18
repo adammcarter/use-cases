@@ -4,8 +4,8 @@
 //
 // They must mirror the CLI's declarative registry exactly. A parity test
 // (tests/cli/known-commands-parity.test.ts) asserts that against `allCommands`,
-// because the previous hand-maintained copy silently fell behind: `uc impact` and
-// `uc showcase request-approval` shipped as real commands while the validator
+// because the previous hand-maintained copy silently fell behind: `use-cases impact` and
+// `use-cases showcase request-approval` shipped as real commands while the validator
 // still reported them as unknown, which would have flagged a correct body.
 //
 // `packages/core` cannot import `packages/cli` (the dependency runs the other
@@ -54,7 +54,7 @@ export const KNOWN_CLI_COMMANDS = new Set([
 export const BUILTIN_FLAT_CLI_COMMANDS = ["init", "version"] as const;
 
 /**
- * Single-segment commands. A reference like `uc bind --repo ...` carries a flag
+ * Single-segment commands. A reference like `use-cases bind --repo ...` carries a flag
  * as its second token, so it is validated by its bare command name rather than
  * as a "<command> <subcommand>" pair.
  */

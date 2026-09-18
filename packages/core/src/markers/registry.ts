@@ -205,7 +205,7 @@ export function validateRegistryEvents(
         errors.push({
           code: RegistryErrorCode.DUPLICATE_REGISTRATION,
           line,
-          message: `binding slug ${slug} is already registered; re-point it with \`uc rebind\` or release it with \`uc unbind\``,
+          message: `binding slug ${slug} is already registered; re-point it with \`use-cases rebind\` or release it with \`use-cases unbind\``,
           binding_slug: slug,
           row_id: row
         });

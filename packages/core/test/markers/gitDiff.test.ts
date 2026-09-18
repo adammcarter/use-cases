@@ -1,4 +1,4 @@
-// Unit tests for the pure git-diff helpers that back `uc impact`. The parsing is
+// Unit tests for the pure git-diff helpers that back `use-cases impact`. The parsing is
 // pure text -> structured data; the git access is an injected GitRunner, so no
 // test shells out to a real repo here (an end-to-end real-git test lives in the
 // CLI subprocess suite).

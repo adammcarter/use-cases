@@ -165,7 +165,7 @@ public struct AcceptanceClaim: Equatable, Sendable {
   }
 }
 
-/// The freshness object: the `uc scan` contract (ADR 0007 decision 8).
+/// The freshness object: the `use-cases scan` contract (ADR 0007 decision 8).
 public struct FreshnessStatus: Equatable, Sendable {
   public let generatedAt: String
   public let tool: ProductVersion.VersionInfo

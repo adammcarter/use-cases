@@ -93,8 +93,8 @@ function snapshot(dir: string): string[] {
 }
 
 const WORKSPACE_URIS = [
-  "uc://matrix", "uc://matrix/status", "uc://freshness", "uc://bindings",
-  "uc://ledger", "uc://evidence", "uc://schemas", "uc://config"
+  "use-cases://matrix", "use-cases://matrix/status", "use-cases://freshness", "use-cases://bindings",
+  "use-cases://ledger", "use-cases://evidence", "use-cases://schemas", "use-cases://config"
 ];
 
 //: @use-case:mcp.resources.workspace_state_is_readable_and_read_only#blackbox
@@ -110,16 +110,16 @@ describe("mcp.resources.workspace_state_is_readable_and_read_only", () => {
     const uris = (listed.result?.resources as Array<{ uri: string }>).map((r) => r.uri);
     expect(uris.sort()).toEqual([...WORKSPACE_URIS].sort());
 
-    const read = await mcp.request("resources/read", { uri: "uc://matrix" });
+    const read = await mcp.request("resources/read", { uri: "use-cases://matrix" });
     const contents = read.result?.contents as Array<{ mimeType: string; text: string }>;
     expect(contents[0].mimeType).toBe("application/json");
     expect(JSON.parse(contents[0].text)).toMatchObject({ command: "matrix.validate" });
   });
 
   // bad_unknown_resource.
-  test("an unknown uc:// URI returns an error, not an empty success", async () => {
+  test("an unknown use-cases:// URI returns an error, not an empty success", async () => {
     const mcp = await session(makeWorkspace());
-    const read = await mcp.request("resources/read", { uri: "uc://not-a-resource" });
+    const read = await mcp.request("resources/read", { uri: "use-cases://not-a-resource" });
     expect(read.error ?? read.result, "an unknown resource must not read as success").toBeTruthy();
     expect(JSON.stringify(read)).toMatch(/not.?found|unknown/i);
   });
@@ -128,7 +128,7 @@ describe("mcp.resources.workspace_state_is_readable_and_read_only", () => {
   test("a repo path that traverses out of the workspace is rejected", async () => {
     const dir = makeWorkspace();
     const mcp = await session(dir);
-    const read = await mcp.request("resources/read", { uri: "uc://matrix?repo=../../etc" });
+    const read = await mcp.request("resources/read", { uri: "use-cases://matrix?repo=../../etc" });
     expect(JSON.stringify(read), "a traversal must not be followed").toMatch(/error|escape|invalid|not.?found/i);
   });
 
@@ -156,15 +156,15 @@ describe("mcp.resources.schemas_are_readable_without_a_repo", () => {
     const mcp = await McpSession.start(bare, {});
     sessions.push(mcp);
 
-    const index = await mcp.request("resources/read", { uri: "uc://schemas" });
+    const index = await mcp.request("resources/read", { uri: "use-cases://schemas" });
     const listed = JSON.parse((index.result?.contents as Array<{ text: string }>)[0].text) as {
       schemas: Array<{ id: string }>;
     };
     expect(listed.schemas.length).toBeGreaterThan(20);
 
     const name = listed.schemas[0].id.split("/").pop();
-    const one = await mcp.request("resources/read", { uri: `uc://schemas/${name}` });
-    expect(one.error, `reading uc://schemas/${name} must not error`).toBeUndefined();
+    const one = await mcp.request("resources/read", { uri: `use-cases://schemas/${name}` });
+    expect(one.error, `reading use-cases://schemas/${name} must not error`).toBeUndefined();
     expect((one.result?.contents as Array<{ text: string }>)[0].text).toContain("$schema");
   });
 });
@@ -178,9 +178,9 @@ describe("mcp.resources.prompts_guide_without_widening_the_surface", () => {
 
     const listed = await mcp.request("prompts/list");
     const names = (listed.result?.prompts as Array<{ name: string }>).map((p) => p.name).sort();
-    expect(names).toEqual(["uc/adopt-repo", "uc/bind-row", "uc/recover-suspect-row", "uc/release-review"]);
+    expect(names).toEqual(["use-cases/adopt-repo", "use-cases/bind-row", "use-cases/recover-suspect-row", "use-cases/release-review"]);
 
-    const got = await mcp.request("prompts/get", { name: "uc/bind-row", arguments: { row: "probe.core.alpha" } });
+    const got = await mcp.request("prompts/get", { name: "use-cases/bind-row", arguments: { row: "probe.core.alpha" } });
     expect(got.error).toBeUndefined();
     expect(JSON.stringify(got.result), "the argument must reach the message").toContain("probe.core.alpha");
   });
@@ -195,13 +195,13 @@ describe("mcp.resources.prompts_guide_without_widening_the_surface", () => {
     expect(toolNames.filter((n) => /prove/i.test(n)), "prove is CI-mediated, never an MCP tool").toEqual([]);
 
     const prompts = await mcp.request("prompts/list");
-    expect(JSON.stringify(prompts.result), "nor may a prompt route to it").not.toMatch(/uc\/prove|prove-row/i);
+    expect(JSON.stringify(prompts.result), "nor may a prompt route to it").not.toMatch(/use-cases\/prove|prove-row/i);
   });
 
   // edge_unknown_prompt.
   test("an unknown prompt returns an error rather than an empty message", async () => {
     const mcp = await session(makeWorkspace());
-    const got = await mcp.request("prompts/get", { name: "uc/not-a-prompt", arguments: {} });
+    const got = await mcp.request("prompts/get", { name: "use-cases/not-a-prompt", arguments: {} });
     expect(got.error ?? JSON.stringify(got.result)).toBeTruthy();
     expect(JSON.stringify(got)).toMatch(/error|unknown|not.?found/i);
   });

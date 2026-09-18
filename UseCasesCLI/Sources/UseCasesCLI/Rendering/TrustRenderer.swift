@@ -101,7 +101,7 @@ enum TrustRenderer {
       || (status == .string("UNPROVEN") && localStatus == .string("VERIFIED_LOCAL"))
   }
 
-  /// The action for a non-green row: the daily verb `uc recover` for drifted
+  /// The action for a non-green row: the daily verb `use-cases recover` for drifted
   /// or unverified rows.
   static func scanRowAction(_ row: JSONValue) -> String? {
     let status = row["status"]
@@ -111,11 +111,11 @@ enum TrustRenderer {
     }
     switch status?.stringValue {
     case "SUSPECT", "UNPROVEN":
-      return "run `uc recover --row \(rowIdentifier)`"
+      return "run `use-cases recover --row \(rowIdentifier)`"
     case "INVALID":
-      return "resolve the binding integrity errors, then re-run `uc scan`"
+      return "resolve the binding integrity errors, then re-run `use-cases scan`"
     case "UNBOUND":
-      return "bind it with `uc bind --row \(rowIdentifier) \u{2026}`"
+      return "bind it with `use-cases bind --row \(rowIdentifier) \u{2026}`"
     default:
       return JavaScriptReading.isTruthy(row["required_action"])
         ? "run `\(JavaScriptReading.text(row["required_action"]))`"

@@ -20,7 +20,7 @@ afterEach(() => {
   }
 });
 
-describe("uc init scaffold path containment", () => {
+describe("use-cases init scaffold path containment", () => {
   test("scaffolds an absolute --repo target from a different cwd through a symlinked parent", () => {
     const sandbox = tempDir("repo-root-");
     const realParent = join(sandbox, "real-parent");

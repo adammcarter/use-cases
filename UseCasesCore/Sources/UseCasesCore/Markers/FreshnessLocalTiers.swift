@@ -20,7 +20,7 @@ enum FreshnessLocalTiers {
         .unattestedLocal,
         "a verification result exists for this row but carries no valid run attestation, "
           + "so nothing proves a verifier was ever run for it here; "
-          + "run `uc verify` to record a real one",
+          + "run `use-cases verify` to record a real one",
       )
     }
     let contextMatches = { (result: LocalVerificationResult) in
@@ -39,17 +39,18 @@ enum FreshnessLocalTiers {
     let reason = if results.contains(where: { result in
       result.passed && !contextMatches(result)
     }) {
-      "the verifier or its declared inputs changed since the last local run; re-run `uc verify`"
+      "the verifier or its declared inputs changed since the last local run; "
+        + "re-run `use-cases verify`"
     } else if results.contains(where: { result in
       result.passed && !bindingMatches(result)
     }) {
-      "the bound code span changed since the last local run; re-run `uc verify`"
+      "the bound code span changed since the last local run; re-run `use-cases verify`"
     } else if results.contains(where: { result in
       !result.passed
     }) {
-      "the last local verification did not pass; fix the row and re-run `uc verify`"
+      "the last local verification did not pass; fix the row and re-run `use-cases verify`"
     } else {
-      "the last local verification no longer matches the current row; re-run `uc verify`"
+      "the last local verification no longer matches the current row; re-run `use-cases verify`"
     }
     return (.staleLocal, reason)
   }

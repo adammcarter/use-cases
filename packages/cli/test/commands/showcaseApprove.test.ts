@@ -1,4 +1,4 @@
-// BLOCKER 1 (F3) — `uc showcase approve` must have a TRUSTED submit path.
+// BLOCKER 1 (F3) — `use-cases showcase approve` must have a TRUSTED submit path.
 //
 // `approve-run` mints a signed approval token, but until this change NO command
 // ingested it: `showcase approve` hard-coded untrusted_automation and never
@@ -470,7 +470,7 @@ describe("BLOCKER 1 — showcase approve --approval-token: trusted submit path",
     const text = renderEnvelope(result.envelope, false);
     expect(text).toContain("approval request");
     expect(text).toContain(`run ${runId}`);
-    expect(text).toContain("uc approve-run --request");
+    expect(text).toContain("use-cases approve-run --request");
     expect(text).not.toContain("approval_token_schema");
   });
 

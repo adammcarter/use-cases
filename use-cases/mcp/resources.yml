@@ -29,13 +29,13 @@ use_cases:
       can never change the workspace.
     preconditions:
       - The MCP server is registered and a repo is configured or passed.
-    trigger: An agent lists or reads a uc:// resource.
+    trigger: An agent lists or reads a use-cases:// resource.
     scenarios:
       - id: mcp.resources.workspace_state_is_readable_and_read_only.golden_list_and_read
         kind: steps
         steps:
           - Initialize the server and read the advertised capabilities.
-          - List the resources and read uc://matrix.
+          - List the resources and read use-cases://matrix.
         observable_outcomes:
           - Initialize advertises resources and prompts capabilities alongside tools.
           - The listing returns the expected workspace-state URIs with their metadata, and a read returns valid structured content.
@@ -56,7 +56,7 @@ use_cases:
       - id: mcp.resources.workspace_state_is_readable_and_read_only.bad_unknown_resource
         kind: steps
         steps:
-          - Read a uc:// URI that does not exist.
+          - Read a use-cases:// URI that does not exist.
           - Read the error.
         observable_outcomes:
           - An unknown resource returns a not-found error rather than an empty success.
@@ -131,19 +131,19 @@ use_cases:
       against and it does not belong to any one repo.
     preconditions:
       - The MCP server is running.
-    trigger: An agent reads uc://schemas or uc://schemas/{name}.
+    trigger: An agent reads use-cases://schemas or use-cases://schemas/{name}.
     scenarios:
       - id: mcp.resources.schemas_are_readable_without_a_repo.golden_named_schema
         kind: steps
         steps:
-          - Read uc://schemas/{name} with no repo configured or passed.
+          - Read use-cases://schemas/{name} with no repo configured or passed.
           - Read the returned schema.
         observable_outcomes:
           - The requested public schema is returned without needing a repo.
       - id: mcp.resources.schemas_are_readable_without_a_repo.edge_index_lists_ids
         kind: steps
         steps:
-          - Read the uc://schemas index.
+          - Read the use-cases://schemas index.
           - Read the listed ids.
         observable_outcomes:
           - The index lists the available schema ids, so a caller can discover what to read.

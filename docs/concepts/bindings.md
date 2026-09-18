@@ -34,23 +34,23 @@ export function applyDiscount(total: number, percent: number): number { … }
 ## The binding lifecycle
 
 ```
-            uc bind                 edit code / test            uc prove (CI)
+            use-cases bind                 edit code / test            use-cases prove (CI)
  author ───────────────▶ registered ──────────────▶ status ◀──────────────── proof
  marker                  (bindings.jsonl)            via scan                  events
                               │  ▲
-                    uc unbind │  │ uc bind
+                    use-cases unbind │  │ use-cases bind
                    (released) │  │
                               ▼  │
-                          ── uc rebind ──
+                          ── use-cases rebind ──
                        (released + re-registered)
 ```
 
 1. **Place** the marker in source.
-2. **Register** it with `uc bind` — this appends a `binding_registered` event to
+2. **Register** it with `use-cases bind` — this appends a `binding_registered` event to
    the append-only registry (`.use-cases/bindings.jsonl` by default). `bind`
    refuses to register unless the edited file scans clean, so the registry never
    records a broken marker.
-3. **Observe** status any time with `uc scan`, which reconciles the registry
+3. **Observe** status any time with `use-cases scan`, which reconciles the registry
    against the current code and the proof ledger.
 4. **Prove** in CI to reach FRESH (see [proofs](./proofs-and-ledger.md)).
 
@@ -65,12 +65,12 @@ editing source), `--comment-prefix` (override the inferred prefix), and
 A registration ends with a `binding_released` event, appended like every other —
 the ledger is never rewritten, so append-only survives. Two commands write one:
 
-- **`uc rebind --row <id> --file <f> --mode <m> …`** moves a binding to a
+- **`use-cases rebind --row <id> --file <f> --mode <m> …`** moves a binding to a
   different declaration, in the same file or another one. The marker moves and
   the registration moves with it, in one step, so the row is never registered to
   nothing in between. A target that cannot resolve to a span aborts with the
   source and the ledger untouched, exactly as `bind` does.
-- **`uc unbind --row <id>`** ends a binding outright: the marker comes out of the
+- **`use-cases unbind --row <id>`** ends a binding outright: the marker comes out of the
   source and the registration is released. Use it when a behaviour is retired,
   or when a row is renamed or deleted from the matrix.
 
@@ -78,11 +78,11 @@ Both take `--suffix` (when a row binds several spans), `--reason` (recorded on
 the event), and `--dry-run`.
 
 **Version floor.** A `binding_released` event is only understood from the version
-that introduced these commands. An older `uc` exits 4 with
+that introduced these commands. An older `use-cases` exits 4 with
 `REGISTRY_SCHEMA_INVALID` on a ledger that has been through `rebind` or `unbind` —
 it fails closed and writes nothing, so it cannot corrupt anything, but it cannot
 work in that workspace either. Upgrade CI and the whole team together before
-using either command. The reverse direction is safe: a current `uc` reads every
+using either command. The reverse direction is safe: a current `use-cases` reads every
 older ledger unchanged.
 
 Why this exists: `bind` will not register a slug that is already registered, and
@@ -97,25 +97,25 @@ within one file, count from the marker-free version.
 
 **A moved binding does not carry its proof.** The row's binding set changed, so
 its old verification no longer applies: after a rebind the row reads
-`STALE_LOCAL` until `uc verify --row <id>` runs again. That is deliberate — the
+`STALE_LOCAL` until `use-cases verify --row <id>` runs again. That is deliberate — the
 alternative would be a way to move a verified status onto code nobody verified.
 
 **Renamed a row?** Release the old id first, then register the new one:
 
 ```sh
-uc unbind --row old.row.id --reason row_renamed
-uc bind --row new.row.id --file <file> --register-existing
+use-cases unbind --row old.row.id --reason row_renamed
+use-cases bind --row new.row.id --file <file> --register-existing
 ```
 
 ## The five freshness states
 
-`uc scan` derives exactly one status per row. They are evaluated in this
+`use-cases scan` derives exactly one status per row. They are evaluated in this
 priority order (the first that applies wins):
 
 | State | Meaning | How to fix |
 |---|---|---|
-| **INVALID** | The markers/registry are internally broken — a malformed or duplicate marker, an unregistered current marker, or a marker pointing at an unknown row. Blocks even in feature mode. | Run `uc scan` to see the integrity errors; fix the marker/registry so the file scans clean. |
-| **UNBOUND** | The row exists but has no registered binding at all. | `uc bind` the row to its implementing code. |
+| **INVALID** | The markers/registry are internally broken — a malformed or duplicate marker, an unregistered current marker, or a marker pointing at an unknown row. Blocks even in feature mode. | Run `use-cases scan` to see the integrity errors; fix the marker/registry so the file scans clean. |
+| **UNBOUND** | The row exists but has no registered binding at all. | `use-cases bind` the row to its implementing code. |
 | **SUSPECT** (removed) | A previously registered binding is gone from the code. | Restore the span, or re-bind to its new home, then re-prove. |
 | **UNPROVEN** | Bound to current code, but no signed proof exists yet. | Let CI `verify` + `prove` the row. |
 | **FRESH** | A trusted, signed proof matches the current row hash, binding-set hash, span hashes, **and** verifier context. | Nothing — this is the goal. |
@@ -128,7 +128,7 @@ trusted.
 
 ## Policy modes
 
-`uc scan --policy-mode <mode>` controls what *blocks*:
+`use-cases scan --policy-mode <mode>` controls what *blocks*:
 
 - **feature** (default) — blocks only INVALID rows.
 - **release** — also blocks any `required_for_release` row that is not FRESH (and,

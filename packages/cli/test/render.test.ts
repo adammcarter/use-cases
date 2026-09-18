@@ -182,8 +182,8 @@ describe("recover — concise human view (not the raw status envelope)", () => {
     expect(human).not.toMatch(/row_hash/);
     expect(human).not.toMatch(/span_sha256s/);
     expect(human).not.toMatch(/verification_context_hash/);
-    // And it must NOT headline "run uc prove" when the keyless light is already green.
-    expect(human).not.toMatch(/uc prove/);
+    // And it must NOT headline "run use-cases prove" when the keyless light is already green.
+    expect(human).not.toMatch(/use-cases prove/);
     // Nor headline UNPROVEN / required_action.
     expect(human).not.toMatch(/required_action/);
   });
@@ -229,7 +229,7 @@ describe("recover — concise human view (not the raw status envelope)", () => {
           code: "recover.verification_failed",
           severity: "error",
           message:
-            "recover could not restore checkout.apply_coupon to green: the verifier failed. Fix the code or the test, then re-run `uc recover`. Inspect the failure with `uc verify --row checkout.apply_coupon`."
+            "recover could not restore checkout.apply_coupon to green: the verifier failed. Fix the code or the test, then re-run `use-cases recover`. Inspect the failure with `use-cases verify --row checkout.apply_coupon`."
         }
       ]
     };
@@ -237,10 +237,10 @@ describe("recover — concise human view (not the raw status envelope)", () => {
     // Reads as failure, never as unqualified green.
     expect(looksUnqualifiedGreen(human)).toBe(false);
     expect(human).toMatch(/could NOT recover|FAILED/i);
-    // The WHY (verifier failed) and the next step (re-run / uc verify) survive
+    // The WHY (verifier failed) and the next step (re-run / use-cases verify) survive
     // into the concise human view — not just the --json envelope.
     expect(human).toMatch(/verifier failed/i);
-    expect(human).toMatch(/uc verify --row checkout\.apply_coupon/);
+    expect(human).toMatch(/use-cases verify --row checkout\.apply_coupon/);
     // Still concise — no raw hash tree leaked in.
     expect(human).not.toMatch(/span_sha256s/);
   });

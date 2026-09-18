@@ -65,7 +65,7 @@ public struct CollectedDiff: Equatable, Sendable {
   }
 }
 
-/// Read-only git-diff plumbing for `uc impact` (gitDiff.ts): which files
+/// Read-only git-diff plumbing for `use-cases impact` (gitDiff.ts): which files
 /// changed, and which new line ranges the change touched.
 public enum GitDiff {
   public static func rangesOverlap(

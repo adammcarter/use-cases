@@ -155,8 +155,8 @@ export function runBindCommand(options: BindCommandOptions): BindCommandResult {
       code: "DUPLICATE_REGISTRATION",
       message:
         `binding slug ${bindingSlug} is already registered; ` +
-        `re-point it with \`uc rebind --row ${options.rowId} --file <file> --mode <mode>\` ` +
-        `or release it with \`uc unbind --row ${options.rowId}\``
+        `re-point it with \`use-cases rebind --row ${options.rowId} --file <file> --mode <mode>\` ` +
+        `or release it with \`use-cases unbind --row ${options.rowId}\``
     });
   }
 
@@ -236,7 +236,7 @@ export function runBindCommand(options: BindCommandOptions): BindCommandResult {
     ok: true,
     registry_event_appended: true,
     scan_result: scanResult,
-    next_command: `uc verify --row ${options.rowId}`,
+    next_command: `use-cases verify --row ${options.rowId}`,
     errors: []
   };
 }

@@ -32,7 +32,7 @@ extension TrustRenderer {
       lines.append("  \u{2717} \(rowIdentifier)")
       lines.append(
         "      \u{2192} re-verify (span in \(JavaScriptReading.text(binding["file"]))); "
-          + "run `uc verify --row \(rowIdentifier)`",
+          + "run `use-cases verify --row \(rowIdentifier)`",
       )
     }
 
@@ -52,7 +52,10 @@ extension TrustRenderer {
       for binding in touched {
         let rowIdentifier = JavaScriptReading.text(binding["row_id"])
         lines.append("  ? \(rowIdentifier) (\(JavaScriptReading.text(binding["file"])))")
-        lines.append("      \u{2192} re-verify to be sure; run `uc verify --row \(rowIdentifier)`")
+        lines
+          .append(
+            "      \u{2192} re-verify to be sure; run `use-cases verify --row \(rowIdentifier)`",
+          )
       }
     }
 

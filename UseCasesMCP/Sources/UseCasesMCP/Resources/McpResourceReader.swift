@@ -104,7 +104,7 @@ public enum McpResourceReader {
     }
   }
 
-  /// `uc://schemas`: the index, with a readable name and the URI each schema
+  /// `use-cases://schemas`: the index, with a readable name and the URI each schema
   /// reads at.
   private static func schemaIndex(_ uri: String) -> McpResourceOutcome {
     let schemas: [PublicSchema]
@@ -118,7 +118,7 @@ public enum McpResourceReader {
       return JSONValue.object(JSONObject([
         ("id", .string(schema.identifier)),
         ("name", .string(base)),
-        ("uri", .string("uc://schemas/\(base)")),
+        ("uri", .string("use-cases://schemas/\(base)")),
       ]))
     }
     return .contents(uri: uri, payload: .object(JSONObject([
@@ -127,7 +127,7 @@ public enum McpResourceReader {
     ])))
   }
 
-  /// `uc://schemas/{name}`: matched on the full id, the file name, or the name
+  /// `use-cases://schemas/{name}`: matched on the full id, the file name, or the name
   /// without its `.schema.json` suffix.
   private static func schema(
     named name: String,

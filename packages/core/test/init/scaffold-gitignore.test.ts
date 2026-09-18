@@ -1,7 +1,7 @@
 // Field report: "`showcase-runs/` litters the repo root, untracked, and isn't
 // gitignored. It broke a merge's clean-working-tree gate."
 //
-// `uc init` scaffolds a workspace whose commands then write transient run output
+// `use-cases init` scaffolds a workspace whose commands then write transient run output
 // (showcase runs) and a transient verification-results ledger — but it never told
 // git to ignore either, so the tool dirtied the adopter's working tree and tripped
 // their own clean-tree gates. init now ensures those entries exist.
@@ -18,7 +18,7 @@ function gitignoreOf(repoRoot: string): string {
   return readFileSync(join(repoRoot, ".gitignore"), "utf8");
 }
 
-describe("uc init keeps transient run output out of git", () => {
+describe("use-cases init keeps transient run output out of git", () => {
   let repoRoot: string;
 
   beforeEach(() => {

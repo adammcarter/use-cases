@@ -1,4 +1,4 @@
-/// `uc keygen` (packages/cli/src/commands/keygen.ts): mint an ed25519 keypair
+/// `use-cases keygen` (packages/cli/src/commands/keygen.ts): mint an ed25519 keypair
 /// for the opt-in signed proof tier. Run in `KeygenCommands+Run.swift`.
 enum KeygenCommands {
   static let all = [

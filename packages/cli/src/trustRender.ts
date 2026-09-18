@@ -109,19 +109,19 @@ interface ScanData {
 
 // The action a human should take for a non-green row. Prefer the row's own
 // required_action (the core already computes it), but present the daily verb
-// `uc recover` for drifted/unverified rows so the fix is one command.
+// `use-cases recover` for drifted/unverified rows so the fix is one command.
 function scanRowAction(row: FreshnessRow): string | null {
   if (isGreen(row.status, row.local_status ?? null)) {
     return null;
   }
   if (row.status === "SUSPECT" || row.status === "UNPROVEN") {
-    return `run \`uc recover --row ${row.row_id}\``;
+    return `run \`use-cases recover --row ${row.row_id}\``;
   }
   if (row.status === "INVALID") {
-    return "resolve the binding integrity errors, then re-run `uc scan`";
+    return "resolve the binding integrity errors, then re-run `use-cases scan`";
   }
   if (row.status === "UNBOUND") {
-    return `bind it with \`uc bind --row ${row.row_id} …\``;
+    return `bind it with \`use-cases bind --row ${row.row_id} …\``;
   }
   return row.required_action ? `run \`${row.required_action}\`` : null;
 }
@@ -288,7 +288,7 @@ function renderVerify(data: VerifyData): string[] {
         lines.push(
           entry.disposition === "blocked"
             ? `      no runnable verifier${entry.verifier_id ? ` (${entry.verifier_id} is not declared)` : ""}`
-            : "      resolve the binding integrity errors first (`uc scan`)"
+            : "      resolve the binding integrity errors first (`use-cases scan`)"
         );
       }
     }
@@ -316,7 +316,7 @@ function renderVerify(data: VerifyData): string[] {
   for (const result of results) {
     lines.push(`  ${verifyBadge(result.status)} ${result.status.toUpperCase().padEnd(7)} ${result.row_id}`);
     if (result.status !== "pass") {
-      lines.push(`      → fix the row and re-run \`uc verify --row ${result.row_id}\``);
+      lines.push(`      → fix the row and re-run \`use-cases verify --row ${result.row_id}\``);
     }
   }
 
@@ -383,7 +383,7 @@ function renderImpact(data: ImpactData): string[] {
 
   for (const binding of impacted) {
     lines.push(`  ✗ ${binding.row_id}`);
-    lines.push(`      → re-verify (span in ${binding.file}); run \`uc verify --row ${binding.row_id}\``);
+    lines.push(`      → re-verify (span in ${binding.file}); run \`use-cases verify --row ${binding.row_id}\``);
   }
 
   // Touched rows are impacted-until-proven-otherwise, so they get the same
@@ -393,7 +393,7 @@ function renderImpact(data: ImpactData): string[] {
     lines.push(`touched (file changed, span not hit) — ${touched.length}, treat as affected until re-verified:`);
     for (const binding of touched) {
       lines.push(`  ? ${binding.row_id} (${binding.file})`);
-      lines.push(`      → re-verify to be sure; run \`uc verify --row ${binding.row_id}\``);
+      lines.push(`      → re-verify to be sure; run \`use-cases verify --row ${binding.row_id}\``);
     }
   }
 
@@ -420,11 +420,11 @@ interface RecoverData {
   };
 }
 
-// A concise human view for `uc recover`: whether it recovered, the target row's
+// A concise human view for `use-cases recover`: whether it recovered, the target row's
 // resulting state (green via VERIFIED_LOCAL / FRESH, or still not green), and a
 // next action ONLY when it is still not green. It deliberately does NOT dump the
 // raw status envelope (row_hash / span_sha256s / verification_context_hash /
-// timestamps) the generic renderer would, and it never headlines "run uc prove"
+// timestamps) the generic renderer would, and it never headlines "run use-cases prove"
 // when the keyless light is already green — keyless success is a first-class
 // green, not a lesser UNPROVEN state.
 function renderRecover(data: RecoverData): string[] {
@@ -498,7 +498,7 @@ function renderApprovalRequest(data: ApprovalRequestData): string[] {
     `  expires ${data.exp}`,
     "",
     "Sign out-of-band:",
-    "  uc approve-run --request <request-file> --key-file <out-of-scope-key> --key-id <keyring-key-id> --json"
+    "  use-cases approve-run --request <request-file> --key-file <out-of-scope-key> --key-id <keyring-key-id> --json"
   ];
 }
 

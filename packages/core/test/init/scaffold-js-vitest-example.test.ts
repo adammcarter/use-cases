@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { scaffoldWorkspace } from "../../src/init/scaffold.js";
 import { scanFileForMarkers } from "../../src/markers/scanner.js";
 
-// `uc init --template js-vitest` must scaffold a RUNNABLE example out of the
+// `use-cases init --template js-vitest` must scaffold a RUNNABLE example out of the
 // box — mirroring the python-pytest template, which ships a real marked source
 // file plus a matching test at the preset's expected path. Without both files a
 // new adopter cannot run `verify` until they hand-write them, so the js-vitest
@@ -19,7 +19,7 @@ const ROW_ID = "example.feature.happy_path";
 const SRC_REL = "src/example.ts";
 const TEST_REL = `tests/use-cases/${ROW_ID}.test.ts`;
 
-describe("uc init --template js-vitest scaffolds a runnable example", () => {
+describe("use-cases init --template js-vitest scaffolds a runnable example", () => {
   let repoRoot: string;
 
   beforeEach(() => {

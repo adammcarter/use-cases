@@ -1,17 +1,17 @@
 import Foundation
 
-/// A `uc://` resource URI, split the way `new URL` splits it
+/// A `use-cases://` resource URI, split the way `new URL` splits it
 /// (packages/mcp/src/resources.ts `parseUcmUri`).
 ///
-/// The host and the path together name the resource, so `uc://matrix/status` is
+/// The host and the path together name the resource, so `use-cases://matrix/status` is
 /// the key `matrix/status`. A `?repo=` query segment names the workspace.
-/// Anything that is not a `uc:` URL is no resource at all.
+/// Anything that is not a `use-cases:` URL is no resource at all.
 public struct McpResourceUri: Sendable, Equatable {
   public let key: String
   public let repository: String?
 
   public init?(_ text: String) {
-    guard let scheme = Self.scheme(of: text), scheme == "uc" else {
+    guard let scheme = Self.scheme(of: text), scheme == "use-cases" else {
       return nil
     }
     var rest = String(text.dropFirst(scheme.count + 1))

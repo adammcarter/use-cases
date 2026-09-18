@@ -330,56 +330,56 @@ const cases = [
   ]],
 
   // ---- the resources
-  ["resource_matrix", workspace, {}, [request("resources/read", { uri: `uc://matrix?repo=${S}` })]],
-  ["resource_matrix_status", workspace, {}, [request("resources/read", { uri: `uc://matrix/status?repo=${S}` })]],
-  ["resource_freshness", workspace, {}, [request("resources/read", { uri: `uc://freshness?repo=${S}` })]],
-  ["resource_bindings", workspace, {}, [request("resources/read", { uri: `uc://bindings?repo=${S}` })]],
-  ["resource_ledger", workspace, {}, [request("resources/read", { uri: `uc://ledger?repo=${S}` })]],
-  ["resource_evidence", workspace, {}, [request("resources/read", { uri: `uc://evidence?repo=${S}` })]],
-  ["resource_config", workspace, {}, [request("resources/read", { uri: `uc://config?repo=${S}` })]],
-  ["resource_schemas_index", bare, {}, [request("resources/read", { uri: "uc://schemas" })]],
+  ["resource_matrix", workspace, {}, [request("resources/read", { uri: `use-cases://matrix?repo=${S}` })]],
+  ["resource_matrix_status", workspace, {}, [request("resources/read", { uri: `use-cases://matrix/status?repo=${S}` })]],
+  ["resource_freshness", workspace, {}, [request("resources/read", { uri: `use-cases://freshness?repo=${S}` })]],
+  ["resource_bindings", workspace, {}, [request("resources/read", { uri: `use-cases://bindings?repo=${S}` })]],
+  ["resource_ledger", workspace, {}, [request("resources/read", { uri: `use-cases://ledger?repo=${S}` })]],
+  ["resource_evidence", workspace, {}, [request("resources/read", { uri: `use-cases://evidence?repo=${S}` })]],
+  ["resource_config", workspace, {}, [request("resources/read", { uri: `use-cases://config?repo=${S}` })]],
+  ["resource_schemas_index", bare, {}, [request("resources/read", { uri: "use-cases://schemas" })]],
   ["resource_one_schema_by_file_name", bare, {}, [
-    request("resources/read", { uri: "uc://schemas/common.schema.json" })
+    request("resources/read", { uri: "use-cases://schemas/common.schema.json" })
   ]],
-  ["resource_one_schema_by_short_name", bare, {}, [request("resources/read", { uri: "uc://schemas/common" })]],
-  ["resource_unknown_schema", bare, {}, [request("resources/read", { uri: "uc://schemas/nope" })]],
-  ["resource_unknown_uri", workspace, {}, [request("resources/read", { uri: "uc://not-a-resource" })]],
+  ["resource_one_schema_by_short_name", bare, {}, [request("resources/read", { uri: "use-cases://schemas/common" })]],
+  ["resource_unknown_schema", bare, {}, [request("resources/read", { uri: "use-cases://schemas/nope" })]],
+  ["resource_unknown_uri", workspace, {}, [request("resources/read", { uri: "use-cases://not-a-resource" })]],
   ["resource_not_a_uc_uri", workspace, {}, [request("resources/read", { uri: "https://example.com" })]],
   ["resource_empty_uri", workspace, {}, [request("resources/read", { uri: "" })]],
-  ["resource_repo_required", workspace, {}, [request("resources/read", { uri: "uc://matrix" })]],
+  ["resource_repo_required", workspace, {}, [request("resources/read", { uri: "use-cases://matrix" })]],
   ["resource_repo_traversal", workspace, { UCM_MCP_REPO: "$SANDBOX" }, [
-    request("resources/read", { uri: "uc://matrix?repo=../../etc" })
+    request("resources/read", { uri: "use-cases://matrix?repo=../../etc" })
   ]],
   ["resource_configured_repo_default", workspace, { UCM_MCP_REPO: "$SANDBOX" }, [
-    request("resources/read", { uri: "uc://matrix" })
+    request("resources/read", { uri: "use-cases://matrix" })
   ]],
-  ["resource_trailing_slash", workspace, {}, [request("resources/read", { uri: `uc://matrix/?repo=${S}` })]],
+  ["resource_trailing_slash", workspace, {}, [request("resources/read", { uri: `use-cases://matrix/?repo=${S}` })]],
 
   // ---- the prompts
-  ["prompt_adopt_repo", bare, {}, [request("prompts/get", { name: "uc/adopt-repo", arguments: { repo: "/tmp/repo" } })]],
-  ["prompt_adopt_repo_without_argument", bare, {}, [request("prompts/get", { name: "uc/adopt-repo", arguments: {} })]],
+  ["prompt_adopt_repo", bare, {}, [request("prompts/get", { name: "use-cases/adopt-repo", arguments: { repo: "/tmp/repo" } })]],
+  ["prompt_adopt_repo_without_argument", bare, {}, [request("prompts/get", { name: "use-cases/adopt-repo", arguments: {} })]],
   ["prompt_bind_row", bare, {}, [
-    request("prompts/get", { name: "uc/bind-row", arguments: { row: "auth.login", file: "Sources/Auth.swift", repo: "/tmp/repo" } })
+    request("prompts/get", { name: "use-cases/bind-row", arguments: { row: "auth.login", file: "Sources/Auth.swift", repo: "/tmp/repo" } })
   ]],
   ["prompt_bind_row_minimal", bare, {}, [
-    request("prompts/get", { name: "uc/bind-row", arguments: { row: "auth.login" } })
+    request("prompts/get", { name: "use-cases/bind-row", arguments: { row: "auth.login" } })
   ]],
   ["prompt_bind_row_missing_required", bare, {}, [
-    request("prompts/get", { name: "uc/bind-row", arguments: { repo: "/tmp/repo" } })
+    request("prompts/get", { name: "use-cases/bind-row", arguments: { repo: "/tmp/repo" } })
   ]],
   ["prompt_bind_row_empty_required", bare, {}, [
-    request("prompts/get", { name: "uc/bind-row", arguments: { row: "" } })
+    request("prompts/get", { name: "use-cases/bind-row", arguments: { row: "" } })
   ]],
   ["prompt_bind_row_non_string_argument", bare, {}, [
-    request("prompts/get", { name: "uc/bind-row", arguments: { row: "auth.login", file: 7 } })
+    request("prompts/get", { name: "use-cases/bind-row", arguments: { row: "auth.login", file: 7 } })
   ]],
   ["prompt_recover_row", bare, {}, [
-    request("prompts/get", { name: "uc/recover-suspect-row", arguments: { row: "auth.login", repo: "/tmp/repo" } })
+    request("prompts/get", { name: "use-cases/recover-suspect-row", arguments: { row: "auth.login", repo: "/tmp/repo" } })
   ]],
   ["prompt_release_review", bare, {}, [
-    request("prompts/get", { name: "uc/release-review", arguments: { repo: "/tmp/repo" } })
+    request("prompts/get", { name: "use-cases/release-review", arguments: { repo: "/tmp/repo" } })
   ]],
-  ["prompt_unknown", bare, {}, [request("prompts/get", { name: "uc/not-a-prompt", arguments: {} })]],
+  ["prompt_unknown", bare, {}, [request("prompts/get", { name: "use-cases/not-a-prompt", arguments: {} })]],
   ["prompt_missing_name", bare, {}, [request("prompts/get", {})]]
 ];
 

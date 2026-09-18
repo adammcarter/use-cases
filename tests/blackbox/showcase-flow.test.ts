@@ -475,7 +475,7 @@ describe("showcase.flow.failure_decisions", () => {
 // The core has appendShowcaseEpoch (packages/core/src/showcase/appendShowcaseEvent.ts,
 // which replayRun.ts understands: an epoch_started event marks named items'
 // item_currency "stale_due_to_epoch_change"), but NO CLI command appends one.
-// `uc showcase resume` (packages/cli/src/commands/showcase.ts) accepts only
+// `use-cases showcase resume` (packages/cli/src/commands/showcase.ts) accepts only
 // --run/--reason/--actor/--idempotency-key/--recorded-at — no --changed-path,
 // no revision snapshot, nothing that diffs the workspace — and its handler
 // calls only resumeShowcaseRun, never appendShowcaseEpoch. `rg -n "epoch" -i
@@ -484,14 +484,14 @@ describe("showcase.flow.failure_decisions", () => {
 // through the binary honestly.
 // NOT bound to this row on purpose. The core has the machinery — appendShowcaseEpoch
 // in showcase/appendShowcaseEvent.ts, and replayRun setting item_currency
-// "stale_due_to_epoch_change" — but NO CLI command ever calls it: `uc showcase
+// "stale_due_to_epoch_change" — but NO CLI command ever calls it: `use-cases showcase
 // resume` takes no revision input and never appends an epoch event. So the
 // behaviour is real and unobservable from outside, which is a contract gap to
 // raise rather than a test to fake. Binding this row would mark it verified
 // against an oracle that asserts nothing.
 describe("showcase.flow.revision_epoch_staleness", () => {
   test.todo(
-    "golden_resume — resuming across a revision change marks affected verdicts stale: no CLI command appends an epoch_started event (appendShowcaseEpoch is core-only, unreachable from `uc showcase resume`)"
+    "golden_resume — resuming across a revision change marks affected verdicts stale: no CLI command appends an epoch_started event (appendShowcaseEpoch is core-only, unreachable from `use-cases showcase resume`)"
   );
   test.todo(
     "bad_old_verdicts_never_stay_silently_current — same missing affordance: staling verdicts on a changed input has no CLI trigger"
@@ -571,7 +571,7 @@ function finishedApprovalRun(workspace: Workspace, seed: string): string {
 }
 
 /** Append a well-formed event straight to the ledger file, bypassing every CLI
- * verb — standing in for anything that is not `uc showcase approve
+ * verb — standing in for anything that is not `use-cases showcase approve
  * --approval-token` (a hand-edited ledger, a rogue script, an MCP write that
  * skipped the verify+append core). Returns the forged event's id. */
 function appendRawEvent(

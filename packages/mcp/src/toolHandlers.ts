@@ -462,9 +462,9 @@ export function showcaseRequestApproval(args: JsonObject): CliResult<unknown> {
 
   // F3: an agent/MCP may only REQUEST approval. Mint a PLUGIN-owned, single-use
   // approval request bound to the live run (nonce + exp minted HERE, never by the
-  // caller). A real human signs it out-of-band with `uc approve-run` using a key
+  // caller). A real human signs it out-of-band with `use-cases approve-run` using a key
   // outside the agent's scope; the plugin then verifies the returned token. We no
-  // longer suggest `uc showcase approve` (that path can never mint trusted
+  // longer suggest `use-cases showcase approve` (that path can never mint trusted
   // sign-off).
   let approvalRequest: ReturnType<typeof mintApprovalRequest> | null = null;
   if (finish) {
@@ -490,7 +490,7 @@ export function showcaseRequestApproval(args: JsonObject): CliResult<unknown> {
     // How a HUMAN signs it (their own shell, out-of-scope key). This produces the
     // signed token the plugin verifies — an agent driving the CLI cannot fake it.
     suggested_signer_command: approvalRequest
-      ? ["uc", "approve-run", "--request", "<request-file>", "--key-file", "<out-of-scope-key>", "--key-id", "<keyring-key-id>", "--json"]
+      ? ["use-cases", "approve-run", "--request", "<request-file>", "--key-file", "<out-of-scope-key>", "--key-id", "<keyring-key-id>", "--json"]
       : null,
     status
   }, context, { complete: status.complete });

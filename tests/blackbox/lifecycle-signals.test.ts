@@ -143,7 +143,7 @@ function scan(workspace: Workspace): ScanStatus {
   return envelope.data.status;
 }
 
-/** The unsigned results ledger `uc verify` writes by default. */
+/** The unsigned results ledger `use-cases verify` writes by default. */
 function resultsLedger(workspace: Workspace): string {
   return join(workspace.dir, ".use-cases", "verification-results.jsonl");
 }
@@ -201,7 +201,7 @@ describe("lifecycle.signals.local_results_are_attested", () => {
 
   // golden_real_run. The record verify wrote carries an attestation, and that
   // is what makes it count — not the hashes, which anything can compute.
-  test("a record uc verify wrote carries an attestation and reads VERIFIED_LOCAL", () => {
+  test("a record use-cases verify wrote carries an attestation and reads VERIFIED_LOCAL", () => {
     const { workspace, record } = verifiedWorkspace();
     expect(record.run_attestation, "verify must attest every record it emits").toMatch(/^hmac-sha256:/);
     expect(record.status).toBe("pass");
@@ -804,7 +804,7 @@ describe("lifecycle.signals.bind_names_the_next_step", () => {
     );
 
     expect(envelope.ok).toBe(true);
-    expect(envelope.data.next_command).toBe("uc verify --row probe.core.alpha");
+    expect(envelope.data.next_command).toBe("use-cases verify --row probe.core.alpha");
   });
 
   // edge_bind_alone_is_not_proof. Binding says where the behaviour lives; it
@@ -1203,7 +1203,7 @@ describe("lifecycle.signals.errors_hand_back_the_cure", () => {
     expect(human, "the new marker names what it came from").toContain("renamed from probe.core.oldname");
     // Truthful about the append-only registry: release BEFORE re-registering,
     // because bind fails closed while the stale registration stands.
-    expect(human).toContain("uc unbind --row probe.core.oldname --reason row_renamed");
+    expect(human).toContain("use-cases unbind --row probe.core.oldname --reason row_renamed");
     expect(human).toContain("--register-existing");
 
     const unbind = runUcJson(

@@ -99,7 +99,7 @@ function makeWorkspace(rows: string[]): Workspace {
   return { dir, env };
 }
 
-/** Run a uc subcommand against this workspace, with --repo wired in. */
+/** Run a use-cases subcommand against this workspace, with --repo wired in. */
 function uc(workspace: Workspace, args: string[]) {
   const [command, ...rest] = args;
   return runUcJson([command, "--repo", ".", ...rest], { cwd: workspace.dir, env: workspace.env });
@@ -205,7 +205,7 @@ describe("lifecycle.bindings.rebind_repoints_a_binding", () => {
 
     expect(moved.envelope.ok).toBe(false);
     expect(errorCodes(moved)).toContain("NOT_REGISTERED");
-    expect(JSON.stringify(moved.envelope.data), "the refusal names bind").toContain("uc bind");
+    expect(JSON.stringify(moved.envelope.data), "the refusal names bind").toContain("use-cases bind");
   });
 
   // edge_verified_local_does_not_survive_the_move. A moved binding never

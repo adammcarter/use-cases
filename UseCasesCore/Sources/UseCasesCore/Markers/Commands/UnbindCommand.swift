@@ -154,8 +154,8 @@ public enum UnbindCommand {
     result.registryEventAppended = true
     // A released row proves nothing until it is bound again.
     result.nextCommand = loaded.rowIdentifiers.contains(options.rowIdentifier)
-      ? "uc bind --row \(options.rowIdentifier) --file <file> --mode <mode>"
-      : "uc scan"
+      ? "use-cases bind --row \(options.rowIdentifier) --file <file> --mode <mode>"
+      : "use-cases scan"
     return result
   }
 

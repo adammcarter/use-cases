@@ -92,11 +92,11 @@ struct FreshnessRowDerivation {
   ) -> String? {
     switch status {
     case .suspect, .unproven:
-      "uc prove --row \(rowIdentifier)"
+      "use-cases prove --row \(rowIdentifier)"
     case .invalid:
-      "uc scan (resolve binding integrity errors)"
+      "use-cases scan (resolve binding integrity errors)"
     case .unbound:
-      "uc bind --row \(rowIdentifier) --file <file> --mode <explicit|swift-func>"
+      "use-cases bind --row \(rowIdentifier) --file <file> --mode <explicit|swift-func>"
     case .fresh:
       nil
     }
@@ -309,25 +309,25 @@ extension RowFacts {
     let file = detection.filePath
     guard let previous = renamedFrom[detection.bindingSlug], !previous.isEmpty else {
       return "register the marker already in the source with "
-        + "`uc bind --row \(rowIdentifier) --file \(file) --register-existing`"
+        + "`use-cases bind --row \(rowIdentifier) --file \(file) --register-existing`"
         + ", or delete the marker if it is not wanted"
     }
     return "looks like \(rowIdentifier) was renamed from \(previous). Release the old registration "
       + "first — bind fails closed while it stands — with "
-      + "`uc unbind --row \(previous) --reason row_renamed`, then run "
-      + "`uc bind --row \(rowIdentifier) --file \(file) --register-existing`"
+      + "`use-cases unbind --row \(previous) --reason row_renamed`, then run "
+      + "`use-cases bind --row \(rowIdentifier) --file \(file) --register-existing`"
   }
 
   private func rowNotFoundRemediation(_ previous: String?) -> String {
     guard let previous, !previous.isEmpty else {
       return "add the row to the matrix, or — if the row id was RENAMED — update the "
         + "`@use-case:` marker(s) in source to the new id and re-register with "
-        + "`uc bind --row <new-id> --file <file> --register-existing`"
+        + "`use-cases bind --row <new-id> --file <file> --register-existing`"
     }
     return "looks like \(previous) was renamed to \(rowIdentifier) — add the renamed row to the "
       + "matrix (or rename it back), release the old registration with "
-      + "`uc unbind --row \(previous) --reason row_renamed`, then re-register with "
-      + "`uc bind --row \(rowIdentifier) --file <file> --register-existing`"
+      + "`use-cases unbind --row \(previous) --reason row_renamed`, then re-register with "
+      + "`use-cases bind --row \(rowIdentifier) --file <file> --register-existing`"
   }
 
   /// The keyless tier and, for a variant family, its breakdown. Emitted only

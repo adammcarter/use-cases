@@ -185,7 +185,7 @@ use_cases:
         kind: steps
         steps:
           - Move a canonical skill out of skills/.
-          - Run uc doctor skills and read what it reports.
+          - Run use-cases doctor skills and read what it reports.
         observable_outcomes:
           - A canonical skill moved out of skills/ is reported as unreachable by the host, not as a pass.
       - id: skills.assets.host_declaration.edge_marketplace_manifest_is_what_makes_it_readable

@@ -137,15 +137,15 @@ const cases = [
     name: "cli_command_references",
     overlay: withBody([
       "",
-      "`uc matrix list` and `uc  matrix\tvalidate --repo .` and `pnpm cli -- plan cards`",
-      "`uc bind --repo .` and `uc verify` and `uc scan --json` and `uc init`",
-      "`uc foo bar` and `uc migrate test-matrix` and `pnpm cli --  showcase start`",
-      "`uc capsule\nrun --json` and `uc\u00a0doctor\u2003skills` and `ucmatrix list` and `uc` and `uc `",
-      "`uc matrix list`` and ``uc schema list` and `pnpm cli matrix list` and `uc version x`",
-      "`uc \ufeffmatrix list` and `uc x\u0085y z` and `uc approve-run now`",
-      "`uc  `uc matrix remove` and `uc \t`pnpm cli -- nope nope` and `uc \n\n` done",
-      "`uc   bind   now  ` and `pnpm cli --matrix list` and `uc x y` z` and `uc tail only",
-      "`uc `uc single-space now` and `uc\t`uc single-tab now`",
+      "`use-cases matrix list` and `use-cases  matrix\tvalidate --repo .` and `pnpm cli -- plan cards`",
+      "`use-cases bind --repo .` and `use-cases verify` and `use-cases scan --json` and `use-cases init`",
+      "`use-cases foo bar` and `use-cases migrate test-matrix` and `pnpm cli --  showcase start`",
+      "`use-cases capsule\nrun --json` and `use-cases\u00a0doctor\u2003skills` and `use-casesmatrix list` and `use-cases` and `use-cases `",
+      "`use-cases matrix list`` and ``use-cases schema list` and `pnpm cli matrix list` and `use-cases version x`",
+      "`use-cases \ufeffmatrix list` and `use-cases x\u0085y z` and `use-cases approve-run now`",
+      "`use-cases  `use-cases matrix remove` and `use-cases \t`pnpm cli -- nope nope` and `use-cases \n\n` done",
+      "`use-cases   bind   now  ` and `pnpm cli --matrix list` and `use-cases x y` z` and `use-cases tail only",
+      "`use-cases `use-cases single-space now` and `use-cases\t`use-cases single-tab now`",
       ""
     ].join("\n"))
   },
@@ -156,13 +156,13 @@ const cases = [
   {
     name: "bootstrap_sections_and_boundaries_missing",
     overlay: {
-      "bootstrap/use-cases.md": "# Bootstrap\n\n## When to apply\nrepo data and secrets.\n`uc nope nope` and `uc matrix list`\nshowcase is mandatory\nwhen not to apply\n"
+      "bootstrap/use-cases.md": "# Bootstrap\n\n## When to apply\nrepo data and secrets.\n`use-cases nope nope` and `use-cases matrix list`\nshowcase is mandatory\nwhen not to apply\n"
     }
   },
   { name: "activation_missing", overlay: { "docs/activation.md": null } },
   {
     name: "activation_markers_missing_and_forbidden",
-    overlay: { "docs/activation.md": "## Decision Tree\n-> use-cases\n->showcase\nhost support is verified.\n`uc bogus command`\n" }
+    overlay: { "docs/activation.md": "## Decision Tree\n-> use-cases\n->showcase\nhost support is verified.\n`use-cases bogus command`\n" }
   },
   { name: "plugin_manifest_missing", overlay: { ".claude-plugin/plugin.json": null } },
   { name: "plugin_manifest_invalid_json", overlay: plugin("{ nope") },

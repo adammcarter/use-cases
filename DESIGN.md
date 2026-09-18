@@ -29,7 +29,7 @@ the **hybrid**:
 
 ## 1. Problem framing
 
-Today one `uc verify` invocation proves N **independent** rows: it loops rows and,
+Today one `use-cases verify` invocation proves N **independent** rows: it loops rows and,
 per row, resolves that row's own verifier, spawns it, and records one verdict. A
 single logical use-case that should fan into many **variants** — same behaviour,
 different inputs (`0/1/many`, `empty/null`, boundary, negative) — has no first-class
@@ -47,11 +47,11 @@ exit code is the verdict; all N records land in a single merge-write.**
 A use-case may declare `variants: [{ key, ... }]`. Each variant is an **addressable
 row** with id `family.id::variant_key`, inheriting the family's binding span but
 computing its **own** `binding_set_hash`/`row_hash` (both already keyed by row_id).
-The family declares ONE verifier. `uc verify` substitutes each variant's `key` into the
+The family declares ONE verifier. `use-cases verify` substitutes each variant's `key` into the
 shared command's `{variant}` token and spawns it once per variant; **exit 0 = pass,
 non-zero = fail** — the same verdict rule ordinary rows already use. All variant result
-records are written in **one merge-write**. `uc scan` lists each variant row with its
-own `local_status`. Non-variant use-cases and older `uc` binaries are wholly unaffected
+records are written in **one merge-write**. `use-cases scan` lists each variant row with its
+own `local_status`. Non-variant use-cases and older `use-cases` binaries are wholly unaffected
 because the use-case schema is open (`[key: string]: unknown`) and every new field is
 optional.
 
@@ -65,7 +65,7 @@ family in one command, all recorded together" holds without a report format.
 | Rejected alternative | Why rejected |
 |---|---|
 | **One process emits a JSONL per-variant report** (`ucase-variant-report-v1`; exit code is NOT the verdict) | More power than v1 needs: invents a new stdout schema + a tolerant parser (the riskiest component) + an exit-code-isn't-verdict subtlety. Its one real win — a single-process binary that shares setup across variants — is a minority case. **Deferred, not dead:** it becomes an opt-in verifier mode later IF a real user hits the re-setup cost. |
-| **Variants as sub-verdicts inside ONE row's record** (one `row_id`, array of variant statuses) | Breaks per-variant integrity: one `row_hash`/`binding_set_hash` can't represent N variants; `uc scan`'s row→proof derivation and the merge key (`row_id`) would need reworking; a partial-fail row has no honest single verdict. |
+| **Variants as sub-verdicts inside ONE row's record** (one `row_id`, array of variant statuses) | Breaks per-variant integrity: one `row_hash`/`binding_set_hash` can't represent N variants; `use-cases scan`'s row→proof derivation and the merge key (`row_id`) would need reworking; a partial-fail row has no honest single verdict. |
 | **Reuse the existing `scenarios[]` axis** | `scenarios` are step-narratives with NO verifier and NO verdict; overloading them with verifier I/O muddies a shipped concept and would change `scenario` semantics for every existing matrix. Variants need verdict-bearing identity `scenarios` deliberately lack. |
 
 ## 3. Matrix representation (additive YAML)
@@ -113,7 +113,7 @@ is a "variant family"; absent/empty ⇒ ordinary row (today's behaviour, byte-fo
 
 ## 4. Verifier→variant contract (`{variant}` token + exit code)
 
-The family declares ONE verifier command. `uc verify` iterates the declared variants and,
+The family declares ONE verifier command. `use-cases verify` iterates the declared variants and,
 for each, substitutes the variant's `key` into the `{variant}` token before spawning —
 exactly as `{slug}` is substituted today. Each spawn's **exit code is that variant's
 verdict** (0 → pass, non-zero → fail), and its stdout/stderr sha256 are recorded per
@@ -127,7 +127,7 @@ verifier:
 ```
 
 ```
-uc verify --row cart.quantity
+use-cases verify --row cart.quantity
   → spawn: vitest … cart.quantity.test.ts -t zero      → exit 0 → pass
   → spawn: vitest … cart.quantity.test.ts -t one       → exit 0 → pass
   → spawn: vitest … cart.quantity.test.ts -t many      → exit 0 → pass
@@ -148,7 +148,7 @@ uc verify --row cart.quantity
   separator is not otherwise legal in ids, so variant rows never collide with authored
   ids.
 - **Binding:** variants **inherit the family's registered binding** (bind once, at
-  `cart.quantity`). `uc verify` synthesizes each variant row's binding view from the
+  `cart.quantity`). `use-cases verify` synthesizes each variant row's binding view from the
   family's span but computes `binding_set_hash` with the **variant row_id** (the hash
   fn already takes `rowId`), so each variant record has a distinct, correct hash.
 - **`row_hash`:** computed from the variant's own loaded-row projection (family fields +
@@ -158,16 +158,16 @@ uc verify --row cart.quantity
 
 ## 6. CLI / UX
 
-- `uc verify --row cart.quantity` → detects a variant family, resolves the ONE shared
+- `use-cases verify --row cart.quantity` → detects a variant family, resolves the ONE shared
   verifier, spawns it ONCE, parses the report, writes N variant records.
-- `uc verify --all` → families expand to their variant rows automatically; each family
+- `use-cases verify --all` → families expand to their variant rows automatically; each family
   still spawns its verifier once.
-- ~~`uc verify --row cart.quantity::negative` single-variant targeting~~ — NOT built
+- ~~`use-cases verify --row cart.quantity::negative` single-variant targeting~~ — NOT built
   (review-corrected): `--row` targets are family-level only; a `::`-suffixed id is
   `ROW_NOT_FOUND`. Single-variant targeting is a possible future addition.
-- `uc scan` → lists each variant row (`cart.quantity::zero …`) with its own
+- `use-cases scan` → lists each variant row (`cart.quantity::zero …`) with its own
   `local_status`. A family is VERIFIED_LOCAL-complete only when every variant row is.
-- `uc bind cart.quantity …` binds the family; variants inherit. (`uc bind` on a
+- `use-cases bind cart.quantity …` binds the family; variants inherit. (`use-cases bind` on a
   variant id is allowed for an override but not required.)
 - `--dry-run` reports one planned entry per variant with the shared command.
 
@@ -191,18 +191,18 @@ JSON Schema `use-case-file.schema.json`, and its use-case object is
 `"additionalProperties": false` — NOT the permissive TS type `[key:string]:unknown`.
 So compat is directional:
 
-- **Forward — new `uc` reads any matrix:** fully compatible. An old (no-`variants`)
+- **Forward — new `use-cases` reads any matrix:** fully compatible. An old (no-`variants`)
   matrix loads byte-identically (hash guard below). This is the direction that matters
   for existing users upgrading. ✓
-- **Backward — OLD `uc` reads a NEW (`variants`-bearing) matrix:** the strict schema
+- **Backward — OLD `use-cases` reads a NEW (`variants`-bearing) matrix:** the strict schema
   rejects the unknown `variants` key with a **loud `schema_error`** — safe (no silent
   corruption, no misread) but it means **adopting variants requires everyone on that
-  repo to be on `uc ≥ 0.5.0`.** That is a documented version floor, not a break of any
+  repo to be on `use-cases ≥ 0.5.0`.** That is a documented version floor, not a break of any
   existing repo. It cannot be retrofitted into already-shipped 0.4.1 regardless.
 
 | Touch | Kind | Safe because |
 |---|---|---|
-| `variants` added to `use-case-file.schema.json` (use-case object) + `variants?` on `UseCaseV1` | additive to the schema | New `uc` accepts it; no existing no-`variants` matrix is affected. Old `uc` rejects it loudly (version floor above), never misreads it. |
+| `variants` added to `use-case-file.schema.json` (use-case object) + `variants?` on `UseCaseV1` | additive to the schema | New `use-cases` accepts it; no existing no-`variants` matrix is affected. Old `use-cases` rejects it loudly (version floor above), never misreads it. |
 | `variant_key?: string` on `ucase-verification-result-v1` | additive, optional | Result records are validated by their own schema; add `variant_key` as optional there too. Records for ordinary rows omit it, so existing ledgers validate unchanged. Schema id stays v1. |
 | `{variant}` token in verifier command substitution | additive | Only expands when present; existing `{slug}`-only commands are untouched. |
 | Row id `::` convention | additive | Only produced for variant families; authored ids can't contain `::`. |
@@ -227,10 +227,10 @@ change validation of any no-`variants` file; **(c)** an existing
 unchanged.
 
 **Versioning:** additive for existing repos ⇒ **0.4.1 → 0.5.0 minor bump, no migration
-step for old matrices** (they load unchanged under new `uc`). The one caveat is the
+step for old matrices** (they load unchanged under new `use-cases`). The one caveat is the
 **version floor**: a repo that *adopts* variants requires its collaborators to be on
-`uc ≥ 0.5.0`, because older clients reject the new key (strict schema). Call this out in
-release notes. A `uc migrate` path is only needed if a *breaking* restructure of
+`use-cases ≥ 0.5.0`, because older clients reject the new key (strict schema). Call this out in
+release notes. A `use-cases migrate` path is only needed if a *breaking* restructure of
 existing fields is ever chosen — this design avoids that.
 
 ## 9. Failure semantics
@@ -274,7 +274,7 @@ applied per variant. No new "malformed report / missing line / duplicate line" c
    *Failing tests:* targeting + dry-run plan lists per-variant entries, spawns nothing.
 8. **Compat guards:** the three invariants from §8 as explicit regression tests
    (extend the existing cross-version release test).
-9. **use-cases matrix:** add rows proving the new behaviour; `uc bind`/`verify`/`scan`
+9. **use-cases matrix:** add rows proving the new behaviour; `use-cases bind`/`verify`/`scan`
    the real feature (dogfood).
 
 Parametrised coverage called out: variant counts `0 / 1 / many`; verdict outcomes
@@ -289,7 +289,7 @@ timeout / mode:none`.
           variants: [zero, one, many, negative]
           verifier: [... "{slug}.test.ts" "-t" "{variant}"]   (declared ONCE)
                     │
-                    │  uc verify --row cart.quantity
+                    │  use-cases verify --row cart.quantity
                     ▼
           resolve shared verifier, substitute {variant} per declared key
                     │
@@ -310,5 +310,5 @@ timeout / mode:none`.
        .use-cases/verification-results.jsonl   (siblings + other rows preserved)
                     │
                     ▼
-          uc scan → per-variant local_status; family green iff all variants green
+          use-cases scan → per-variant local_status; family green iff all variants green
 ```

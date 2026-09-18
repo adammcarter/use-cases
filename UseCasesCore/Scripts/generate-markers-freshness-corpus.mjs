@@ -7,7 +7,7 @@
 //
 // This is the oracle for the verifier presets, the verifier resolver, the
 // verification context hash and the freshness state machine (row 3d3). The
-// freshness object IS the `uc scan` contract (ADR 0007 decision 8), so each case
+// freshness object IS the `use-cases scan` contract (ADR 0007 decision 8), so each case
 // records the whole object as the bytes `JSON.stringify` wrote: key order,
 // absent members and `null` members are all part of what the Swift port is held
 // to. The script refuses to run against a `dist` older than its `src`.
@@ -1484,7 +1484,7 @@ const swift = `// swiftlint:disable single_line_closure_body line_length
 // Generated from the TypeScript marker code. DO NOT EDIT BY HAND.
 //
 // Every expected value is what packages/core/dist/markers returned for the input
-// beside it. The freshness object is the \`uc scan\` contract and the context hash
+// beside it. The freshness object is the \`use-cases scan\` contract and the context hash
 // is embedded in proofs already in ledgers, so these bytes are frozen contract
 // (ADR 0007 decision 8).
 //

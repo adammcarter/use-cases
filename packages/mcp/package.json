@@ -10,7 +10,6 @@
     "directory": "packages/mcp"
   },
   "bin": {
-    "uc-mcp": "./dist/index.js",
     "use-cases-mcp": "./dist/index.js"
   },
   "exports": {

@@ -1,6 +1,6 @@
-// `uc impact` acceptance (0.2.0 F2): the advisory change-impact map.
+// `use-cases impact` acceptance (0.2.0 F2): the advisory change-impact map.
 //
-// Given a git change, `uc impact` reports which BOUND behaviours the change
+// Given a git change, `use-cases impact` reports which BOUND behaviours the change
 // touches, so you know what to re-verify — via line-level overlap between the
 // diff hunks and each binding's span. It is ADVISORY and READ-ONLY: it never
 // changes a trust verdict and never writes a ledger.
@@ -41,7 +41,7 @@ function uc(cwd: string, ...args: string[]) {
 function ucJson(cwd: string, ...args: string[]): { status: number | null; ok: boolean; data: Record<string, any> } {
   const r = uc(cwd, ...args);
   if (typeof r.stdout !== "string" || r.stdout.trim() === "") {
-    throw new Error(`uc ${args.join(" ")} produced no JSON (status ${r.status}, stderr: ${r.stderr})`);
+    throw new Error(`use-cases ${args.join(" ")} produced no JSON (status ${r.status}, stderr: ${r.stderr})`);
   }
   const payload = JSON.parse(r.stdout) as { ok: boolean; data: Record<string, any> };
   return { status: r.status, ok: payload.ok, data: payload.data };
@@ -78,7 +78,7 @@ function editInSpan(dir: string): void {
   writeFileSync(p, edited);
 }
 
-describe("uc impact: change-impact map", () => {
+describe("use-cases impact: change-impact map", () => {
   beforeAll(() => {
     const build = spawnSync("corepack", ["pnpm", "build"], {
       cwd: repoRoot,
@@ -147,7 +147,7 @@ describe("uc impact: change-impact map", () => {
     expect(human).toContain("0 span-hit, 1 file-touched");
     expect(human).not.toContain("nothing impacted");
     // And the touched row gets a runnable command, not just a mention.
-    expect(human).toContain(`uc verify --row ${ROW_ID}`);
+    expect(human).toContain(`use-cases verify --row ${ROW_ID}`);
   });
 
   test("--base compares against a ref", () => {

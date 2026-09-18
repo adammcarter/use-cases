@@ -14,7 +14,7 @@ still match."
 > machine. This is the whole point of the trust model: an agent on a developer
 > box cannot manufacture a green check.
 
-Every command shown here is a real `uc` command. Concepts are linked to the
+Every command shown here is a real `use-cases` command. Concepts are linked to the
 [concept docs](./README.md); the deeper trust mechanics live under
 [`docs/concepts/`](./concepts/matrix.md).
 
@@ -30,7 +30,7 @@ one — the committed, dependency-free bundle in `dist/`, which runs with Node
 alone.
 
 Install it as a plugin into your agent and everything is wired for you:
-skills, the MCP server, the bootstrap, and where `uc` lives.
+skills, the MCP server, the bootstrap, and where `use-cases` lives.
 
 ```text
 Claude Code   /plugin marketplace add adammcarter/use-cases
@@ -42,26 +42,26 @@ Codex         codex plugin marketplace add adammcarter/use-cases
 OpenCode      opencode plugin add 'github:adammcarter/use-cases'
 ```
 
-Claude also puts `uc` on PATH inside the session; on every host the bootstrap
-names the full path to the plugin's `bin/uc`.
+Claude also puts `use-cases` on PATH inside the session; on every host the bootstrap
+names the full path to the plugin's `bin/use-cases`.
 
 Anywhere else, clone the repo and call its entry point:
 
 ```bash
 git clone https://github.com/adammcarter/use-cases.git
-alias uc="$PWD/use-cases/bin/uc"
+alias use-cases="$PWD/use-cases/bin/use-cases"
 ```
 
 The companion MCP server is `bin/use-cases-mcp`, which every host manifest
 names — see [the MCP contract](./mcp.md).
 
-## 2. Scaffold the workspace with `uc init`
+## 2. Scaffold the workspace with `use-cases init`
 
 One command takes a brand-new repo from nothing to a bindable, verifiable
 matrix — a workspace config plus an example row that already validates:
 
 ```bash
-uc init --repo . --template js-vitest
+use-cases init --repo . --template js-vitest
 ```
 
 - `--template` wires the default verifier: `generic` (a clearly-TODO placeholder
@@ -154,7 +154,7 @@ there is nothing to prove.)
 
 > **Enforce this behaviour in CI.** Add `required_for_release: true` under
 > `approval_policy` (i.e. `approval_policy: { mode: none, required_for_release:
-> true }`) to make `uc scan --gate` **fail the build** when this row drops below
+> true }`) to make `use-cases scan --gate` **fail the build** when this row drops below
 > the bar. This is the single knob the gate enforces — see
 > *[Gate a behaviour in CI](#9-gate-a-behaviour-in-ci)* below. Rows without it are
 > advisory: the gate warns about their drift but does not block.
@@ -162,7 +162,7 @@ there is nothing to prove.)
 Validate the matrix:
 
 ```bash
-uc matrix validate --repo . --json
+use-cases matrix validate --repo . --json
 ```
 
 `ok: true` / `complete: true` means the matrix is structurally clean.
@@ -185,13 +185,13 @@ export function applyDiscount(total: number, percent: number): number {
 The grammar is `<comment>: @use-case:<slug>` … `<comment>: @use-case:end
 <slug>`. See [bindings & markers](./concepts/bindings.md).
 
-## 5. Register the binding with `uc bind`
+## 5. Register the binding with `use-cases bind`
 
 `bind` registers the marker in the append-only binding registry, but only after
 the edited file scans clean:
 
 ```bash
-uc bind \
+use-cases bind \
   --repo . \
   --row billing.core.apply_discount \
   --file src/billing/discount.ts \
@@ -257,10 +257,10 @@ The available presets are `command.generic`, `js.vitest`, `js.npm-test`,
 Now write the acceptance test the preset names (e.g.
 `tests/use-cases/billing.core.apply_discount.test.ts`) and make it pass locally.
 
-## 7. See the status locally with `uc scan`
+## 7. See the status locally with `use-cases scan`
 
 ```bash
-uc scan --repo . --product-root . --policy-mode feature --json
+use-cases scan --repo . --product-root . --policy-mode feature --json
 ```
 
 At this point the row is **UNPROVEN**: it is bound to current code, but no signed
@@ -277,7 +277,7 @@ FRESH happens in a trusted CI pipeline, in two stages:
    so a PR can prove its tests *ran and passed* without minting trust:
 
    ```bash
-   uc verify --repo . --product-root . --all \
+   use-cases verify --repo . --product-root . --all \
      --out .use-cases/verification-results.jsonl --json
    ```
 
@@ -287,7 +287,7 @@ FRESH happens in a trusted CI pipeline, in two stages:
    the **only** place signing happens:
 
    ```bash
-   uc prove --repo . --product-root . --all --trusted-ci --append \
+   use-cases prove --repo . --product-root . --all --trusted-ci --append \
      --verification-results .use-cases/verification-results.jsonl \
      --signing-key-env UCM_CI_SIGNING_KEY --key-id ci-key-1 \
      --public-key .use-cases/trusted-ci-public-key.pem --json
@@ -327,7 +327,7 @@ behaviour regresses, do two things:
    proof; otherwise it is the keyless `VERIFIED_LOCAL` pass or better:
 
    ```bash
-   uc scan --repo . --product-root . --policy-mode release --gate
+   use-cases scan --repo . --product-root . --policy-mode release --gate
    ```
 
    - A required row below the bar → **exit 1** (the build fails), listed as an
@@ -349,11 +349,11 @@ behaviour into CI enforcement is a deliberate, discoverable one-line change.
 
 | Stage | Command | Row state |
 |---|---|---|
-| Authored | `uc matrix validate` | (tracked) |
-| Bound | `uc bind …` | UNBOUND → UNPROVEN |
-| Verified in CI (PR, keyless) | `uc verify --out …` | UNPROVEN (results only) |
-| Proved in CI (trusted branch) | `uc prove --trusted-ci …` | **FRESH** |
-| Code/test later weakened | `uc scan` | SUSPECT |
+| Authored | `use-cases matrix validate` | (tracked) |
+| Bound | `use-cases bind …` | UNBOUND → UNPROVEN |
+| Verified in CI (PR, keyless) | `use-cases verify --out …` | UNPROVEN (results only) |
+| Proved in CI (trusted branch) | `use-cases prove --trusted-ci …` | **FRESH** |
+| Code/test later weakened | `use-cases scan` | SUSPECT |
 
 When you later change the implementation or weaken the test, the embedded hashes
 no longer match and the row drops to **SUSPECT** — the stale claim becomes

@@ -38,7 +38,7 @@ enum ShowcaseFlags {
     key: "approvalToken",
     name: "--approval-token",
     kind: .string,
-    summary: "Signed approval token JSON from `uc approve-run` — the ONLY trusted human "
+    summary: "Signed approval token JSON from `use-cases approve-run` — the ONLY trusted human "
       + "sign-off path (F3).",
     valueName: "<path>",
   )

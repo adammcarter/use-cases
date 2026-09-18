@@ -10,7 +10,6 @@
     "directory": "packages/cli"
   },
   "bin": {
-    "uc": "./dist/index.js",
     "use-cases": "./dist/index.js"
   },
   "exports": {

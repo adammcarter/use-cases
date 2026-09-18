@@ -13,7 +13,7 @@
 // the number, and driving the product must.
 //
 // It installs the packed tarballs into a copy of the committed python-pytest
-// example and drives the real `uc` binary, so nothing here is a unit stub. Every
+// example and drives the real `use-cases` binary, so nothing here is a unit stub. Every
 // run points `UC_RUN_KEY_FILE` at a throwaway path, so no test ever touches the
 // developer's own machine-local key.
 import { spawnSync, type SpawnSyncReturns } from "node:child_process";
@@ -79,7 +79,7 @@ function installConsumer(): Consumer {
   );
   return {
     dir,
-    uc: join(dir, "node_modules/.bin/uc"),
+    uc: join(dir, "node_modules/.bin/use-cases"),
     resultsPath: join(dir, ".use-cases", "verification-results.jsonl"),
     // The machine-local run key goes in the throwaway workspace, never in $HOME.
     env: { UC_RUN_KEY_FILE: join(dir, "machine", "run-key") }
@@ -92,7 +92,7 @@ function uc(
 ): { ok: boolean; data: Record<string, any>; diagnostics: Array<Record<string, any>> } {
   const result = run(consumer.uc, args, consumer.dir, consumer.env);
   if (typeof result.stdout !== "string" || result.stdout.trim() === "") {
-    throw new Error(`uc ${args.join(" ")} produced no JSON (status ${result.status}): ${result.stderr}`);
+    throw new Error(`use-cases ${args.join(" ")} produced no JSON (status ${result.status}): ${result.stderr}`);
   }
   return JSON.parse(result.stdout) as {
     ok: boolean;
@@ -199,7 +199,7 @@ describe("EXPERIMENT 2: driving the product must move the acceptance claim", () 
     const before = claimOf(consumer);
     expect(before.proven).toBe(0);
 
-    // Drive the behaviour for real. `uc` spawns the command itself and records
+    // Drive the behaviour for real. `use-cases` spawns the command itself and records
     // the argv it ran — which is the thing a hand-written record cannot supply.
     const recorded = uc(consumer, [
       "evidence", "record", "--repo", consumer.dir, "--use-case", ROW_ID,

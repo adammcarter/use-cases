@@ -1,7 +1,7 @@
 import Testing
 @testable import UseCasesCore
 
-/// The freshness state machine: the object `uc scan` emits. Every corpus case is
+/// The freshness state machine: the object `use-cases scan` emits. Every corpus case is
 /// the TypeScript's whole output, compared byte for byte — key order, absent
 /// members and `null` members included.
 struct FreshnessTests {

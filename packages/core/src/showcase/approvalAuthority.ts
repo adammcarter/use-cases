@@ -7,7 +7,7 @@
 //
 // The pre-F3 caller-asserted booleans (stdinIsTty / confirmed / verified) and
 // the capture_method-string trust path are DELETED. They were the live hole:
-// `uc showcase approve --actor user` stamped capture_method
+// `use-cases showcase approve --actor user` stamped capture_method
 // =trusted_user_interactive_cli and the replay verifier trusted that string
 // with no signature.
 import type { PublicKeyResolver } from "../markers/proofSignature.js";

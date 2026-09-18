@@ -323,7 +323,7 @@ describe("EXPERIMENT 1: typing a line must not move the number", () => {
   });
 
   test("a ledger from another machine reads unattested, not verified", () => {
-    // The results ledger is transient per-machine output (`uc init` gitignores
+    // The results ledger is transient per-machine output (`use-cases init` gitignores
     // it). One committed by a teammate is their run, not yours.
     const ws = makeWorkspace();
     bind(ws, ROW_A, "Sources/Checkout/CouponService.swift");

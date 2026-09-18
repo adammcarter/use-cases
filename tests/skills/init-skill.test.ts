@@ -6,12 +6,12 @@ const repoRoot = resolve(import.meta.dirname, "../..");
 const skillPath = join(repoRoot, "skills/init/SKILL.md");
 
 //: @use-case:plugin.init.skill_hands_off
-describe("the init skill runs uc init and hands over to the loop", () => {
-  test("the skill runs uc init, reads AGENTS.md back, and ends by invoking the loop skill", () => {
+describe("the init skill runs use-cases init and hands over to the loop", () => {
+  test("the skill runs use-cases init, reads AGENTS.md back, and ends by invoking the loop skill", () => {
     expect(existsSync(skillPath)).toBe(true);
     const body = readFileSync(skillPath, "utf8");
     expect(body).toMatch(/^name: init$/m);
-    expect(body).toContain("uc init --repo .");
+    expect(body).toContain("use-cases init --repo .");
     expect(body).toContain("AGENTS.md");
     const lastParagraph = body.trim().split(/\n\s*\n/).pop() ?? "";
     expect(lastParagraph).toContain("use-case-driven-development");

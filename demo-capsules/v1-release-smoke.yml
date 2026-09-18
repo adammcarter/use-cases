@@ -22,5 +22,5 @@ permissions:
   command_execution: true
 extensions:
   use-cases.dev/runner:
-    command: uc capsule run --repo . --capsule capsule.v1.release_smoke --execute-commands --idempotency-key p14:v1-release-smoke --json
+    command: use-cases capsule run --repo . --capsule capsule.v1.release_smoke --execute-commands --idempotency-key p14:v1-release-smoke --json
     command_steps: required

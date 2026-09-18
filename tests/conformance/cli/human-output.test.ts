@@ -275,7 +275,7 @@ describe("F4: human-readable trust output (scan / verify / impact)", () => {
     expect(out.toLowerCase()).toContain("fresh");
     expect(out.toLowerCase()).toContain("suspect");
     // The required action for the suspect row is surfaced (recover / prove).
-    expect(out.toLowerCase()).toMatch(/uc (recover|prove)/);
+    expect(out.toLowerCase()).toMatch(/use-cases (recover|prove)/);
   });
 
   test("`scan --json` output is UNCHANGED — byte-identical to the pre-F4 machine envelope", () => {

@@ -95,7 +95,7 @@ extension EvidenceCommands {
       return .refused(refusal(
         command,
         "evidence.run.command_required",
-        "--perform needs a command: `uc evidence record --use-case <id> "
+        "--perform needs a command: `use-cases evidence record --use-case <id> "
           + "--perform -- <cmd> [args...]`.",
       ))
     }

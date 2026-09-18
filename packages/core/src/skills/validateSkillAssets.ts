@@ -260,7 +260,7 @@ function parseFrontmatter(
 
 function extractCliCommands(source: string, sourcePath: string): SkillCommandReference[] {
   const references: SkillCommandReference[] = [];
-  for (const match of source.matchAll(/`(?:uc|pnpm cli --)\s+([^`]+?)`/g)) {
+  for (const match of source.matchAll(/`(?:use-cases|pnpm cli --)\s+([^`]+?)`/g)) {
     const tokens = match[1].trim().split(/\s+/);
     if (tokens.length >= 2) {
       references.push({ command: `${tokens[0]} ${tokens[1]}`, source_path: sourcePath });

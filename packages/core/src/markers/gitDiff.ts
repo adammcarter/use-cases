@@ -1,4 +1,4 @@
-// Read-only git-diff plumbing for `uc impact` (0.2.0).
+// Read-only git-diff plumbing for `use-cases impact` (0.2.0).
 //
 // This module answers a single question — "which files changed, and which NEW
 // line ranges did the change add/modify?" — by parsing `git diff` output. It is

@@ -2,7 +2,7 @@
 // write a binding: bind (place + register), unbind (remove + release), and rebind
 // (move + release + re-register).
 //
-// It lives in one place on purpose. `uc` refuses a hand-placed marker and a
+// It lives in one place on purpose. `use-cases` refuses a hand-placed marker and a
 // hand-edited ledger, and those refusals are only fair while the tool itself is
 // the single writer of BOTH halves — the marker in the source and the event in
 // `bindings.jsonl`. Two implementations of "move a marker" would be two chances

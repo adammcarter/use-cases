@@ -13,7 +13,7 @@ export * from "./unbind.js";
 export * from "./rebind.js";
 export * from "./prove.js";
 export * from "./verify.js";
-// 0.2.0 F2: advisory, read-only change-impact map (`uc impact`).
+// 0.2.0 F2: advisory, read-only change-impact map (`use-cases impact`).
 export * from "./impact.js";
 export * from "./validateLedger.js";
 // Phase 8: precommit orchestrator + PR-summary formatter (pure, unit-tested).

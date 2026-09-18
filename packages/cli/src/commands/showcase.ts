@@ -871,7 +871,7 @@ export const showcaseApproveCommand: CliCommand = {
     { key: "run", name: "--run", kind: "string", required: true, valueName: "<id>", summary: "Showcase run id." },
     { key: "statement", name: "--statement", kind: "string", required: true, valueName: "<text>", summary: "Approval statement." },
     { key: "actor", name: "--actor", kind: "string", valueName: "<type>", summary: "Actor type (defaults to agent; --approval-token forces user)." },
-    { key: "approvalToken", name: "--approval-token", kind: "string", valueName: "<path>", summary: "Signed approval token JSON from `uc approve-run` — the ONLY trusted human sign-off path (F3)." },
+    { key: "approvalToken", name: "--approval-token", kind: "string", valueName: "<path>", summary: "Signed approval token JSON from `use-cases approve-run` — the ONLY trusted human sign-off path (F3)." },
     { key: "keyring", name: "--keyring", kind: "string", valueName: "<path>", summary: "Public-key keyring that verifies --approval-token, or narrows pinned approval_trust." },
     { key: "publicKey", name: "--public-key", kind: "string", valueName: "<path>", summary: "Single public key that verifies --approval-token, or narrows pinned approval_trust." },
     { key: "idempotencyKey", name: "--idempotency-key", kind: "string", valueName: "<key>", summary: "Idempotency key (defaults to a derived cli: key)." },
@@ -930,7 +930,7 @@ export const showcaseApproveCommand: CliCommand = {
         idempotencyKey: (flags.idempotencyKey as string | undefined) ?? `cli:approve:${runId}:${statement}`,
         recordedAt: (flags.recordedAt as string | undefined) ?? "2026-06-25T12:04:00.000Z",
         // SECURITY (F3): WITHOUT --approval-token these are all undefined, so the
-        // CLI path carries no signed token — an agent driving `uc showcase
+        // CLI path carries no signed token — an agent driving `use-cases showcase
         // approve` still gets untrusted_automation and a user-required plan stays
         // pending. WITH --approval-token, the (token, resolver, tierResolver,
         // policy-derived floor) bundle drives the existing verify+append gate; the trusted key
@@ -971,7 +971,7 @@ export const showcaseRejectCommand: CliCommand = {
     { key: "run", name: "--run", kind: "string", required: true, valueName: "<id>", summary: "Showcase run id." },
     { key: "statement", name: "--statement", kind: "string", required: true, valueName: "<text>", summary: "Rejection statement." },
     { key: "actor", name: "--actor", kind: "string", valueName: "<type>", summary: "Actor type (defaults to user)." },
-    { key: "approvalToken", name: "--approval-token", kind: "string", valueName: "<path>", summary: "Signed approval token JSON from `uc approve-run` — the ONLY trusted human sign-off path (F3)." },
+    { key: "approvalToken", name: "--approval-token", kind: "string", valueName: "<path>", summary: "Signed approval token JSON from `use-cases approve-run` — the ONLY trusted human sign-off path (F3)." },
     { key: "keyring", name: "--keyring", kind: "string", valueName: "<path>", summary: "Public-key keyring that verifies --approval-token, or narrows pinned approval_trust." },
     { key: "publicKey", name: "--public-key", kind: "string", valueName: "<path>", summary: "Single public key that verifies --approval-token, or narrows pinned approval_trust." },
     { key: "idempotencyKey", name: "--idempotency-key", kind: "string", valueName: "<key>", summary: "Idempotency key (defaults to a derived cli: key)." },

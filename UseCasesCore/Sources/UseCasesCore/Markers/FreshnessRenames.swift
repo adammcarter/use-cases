@@ -132,7 +132,7 @@ enum FreshnessRenames {
         errors[index]["remediation"] = .string(registryRowMissingRemediation(error, renamedTo))
       } else if JavaScriptValue.strictlyEquals(error["code"], "LEDGER_INTEGRITY_ERROR") {
         errors[index]["remediation"] = .string(
-          "inspect the ledger with `uc validate-ledger` — "
+          "inspect the ledger with `use-cases validate-ledger` — "
             + "a proof/binding ledger entry is malformed or out of order",
         )
       }
@@ -152,17 +152,17 @@ enum FreshnessRenames {
     if let newRowIdentifier, !newRowIdentifier.isEmpty {
       let previous = JavaScriptValue.text(rowIdentifier)
       return "looks like \(previous) was renamed to \(newRowIdentifier). "
-        + "`uc bind` fails closed while "
+        + "`use-cases bind` fails closed while "
         + "the stale registration stands, so release it first: run "
-        + "`uc unbind --row \(previous) --reason row_renamed`, then "
-        + "`uc bind --row \(newRowIdentifier) --file <file> --register-existing`"
+        + "`use-cases unbind --row \(previous) --reason row_renamed`, then "
+        + "`use-cases bind --row \(newRowIdentifier) --file <file> --register-existing`"
     }
     let unnamed = rowIdentifier == nil || rowIdentifier == .null
     let row = unnamed ? "a row" : JavaScriptValue.text(rowIdentifier)
     let placeholder = unnamed ? "<row>" : JavaScriptValue.text(rowIdentifier)
     return "the registry still binds \(row), which no longer exists in the "
       + "matrix. Restore the row to the matrix, or release the stale registration with "
-      + "`uc unbind --row \(placeholder)` and re-register the binding against "
+      + "`use-cases unbind --row \(placeholder)` and re-register the binding against "
       + "the row that replaced it"
   }
 

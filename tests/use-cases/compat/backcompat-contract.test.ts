@@ -53,13 +53,23 @@ interface Snapshot {
 // ---------------------------------------------------------------------------
 const DECLARED_CHANGES: { path: RegExp; reason: string }[] = [
   {
-    // An UNBOUND row's required_action was null — the one status most likely to
-    // need a next command, and the core never supplied one. Nothing branches on
-    // the null (a consumer reading `required_action !== null` as "needs work" was
-    // previously told an unbound row needed nothing), so this can only make a
+    // Two declared reasons share this path, so both are named here rather than
+    // one of them riding in silently on the other's entry.
+    //
+    // (a) An UNBOUND row's required_action was null — the one status most likely
+    // to need a next command, and the core never supplied one. Nothing branches
+    // on the null (a consumer reading `required_action !== null` as "needs work"
+    // was previously told an unbound row needed nothing), so this can only make a
     // consumer more correct.
+    //
+    // (b) The command the action names is now `use-cases`, not `uc`: ADR 0007
+    // decision 4 is a HARD rename with no alias, so `uc prove --row X` reads
+    // `use-cases prove --row X`. A consumer that PASTES this string into a shell
+    // needs the new name on PATH; one that parses it for the row id is unaffected.
+    // The field, its type and its nullability are unchanged — the frozen envelope
+    // (decision 8) constrains the key, not the command name inside its value.
     path: /^\$\.data\.status\.rows\[\d+\]\.required_action$/,
-    reason: "UNBOUND rows now carry a bind command instead of null (0.4.1)"
+    reason: "UNBOUND rows carry a bind command instead of null (0.4.1); the command is renamed uc -> use-cases (ADR 0007 decision 4)"
   },
   {
     // THE DATA-LOSS FIX, captured by the golden itself. On 0.4.0, `verify --row X`

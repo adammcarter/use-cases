@@ -43,7 +43,7 @@ describe("CLI help and usage discoverability", () => {
     expect(result.status).toBe(0);
     expect(result.stderr).toBe("");
     expect(result.stdout.trimStart().startsWith("{")).toBe(false);
-    expect(result.stdout).toContain("uc — use-cases CLI");
+    expect(result.stdout).toContain("use-cases — the Use Cases CLI");
     expect(result.stdout).toContain("Commands:");
     expect(result.stdout).toContain("matrix upsert");
   });
@@ -84,7 +84,7 @@ describe("CLI help and usage discoverability", () => {
   test("a bare invocation prints the human-readable help", () => {
     const result = runCli([]);
     expect(result.status).toBe(0);
-    expect(result.stdout).toContain("uc — use-cases CLI");
+    expect(result.stdout).toContain("use-cases — the Use Cases CLI");
   });
 
   test("`version` subcommand prints the version (like --version)", () => {

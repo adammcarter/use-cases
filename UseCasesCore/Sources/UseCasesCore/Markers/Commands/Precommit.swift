@@ -335,13 +335,13 @@ public enum Precommit {
   }
 
   /// `defaultRequiredAction`: the row's own action when it is a non-empty
-  /// string (truthiness), else `uc bind` for UNBOUND and `uc prove` otherwise.
+  /// string (truthiness), else `use-cases bind` for UNBOUND and `use-cases prove` otherwise.
   private static func requiredAction(_ row: FreshnessRow) -> String {
     if let action = row.requiredAction, !action.isEmpty {
       return action
     }
     return row.status == .unbound
-      ? "uc bind --row \(row.rowIdentifier)"
-      : "uc prove --row \(row.rowIdentifier)"
+      ? "use-cases bind --row \(row.rowIdentifier)"
+      : "use-cases prove --row \(row.rowIdentifier)"
   }
 }

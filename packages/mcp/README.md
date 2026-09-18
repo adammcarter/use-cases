@@ -14,7 +14,7 @@ ships bundled inside the
 npm i -g use-cases
 ```
 
-That provides the `uc-mcp` binary (and its `use-cases-mcp` long-form alias).
+That provides the `use-cases-mcp` binary.
 
 ## Usage
 

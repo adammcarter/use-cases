@@ -1,4 +1,4 @@
-/// The text `uc init` writes, line for line as `init/scaffold.ts` renders it.
+/// The text `use-cases init` writes, line for line as `init/scaffold.ts` renders it.
 enum ScaffoldTemplates {
   static let configurationFile = "use-cases.yml"
   static let useCaseFile = "use-cases/example.yml"
@@ -90,7 +90,8 @@ enum ScaffoldTemplates {
     "feature:",
     "  id: example.feature",
     "  name: Example feature",
-    "  summary: A sample use case vended by `uc init` \u{2014} copy its shape for your own rows.",
+    "  summary: A sample use case vended by `use-cases init` \u{2014} "
+      + "copy its shape for your own rows.",
     "metadata:",
     "  owner: unassigned",
     "  lifecycle: active",
@@ -107,7 +108,7 @@ enum ScaffoldTemplates {
     "    # How often users hit it: common | occasional | rare.",
     "    usage_frequency: common",
     "    tags: [example]",
-    "    # Files the behaviour lives in. `uc bind` wraps the exact span with a marker.",
+    "    # Files the behaviour lives in. `use-cases bind` wraps the exact span with a marker.",
     "    source_refs:",
     "      - kind: file",
     "        path: src/example.ts",
@@ -197,7 +198,7 @@ enum ScaffoldTemplates {
       "//",
       "// Run this file directly with",
       "//   \(runCommand)",
-      "// or let `uc verify` invoke the `js.vitest` preset for the row. Replace",
+      "// or let `use-cases verify` invoke the `js.vitest` preset for the row. Replace",
       "// these assertions as you replace the example row with your own use case.",
       #"import { describe, expect, test } from "vitest";"#,
       #"import { greet } from "../../src/example.js";"#,
@@ -243,12 +244,13 @@ enum ScaffoldTemplates {
   static let hookBlockMarker = "# use-cases:"
 
   private static let useCasesLookup = [
-    "# The plugin puts uc on PATH in Claude sessions; elsewhere set UC to <plugin>/bin/uc.",
-    #"uc="${"# +
-      #"UC:-$(command -v uc 2>/dev/null || true)}""#,
-    #"if [ -z "$uc" ]; then"#,
-    #"  echo "pre-commit: uc not found \#u{2014} install the Use Cases plugin "# +
-      #"(https://github.com/adammcarter/use-cases) or set UC=<plugin>/bin/uc" >&2"#,
+    "# The plugin puts use-cases on PATH in Claude sessions; "
+      + "elsewhere set USE_CASES to <plugin>/bin/use-cases.",
+    #"use_cases="${"# +
+      #"USE_CASES:-$(command -v use-cases 2>/dev/null || true)}""#,
+    #"if [ -z "$use_cases" ]; then"#,
+    #"  echo "pre-commit: use-cases not found \#u{2014} install the Use Cases plugin "# +
+      #"(https://github.com/adammcarter/use-cases) or set USE_CASES=<plugin>/bin/use-cases" >&2"#,
     "  exit 0",
     "fi",
   ]
@@ -261,18 +263,19 @@ enum ScaffoldTemplates {
       "  " + line
     } + [
       #"  root="$(git rev-parse --show-toplevel)""#,
-      #"  "$uc" matrix validate --repo "$root" --json >/dev/null \"#,
+      #"  "$use_cases" matrix validate --repo "$root" --json >/dev/null \"#,
       #"    || { echo "pre-commit: use-case matrix invalid \#u{2014} "# +
-        #"run: uc matrix validate --repo ." >&2; exit 1; }"#,
+        #"run: use-cases matrix validate --repo ." >&2; exit 1; }"#,
       #"  key=""; [ -f "$root/.use-cases/trusted-ci-public-key.pem" ] "# +
         #"&& key="--public-key $root/.use-cases/trusted-ci-public-key.pem""#,
-      #"  "$uc" validate-ledger --repo "$root" $key --json >/dev/null \"#,
+      #"  "$use_cases" validate-ledger --repo "$root" $key --json >/dev/null \"#,
       #"    || { echo "pre-commit: use-case ledger invalid \#u{2014} "# +
-        #"run: uc validate-ledger --repo ." >&2; exit 1; }"#,
+        #"run: use-cases validate-ledger --repo ." >&2; exit 1; }"#,
       "  # A marker and its binding that disagree is INVALID; stale is fine here.",
-      #"  if "$uc" scan --repo "$root" --json 2>/dev/null | grep -Eq '"status": *"INVALID"'; then"#,
+      #"  if "$use_cases" scan --repo "$root" --json 2>/dev/null "# +
+        #"| grep -Eq '"status": *"INVALID"'; then"#,
       #"    echo "pre-commit: a use-case marker and its binding disagree \#u{2014} "# +
-        #"run: uc scan --repo ." >&2"#,
+        #"run: use-cases scan --repo ." >&2"#,
       "    exit 1",
       "  fi",
       "fi",
@@ -288,8 +291,8 @@ enum ScaffoldTemplates {
       replacingFirst("pre-commit:", with: "pre-push:", in: "  " + line)
     } + [
       #"  root="$(git rev-parse --show-toplevel)""#,
-      #"  "$uc" impact --repo "$root" 2>/dev/null || true"#,
-      #"  "$uc" scan --repo "$root" 2>/dev/null | tail -n 20 || true"#,
+      #"  "$use_cases" impact --repo "$root" 2>/dev/null || true"#,
+      #"  "$use_cases" scan --repo "$root" 2>/dev/null | tail -n 20 || true"#,
       "fi",
       "exit 0",
     ]

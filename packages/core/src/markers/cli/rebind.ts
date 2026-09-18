@@ -8,7 +8,7 @@
 // Why this matters more than it looks: a marker on the wrong declaration is the
 // vacuous-row defect in marker form. The row reads as proven while the code it
 // points at cannot fail when the claim does, and it looks exactly like a good row
-// from every angle `uc` reports on. Finding those is the point of reviewing a
+// from every angle `use-cases` reports on. Finding those is the point of reviewing a
 // matrix; before this command, a review that found one had nothing to do about it.
 import type { ResolvedWorkspaceContext } from "../../roots.js";
 import { resolveCommentPrefix, type CommentPrefixConfig } from "../commentPrefix.js";
@@ -133,7 +133,7 @@ export function runRebindCommand(options: RebindCommandOptions): RebindCommandRe
   if (!validation.registry.slugToRow.has(bindingSlug)) {
     return fail(base, 2, {
       code: "NOT_REGISTERED",
-      message: `binding slug ${bindingSlug} is not registered; bind it first with \`uc bind --row ${options.rowId} --file ${relFile} --mode ${options.mode}\``
+      message: `binding slug ${bindingSlug} is not registered; bind it first with \`use-cases bind --row ${options.rowId} --file ${relFile} --mode ${options.mode}\``
     });
   }
 
@@ -267,7 +267,7 @@ export function runRebindCommand(options: RebindCommandOptions): RebindCommandRe
     scan_result: scanResult,
     // The row's old proof does not survive the move (the binding set it was
     // proven against no longer exists), so re-verification is the next step.
-    next_command: `uc verify --row ${options.rowId}`,
+    next_command: `use-cases verify --row ${options.rowId}`,
     errors: []
   };
 }

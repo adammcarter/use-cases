@@ -39,7 +39,7 @@ extension TrustRenderer {
       "  expires \(JavaScriptReading.text(value["exp"]))",
       "",
       "Sign out-of-band:",
-      "  uc approve-run --request <request-file> --key-file <out-of-scope-key> "
+      "  use-cases approve-run --request <request-file> --key-file <out-of-scope-key> "
         + "--key-id <keyring-key-id> --json",
       "",
       EnvelopeRenderer.footer,

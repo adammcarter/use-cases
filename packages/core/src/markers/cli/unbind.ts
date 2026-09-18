@@ -187,8 +187,8 @@ export function runUnbindCommand(options: UnbindCommandOptions): UnbindCommandRe
     markers_removed: markersRemoved,
     // A released row proves nothing until it is bound again, so say so.
     next_command: loaded.rowIds.has(options.rowId)
-      ? `uc bind --row ${options.rowId} --file <file> --mode <mode>`
-      : "uc scan",
+      ? `use-cases bind --row ${options.rowId} --file <file> --mode <mode>`
+      : "use-cases scan",
     errors: []
   };
 }

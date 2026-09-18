@@ -103,9 +103,9 @@ describe("agents.roster.bodies_hold_the_line", () => {
   });
 
   // bad_cites_a_command_the_cli_does_not_ship. The allowlist is internal, but
-  // its consequence is not: every `uc` command a body cites must be one the
+  // its consequence is not: every `use-cases` command a body cites must be one the
   // shipped CLI actually dispatches, which --help enumerates.
-  test("every uc command an agent body cites is one the CLI actually ships", () => {
+  test("every use-cases command an agent body cites is one the CLI actually ships", () => {
     const help = runUc(["--help"]);
     expect(help.status).toBe(0);
     const dispatchable = new Set(
@@ -117,12 +117,12 @@ describe("agents.roster.bodies_hold_the_line", () => {
     expect(dispatchable.size, "help must enumerate the command surface").toBeGreaterThan(20);
 
     for (const name of CANONICAL_AGENTS) {
-      for (const match of agentBody(name).matchAll(/`uc\s+([^`]+?)`/g)) {
+      for (const match of agentBody(name).matchAll(/`use-cases\s+([^`]+?)`/g)) {
         const tokens = match[1].trim().split(/\s+/);
         const [first, second] = tokens;
         const cited = second && !second.startsWith("-") ? `${first} ${second}` : first;
         const known = dispatchable.has(cited) || dispatchable.has(first);
-        expect(known, `${name} cites \`uc ${cited}\`, which the CLI does not ship`).toBe(true);
+        expect(known, `${name} cites \`use-cases ${cited}\`, which the CLI does not ship`).toBe(true);
       }
     }
   });

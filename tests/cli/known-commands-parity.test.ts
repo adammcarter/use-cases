@@ -7,9 +7,9 @@ import {
 } from "../../packages/core/src/cli/knownCommands.js";
 
 // Skill and agent bodies are validated against these two sets: a body that tells
-// its reader to run `uc <something>` is flagged when `<something>` is not a real
+// its reader to run `use-cases <something>` is flagged when `<something>` is not a real
 // command. That guard is only as good as the sets, and they used to be a
-// hand-maintained copy of the CLI — so `uc impact` and `uc showcase
+// hand-maintained copy of the CLI — so `use-cases impact` and `use-cases showcase
 // request-approval` shipped for real while the validator still called them
 // unknown. This test makes the copy impossible to drift: the sets must equal what
 // the registry actually dispatches, plus the bespoke builtins that never entered

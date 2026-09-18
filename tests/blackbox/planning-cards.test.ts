@@ -4,8 +4,8 @@
 // selects, what a walkthrough adds beyond it, why a generated plan is never
 // proof by itself, how audience/timebox constraints shape what fits, and how
 // a partial matrix is flagged before anyone demos off it. All five are
-// measured through `uc plan showcase`, `uc plan walkthrough` and
-// `uc showcase start` — never by importing the selection code directly.
+// measured through `use-cases plan showcase`, `use-cases plan walkthrough` and
+// `use-cases showcase start` — never by importing the selection code directly.
 //
 // Self-contained: a shared oracle file means one edit stales every row bound
 // to it.

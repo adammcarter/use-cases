@@ -758,6 +758,104 @@ across sessions.
 - **0.8.0 release notes (row 11)** must list as breaking: `uc migrate test-matrix`, the `migration` skill, the `migration-test-matrix-result` schema, the two `UCM_MIGRATION_*` codes, and the `migration` workflow mode (a config naming it stops loading). No CHANGELOG exists yet.
 - **`SchemaGoldenCorpus.swift` has no committed generator** (its header points at the row 3b report); retiring the `migration` workflow mode regenerated its one changed case by re-running `validateBySchemaId` over every case, all other 61 reproducing byte for byte.
 
+## Row 8 — the hard rename (`uc` → `use-cases`)
+
+- **This file, `docs/adr/`, `docs/acceptance/0.3.0/`, the two `.use-cases/`
+  ledgers, `showcase-runs/` and `tests/fixtures/backcompat/` are RECORDS and
+  were deliberately left saying `uc`.** ADR 0007 decision 4 is quoted verbatim
+  in the ADR; rewriting it would erase the decision being carried out. The
+  backcompat fixtures are captures of published 0.4.0/0.4.3/0.5.5 binaries and
+  are regenerated only when a new baseline is cut. Same rule as the "removed in
+  0.7.0" prose the row 6 note preserves.
+- **Where decision 4 and decision 8 touch, the line falls between the key and
+  the value.** The frozen envelope constrains the KEY (`required_action`,
+  `next_command`, `suggested_signer_command`, `usage`) and its type; the command
+  name INSIDE the value is what decision 4 renames. No schema mentions `uc`
+  (`rg -n '\buc\b' schemas/v1/` is empty), no key changed, no type changed.
+  `tests/use-cases/compat/backcompat-contract.test.ts` now DECLARES the rename
+  on `required_action` alongside the 0.4.1 reason, so it is not silent — that
+  path already had a declaration and would otherwise have swallowed it.
+- **OWNER-ANSWERED 2026-09-18 — `uc://` and `uc/<prompt>` ARE renamed.**
+  Decision 8 freezes the CLI JSON envelope, the 27 schemas, the marker syntax
+  and the ledger formats; an MCP resource URI scheme and a prompt name are on
+  none of those lists and are squarely inside decision 4's "the MCP server".
+  Checked first that `use-cases` is a legal scheme that `new URL` splits
+  identically: `use-cases://matrix/status` gives host `matrix`, path `/status`,
+  exactly as `uc://` did — `McpResourceUri` mirrors that split. The old scheme
+  and the old prompt names are REFUSED, not aliased (`-32002 Unknown resource`,
+  `-32602 Unknown prompt`), proved by hand against the Swift binary. The owner
+  approved this and the refusal behaviour; it is settled, not a standing
+  question. To reverse it: the scheme constant in `McpResourceUri.swift`,
+  `McpResourceCatalog`, the four prompt names, the two TypeScript mirrors, then
+  regenerate `McpGoldenCorpus`.
+- **OWNER-ANSWERED 2026-09-18 — `bin/uc` is DELETED. No alias and no
+  tombstone.** A tombstone (a `bin/uc` that execs nothing, prints "the command
+  is now `use-cases`" and exits 2) was built first and then removed: the owner
+  read decision 4's "no alias" strictly — the file goes. The consequence is
+  accepted and is the point: a stale 0.7.0-era `.githooks/pre-commit` in an
+  adopter's own repo that calls `uc` now fails with the shell's own
+  `command not found: uc`, and the plugin says nothing to them. The cure for
+  such a repo is re-running `use-cases init`, which rewrites the hook block.
+  `dist/uc.js` and `dist/uc-mcp.js` are NOT affected — the resolver's bundle
+  map never named `bin/uc`, and row 10 still owns them.
+  Swept after deleting: no live reference to `bin/uc` survives in `bin/`,
+  `hooks/`, `tests/`, `docs/` (outside these records), `skills/`, `agents/`,
+  `scripts/`, the manifests or the rows. The only mention left in code is
+  `session-path.test.ts` asserting the file is ABSENT.
+- **The `#bin` binding moved with the behaviour.**
+  `plugin.install.uc_on_path_in_session#bin` was rebound through the CLI onto
+  `bin/use-cases` (reason `row 8: the hard rename — the session command is
+  bin/use-cases`). The row id, the scenario ids and the binding slug are
+  unchanged, as decision 4 requires: an id containing "uc" is not a rename
+  target. The row gained one scenario,
+  `bad_the_old_name_is_gone`, which asserts what is now true — the plugin ships
+  no entry point under the old name and `command -v uc` resolves to nothing
+  after the session hook exports `bin/`. That scenario is what stops an alias
+  being reinstated later, which is why it is worth a row rather than nothing.
+- **`SkillText.prefixes` and every skill/agent body had to move together.** The
+  CLI-citation extractor is `` /`(?:uc|pnpm cli --)\s+([^`]+?)`/g `` in three
+  places (`validateSkillAssets.ts`, `SkillText.swift`, and the two test copies
+  in `agents-roster.test.ts` / `p7-skills.test.ts` / `plugin-init-loop-skill.test.ts`).
+  Renaming the prefix while bodies still said `` `uc scan` `` would make the
+  validator extract NOTHING and the gate pass having asserted nothing. The
+  adversarial fixtures in `generate-skills-corpus.mjs` (nbsp, em-space, BOM,
+  U+0085, nested backticks, `ucmatrix`) were renamed in step so they still
+  exercise the same backtracking edges — `ucmatrix` became `use-casesmatrix`.
+- **The scaffolded git hook's shell variable and override moved too**:
+  `uc="${UC:-…}"` is now `use_cases="${USE_CASES:-$(command -v use-cases …)}"`.
+  `use-cases` is not a legal shell identifier, so the variable had to change
+  anyway; `USE_CASES` follows row 6's `USE_CASES_*` convention and stops the
+  hook telling a user to set a variable named after the retired command.
+  Adopters' already-scaffolded hooks are their files and are not rewritten.
+- **Env vars that did NOT move, deliberately.** `UCM_*` are error codes in the
+  frozen envelope (decision 8). `UC_BIN` / `UC_MCP_BIN` are the black-box
+  harness's seam and `tests/helpers/uc-binary.ts` keeps its name — row 7 left
+  the oracle's default to row 10 and that is unchanged. `UC_RUN_KEY_FILE` is an
+  env knob, not "the command, the MCP server, skills, agents, hooks or docs".
+- **Left to row 10, as row 7 left them**: `dist/uc.js` / `dist/uc-mcp.js`, the
+  resolver's Node branch and the bootstrap's `fallback_hint` that names them,
+  `.githooks/{pre-commit,pre-push}` (they run `node dist/uc.js`; only their
+  human advice strings were renamed), `scripts/bundle.mjs`, and
+  `packages/core/test/init/scaffold-sample.test.ts`.
+- **The npm `bin` aliases are gone.** `packages/cli/package.json` mapped both
+  `uc` and `use-cases`, and `packages/mcp/package.json` both `uc-mcp` and
+  `use-cases-mcp`; the short names are removed and both READMEs stopped
+  advertising a "long-form alias", which decision 4 abolishes. npm publishing
+  itself went at 0.7.0, so nothing consumes these today.
+- **`generate-showcase-corpus.mjs` is NOT byte-reproducible.** Re-running it
+  changes exactly one substring — a freshly minted ECDSA P-256 WebAuthn
+  signature in `webauthn_p256` (P-256 signing is randomised). Nothing else
+  moves. The regenerated file was reverted here because the rename does not
+  reach it; a future row that must regenerate it should expect that one-line
+  churn and not read it as drift.
+- **A clean TypeScript rebuild is required before any generator runs.** Every
+  generator refuses when `dist/**.js` is older than its `.ts`, and a
+  whole-tree rewrite bumps the mtime of files `tsc -b` then declines to rebuild.
+  `pnpm clean && rm -f packages/*/*.tsbuildinfo && pnpm build` is what unsticks it.
+- **Closed here, from row 5:** `showcase_request_approval`'s
+  `suggested_signer_command` is now `["use-cases","approve-run",…]`, and no `uc`
+  survives in the four MCP prompt bodies.
+
 ## Candidate hardening (contract change — owner's call, after 0.8.0)
 
 - `keyring.schema.json` puts no pattern on `key_id`. Without exact-byte key

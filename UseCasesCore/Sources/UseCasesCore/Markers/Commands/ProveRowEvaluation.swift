@@ -30,8 +30,9 @@ struct ProveRowEvaluation {
         sweep ? .skippedVariantFamily : .failed,
         reason: "VARIANT_FAMILY_UNSUPPORTED",
         message: "row \(rowIdentifier) is a variant family; signed proofs for variant families are "
-          + "not supported yet — use the keyless loop (`uc verify --row \(rowIdentifier)` then "
-          + "`uc scan`) for per-variant local acceptance",
+          + "not supported yet — use the keyless loop "
+          + "(`use-cases verify --row \(rowIdentifier)` then "
+          + "`use-cases scan`) for per-variant local acceptance",
       )
     }
     switch target.status.status {
@@ -139,7 +140,7 @@ struct ProveRowEvaluation {
       return .refused(
         reason: "NO_PASSING_RESULT",
         message: "no verification result for row \(rowIdentifier); "
-          + "run `uc verify --row \(rowIdentifier) --out <path>` first",
+          + "run `use-cases verify --row \(rowIdentifier) --out <path>` first",
       )
     }
     if JavaScriptValue.strictlyEquals(record["status"], "blocked") {

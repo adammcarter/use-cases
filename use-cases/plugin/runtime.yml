@@ -19,8 +19,6 @@ use_cases:
       - kind: file
         path: bin/use-cases-runtime
       - kind: file
-        path: bin/uc
-      - kind: file
         path: bin/use-cases
       - kind: file
         path: bin/use-cases-mcp
@@ -29,16 +27,16 @@ use_cases:
     preconditions:
       - The plugin version names a release that publishes the Swift archives.
       - "No real release does yet: .claude-plugin/plugin.json is below the first Swift release, so the scenarios below are proved against a stand-in release on disk, exactly as ladder row 6 proved the download path. The real flip happens the moment 0.8.0 publishes, with no file in the plugin changed."
-    trigger: A host, a skill or a shell runs bin/uc, bin/use-cases or bin/use-cases-mcp.
+    trigger: A host, a skill or a shell runs bin/use-cases or bin/use-cases-mcp.
     scenarios:
       - id: plugin.runtime.release_versions_run_the_verified_swift_binary.golden_every_entry_point_execs_the_downloaded_binary
         kind: steps
         steps:
           - Publish a stand-in release at a version above the first Swift release.
-          - Run bin/uc, bin/use-cases and bin/use-cases-mcp against it with an empty cache.
+          - Run bin/use-cases and bin/use-cases-mcp against it with an empty cache.
         observable_outcomes:
-          - All three exec the checksum-verified executable out of the release archive, so the command name a host uses does not change what runs.
-          - bin/uc runs the Swift CLI, not the committed Node bundle.
+          - Both exec the checksum-verified executable out of the release archive, so the command name a host uses does not change what runs.
+          - bin/use-cases runs the Swift CLI, not the committed Node bundle.
       - id: plugin.runtime.release_versions_run_the_verified_swift_binary.golden_the_mcp_entry_point_the_manifests_name_serves_a_host
         kind: steps
         steps:
@@ -50,7 +48,7 @@ use_cases:
         kind: steps
         steps:
           - Point a Swift-era version at a release that publishes no archive for this machine.
-          - Run bin/uc and read the exit code, stdout and stderr.
+          - Run bin/use-cases and read the exit code, stdout and stderr.
         observable_outcomes:
           - It exits nonzero naming the release and the asset it wanted, and the committed Node bundle is never run in its place.
           - A missing release is never masked by falling back to another runtime.
@@ -91,7 +89,6 @@ use_cases:
           inputs:
             - tests/plugin/runtime-resolver.test.ts
             - bin/use-cases-runtime
-            - bin/uc
             - bin/use-cases
             - bin/use-cases-mcp
       requirements:
@@ -124,15 +121,15 @@ use_cases:
     preconditions:
       - The plugin version is below the first release that publishes the Swift archives.
       - The committed bundle is in dist/, as it is in every clone until the TypeScript is deleted.
-    trigger: A host, a skill or a shell runs bin/uc, bin/use-cases or bin/use-cases-mcp on an installed plugin at such a version.
+    trigger: A host, a skill or a shell runs bin/use-cases or bin/use-cases-mcp on an installed plugin at such a version.
     scenarios:
       - id: plugin.runtime.pre_swift_versions_run_the_committed_bundle.golden_the_cli_entry_points_run_the_bundle
         kind: steps
         steps:
-          - Run bin/uc version --json and bin/use-cases version --json at the plugin's own version.
+          - Run bin/use-cases version --json at the plugin's own version.
           - Read the envelope and what produced it.
         observable_outcomes:
-          - Both print the version envelope, produced by the committed bundle, so an installed plugin keeps working today.
+          - It prints the version envelope, produced by the committed bundle, so an installed plugin keeps working today.
       - id: plugin.runtime.pre_swift_versions_run_the_committed_bundle.golden_the_mcp_entry_point_the_manifests_name_answers
         kind: steps
         steps:
@@ -143,14 +140,14 @@ use_cases:
       - id: plugin.runtime.pre_swift_versions_run_the_committed_bundle.bad_the_bundle_is_missing
         kind: steps
         steps:
-          - Remove the committed bundle from a copy of the plugin and run its bin/uc.
+          - Remove the committed bundle from a copy of the plugin and run its bin/use-cases.
           - Read the exit code and stderr.
         observable_outcomes:
           - It exits nonzero naming the bundle it expected and the release that would have carried a binary instead, rather than failing as a bare interpreter error.
       - id: plugin.runtime.pre_swift_versions_run_the_committed_bundle.edge_no_download_is_attempted
         kind: steps
         steps:
-          - Point the release root at a host that refuses connections and run bin/uc version --json at the plugin's own version.
+          - Point the release root at a host that refuses connections and run bin/use-cases version --json at the plugin's own version.
           - Read the envelope, the exit code and the cache.
         observable_outcomes:
           - "The envelope is printed and nothing was fetched or cached: the branch is decided by the version, never by a download failing."
@@ -184,7 +181,6 @@ use_cases:
           inputs:
             - tests/plugin/runtime-resolver.test.ts
             - bin/use-cases-runtime
-            - bin/uc
             - bin/use-cases
             - bin/use-cases-mcp
       requirements:

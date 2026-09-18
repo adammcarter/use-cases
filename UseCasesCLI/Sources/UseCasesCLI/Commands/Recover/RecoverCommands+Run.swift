@@ -173,8 +173,9 @@ private struct Recovery {
     let diagnostic = Diagnostic(
       code: "recover.verification_failed",
       message: "recover could not restore \(named) to green: the verifier failed for \(named). "
-        + "Fix the code or the test so the row's verifier passes, then re-run `uc recover`. "
-        + "Inspect the failure with `uc verify --repo \(workspace.workspaceRoot) \(target)`.",
+        + "Fix the code or the test so the row's verifier passes, then re-run `use-cases recover`. "
+        +
+        "Inspect the failure with `use-cases verify --repo \(workspace.workspaceRoot) \(target)`.",
       entityIdentifier: failedRows.first ?? rowIdentifier,
       relatedIdentifiers: failedRows,
     )
@@ -295,10 +296,11 @@ private struct Recovery {
         + "half of --signing-key-env)."
     }
     if scanned.exitCode != 0 {
-      return "`uc scan` reported an integrity error (exit \(scanned.exitCode)) — resolve it, "
-        + "then re-run `uc recover`."
+      return "`use-cases scan` reported an integrity error "
+        + "(exit \(scanned.exitCode)) — resolve it, "
+        + "then re-run `use-cases recover`."
     }
-    return "Inspect the current state with `uc scan --repo \(workspace.workspaceRoot)`."
+    return "Inspect the current state with `use-cases scan --repo \(workspace.workspaceRoot)`."
   }
 
   private func failed(

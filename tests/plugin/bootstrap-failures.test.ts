@@ -37,7 +37,7 @@ describe.skipIf(!canRunBootstrap)("a download that cannot be completed says what
     expect(result.stderr).toContain(`v${release.version}`);
     expect(result.stderr).toContain(`${release.baseUrl}/v${release.version}/${release.assetName}`);
     expect(result.stderr).toMatch(/does not carry/);
-    // bin/uc now runs whatever the resolver picks, so the escape hatch a
+    // bin/use-cases now runs whatever the resolver picks, so the escape hatch a
     // failed download names is the committed bundle itself, by its path.
     expect(result.stderr).toContain(join(repoRoot, "dist/uc.js"));
     expect(existsSync(join(repoRoot, "dist/uc.js")), "the hint must name a path that exists").toBe(true);

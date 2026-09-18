@@ -60,12 +60,12 @@ A row is more than a title. The fields that drive the trust engine are:
   ```
 
   A row with `variants` is a **variant family**. The family is still ONE row —
-  one `id`, one code binding, one shared verifier — but `uc verify` proves each
+  one `id`, one code binding, one shared verifier — but `use-cases verify` proves each
   variant separately (one spawn per variant, `{variant}` substituted into the
-  command) and `uc scan` reports the family `VERIFIED_LOCAL` only when **every**
+  command) and `use-cases scan` reports the family `VERIFIED_LOCAL` only when **every**
   variant currently passes, with a per-variant breakdown naming any failing
   shape. See [verifiers](./verifiers.md#the-variant-convention--variant-families).
-  Adopting `variants` requires every collaborator on `uc >= 0.5.0`: older
+  Adopting `variants` requires every collaborator on `use-cases >= 0.5.0`: older
   releases reject the field with a schema error (loudly and safely — never a
   silent misread).
 
@@ -75,11 +75,11 @@ All matrix commands emit the standard JSON envelope and take `--json`:
 
 | Goal | Command |
 |---|---|
-| Check structural integrity | `uc matrix validate --repo . --json` |
-| List / filter addressable rows | `uc matrix list --repo . --json` (filters: `--value`, `--journey-role`, `--lifecycle`, `--host`, `--tag`, `--changed-path`) |
-| Combine matrix + evidence status | `uc matrix status --repo . --json` |
-| Add or update one row | `uc matrix upsert --repo . --file <yaml> --use-case-json '<json>' --json` |
-| Retire a row | `uc matrix remove --repo . --use-case <id> --reason <text> --json` |
+| Check structural integrity | `use-cases matrix validate --repo . --json` |
+| List / filter addressable rows | `use-cases matrix list --repo . --json` (filters: `--value`, `--journey-role`, `--lifecycle`, `--host`, `--tag`, `--changed-path`) |
+| Combine matrix + evidence status | `use-cases matrix status --repo . --json` |
+| Add or update one row | `use-cases matrix upsert --repo . --file <yaml> --use-case-json '<json>' --json` |
+| Retire a row | `use-cases matrix remove --repo . --use-case <id> --reason <text> --json` |
 
 `matrix remove` is a **lifecycle transition**, not a physical delete: the row is
 marked `lifecycle: removed` and its history is preserved. Mutations validate the

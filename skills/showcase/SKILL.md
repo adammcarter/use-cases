@@ -23,8 +23,8 @@ Generated plans, walkthroughs, capsules, and runbooks are prepared material only
 
 ## Plan Mode vs Run Mode
 
-- Plan mode prepares only. Use `uc plan showcase --json` or `uc capsule plan --json`.
-- Run mode records actual performed events. Use `uc showcase start --json` only when the request clearly asks for a live run or the user agrees to perform one.
+- Plan mode prepares only. Use `use-cases plan showcase --json` or `use-cases capsule plan --json`.
+- Run mode records actual performed events. Use `use-cases showcase start --json` only when the request clearly asks for a live run or the user agrees to perform one.
 - A generated plan must not be described as a completed demo.
 
 ## The Demo Card Loop
@@ -58,7 +58,7 @@ The card grows; it never mutates. Follow-up turns reprint the whole card with th
 
 - Turn 1 - Present. Send the card (Steps + Expect) as its OWN message and END the turn - no question tool call, no other tool calls after the card. The card must be on the user's screen before anything else happens.
 - Turn 2 - Gate. In the NEXT turn, ask Gate 1 with the host's structured question tool (`AskUserQuestion` on Claude; the closest native single-tap prompt elsewhere): ready to run this card, options "Ready - go" / "Not yet". A one-line pointer ("Card above - ready?") may precede the question; the full card lives in the previous message. Never start from inference, a generated plan, or momentum; "Not yet" holds with nothing recorded.
-- Turn 3 - Perform and grade. Only after "Ready - go": perform exactly the card's Steps - nothing more, nothing less - then send the full card reprinted with **Actual** filled as its OWN message and end the turn, then ask Gate 3 (verdict) in the following turn with options **in this order: Approve, Reject, Run it again**. Approve and Reject accept optional free-text notes; "Run it again" re-performs the same card's Steps and re-asks the verdict, recording nothing in between. Discussion arrives through the host's free-text option and maps to `uc showcase pause --json`, talk, then re-ask.
+- Turn 3 - Perform and grade. Only after "Ready - go": perform exactly the card's Steps - nothing more, nothing less - then send the full card reprinted with **Actual** filled as its OWN message and end the turn, then ask Gate 3 (verdict) in the following turn with options **in this order: Approve, Reject, Run it again**. Approve and Reject accept optional free-text notes; "Run it again" re-performs the same card's Steps and re-asks the verdict, recording nothing in between. Discussion arrives through the host's free-text option and maps to `use-cases showcase pause --json`, talk, then re-ask.
 - Gate 2 - Driver - is asked once per run (or per item when it genuinely varies): who drives, the agent (offer only when the agent can genuinely execute the steps - scripts, AppleScript, computer use) or the user following the card's Steps. Agent-driven items present as Testing or Inspecting; user-driven items present as Over to you, where Confirm stays human.
 
 ### The card-first visibility rule (hard)
@@ -74,20 +74,20 @@ This rule exists because both observed failure modes are real and repeat:
 
 The gates change how the answer is collected (a tap, not typed text), never what an answer is worth - an answer given through the question tool carries exactly the trust a typed one always did:
 
-- Approve: treat it as the user's acceptance of that card, quoting their answer and notes verbatim; record the observation and verdict, then move to the next item - whose Turn 1 must begin with its own card message, never a bare ready-gate. Record remaining decisions with `uc showcase decide --json` and close the run with `uc showcase finish --json`. Act only on a fresh, explicit approve answer for that exact run - never a stale, inferred, or agent-authored one.
-- Reject: record the user's decision and notes with `uc showcase reject --statement`, record any failing verdicts' decisions with `uc showcase decide --json`, then `uc showcase finish --json`. A rejected live card stays a live failure; it is never restaged into a pass or re-narrated as an explanation.
+- Approve: treat it as the user's acceptance of that card, quoting their answer and notes verbatim; record the observation and verdict, then move to the next item - whose Turn 1 must begin with its own card message, never a bare ready-gate. Record remaining decisions with `use-cases showcase decide --json` and close the run with `use-cases showcase finish --json`. Act only on a fresh, explicit approve answer for that exact run - never a stale, inferred, or agent-authored one.
+- Reject: record the user's decision and notes with `use-cases showcase reject --statement`, record any failing verdicts' decisions with `use-cases showcase decide --json`, then `use-cases showcase finish --json`. A rejected live card stays a live failure; it is never restaged into a pass or re-narrated as an explanation.
 - Run it again: re-perform, reprint the card with the fresh Actual, re-ask. Repeat runs overwrite nothing; only the verdict the user finally gives is recorded.
 
-The signed sign-off tier (`uc approve-run` + `uc showcase approve --approval-token`) is unchanged by these gates: it remains the separate, opt-in release/audit path, and stays out of the everyday demo flow unless the run's approval policy demands it.
+The signed sign-off tier (`use-cases approve-run` + `use-cases showcase approve --approval-token`) is unchanged by these gates: it remains the separate, opt-in release/audit path, and stays out of the everyday demo flow unless the run's approval policy demands it.
 
 ## Live Run Rules
 
-- Record observations before verdicts with `uc showcase record-observation --json`.
-- Record verdicts with `uc showcase record-verdict --json`.
-- When a verdict fails or blocks, record a decision with `uc showcase decide --json` before finishing.
-- Pause or resume with `uc showcase pause --json` and `uc showcase resume --json`.
-- Correct mistaken entries with `uc showcase correct --json`; do not edit JSONL history by hand.
-- Finish with `uc showcase finish --json` and inspect state with `uc showcase status --json`.
+- Record observations before verdicts with `use-cases showcase record-observation --json`.
+- Record verdicts with `use-cases showcase record-verdict --json`.
+- When a verdict fails or blocks, record a decision with `use-cases showcase decide --json` before finishing.
+- Pause or resume with `use-cases showcase pause --json` and `use-cases showcase resume --json`.
+- Correct mistaken entries with `use-cases showcase correct --json`; do not edit JSONL history by hand.
+- Finish with `use-cases showcase finish --json` and inspect state with `use-cases showcase status --json`.
 
 ## Presentation Formats
 
@@ -110,6 +110,6 @@ The header verb is a promise and must not lie:
 
 ## Approval Boundary
 
-Agents may record agent observations and agent verdicts when allowed. Agents must not claim user approval, user sign-off, or user verification. User approval requires the designated trusted confirmation path, such as `uc showcase approve --json` with an explicit user actor in a context where the user actually confirms.
+Agents may record agent observations and agent verdicts when allowed. Agents must not claim user approval, user sign-off, or user verification. User approval requires the designated trusted confirmation path, such as `use-cases showcase approve --json` with an explicit user actor in a context where the user actually confirms.
 
 Do not say Claude, Codex, Copilot, or OpenCode support is verified unless host evidence exists. A canonical skill, host profile, or passing doctor check is not live host workflow evidence.

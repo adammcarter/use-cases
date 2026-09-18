@@ -102,7 +102,7 @@ for (const file of yamlFiles(matrixDir)) {
 
     // Row 2 needs something to RUN. A row whose required_verifiers names an id
     // its verifiers block never defines is a dangling reference, and it reads
-    // exactly like a healthy row: `uc matrix validate` passes it with zero
+    // exactly like a healthy row: `use-cases matrix validate` passes it with zero
     // diagnostics, the same way it passed the dead source_refs. Counting it
     // here is what makes row 2 start with a target instead of a surprise.
     if (row.requiredVerifiers.length > 0) {

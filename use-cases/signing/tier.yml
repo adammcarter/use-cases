@@ -32,7 +32,7 @@ use_cases:
       is the one mistake this tier cannot survive.
     preconditions:
       - The owner has decided they need the signed tier.
-    trigger: The owner runs `uc keygen`.
+    trigger: The owner runs `use-cases keygen`.
     scenarios:
       - id: signing.tier.keygen_keeps_the_private_key_out_of_the_tree.golden_inline
         kind: steps
@@ -127,7 +127,7 @@ use_cases:
     preconditions:
       - A results file written by `verify --out` exists.
       - A signing key is available through a CI secret.
-    trigger: Trusted CI runs `uc prove --verification-results <path>`.
+    trigger: Trusted CI runs `use-cases prove --verification-results <path>`.
     scenarios:
       - id: signing.tier.prove_never_signs_what_it_cannot_recompute.golden_signs_bound_passing_rows
         kind: steps
@@ -243,7 +243,7 @@ use_cases:
       valid, and signed by a key the caller trusts.
     preconditions:
       - A proof ledger exists.
-    trigger: The pre-commit hook or CI runs `uc validate-ledger`.
+    trigger: The pre-commit hook or CI runs `use-cases validate-ledger`.
     scenarios:
       - id: signing.tier.validate_ledger_holds_the_append_only_line.golden_clean_ledger
         kind: steps
@@ -324,7 +324,7 @@ use_cases:
       reporting a green it did not achieve.
     preconditions:
       - A bound row has drifted or was never verified.
-    trigger: An agent runs `uc recover --row <id>`.
+    trigger: An agent runs `use-cases recover --row <id>`.
     scenarios:
       - id: signing.tier.recover_never_fakes_green.golden_stale_to_verified_local
         kind: steps
@@ -416,7 +416,7 @@ use_cases:
     preconditions:
       - The plugin has minted an ApprovalRequest JSON file.
       - The owner holds an ed25519 key outside the agent's scope, or a platform authenticator.
-    trigger: The owner runs `uc approve-run --request <file>` in their own shell.
+    trigger: The owner runs `use-cases approve-run --request <file>` in their own shell.
     scenarios:
       - id: signing.tier.approve_run_keeps_the_key_out_of_agent_scope.golden_key_file
         kind: steps

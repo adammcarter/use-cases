@@ -42,7 +42,7 @@ afterEach(() => {
 //: @use-case:plugin.runtime.release_versions_run_the_verified_swift_binary
 describe("a version whose release publishes Swift assets runs the verified binary", () => {
   // golden_every_entry_point_execs_the_downloaded_binary
-  test.skipIf(!canRunBootstrap)("bin/uc, bin/use-cases and bin/use-cases-mcp all exec the verified executable", () => {
+  test.skipIf(!canRunBootstrap)("bin/use-cases and bin/use-cases-mcp both exec the verified executable", () => {
     const release = publishStandInRelease();
     const cacheDir = scratch("use-cases-cache-");
     const env = {
@@ -59,17 +59,6 @@ describe("a version whose release publishes Swift assets runs the verified binar
       expect(result.status, result.stderr).toBe(0);
       expect(result.stdout.trim()).toBe(expected);
     }
-
-    // bin/uc is not one of the release's executable names, so the stand-in
-    // helper cannot spawn it: run it directly with the same environment.
-    const uc = spawnSync(join(repoRoot, "bin/uc"), ["one"], {
-      encoding: "utf8",
-      env: { ...process.env, ...env, HOME: scratch("use-cases-home-") }
-    });
-    expect(uc.status, uc.stderr).toBe(0);
-    // The Swift CLI, not the committed Node bundle: the bundle would have
-    // refused an unknown command rather than echoed it.
-    expect(uc.stdout.trim()).toBe("stand-in use-cases args:one");
   });
 
   // golden_the_mcp_entry_point_the_manifests_name_serves_a_host
@@ -98,7 +87,7 @@ describe("a version whose release publishes Swift assets runs the verified binar
     const release = publishStandInRelease({ omitArchive: true });
     const cacheDir = scratch("use-cases-cache-");
 
-    const result = spawnSync(join(repoRoot, "bin/uc"), ["version", "--json"], {
+    const result = spawnSync(join(repoRoot, "bin/use-cases"), ["version", "--json"], {
       encoding: "utf8",
       env: {
         ...process.env,
@@ -121,7 +110,7 @@ describe("a version whose release publishes Swift assets runs the verified binar
   // edge_a_version_that_is_not_a_version_is_refused. No download, so this one
   // runs on every machine.
   test("a version that is not a semantic version is refused rather than guessed", () => {
-    const result = spawnSync(join(repoRoot, "bin/uc"), ["version", "--json"], {
+    const result = spawnSync(join(repoRoot, "bin/use-cases"), ["version", "--json"], {
       encoding: "utf8",
       env: { ...process.env, USE_CASES_VERSION: "not-a-version", HOME: scratch("use-cases-home-") }
     });
@@ -136,8 +125,8 @@ describe("a version whose release publishes Swift assets runs the verified binar
 //: @use-case:plugin.runtime.pre_swift_versions_run_the_committed_bundle
 describe("a version whose release published no Swift asset runs the committed bundle", () => {
   // golden_the_cli_entry_points_run_the_bundle
-  test("bin/uc and bin/use-cases print the version envelope from the committed bundle", () => {
-    for (const entry of ["uc", "use-cases"] as const) {
+  test("bin/use-cases prints the version envelope from the committed bundle", () => {
+    for (const entry of ["use-cases"] as const) {
       const result = spawnSync(join(repoRoot, "bin", entry), ["version", "--json"], {
         encoding: "utf8",
         cwd: scratch("use-cases-cwd-"),
@@ -201,12 +190,12 @@ describe("a version whose release published no Swift asset runs the committed bu
     cpSync(join(repoRoot, "bin"), join(plugin, "bin"), { recursive: true });
     mkdirSync(join(plugin, ".claude-plugin"), { recursive: true });
     writeFileSync(join(plugin, ".claude-plugin/plugin.json"), JSON.stringify({ name: "use-cases", version: pluginVersion }));
-    for (const entry of ["uc", "use-cases", "use-cases-mcp", "use-cases-runtime", "use-cases-bootstrap"]) {
+    for (const entry of ["use-cases", "use-cases-mcp", "use-cases-runtime", "use-cases-bootstrap"]) {
       chmodSync(join(plugin, "bin", entry), 0o755);
     }
     expect(existsSync(join(plugin, "dist"))).toBe(false);
 
-    const result = spawnSync(join(plugin, "bin/uc"), ["version", "--json"], {
+    const result = spawnSync(join(plugin, "bin/use-cases"), ["version", "--json"], {
       encoding: "utf8",
       env: { ...process.env, HOME: scratch("use-cases-home-") }
     });
@@ -219,7 +208,7 @@ describe("a version whose release published no Swift asset runs the committed bu
   // edge_no_download_is_attempted
   test("nothing is fetched or cached: the branch is decided by the version, not by a download failing", () => {
     const cacheDir = scratch("use-cases-cache-");
-    const result = spawnSync(join(repoRoot, "bin/uc"), ["version", "--json"], {
+    const result = spawnSync(join(repoRoot, "bin/use-cases"), ["version", "--json"], {
       encoding: "utf8",
       env: {
         ...process.env,

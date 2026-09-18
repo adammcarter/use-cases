@@ -11,7 +11,7 @@ function generatedTestContents(repoRoot: string): string {
   return readFileSync(join(repoRoot, TEST_REL), "utf8");
 }
 
-describe("uc init package-manager-specific scaffold commands", () => {
+describe("use-cases init package-manager-specific scaffold commands", () => {
   let repoRoot: string;
 
   beforeEach(() => {

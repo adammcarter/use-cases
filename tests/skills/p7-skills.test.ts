@@ -109,7 +109,7 @@ describe("P7 canonical skills and activation bootstrap", () => {
     expect(source).toMatch(/a tap, not typed text/i);
     expect(source).toMatch(/opt-in release\/audit path/i);
     // Reject carries the user's decision + notes through the reject command.
-    expect(source).toContain("`uc showcase reject");
+    expect(source).toContain("`use-cases showcase reject");
     // The gates never soften the F3 boundary this file already guards below.
     expect(source).toMatch(/explicit/i);
   });
@@ -184,7 +184,7 @@ function parseFrontmatter(source: string, path: string): { name: string; descrip
 
 function extractCliCommands(source: string): string[] {
   const commands: string[] = [];
-  for (const match of source.matchAll(/`(?:uc|pnpm cli --)\s+([^`]+?)`/g)) {
+  for (const match of source.matchAll(/`(?:use-cases|pnpm cli --)\s+([^`]+?)`/g)) {
     const tokens = match[1].trim().split(/\s+/);
     if (tokens.length >= 2) {
       commands.push(`${tokens[0]} ${tokens[1]}`);

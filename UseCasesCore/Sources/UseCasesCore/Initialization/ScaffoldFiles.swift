@@ -107,7 +107,7 @@ struct ScaffoldFiles {
       "",
       "This repo is use-case driven: every functional change starts in `use-cases/`,",
       "rows are agreed before tests, tests and code are wrapped in the row's markers,",
-      "and `uc scan` is the coverage number. The rules live in the Use Cases plugin's",
+      "and `use-cases scan` is the coverage number. The rules live in the Use Cases plugin's",
       "skills \u{2014} `use-case-driven-development` for when and in what order, `use-cases`",
       "for the commands \u{2014} and every agent working here follows them.",
       "",

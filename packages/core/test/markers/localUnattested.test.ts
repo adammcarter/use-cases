@@ -6,7 +6,7 @@
 // nothing in the pipeline could tell that line from one a real run wrote.
 //
 // The keyless tier now requires a RUN ATTESTATION — proof the record was
-// written by `uc verify`, which had to spawn the verifier to write it. A record
+// written by `use-cases verify`, which had to spawn the verifier to write it. A record
 // without one reads UNATTESTED_LOCAL: visible, explained, and never counted as
 // proven.
 import { describe, expect, test } from "vitest";
@@ -132,7 +132,7 @@ describe("an unattested local result is not verification", () => {
     });
     const result = status.rows[0];
     expect(result.local_status).toBe("UNATTESTED_LOCAL");
-    expect(result.local_reason).toMatch(/uc verify/);
+    expect(result.local_reason).toMatch(/use-cases verify/);
     expect(validateFreshnessStatus(status).ok).toBe(true);
   });
 

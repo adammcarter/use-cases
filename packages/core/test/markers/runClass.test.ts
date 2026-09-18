@@ -10,7 +10,7 @@
 // `verify` now records what it can SEE — the shape of the verifier it actually
 // resolved and spawned — beside what the row DECLARED, and says so when the two
 // disagree. It can never mint a journey: it spawns a process, and a process is
-// not a demonstration. A demonstration is `uc evidence record --perform`.
+// not a demonstration. A demonstration is `use-cases evidence record --perform`.
 import { mkdirSync, mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { generateKeyPairSync } from "node:crypto";
 import { tmpdir } from "node:os";

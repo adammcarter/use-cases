@@ -57,7 +57,7 @@ describe("canonical agents", () => {
   test.each(canonicalAgentNames)("%s references only CLI commands the plugin ships", (name) => {
     const source = readAgent(name);
     const unknown: string[] = [];
-    for (const match of source.matchAll(/`(?:uc|pnpm cli --)\s+([^`]+?)`/g)) {
+    for (const match of source.matchAll(/`(?:use-cases|pnpm cli --)\s+([^`]+?)`/g)) {
       const tokens = match[1].trim().split(/\s+/);
       const [first, second] = tokens;
       if (!second || second.startsWith("-")) {

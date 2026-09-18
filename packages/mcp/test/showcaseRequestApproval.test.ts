@@ -1,8 +1,8 @@
 // F3 — showcase_request_approval mints a PLUGIN-owned, single-use approval
 // request bound to the live run. An agent/MCP may only REQUEST; the nonce (jti)
 // and exp are minted by the plugin, and a human signs the request out-of-band
-// with `uc approve-run`. The MCP tool must NOT suggest the spoofable `uc
-// showcase approve` path.
+// with `use-cases approve-run`. The MCP tool must NOT suggest the spoofable
+// `use-cases showcase approve` path.
 import { cpSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";

@@ -72,7 +72,7 @@ extension McpToolHandlers {
   }
 
   private static let signerCommand = JSONValue.array([
-    .string("uc"),
+    .string("use-cases"),
     .string("approve-run"),
     .string("--request"),
     .string("<request-file>"),

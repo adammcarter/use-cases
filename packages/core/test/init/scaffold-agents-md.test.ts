@@ -12,7 +12,7 @@ function agentsMd(repoRoot: string): string {
 }
 
 //: @use-case:plugin.init.records_decision_in_agents_md
-describe("uc init records the use-case-driven decision in AGENTS.md", () => {
+describe("use-cases init records the use-case-driven decision in AGENTS.md", () => {
   let repoRoot: string;
   beforeEach(() => { repoRoot = mkdtempSync(join(tmpdir(), "ucm-init-agents-")); });
   afterEach(() => { rmSync(repoRoot, { recursive: true, force: true }); });

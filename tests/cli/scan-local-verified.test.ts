@@ -73,7 +73,7 @@ function runUcm(
   const result = run(uc, args, consumer, env);
   if (typeof result.stdout !== "string" || result.stdout.trim() === "") {
     throw new Error(
-      `uc ${args.join(" ")} produced no JSON (status ${result.status}, stderr: ${result.stderr})`
+      `use-cases ${args.join(" ")} produced no JSON (status ${result.status}, stderr: ${result.stderr})`
     );
   }
   const payload = JSON.parse(result.stdout) as { ok: boolean; data: Record<string, any> };
@@ -115,7 +115,7 @@ function installConsumer(): Consumer {
 
   return {
     dir,
-    uc: join(dir, "node_modules/.bin/uc"),
+    uc: join(dir, "node_modules/.bin/use-cases"),
     defaultVrPath: join(dir, ".use-cases", "verification-results.jsonl")
   };
 }

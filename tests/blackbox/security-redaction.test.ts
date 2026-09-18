@@ -3,7 +3,7 @@
 // Redaction happens at APPEND time, on the way into a ledger that is
 // append-only and usually committed. That is why it is worth a black-box test
 // rather than only a unit test of the matcher: what matters is not that the
-// regexes fire, but that a secret handed to `uc evidence record` cannot be read
+// regexes fire, but that a secret handed to `use-cases evidence record` cannot be read
 // back out of the stored event.
 //
 // Self-contained: a shared oracle file means one edit stales every row bound

@@ -56,7 +56,7 @@ export interface LocalVerificationResult {
   context_hash: string;
   binding_set_hash: string;
   passed: boolean;
-  // Did this record carry a valid run attestation (proof that `uc verify` on
+  // Did this record carry a valid run attestation (proof that `use-cases verify` on
   // this machine wrote it, having spawned the verifier to do so)? `false` means
   // the line was hand-written or came from elsewhere, and it proves nothing.
   //
@@ -666,7 +666,7 @@ function deriveLocalStatus(
       local_status: "UNATTESTED_LOCAL",
       local_reason:
         "a verification result exists for this row but carries no valid run attestation, " +
-        "so nothing proves a verifier was ever run for it here; run `uc verify` to record a real one"
+        "so nothing proves a verifier was ever run for it here; run `use-cases verify` to record a real one"
     };
   }
   const passing = results.some(
@@ -693,13 +693,13 @@ function deriveLocalStatus(
   let reason: string;
   if (contextDrifted) {
     reason =
-      "the verifier or its declared inputs changed since the last local run; re-run `uc verify`";
+      "the verifier or its declared inputs changed since the last local run; re-run `use-cases verify`";
   } else if (bindingDrifted) {
-    reason = "the bound code span changed since the last local run; re-run `uc verify`";
+    reason = "the bound code span changed since the last local run; re-run `use-cases verify`";
   } else if (anyFailure) {
-    reason = "the last local verification did not pass; fix the row and re-run `uc verify`";
+    reason = "the last local verification did not pass; fix the row and re-run `use-cases verify`";
   } else {
-    reason = "the last local verification no longer matches the current row; re-run `uc verify`";
+    reason = "the last local verification no longer matches the current row; re-run `use-cases verify`";
   }
   return { local_status: "STALE_LOCAL", local_reason: reason };
 }
@@ -790,23 +790,23 @@ export function deriveFreshness(input: DeriveFreshnessInput): FreshnessStatus {
     }
     if (error.code === "REGISTRY_ROW_MISSING") {
       const newRowId = error.row_id ? renamedTo.get(error.row_id) : undefined;
-      // Tell the truth about the cure. `uc bind` validates the registry first, so
+      // Tell the truth about the cure. `use-cases bind` validates the registry first, so
       // it fails closed on this very error — the stale registration has to END
-      // before anything can be re-registered. `uc unbind` is what ends it; do NOT
+      // before anything can be re-registered. `use-cases unbind` is what ends it; do NOT
       // send the reader back to hand-editing .use-cases/bindings.jsonl, which is
       // the same shortcut the tool refuses everywhere else.
       error.remediation = newRowId
-        ? `looks like ${error.row_id} was renamed to ${newRowId}. \`uc bind\` fails closed while ` +
+        ? `looks like ${error.row_id} was renamed to ${newRowId}. \`use-cases bind\` fails closed while ` +
           `the stale registration stands, so release it first: run ` +
-          `\`uc unbind --row ${error.row_id} --reason row_renamed\`, then ` +
-          `\`uc bind --row ${newRowId} --file <file> --register-existing\``
+          `\`use-cases unbind --row ${error.row_id} --reason row_renamed\`, then ` +
+          `\`use-cases bind --row ${newRowId} --file <file> --register-existing\``
         : `the registry still binds ${error.row_id ?? "a row"}, which no longer exists in the ` +
           `matrix. Restore the row to the matrix, or release the stale registration with ` +
-          `\`uc unbind --row ${error.row_id ?? "<row>"}\` and re-register the binding against ` +
+          `\`use-cases unbind --row ${error.row_id ?? "<row>"}\` and re-register the binding against ` +
           `the row that replaced it`;
     } else if (error.code === "LEDGER_INTEGRITY_ERROR") {
       error.remediation =
-        "inspect the ledger with `uc validate-ledger` — a proof/binding ledger entry is malformed or out of order";
+        "inspect the ledger with `use-cases validate-ledger` — a proof/binding ledger entry is malformed or out of order";
     }
   }
 
@@ -910,10 +910,10 @@ export function deriveFreshness(input: DeriveFreshnessInput): FreshnessStatus {
         remediation: previousId
           ? `looks like ${rowId} was renamed from ${previousId}. Release the old registration ` +
             `first — bind fails closed while it stands — with ` +
-            `\`uc unbind --row ${previousId} --reason row_renamed\`, then run ` +
-            `\`uc bind --row ${rowId} --file ${detection.file_path} --register-existing\``
+            `\`use-cases unbind --row ${previousId} --reason row_renamed\`, then run ` +
+            `\`use-cases bind --row ${rowId} --file ${detection.file_path} --register-existing\``
           : `register the marker already in the source with ` +
-            `\`uc bind --row ${rowId} --file ${detection.file_path} --register-existing\`` +
+            `\`use-cases bind --row ${rowId} --file ${detection.file_path} --register-existing\`` +
             `, or delete the marker if it is not wanted`
       });
     }
@@ -932,11 +932,11 @@ export function deriveFreshness(input: DeriveFreshnessInput): FreshnessStatus {
         remediation: previousId
           ? `looks like ${previousId} was renamed to ${rowId} — add the renamed row to the ` +
             `matrix (or rename it back), release the old registration with ` +
-            `\`uc unbind --row ${previousId} --reason row_renamed\`, then re-register with ` +
-            `\`uc bind --row ${rowId} --file <file> --register-existing\``
+            `\`use-cases unbind --row ${previousId} --reason row_renamed\`, then re-register with ` +
+            `\`use-cases bind --row ${rowId} --file <file> --register-existing\``
           : `add the row to the matrix, or — if the row id was RENAMED — update the ` +
             `\`@use-case:\` marker(s) in source to the new id and re-register with ` +
-            `\`uc bind --row <new-id> --file <file> --register-existing\``
+            `\`use-cases bind --row <new-id> --file <file> --register-existing\``
       });
     }
 
@@ -1054,14 +1054,14 @@ export function deriveFreshness(input: DeriveFreshnessInput): FreshnessStatus {
 
     let requiredAction: string | null = null;
     if (status === "SUSPECT" || status === "UNPROVEN") {
-      requiredAction = `uc prove --row ${rowId}`;
+      requiredAction = `use-cases prove --row ${rowId}`;
     } else if (status === "INVALID") {
-      requiredAction = "uc scan (resolve binding integrity errors)";
+      requiredAction = "use-cases scan (resolve binding integrity errors)";
     } else if (status === "UNBOUND") {
       // Was null: an UNBOUND row is the single most common thing a reader needs a
       // next command for, and the core knew it but only the pre-commit formatter
       // ever said it.
-      requiredAction = `uc bind --row ${rowId} --file <file> --mode <explicit|swift-func>`;
+      requiredAction = `use-cases bind --row ${rowId} --file <file> --mode <explicit|swift-func>`;
     }
 
     // Keyless local tier (0.1.0). Only emitted when the caller supplied
@@ -1258,7 +1258,7 @@ export function deriveFreshness(input: DeriveFreshnessInput): FreshnessStatus {
     `${byEvidence.performed_run} performed run`
   ];
   if (summary.unattested_local > 0) {
-    parts.push(`${summary.unattested_local} unattested (run \`uc verify\`)`);
+    parts.push(`${summary.unattested_local} unattested (run \`use-cases verify\`)`);
   }
   const basis = parts.join(", ");
 //: @use-case:end lifecycle.signals.acceptance_claim_is_honest

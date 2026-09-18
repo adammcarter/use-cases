@@ -1,4 +1,4 @@
-// `uc approve-run` — the OUT-OF-BAND human signer for F3 trusted approval.
+// `use-cases approve-run` — the OUT-OF-BAND human signer for F3 trusted approval.
 //
 // A real human runs THIS in THEIR OWN shell to turn a plugin-minted
 // ApprovalRequest into a signed approval token. The ed25519 signing key MUST

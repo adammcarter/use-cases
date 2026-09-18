@@ -41,7 +41,7 @@ export function numberAfter(argv: string[], flag: string): number | undefined {
 }
 
 // Flags are parsed from the argv BEFORE any `--` separator. Everything after it
-// belongs to a command `uc` is about to spawn (see `evidence record --run`), and
+// belongs to a command `use-cases` is about to spawn (see `evidence record --run`), and
 // reading that command's own flags as ours would be both wrong and dangerous —
 // a payload containing `--out` would silently redirect a ledger write.
 export function parseFlags(argv: string[], flags: readonly FlagSpec[]): ParsedFlags {

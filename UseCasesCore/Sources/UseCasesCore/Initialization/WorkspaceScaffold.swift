@@ -1,6 +1,6 @@
 import Foundation
 
-/// `uc init`: scaffold a minimal, working Use Cases workspace, as
+/// `use-cases init`: scaffold a minimal, working Use Cases workspace, as
 /// `init/scaffold.ts` does.
 ///
 /// Never writes a private key or a workflow file. An existing `use-cases.yml`
@@ -80,13 +80,13 @@ public enum WorkspaceScaffold {
       : []
     return hooksHint + [
       "Copy use-cases/example.yml's row for your first real use case, then delete the example.",
-      "Run `uc matrix validate --repo . --json` to confirm the matrix is clean.",
-      "Bind the implementing code with `uc bind` \u{2014} code-marker grammar in "
+      "Run `use-cases matrix validate --repo . --json` to confirm the matrix is clean.",
+      "Bind the implementing code with `use-cases bind` \u{2014} code-marker grammar in "
         + "docs/markers-adoption.md.",
       "Wire the `acceptance` verifier in use-cases.yml to your real test command (docs/cli.md).",
       "Generate an ed25519 keypair \u{2014} commit the PUBLIC key, keep the PRIVATE key "
         + "in a CI secret only (docs/security.md).",
-      "Let trusted CI mint FRESH proofs with `uc prove` (docs/cli.md, docs/security.md).",
+      "Let trusted CI mint FRESH proofs with `use-cases prove` (docs/cli.md, docs/security.md).",
     ]
   }
 

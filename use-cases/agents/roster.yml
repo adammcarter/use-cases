@@ -119,7 +119,7 @@ use_cases:
       - id: agents.roster.bodies_hold_the_line.bad_cites_a_command_the_cli_does_not_ship
         kind: steps
         steps:
-          - Extract every uc command the body cites.
+          - Extract every use-cases command the body cites.
           - Check each against the shared allowlist.
         observable_outcomes:
           - A body that sends the reader to a command the CLI does not ship fails the gate.

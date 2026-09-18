@@ -10,7 +10,7 @@ import UseCasesCore
 public enum McpPromptCatalog {
   public static let descriptors: [McpPromptDescriptor] = [
     McpPromptDescriptor(
-      name: "uc/adopt-repo",
+      name: "use-cases/adopt-repo",
       description: "Bring a repository under Use-Case Matrix governance the keyless way: "
         + "author the workspace, bind rows to code, verify, and confirm VERIFIED_LOCAL — then "
         + "add signed CI proofs only when you need a release gate.",
@@ -22,7 +22,7 @@ public enum McpPromptCatalog {
       ],
     ),
     McpPromptDescriptor(
-      name: "uc/bind-row",
+      name: "use-cases/bind-row",
       description: "Bind one matrix row to the code that implements it, verify it, and "
         + "confirm the keyless VERIFIED_LOCAL green — no keys, no CI.",
       arguments: [
@@ -42,7 +42,7 @@ public enum McpPromptCatalog {
       ],
     ),
     McpPromptDescriptor(
-      name: "uc/recover-suspect-row",
+      name: "use-cases/recover-suspect-row",
       description: "Drive a drifted / unproven row back to green in one command — keyless "
         + "VERIFIED_LOCAL by default, signed FRESH as an opt-in upgrade.",
       arguments: [
@@ -58,7 +58,7 @@ public enum McpPromptCatalog {
       ],
     ),
     McpPromptDescriptor(
-      name: "uc/release-review",
+      name: "use-cases/release-review",
       description: "Before a release, confirm every required_for_release row is FRESH and "
         + "the ledger is intact.",
       arguments: [
@@ -122,10 +122,10 @@ public enum McpPromptCatalog {
     let repository = value(values, "repo", placeholder: "<repo>")
     let row = value(values, "row", placeholder: "<row-id>")
     return switch name {
-    case "uc/adopt-repo": adoptRepo(repository)
-    case "uc/bind-row":
+    case "use-cases/adopt-repo": adoptRepo(repository)
+    case "use-cases/bind-row":
       bindRow(repository, row, value(values, "file", placeholder: "<path/to/source>"))
-    case "uc/recover-suspect-row": recoverRow(repository, row)
+    case "use-cases/recover-suspect-row": recoverRow(repository, row)
     default: releaseReview(repository)
     }
   }

@@ -14,13 +14,13 @@ ships bundled inside the
 npm i -g use-cases
 ```
 
-That provides the `uc` binary (and its `use-cases` long-form alias).
+That provides the `use-cases` binary.
 
 ## Usage
 
 ```bash
-npx uc --version --json
-npx uc matrix validate --repo . --json
+npx use-cases --version --json
+npx use-cases matrix validate --repo . --json
 ```
 
 The `--json` envelope and every command's `data` shape, the command/flag names,

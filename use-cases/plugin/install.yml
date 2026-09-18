@@ -2,7 +2,7 @@ schema_version: 1
 feature:
   id: plugin.install
   name: Plugin install
-  summary: A public GitHub repo any agent host installs as a plugin, with skills, agents, the MCP server and the uc command all reachable on the first session.
+  summary: A public GitHub repo any agent host installs as a plugin, with skills, agents, the MCP server and the use-cases command all reachable on the first session.
 use_cases:
   - id: plugin.install.claude_from_github
     title: Claude Code installs the plugin straight from GitHub
@@ -95,7 +95,7 @@ use_cases:
     approval_policy:
       mode: none
   - id: plugin.install.uc_on_path_in_session
-    title: uc is a plain command inside any session
+    title: use-cases is a plain command inside any session
     lifecycle: active
     value_tier: core
     journey_role: golden
@@ -106,11 +106,11 @@ use_cases:
       - hooks
     source_refs:
       - kind: file
-        path: bin/uc
+        path: bin/use-cases
       - kind: file
         path: hooks/session-start
     actor: agent
-    intent: Run uc from a skill or agent body exactly as written, with nothing installed globally, because the plugin puts its own bin/ on PATH at session start where the host allows it and names the binary's path in the bootstrap everywhere.
+    intent: Run use-cases from a skill or agent body exactly as written, with nothing installed globally, because the plugin puts its own bin/ on PATH at session start where the host allows it and names the binary's path in the bootstrap everywhere. The plugin ships no entry point under the old name, so what the session gets on PATH is the new name and nothing else.
     preconditions:
       - The plugin is installed and its session-start hook runs.
     trigger: The host starts a session and runs hooks/session-start.
@@ -118,10 +118,10 @@ use_cases:
       - id: plugin.install.uc_on_path_in_session.golden_bin_runs_the_bundle
         kind: steps
         steps:
-          - Run bin/uc version --json from any working directory.
+          - Run bin/use-cases version --json from any working directory.
           - Confirm it runs whichever runtime plugin.runtime resolves for this plugin version and prints the version envelope.
         observable_outcomes:
-          - uc works in a session without any global install, from any working directory.
+          - use-cases works in a session without any global install, from any working directory.
       - id: plugin.install.uc_on_path_in_session.golden_hook_exports_path
         kind: steps
         steps:
@@ -150,12 +150,21 @@ use_cases:
           - Run hooks/session-start on any host.
           - Read the last line of the injected bootstrap.
         observable_outcomes:
-          - The bootstrap ends by naming the absolute path of the plugin's bin/uc, so an agent whose host cannot alter PATH still runs the right binary.
-          - Every host's agent is told where uc lives, whether or not PATH was changed.
+          - The bootstrap ends by naming the absolute path of the plugin's bin/use-cases, so an agent whose host cannot alter PATH still runs the right binary.
+          - Every host's agent is told where use-cases lives, whether or not PATH was changed.
+      - id: plugin.install.uc_on_path_in_session.bad_the_old_name_is_gone
+        kind: steps
+        steps:
+          - List what the plugin's bin/ ships and look for the old name.
+          - Export the plugin's bin/ with the session hook and look the old name up on PATH.
+        observable_outcomes:
+          - The plugin ships no entry point under the old name, so nothing in bin/ can stand in for the new one.
+          - After the hook exports bin/, the old name resolves to nothing on PATH.
     observable_outcomes:
-      - uc works in a session without any global install.
+      - use-cases works in a session without any global install.
       - Delivering the bootstrap never depends on the PATH export succeeding.
-      - Every host's agent is told where uc lives, whether or not PATH was changed.
+      - Every host's agent is told where use-cases lives, whether or not PATH was changed.
+      - The plugin ships no entry point under the old name, and the session hook puts none on PATH.
     host_applicability:
       - host_surface: claude.cli
         supported: true
@@ -173,7 +182,7 @@ use_cases:
             - tests/plugin/session-path.test.ts
           inputs:
             - tests/plugin/session-path.test.ts
-            - bin/uc
+            - bin/use-cases
             - hooks/session-start
       requirements:
         - evidence_kind: test_result
@@ -362,7 +371,7 @@ use_cases:
       - kind: file
         path: package.json
     actor: user
-    intent: Install the plugin into OpenCode with one command and have the MCP server, the skills, the bootstrap and uc on PATH, all registered by the plugin module itself.
+    intent: Install the plugin into OpenCode with one command and have the MCP server, the skills, the bootstrap and use-cases on PATH, all registered by the plugin module itself.
     preconditions:
       - The repo is public on GitHub; package.json exports the OpenCode plugin module.
       - Node is on PATH on the user's machine, which is what the committed bundle needs until a release publishes the Swift binaries; from then on the plugin needs neither Node nor a build.
@@ -394,8 +403,8 @@ use_cases:
       - id: plugin.install.opencode_from_git.edge_live_session
         kind: steps
         steps:
-          - Load the module in an OpenCode session and ask for command -v uc, the MCP tool names and the bootstrap text.
-          - Confirm uc resolves to the plugin's bin, the use-cases tools are listed and the bootstrap is present.
+          - Load the module in an OpenCode session and ask for command -v use-cases, the MCP tool names and the bootstrap text.
+          - Confirm use-cases resolves to the plugin's bin, the use-cases tools are listed and the bootstrap is present.
         observable_outcomes:
           - Everything the module registers is observable in a real session.
     observable_outcomes:

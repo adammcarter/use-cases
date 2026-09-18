@@ -27,7 +27,7 @@ Use Cases replaces all of that with one append-only, content-addressed source of
 ## What you get
 
 ### 🧬 A living use-case matrix
-Behaviours, not just tests. Each row captures intent, scenarios, value tier, and observable outcomes in readable YAML the agent keeps current during planning and implementation. Query it (`uc matrix list`), validate it, and see coverage by value and journey role at a glance.
+Behaviours, not just tests. Each row captures intent, scenarios, value tier, and observable outcomes in readable YAML the agent keeps current during planning and implementation. Query it (`use-cases matrix list`), validate it, and see coverage by value and journey role at a glance.
 
 ### 🔐 Cryptographic freshness (the headline)
 Bind a row to the exact code that satisfies it with a one-line marker. Trusted CI runs the verifier and signs an Ed25519 proof — only then does the row read `FRESH`. **Change the bound code and the row automatically becomes `SUSPECT`** (the signed proof no longer matches the code span). No human can fake `FRESH`; the signing key lives only in CI. Freshness is math, not a checkbox.
@@ -39,7 +39,7 @@ Append-only, content-addressed history of what was actually observed. It grades 
 Perform a behaviour live — observe, verdict, finish — recorded as an event-sourced run. An agent can drive the whole show **but is structurally barred from approving it as the user**: user sign-off requires a trusted confirmation path the agent can't command. "Approved by a human" finally means it.
 
 ### 🔌 Works inside your agent
-Ships for **Claude Code, Codex, Copilot, and OpenCode** as a CLI (`uc`) and an MCP server, with the same JSON contract on both. On install it auto-injects a trusted bootstrap at session start, so the agent knows how to use it without being told.
+Ships for **Claude Code, Codex, Copilot, and OpenCode** as a CLI (`use-cases`) and an MCP server, with the same JSON contract on both. On install it auto-injects a trusted bootstrap at session start, so the agent knows how to use it without being told.
 
 ### 🤖 Three agents that do the work
 Dispatch them by name; each owns one part of the loop and hands off to the next.
@@ -72,7 +72,7 @@ Typical workflows: **continuous** (keep the matrix live as you build), **backfil
 # a release publishes one they run the committed, dependency-free bundle in
 # dist/, which needs nothing but Node. Pick your host.
 
-# Claude Code — next session: /use-cases:* skills, agents, MCP tools, uc on PATH
+# Claude Code — next session: /use-cases:* skills, agents, MCP tools, use-cases on PATH
 /plugin marketplace add adammcarter/use-cases
 /plugin install use-cases@use-cases
 
@@ -89,25 +89,25 @@ opencode plugin add 'github:adammcarter/use-cases'
 
 # Anywhere else: clone it and call its bin/ entry point; it resolves the runtime
 git clone https://github.com/adammcarter/use-cases.git
-alias uc="$PWD/use-cases/bin/uc"
+alias use-cases="$PWD/use-cases/bin/use-cases"
 
 # Scaffold a workspace (creates use-cases/ + config with one example behaviour)
-uc init
+use-cases init
 
 # Explore — output is human-readable by default; add --json to ANY command for
 # the machine-readable result envelope.
-uc --help
-uc matrix validate --repo .            # is the matrix clean?
-uc matrix list --repo .                # what behaviours exist?  (lists example.feature.happy_path)
+use-cases --help
+use-cases matrix validate --repo .            # is the matrix clean?
+use-cases matrix list --repo .                # what behaviours exist?  (lists example.feature.happy_path)
 
 # Bind a behaviour to the code that satisfies it — point --file at your own code.
 # Set --start-line/--end-line to a range that EXISTS in that file (1–20 is just
 # an example; a range past the end of a short file is rejected).
-uc bind --row example.feature.happy_path \
+use-cases bind --row example.feature.happy_path \
   --file src/feature.ts --mode explicit --start-line 1 --end-line 20
 
 # Pick a few high-value behaviours to demo
-uc plan showcase --repo . --max-items 3
+use-cases plan showcase --repo . --max-items 3
 ```
 
 Everything except `bind` runs as-is against the freshly scaffolded workspace;
@@ -129,7 +129,7 @@ For the technically curious — the high-level shape:
 - **Built-in CI + precommit.** `.github/workflows/use-cases.yml` runs `validate-ledger` and `scan`, and (on release) `verify → prove → release-gate` so required rows must be `FRESH` to ship. An optional local precommit hook gives fast, non-authoritative feedback. Publishing uses npm Trusted Publishing (OIDC) with build provenance — no tokens.
 - **Append-only everywhere.** The matrix, the binding registry, the evidence ledger, and showcase runs are all event-sourced and content-addressed: status is *derived* from history, never asserted.
 
-Ships as a single self-contained package: **`use-cases`** (binaries `uc` and `uc-mcp`). The `core` / `cli` / `mcp` workspaces are bundled inside it, not published separately.
+Ships as a single self-contained package: **`use-cases`** (binaries `use-cases` and `use-cases-mcp`). The `core` / `cli` / `mcp` workspaces are bundled inside it, not published separately.
 
 Deeper reading: [CLI reference](docs/cli.md) · [data model](docs/data-model.md) · [code markers & freshness](docs/markers-adoption.md) · [evidence & security](docs/security.md) · [showcase runs](docs/showcase.md) · [activation](docs/activation.md) · [MCP](docs/mcp.md).
 

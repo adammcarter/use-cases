@@ -168,7 +168,7 @@ export function signApprovalToken(options: {
   return signEvent(unsigned, options.privateKey, options.keyId) as ApprovalToken;
 }
 
-// Boundary helper used by `uc approve-run --webauthn-assertion`: the actual
+// Boundary helper used by `use-cases approve-run --webauthn-assertion`: the actual
 // authenticator ceremony is out of scope. The caller supplies the platform
 // assertion; verification happens in verifyApprovalToken against pinned trust.
 export function buildWebAuthnApprovalToken(options: {

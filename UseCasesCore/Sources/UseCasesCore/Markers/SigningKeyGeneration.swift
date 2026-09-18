@@ -8,7 +8,7 @@ public struct SigningKeypair: Equatable, Sendable {
   public let publicPEM: String
 }
 
-/// `uc keygen`'s keypair generation (keygen.ts): pure crypto over in-memory
+/// `use-cases keygen`'s keypair generation (keygen.ts): pure crypto over in-memory
 /// values, with no filesystem access.
 public enum SigningKeyGeneration {
   /// A new, distinct keypair on every call.

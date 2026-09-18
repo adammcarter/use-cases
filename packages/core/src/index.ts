@@ -21,9 +21,9 @@ export * from "./cli/index.js";
 export * from "./markers/cli/index.js";
 // Public-v1: opt-in multi-key keyring resolver (rotation / revocation).
 export * from "./markers/keyring.js";
-// Public-v1: opt-in signed-tier ed25519 keypair generation (`uc keygen`).
+// Public-v1: opt-in signed-tier ed25519 keypair generation (`use-cases keygen`).
 export * from "./markers/keygen.js";
 // Public-v1: CI-neutral provenance authority detection (detectCiAuthority).
 export * from "./markers/ciAuthority.js";
-// Public-v1 Phase 5 onboarding: `uc init` workspace scaffolder.
+// Public-v1 Phase 5 onboarding: `use-cases init` workspace scaffolder.
 export * from "./init/index.js";

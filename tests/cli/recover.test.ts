@@ -1,4 +1,4 @@
-// `uc recover` acceptance (0.2.0, Task 4): drive a drifted / unproven row back
+// `use-cases recover` acceptance (0.2.0, Task 4): drive a drifted / unproven row back
 // to green with ONE command. `recover` re-runs the row's verifier, writes the
 // UNSIGNED results ledger to the canonical auto-discover path, re-scans, and
 // reports the resulting local_status + status.
@@ -86,7 +86,7 @@ function runUcm(
   const result = run(uc, args, consumer, env);
   if (typeof result.stdout !== "string" || result.stdout.trim() === "") {
     throw new Error(
-      `uc ${args.join(" ")} produced no JSON (status ${result.status}, stderr: ${result.stderr})`
+      `use-cases ${args.join(" ")} produced no JSON (status ${result.status}, stderr: ${result.stderr})`
     );
   }
   const payload = JSON.parse(result.stdout) as { ok: boolean; data: Record<string, any> };
@@ -126,7 +126,7 @@ function installConsumer(): Consumer {
 
   return {
     dir,
-    uc: join(dir, "node_modules/.bin/uc"),
+    uc: join(dir, "node_modules/.bin/use-cases"),
     defaultVrPath: join(dir, ".use-cases", "verification-results.jsonl")
   };
 }
@@ -237,7 +237,7 @@ afterAll(() => {
   }
 }, 120_000);
 
-describe("uc recover: drive a drifted / unproven row back to green", () => {
+describe("use-cases recover: drive a drifted / unproven row back to green", () => {
   test("STALE_LOCAL -> recover --row -> VERIFIED_LOCAL (exit 0), no key", () => {
     const consumer = installConsumer();
     expect(bind(consumer).ok).toBe(true);

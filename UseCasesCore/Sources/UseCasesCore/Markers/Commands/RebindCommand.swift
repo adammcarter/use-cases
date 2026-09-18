@@ -187,7 +187,7 @@ public enum RebindCommand {
     )
     result.registryEventsAppended = 2
     // The old proof does not survive the move.
-    result.nextCommand = "uc verify --row \(options.rowIdentifier)"
+    result.nextCommand = "use-cases verify --row \(options.rowIdentifier)"
     return result
   }
 
@@ -289,7 +289,7 @@ public enum RebindCommand {
       throw .refused(exitCode: 2, MarkerCommandFailure(
         code: "NOT_REGISTERED",
         message: "binding slug \(bindingSlug) is not registered; bind it first with "
-          + "`uc bind --row \(options.rowIdentifier) --file \(relativeFile) "
+          + "`use-cases bind --row \(options.rowIdentifier) --file \(relativeFile) "
           + "--mode \(options.mode.rawValue)`",
       ))
     }

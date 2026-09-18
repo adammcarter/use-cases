@@ -18,7 +18,7 @@
 // and it is a large step up from "any line in a tracked file is proof".
 //
 // WHY THE KEY LIVES OUTSIDE THE REPO. The results ledger is transient, per-
-// machine output — `uc init` gitignores it for exactly that reason. A key stored
+// machine output — `use-cases init` gitignores it for exactly that reason. A key stored
 // beside it would either be committed (and so forgeable by anyone with the repo)
 // or need its own ignore entry in every adopting project. Keeping it under the
 // user's home makes "this machine ran it" the literal meaning of the

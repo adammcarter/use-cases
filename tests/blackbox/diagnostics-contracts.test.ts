@@ -222,11 +222,11 @@ describe("diagnostics.contracts.cli_self_documents", () => {
   test("a bare invocation and --help both print usage listing the commands", () => {
     const bare = runUcJson<{ usage: string }>([]);
     expect(bare.envelope.command).toBe("help");
-    expect(bare.envelope.data.usage, "the usage line is in the envelope").toContain("uc <command>");
+    expect(bare.envelope.data.usage, "the usage line is in the envelope").toContain("use-cases <command>");
 
     const help = runUc(["--help"]);
     expect(help.status).toBe(0);
-    expect(help.stdout).toContain("uc — use-cases CLI");
+    expect(help.stdout).toContain("use-cases — the Use Cases CLI");
     for (const command of ["scan", "verify", "bind"]) {
       expect(help.stdout, `help must list ${command}`).toContain(command);
     }
@@ -241,7 +241,7 @@ describe("diagnostics.contracts.cli_self_documents", () => {
 
     const human = runUc(["frobnicate"]);
     expect(human.stdout + human.stderr).toContain("frobnicate");
-    expect(human.stdout + human.stderr).toContain("uc --help");
+    expect(human.stdout + human.stderr).toContain("use-cases --help");
   });
 });
 //: @use-case:end diagnostics.contracts.cli_self_documents#blackbox

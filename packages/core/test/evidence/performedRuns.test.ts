@@ -86,7 +86,7 @@ describe("collectPerformedRuns", () => {
     expect(rowsOf([aggregate()])).toEqual([ROW]);
   });
 
-  // The discriminator. `uc evidence record` without --run writes a self-reported
+  // The discriminator. `use-cases evidence record` without --run writes a self-reported
   // observation: an agent's word that something happened. The ledger already
   // grades it the weakest tier, and the claim must respect that grading rather
   // than counting every row anyone wrote a sentence about.

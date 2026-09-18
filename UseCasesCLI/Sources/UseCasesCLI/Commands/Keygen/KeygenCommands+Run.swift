@@ -113,7 +113,7 @@ extension KeygenCommands {
     "        env:",
     "          UCM_CI_SIGNING_KEY: ${{ secrets.UCM_CI_SIGNING_KEY }}",
     "        run: |",
-    "          uc prove --all --trusted-ci \\",
+    "          use-cases prove --all --trusted-ci \\",
     "            --signing-key-env UCM_CI_SIGNING_KEY \\",
     "            --key-id ci-key-1",
     "",

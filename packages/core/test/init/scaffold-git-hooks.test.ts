@@ -19,7 +19,7 @@ function runHook(repoRoot: string, hook: string, env: Record<string, string> = {
 }
 
 //: @use-case:plugin.init.wires_git_hooks
-describe("uc init wires the pre-commit and pre-push hooks", () => {
+describe("use-cases init wires the pre-commit and pre-push hooks", () => {
   let repoRoot: string;
   beforeEach(() => {
     repoRoot = mkdtempSync(join(tmpdir(), "ucm-init-hooks-"));
@@ -66,11 +66,11 @@ describe("uc init wires the pre-commit and pre-push hooks", () => {
     expect(run.stdout).toContain("theirs-ran");
   });
 
-  test("with no uc on PATH the pre-commit warns and exits 0 instead of locking the repo", () => {
+  test("with no use-cases on PATH the pre-commit warns and exits 0 instead of locking the repo", () => {
     scaffoldWorkspace({ repoRoot });
     const run = runHook(repoRoot, ".githooks/pre-commit");
     expect(run.status).toBe(0);
-    expect(run.stderr).toMatch(/uc .*not found/i);
+    expect(run.stderr).toMatch(/use-cases .*not found/i);
     expect(run.stderr).toContain("install");
   });
 

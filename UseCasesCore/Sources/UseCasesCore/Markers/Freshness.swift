@@ -105,7 +105,7 @@ private struct FreshnessTally {
       "\(byEvidence.performedRun) performed run",
     ]
     if summary.unattestedLocal > 0 {
-      parts.append("\(summary.unattestedLocal) unattested (run `uc verify`)")
+      parts.append("\(summary.unattestedLocal) unattested (run `use-cases verify`)")
     }
     return AcceptanceClaim(
       proven: proven,

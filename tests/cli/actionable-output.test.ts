@@ -4,7 +4,7 @@
 // reader to work out the cure. This pins the two places 0.4.2 fixed that, at the
 // CLI level (the surface an agent actually sees):
 //
-//   1. `uc bind` succeeds and FEELS like progress, so rows get bound and left
+//   1. `use-cases bind` succeeds and FEELS like progress, so rows get bound and left
 //      UNPROVEN forever ("all 7 of my rows are in exactly that state right now").
 //      A successful bind must name the command that actually proves the row.
 //   2. Integrity errors were JSON-only and cure-free — the human view showed none
@@ -71,20 +71,20 @@ afterAll(() => {
 });
 
 describe("bind tells you the row proves nothing yet", () => {
-  test("a successful bind names `uc verify --row <id>` as the next command", () => {
+  test("a successful bind names `use-cases verify --row <id>` as the next command", () => {
     const dir = workspace("bind");
     const result = bind(dir, "--json");
 
     expect(result.status).toBe(0);
     const payload = JSON.parse(result.stdout) as { data: { next_command?: string } };
-    expect(payload.data.next_command).toBe(`uc verify --row ${ROW_ID}`);
+    expect(payload.data.next_command).toBe(`use-cases verify --row ${ROW_ID}`);
   });
 
   test("the human view surfaces it too", () => {
     const dir = workspace("bind-human");
     const out = bind(dir).stdout;
 
-    expect(out).toContain(`uc verify --row ${ROW_ID}`);
+    expect(out).toContain(`use-cases verify --row ${ROW_ID}`);
   });
 });
 
@@ -124,11 +124,11 @@ describe("integrity errors are visible and carry a cure", () => {
 
     const out = uc(dir, "scan", "--repo", dir).stdout;
 
-    // `uc bind` validates the registry first, so it fails CLOSED on this very
+    // `use-cases bind` validates the registry first, so it fails CLOSED on this very
     // error: the old registration has to END before the new id can be registered.
     // The cure names the command that ends it — never a hand-edit of the ledger,
     // which is the same shortcut the tool refuses everywhere else.
-    expect(out).toContain(`uc unbind --row ${ROW_ID}`);
+    expect(out).toContain(`use-cases unbind --row ${ROW_ID}`);
     expect(out).toContain("--register-existing");
     expect(out).not.toContain("Delete the");
   });

@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import UseCasesCore
 
-/// `uc keygen`'s keypair. The values are random by design, so what is pinned
+/// `use-cases keygen`'s keypair. The values are random by design, so what is pinned
 /// is the SHAPE node's own output has, and that the halves work — here and in
 /// node.
 struct SigningKeyGenerationTests {

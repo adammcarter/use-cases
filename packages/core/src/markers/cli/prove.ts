@@ -317,7 +317,7 @@ function proveOneRow(args: ProveOneRowArgs): ProveRowResult {
 
   // A variant family cannot be signed yet: verify records per-variant results
   // (`<family>::<key>`), and the signed tier has no variant model. Without this
-  // guard prove would report NO_PASSING_RESULT with a "run `uc verify` first"
+  // guard prove would report NO_PASSING_RESULT with a "run `use-cases verify` first"
   // remediation that verify can NEVER satisfy — an infinite loop of honest-looking
   // advice. An explicit --row asked for the unsupported thing, so refuse hard;
   // a sweep proves what is provable, so skip with the same truth (one family
@@ -327,7 +327,7 @@ function proveOneRow(args: ProveOneRowArgs): ProveRowResult {
       reason: "VARIANT_FAMILY_UNSUPPORTED",
       message:
         `row ${rowId} is a variant family; signed proofs for variant families are not ` +
-        `supported yet — use the keyless loop (\`uc verify --row ${rowId}\` then \`uc scan\`) ` +
+        `supported yet — use the keyless loop (\`use-cases verify --row ${rowId}\` then \`use-cases scan\`) ` +
         `for per-variant local acceptance`
     });
   }
@@ -395,7 +395,7 @@ function proveOneRow(args: ProveOneRowArgs): ProveRowResult {
       return rowResult(rowId, "failed", {
         ...hashes,
         reason: "NO_PASSING_RESULT",
-        message: `no verification result for row ${rowId}; run \`uc verify --row ${rowId} --out <path>\` first`
+        message: `no verification result for row ${rowId}; run \`use-cases verify --row ${rowId} --out <path>\` first`
       });
     }
     if (record.status === "blocked") {

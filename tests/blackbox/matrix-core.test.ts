@@ -1,7 +1,7 @@
 // The black-box oracle for matrix/core.yml.
 //
 // These two rows are among the eight that carry `verification_policy: mode:
-// none` — no verifier at all, so `uc verify` has never had anything to run for
+// none` — no verifier at all, so `use-cases verify` has never had anything to run for
 // them. Converting them adds a verifier where none existed, which is the bulk
 // of what ladder row 2 still has to do.
 //

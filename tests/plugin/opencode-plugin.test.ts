@@ -51,7 +51,7 @@ describe("OpenCode installs the plugin from git", () => {
     }
   });
 
-  test("setup registers the MCP server, every skill, the bootstrap and uc on PATH", async () => {
+  test("setup registers the MCP server, every skill, the bootstrap and use-cases on PATH", async () => {
     const out = await runSetup(repoRoot);
     expect(out.mcp["use-cases"]).toEqual({ type: "local", command: ["bash", join(repoRoot, "bin/use-cases-mcp")], cwd: repoRoot, enabled: true });
     expect(readFileSync(modulePath, "utf8"), "the module must not name the committed bundle").not.toContain("dist/uc");
@@ -76,6 +76,6 @@ describe("OpenCode installs the plugin from git", () => {
     expect(out.system.context?.join("\n")).toContain("could not be read");
   });
 
-  test.skip("live: opencode run shows uc from the plugin bin, the use-cases tools and the bootstrap", () => {});
+  test.skip("live: opencode run shows use-cases from the plugin bin, the use-cases tools and the bootstrap", () => {});
 });
 //: @use-case:end plugin.install.opencode_from_git

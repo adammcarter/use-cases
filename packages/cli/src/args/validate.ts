@@ -69,8 +69,8 @@ export function findUnknownFlags(argv: readonly string[], commands: readonly Cli
   const unknown: string[] = [];
   for (let index = 0; index < argv.length; index += 1) {
     const token = argv[index];
-    // POSIX separator: everything after it is a PAYLOAD, not flags for `uc`.
-    // `uc evidence record --run -- pytest -q --tb=short` must not have the
+    // POSIX separator: everything after it is a PAYLOAD, not flags for `use-cases`.
+    // `use-cases evidence record --run -- pytest -q --tb=short` must not have the
     // spawned command's own flags read as typos in ours.
     if (token === "--") {
       break;

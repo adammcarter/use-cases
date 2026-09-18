@@ -76,7 +76,7 @@ describe("the black-box harness", () => {
     const fake = fakeBinary('echo "not json" >&2\nexit 1');
     process.env.UC_BIN = fake;
     try {
-      expect(() => runUcJson(["scan"])).toThrowError(/uc scan --json: stdout did not parse as JSON/);
+      expect(() => runUcJson(["scan"])).toThrowError(/use-cases scan --json: stdout did not parse as JSON/);
     } finally {
       delete process.env.UC_BIN;
     }

@@ -22,7 +22,7 @@ enum McpResourceViews {
   }
 
   /// No proof-signing key is configured for a read-only view, mirroring the
-  /// CLI default (`uc scan` and `uc validate-ledger` without `--public-key`).
+  /// CLI default (`use-cases scan` and `use-cases validate-ledger` without `--public-key`).
   private static let noKeyResolver: PublicKeyResolver = { _, _ in nil }
 
   private static func scanOptions(_ workspace: ResolvedWorkspaceContext) -> ScanCommandOptions {

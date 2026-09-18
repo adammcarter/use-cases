@@ -4,7 +4,7 @@ import TestSupport
 @testable import UseCasesCore
 
 /// The append-only line check, the `git show` base-ref read, and the
-/// `git diff` parsing behind `uc impact` — the git parts run against a REAL
+/// `git diff` parsing behind `use-cases impact` — the git parts run against a REAL
 /// temporary repository, replayed step for step from the corpus.
 struct AppendOnlyAndGitTests {
   @Test

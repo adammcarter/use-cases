@@ -4,7 +4,7 @@ import { dirname, join } from "node:path";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { runCli } from "../../src/index.js";
 
-// Regression (found in the 0.5.0 review): `uc recover --all` derived its target
+// Regression (found in the 0.5.0 review): `use-cases recover --all` derived its target
 // row ids from the VERIFY results — which for a variant family are keyed
 // `<family>::<key>` — and then looked them up in the SCAN rows, which are keyed
 // only by family ids. Every variant lookup missed, so `recover --all` reported
@@ -103,7 +103,7 @@ use_cases:
 `;
 
 // No line of THIS file may begin with the marker comment prefix: a repo-root
-// `uc scan` reads fixture markers as real bindings (literal cart.* markers
+// `use-cases scan` reads fixture markers as real bindings (literal cart.* markers
 // here broke the use-cases integrity workflow on main). Building the fixture
 // from joined fragments keeps the written temp file byte-identical while this
 // source stays invisible to the scanner.

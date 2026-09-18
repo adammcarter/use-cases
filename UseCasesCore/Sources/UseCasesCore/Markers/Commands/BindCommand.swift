@@ -204,7 +204,7 @@ public enum BindCommand {
     }
     try register(options, bindingSlug: bindingSlug, files: files)
     result.registryEventAppended = true
-    result.nextCommand = "uc verify --row \(options.rowIdentifier)"
+    result.nextCommand = "use-cases verify --row \(options.rowIdentifier)"
     return result
   }
 
@@ -267,8 +267,9 @@ public enum BindCommand {
       throw .refused(exitCode: 4, MarkerCommandFailure(
         code: "DUPLICATE_REGISTRATION",
         message: "binding slug \(bindingSlug) is already registered; "
-          + "re-point it with `uc rebind --row \(rowIdentifier) --file <file> --mode <mode>` "
-          + "or release it with `uc unbind --row \(rowIdentifier)`",
+          + "re-point it with `use-cases rebind --row \(rowIdentifier) "
+          + "--file <file> --mode <mode>` "
+          + "or release it with `use-cases unbind --row \(rowIdentifier)`",
       ))
     }
   }

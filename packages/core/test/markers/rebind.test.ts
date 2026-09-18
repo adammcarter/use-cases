@@ -1,4 +1,4 @@
-// Re-pointing and releasing a binding (`uc rebind` / `uc unbind`).
+// Re-pointing and releasing a binding (`use-cases rebind` / `use-cases unbind`).
 //
 // A marker on the wrong declaration is the vacuous-row defect in marker form: the
 // row reads as proven while the code it points at cannot fail when the claim does.
@@ -218,7 +218,7 @@ function rowReasons(result: ReturnType<typeof runScanCommand>, rowId: string): s
   return (row?.reasons ?? []).map((reason) => reason.code);
 }
 
-describe("uc unbind: releasing a binding", () => {
+describe("use-cases unbind: releasing a binding", () => {
   test("removes the marker and releases the registration, so the slug can be bound again", () => {
     const ws = makeWorkspace({ [SOURCE_PATH]: SOURCE });
     expect(bindWrongDeclaration(ws).exit_code).toBe(0);
@@ -347,7 +347,7 @@ describe("uc unbind: releasing a binding", () => {
   });
 });
 
-describe("uc rebind: moving a binding to the right declaration", () => {
+describe("use-cases rebind: moving a binding to the right declaration", () => {
   test("moves the marker and re-registers in one step", () => {
     const ws = makeWorkspace({ [SOURCE_PATH]: SOURCE });
     expect(bindWrongDeclaration(ws).exit_code).toBe(0);
@@ -431,7 +431,7 @@ describe("uc rebind: moving a binding to the right declaration", () => {
     });
     expect(result.exit_code).toBe(2);
     expect(result.errors.map((e) => e.code)).toEqual(["NOT_REGISTERED"]);
-    expect(result.errors[0].message).toContain("uc bind");
+    expect(result.errors[0].message).toContain("use-cases bind");
     expect(markerLines(source(ws))).toEqual([]);
   });
 
@@ -491,7 +491,7 @@ describe("a moved binding does not carry its proof", () => {
     // against does not exist any more.
     // STALE_LOCAL, not VERIFIED_LOCAL: the row is visibly out of date, not silently fine.
     expect(localStatus(ws)).toBe("STALE_LOCAL");
-    expect(moved.next_command).toBe(`uc verify --row ${ROW_ID}`);
+    expect(moved.next_command).toBe(`use-cases verify --row ${ROW_ID}`);
 
     // ...and the keyless loop puts it back, now proving the RIGHT declaration.
     expect(verify(ws).exit_code).toBe(0);

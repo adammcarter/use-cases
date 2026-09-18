@@ -1,4 +1,4 @@
-// F3 — `uc approve-run` is the OUT-OF-BAND human signer. It runs in the human's
+// F3 — `use-cases approve-run` is the OUT-OF-BAND human signer. It runs in the human's
 // OWN shell with an ed25519 key that lives OUTSIDE the in-session agent's
 // granted scope, and turns a plugin-minted ApprovalRequest into a signed
 // approval token. The plugin later verifies that token.
@@ -144,7 +144,7 @@ afterEach(() => {
   delete process.env.UCM_TEST_APPROVAL_KEY;
 });
 
-describe("uc approve-run — out-of-band human signer", () => {
+describe("use-cases approve-run — out-of-band human signer", () => {
   test("(j/l) with a key FILE, signs a token the plugin then verifies against the keyring", () => {
     const requestPath = writeRequest();
     const keyPath = join(dir, "human.key");

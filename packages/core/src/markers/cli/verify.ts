@@ -89,7 +89,7 @@ export interface VerificationResultRecord {
   //   "command" an arbitrary script or make target; could be anything
   //
   // There is deliberately no "journey". `verify` spawns a process, and a process
-  // is not a demonstration; a demonstration is `uc evidence record --perform`,
+  // is not a demonstration; a demonstration is `use-cases evidence record --perform`,
   // which records the argv it drove. Measured: 42 of 297 rows on a real repo
   // resolved to a unit-suite filter while declaring `evidence_kind: live_demo`,
   // and the ledger repeated the declaration without comment.

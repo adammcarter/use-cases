@@ -5,7 +5,7 @@
 // `scan` trusted any line in it whose hashes matched — so appending one
 // hand-written line moved the acceptance claim, while genuinely driving the
 // product moved nothing. A machine-local HMAC over each record closes that: only
-// `uc verify`, which actually spawned the verifier, holds the key, so a typed
+// `use-cases verify`, which actually spawned the verifier, holds the key, so a typed
 // line carries no valid attestation and proves nothing.
 //
 // This is NOT the signing tier: the key is auto-minted on first use, lives

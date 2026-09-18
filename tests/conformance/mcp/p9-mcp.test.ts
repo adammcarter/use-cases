@@ -139,8 +139,8 @@ describe("P9 MCP wrapper contract", () => {
         trusted_confirmation_required: true,
         run_id: runId,
         // F3: the tool mints a PLUGIN-owned single-use approval request bound to
-        // the run and points at the out-of-band signer (`uc approve-run`), NOT
-        // the spoofable `uc showcase approve`.
+        // the run and points at the out-of-band signer (`use-cases approve-run`), NOT
+        // the spoofable `use-cases showcase approve`.
         approval_request: expect.objectContaining({
           approval_request_schema: "ucase-approval-request-v1",
           binding: expect.objectContaining({ run_id: runId })

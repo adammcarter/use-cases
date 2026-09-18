@@ -63,7 +63,7 @@ enum SkillText {
     return nil
   }
 
-  /// Every first group of the global `/`(?:uc|pnpm cli --)\s+([^`]+?)`/g`, in
+  /// Every first group of the global `/`(?:use-cases|pnpm cli --)\s+([^`]+?)`/g`, in
   /// order, with the regex's own backtracking: when the whitespace run is
   /// followed straight by the closing backtick, the capture is the run's last
   /// character, so long as the run is two or more.
@@ -100,7 +100,7 @@ enum SkillText {
 
   private static let backtick: UInt16 = 0x60
 
-  private static let prefixes: [[UInt16]] = [Array("uc".utf16), Array("pnpm cli --".utf16)]
+  private static let prefixes: [[UInt16]] = [Array("use-cases".utf16), Array("pnpm cli --".utf16)]
 
   private static func captureMatch(
     _ units: [UInt16],

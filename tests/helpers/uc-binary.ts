@@ -89,7 +89,7 @@ export function runUcJson<T = Record<string, unknown>>(
   } catch (error) {
     throw new Error(
       [
-        `uc ${args.join(" ")} --json: stdout did not parse as JSON (exit ${result.status})`,
+        `use-cases ${args.join(" ")} --json: stdout did not parse as JSON (exit ${result.status})`,
         `parse error: ${(error as Error).message}`,
         `stdout: ${stdout || "(empty)"}`,
         `stderr: ${result.stderr || "(empty)"}`

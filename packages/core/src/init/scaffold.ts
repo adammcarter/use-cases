@@ -1,10 +1,10 @@
-// `uc init` — scaffold a minimal, WORKING Use Cases workspace.
+// `use-cases init` — scaffold a minimal, WORKING Use Cases workspace.
 //
 // Takes a brand-new repo from nothing to a bindable, verifiable matrix in one
 // command: a workspace config (`use-cases.yml`) wired to a default
 // verifier matching the chosen template, plus a `use-cases/` dir holding one
 // example row that VALIDATES against the use-case-file schema. The scaffolded
-// workspace passes `uc matrix validate` out of the box.
+// workspace passes `use-cases matrix validate` out of the box.
 //
 // SAFETY: never generates or writes any private key, never writes a GitHub
 // workflow file. If a `use-cases.yml` already exists it REFUSES unless
@@ -246,7 +246,7 @@ function ensureAgentsMdDecision(
     "",
     "This repo is use-case driven: every functional change starts in `use-cases/`,",
     "rows are agreed before tests, tests and code are wrapped in the row's markers,",
-    "and `uc scan` is the coverage number. The rules live in the Use Cases plugin's",
+    "and `use-cases scan` is the coverage number. The rules live in the Use Cases plugin's",
     "skills — `use-case-driven-development` for when and in what order, `use-cases`",
     "for the commands — and every agent working here follows them.",
     ""
@@ -275,10 +275,10 @@ const DEFAULT_HOOKS_DIR = ".githooks";
 const HOOK_BLOCK_MARKER = "# use-cases:";
 
 const UC_LOOKUP = [
-  "# The plugin puts uc on PATH in Claude sessions; elsewhere set UC to <plugin>/bin/uc.",
-  'uc="${UC:-$(command -v uc 2>/dev/null || true)}"',
-  'if [ -z "$uc" ]; then',
-  '  echo "pre-commit: uc not found — install the Use Cases plugin (https://github.com/adammcarter/use-cases) or set UC=<plugin>/bin/uc" >&2',
+  "# The plugin puts use-cases on PATH in Claude sessions; elsewhere set USE_CASES to <plugin>/bin/use-cases.",
+  'use_cases="${USE_CASES:-$(command -v use-cases 2>/dev/null || true)}"',
+  'if [ -z "$use_cases" ]; then',
+  '  echo "pre-commit: use-cases not found — install the Use Cases plugin (https://github.com/adammcarter/use-cases) or set USE_CASES=<plugin>/bin/use-cases" >&2',
   "  exit 0",
   "fi"
 ];
@@ -289,14 +289,14 @@ function preCommitBlock(): string[] {
     'if [ -f "$(git rev-parse --show-toplevel)/use-cases.yml" ]; then',
     ...UC_LOOKUP.map((line) => `  ${line}`.replace(/^  $/, "")),
     '  root="$(git rev-parse --show-toplevel)"',
-    '  "$uc" matrix validate --repo "$root" --json >/dev/null \\',
-    '    || { echo "pre-commit: use-case matrix invalid — run: uc matrix validate --repo ." >&2; exit 1; }',
+    '  "$use_cases" matrix validate --repo "$root" --json >/dev/null \\',
+    '    || { echo "pre-commit: use-case matrix invalid — run: use-cases matrix validate --repo ." >&2; exit 1; }',
     '  key=""; [ -f "$root/.use-cases/trusted-ci-public-key.pem" ] && key="--public-key $root/.use-cases/trusted-ci-public-key.pem"',
-    '  "$uc" validate-ledger --repo "$root" $key --json >/dev/null \\',
-    '    || { echo "pre-commit: use-case ledger invalid — run: uc validate-ledger --repo ." >&2; exit 1; }',
+    '  "$use_cases" validate-ledger --repo "$root" $key --json >/dev/null \\',
+    '    || { echo "pre-commit: use-case ledger invalid — run: use-cases validate-ledger --repo ." >&2; exit 1; }',
     "  # A marker and its binding that disagree is INVALID; stale is fine here.",
-    '  if "$uc" scan --repo "$root" --json 2>/dev/null | grep -Eq \'"status": *"INVALID"\'; then',
-    '    echo "pre-commit: a use-case marker and its binding disagree — run: uc scan --repo ." >&2',
+    '  if "$use_cases" scan --repo "$root" --json 2>/dev/null | grep -Eq \'"status": *"INVALID"\'; then',
+    '    echo "pre-commit: a use-case marker and its binding disagree — run: use-cases scan --repo ." >&2',
     "    exit 1",
     "  fi",
     "fi"
@@ -309,8 +309,8 @@ function prePushBlock(): string[] {
     'if [ -f "$(git rev-parse --show-toplevel)/use-cases.yml" ]; then',
     ...UC_LOOKUP.map((line) => `  ${line}`.replace("pre-commit:", "pre-push:")),
     '  root="$(git rev-parse --show-toplevel)"',
-    '  "$uc" impact --repo "$root" 2>/dev/null || true',
-    '  "$uc" scan --repo "$root" 2>/dev/null | tail -n 20 || true',
+    '  "$use_cases" impact --repo "$root" 2>/dev/null || true',
+    '  "$use_cases" scan --repo "$root" 2>/dev/null | tail -n 20 || true',
     "fi",
     "exit 0"
   ];
@@ -450,7 +450,7 @@ function renderExampleUseCase(): string {
     "feature:",
     "  id: example.feature",
     "  name: Example feature",
-    "  summary: A sample use case vended by `uc init` — copy its shape for your own rows.",
+    "  summary: A sample use case vended by `use-cases init` — copy its shape for your own rows.",
     "metadata:",
     "  owner: unassigned",
     "  lifecycle: active",
@@ -467,7 +467,7 @@ function renderExampleUseCase(): string {
     "    # How often users hit it: common | occasional | rare.",
     "    usage_frequency: common",
     "    tags: [example]",
-    "    # Files the behaviour lives in. `uc bind` wraps the exact span with a marker.",
+    "    # Files the behaviour lives in. `use-cases bind` wraps the exact span with a marker.",
     "    source_refs:",
     "      - kind: file",
     "        path: src/example.ts",
@@ -562,14 +562,14 @@ function renderJsVitestSource(): string {
 }
 
 // A plain vitest module at the path the `js.vitest` preset derives from the row
-// id (`tests/use-cases/<row-id>.test.ts`), so `uc verify` runs it as-is.
+// id (`tests/use-cases/<row-id>.test.ts`), so `use-cases verify` runs it as-is.
 function renderJsVitestTest(runCommand: string): string {
   return [
     `// Acceptance test for the \`${EXAMPLE_ROW_ID}\` use-case row.`,
     "//",
     "// Run this file directly with",
     `//   ${runCommand}`,
-    "// or let `uc verify` invoke the `js.vitest` preset for the row. Replace",
+    "// or let `use-cases verify` invoke the `js.vitest` preset for the row. Replace",
     "// these assertions as you replace the example row with your own use case.",
     'import { describe, expect, test } from "vitest";',
     'import { greet } from "../../src/example.js";',
@@ -597,11 +597,11 @@ export function nextSteps(options: { hooksPathSet?: boolean; hooksDir?: string }
       ? ["Point git at the hooks once the repo is initialised: `git config core.hooksPath .githooks`."]
       : []),
     "Copy use-cases/example.yml's row for your first real use case, then delete the example.",
-    "Run `uc matrix validate --repo . --json` to confirm the matrix is clean.",
-    "Bind the implementing code with `uc bind` — code-marker grammar in docs/markers-adoption.md.",
+    "Run `use-cases matrix validate --repo . --json` to confirm the matrix is clean.",
+    "Bind the implementing code with `use-cases bind` — code-marker grammar in docs/markers-adoption.md.",
     "Wire the `acceptance` verifier in use-cases.yml to your real test command (docs/cli.md).",
     "Generate an ed25519 keypair — commit the PUBLIC key, keep the PRIVATE key in a CI secret only (docs/security.md).",
-    "Let trusted CI mint FRESH proofs with `uc prove` (docs/cli.md, docs/security.md)."
+    "Let trusted CI mint FRESH proofs with `use-cases prove` (docs/cli.md, docs/security.md)."
   ];
 }
 

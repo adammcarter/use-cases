@@ -301,7 +301,7 @@ export type EvidenceErrorCode = (typeof EvidenceErrorCode)[keyof typeof Evidence
 
 // A PURE missing-key failure: a signed proof is present but the caller supplied
 // no key (or a keyring that does not know the proof's key_id) to CHECK it. This
-// is NOT ledger corruption — it is the ordinary keyless path (`uc scan` / `uc
+// is NOT ledger corruption — it is the ordinary keyless path (`use-cases scan` / `use-cases
 // verify` without --public-key). The proof simply cannot be TRUSTED without the
 // key, so its row reads UNPROVEN and the keyless VERIFIED_LOCAL tier still
 // applies. A key that is present but REJECTS the signature (BAD_SIGNATURE), or a

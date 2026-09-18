@@ -5,7 +5,7 @@ All commands use JSON envelopes with `schema_version`, `protocol_version`,
 
 ## Onboarding
 
-- `uc init [--repo <dir>] [--template generic|js-vitest|python-pytest|go-test] [--component <id>] [--force] [--json]`:
+- `use-cases init [--repo <dir>] [--template generic|js-vitest|python-pytest|go-test] [--component <id>] [--force] [--json]`:
   scaffold a minimal working workspace — a `use-cases.yml` (with a
   `verifiers.default` matching the template) and a `use-cases/example.yml` whose
   one row already validates. The scaffolded workspace passes `matrix validate`
@@ -31,8 +31,8 @@ All commands use JSON envelopes with `schema_version`, `protocol_version`,
   (`actor`, `intent`, `preconditions`, `trigger`, `scenarios`,
   `observable_outcomes`, `host_applicability`, `verification_policy`,
   `approval_policy`). Set `approval_policy.required_for_release: true` on a row to
-  make `uc scan --gate` **enforce** it (fail CI when it drops below the bar); rows
-  without it are advisory (the gate only warns). See the `uc scan --gate` section.
+  make `use-cases scan --gate` **enforce** it (fail CI when it drops below the bar); rows
+  without it are advisory (the gate only warns). See the `use-cases scan --gate` section.
 - `matrix remove --repo <path> --use-case <id> --reason <text> --json`:
   mark a use case as `removed`. This is a lifecycle change, not physical
   deletion.
@@ -44,13 +44,13 @@ All commands use JSON envelopes with `schema_version`, `protocol_version`,
   self-reported observation its weakest tier (`reported`), and the acceptance
   claim does not count it.
 - `evidence record --repo <path> --use-case <id> --perform -- <cmd> [args...] --json`
-  **performs** the behaviour instead of asserting it: `uc` spawns the command
+  **performs** the behaviour instead of asserting it: `use-cases` spawns the command
   itself and records the argv it ran, the exit code, and the output digests. That
-  lands as assurance class `reproducible`, and `uc scan` counts it as a
+  lands as assurance class `reproducible`, and `use-cases scan` counts it as a
   **performed run** — a row proven by driving the product rather than by a
   spawned unit filter. A failing command is recorded as a failing run and proves
   nothing. Everything after `--` belongs to the spawned command, so its own flags
-  are never read as `uc`'s.
+  are never read as `use-cases`'s.
 - `evidence status --repo <path> --json` replays append-only JSONL history.
 - `evidence void --repo <path> --evidence <id> --expected-head <event-id> --reason <text> --json`
   records a correction event without deleting history.
@@ -62,7 +62,7 @@ CI has signed proof that the current code, binding, and verifier still match. Th
 signing key must be a PKCS8 ed25519 PEM — see
 [key management](./security/key-management.md) for how to generate one.
 
-- `uc bind --row <id> --file <path> --mode explicit --start-line <n> --end-line <n> [--repo <path>] [--json]`:
+- `use-cases bind --row <id> --file <path> --mode explicit --start-line <n> --end-line <n> [--repo <path>] [--json]`:
   bind a row to a code span. `--mode explicit` inserts `//: @use-case:<id>` …
   `//: @use-case:end <id>` markers around the span (the comment prefix is inferred
   per file type). Use `--register-existing` to register a span whose markers are
@@ -70,22 +70,22 @@ signing key must be a PKCS8 ed25519 PEM — see
   opening marker shifts the file's line numbers down by one, so a later `scan`
   reports the span one line below the `--start-line`/`--end-line` you passed —
   that is expected, not drift.
-- `uc rebind --row <id> --file <path> --mode explicit|swift-func … [--reason <s>] [--dry-run] [--json]`:
+- `use-cases rebind --row <id> --file <path> --mode explicit|swift-func … [--reason <s>] [--dry-run] [--json]`:
   move a binding to a different declaration, in this file or another one. The
   marker and its registration move together in one step, so the row is never
   registered to nothing in between; a target that cannot resolve to a span aborts
   with the source and the ledger untouched. Count `--line` /
   `--start-line`/`--end-line` as the file will read once the OLD marker is gone.
   The row drops to `STALE_LOCAL` after the move — a moved binding is a different
-  claim, so `uc verify --row <id>` has to run again.
-- `uc unbind --row <id> [--suffix <s>] [--reason <s>] [--dry-run] [--json]`:
+  claim, so `use-cases verify --row <id>` has to run again.
+- `use-cases unbind --row <id> [--suffix <s>] [--reason <s>] [--dry-run] [--json]`:
   end a binding — remove its marker from the source and release its registration,
   freeing the slug to be bound again. This is the exit path for a retired
   behaviour, and the first step when a row is renamed or deleted from the matrix
-  (`uc unbind --row <old>` then `uc bind --row <new> --register-existing`). Its
+  (`use-cases unbind --row <old>` then `use-cases bind --row <new> --register-existing`). Its
   preconditions are deliberately weaker than `bind`'s: the row may already be
   gone from the matrix, and the marker may already be gone from the source.
-- `uc scan [--repo <path>] [--public-key <pem>] [--keyring <path>] [--gate] [--policy-mode <mode>] [--json]`:
+- `use-cases scan [--repo <path>] [--public-key <pem>] [--keyring <path>] [--gate] [--policy-mode <mode>] [--json]`:
   derive each row's freshness — `FRESH` / `SUSPECT` / `UNPROVEN` / `UNBOUND` /
   `INVALID` — from the current code, the binding registry, and the proof ledger.
   Without a trusted `--public-key` (or `--keyring`), signed proofs read `UNPROVEN`
@@ -105,7 +105,7 @@ signing key must be a PKCS8 ed25519 PEM — see
   never silently endorses drift. To make the gate protect a behaviour, add
   `approval_policy.required_for_release: true` to its use-case row (see
   `matrix upsert` and `init`).
-- `uc verify [--row <id> | --all] --out <path> [--repo <path>] [--json]`: run each
+- `use-cases verify [--row <id> | --all] --out <path> [--repo <path>] [--json]`: run each
   bound row's verifier command and write an **unsigned** verification-results
   ledger (one JSONL record per row). This is the step that actually executes tests.
 
@@ -114,19 +114,19 @@ signing key must be a PKCS8 ed25519 PEM — see
   per variant (`<family>::<key>`), all merged into the same ledger.
   `--dry-run` previews the per-variant plan. A family command without a
   `{variant}` token is a surfaced `VARIANT_TOKEN_MISSING` spec error (recorded
-  `blocked`, nothing spawned). `uc scan` reports the family `VERIFIED_LOCAL`
+  `blocked`, nothing spawned). `use-cases scan` reports the family `VERIFIED_LOCAL`
   only when every variant passes and emits a `variant_local_status` breakdown
-  naming any failing variant; `uc prove --row <family>` refuses families
+  naming any failing variant; `use-cases prove --row <family>` refuses families
   (`VARIANT_FAMILY_UNSUPPORTED` — the signed tier has no variant model yet),
-  while a `uc prove --all` sweep skips them (`skipped_variant_family`, same
+  while a `use-cases prove --all` sweep skips them (`skipped_variant_family`, same
   reason, exit 0) so one family cannot hold a CI sweep permanently red.
   See [verifiers](./concepts/verifiers.md#the-variant-convention--variant-families).
-- `uc prove (--row <id> | --all) --verification-results <path> --trusted-ci --signing-key-env <ENV> [--key-id <id>] [--append] [--repo <path>] [--json]`:
+- `use-cases prove (--row <id> | --all) --verification-results <path> --trusted-ci --signing-key-env <ENV> [--key-id <id>] [--append] [--repo <path>] [--json]`:
   mint **signed** ed25519 proof events from the `verify` results. Signing is
   CI-only: the private key is read from the named environment variable and never
   written to disk. A present-but-malformed key returns a `signing_key.invalid`
   diagnostic rather than crashing.
-- `uc validate-ledger [--repo <path>] [--json]`: check the append-only proof/
+- `use-cases validate-ledger [--repo <path>] [--json]`: check the append-only proof/
   evidence ledger for integrity (hash-chain, ordering, signature shape).
 
 ## Planning And Showcases

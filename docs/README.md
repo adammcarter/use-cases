@@ -6,15 +6,15 @@ row **FRESH** only when trusted CI has signed proof that the current code,
 binding, and verifier context still match. Stale claims become visible instead of
 silently trusted.
 
-Ships as a single plugin, `use-cases`, providing the `uc` CLI (`bin/uc`) and
+Ships as a single plugin, `use-cases`, providing the `use-cases` CLI (`bin/use-cases`) and
 the MCP server (`bin/use-cases-mcp`). Both resolve their runtime themselves —
 see [getting started](./getting-started.md#1-install-the-cli).
 
 ## Start here
 
-- **[CLI reference](./cli.md)** — every command and its flags. `uc init`
-  scaffolds a workspace that validates out of the box; `uc bind` links a row to
-  code; `uc prove` (in trusted CI) mints the FRESH proof.
+- **[CLI reference](./cli.md)** — every command and its flags. `use-cases init`
+  scaffolds a workspace that validates out of the box; `use-cases bind` links a row to
+  code; `use-cases prove` (in trusted CI) mints the FRESH proof.
 - **[Activation](./activation.md)** — when to use the plugin continuously during
   planning/implementation versus as a backfill, walkthrough, or live showcase.
 

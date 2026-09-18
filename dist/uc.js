@@ -16269,7 +16269,7 @@ function validateRegistryEvents(read, yamlRowIds) {
         errors.push({
           code: RegistryErrorCode.DUPLICATE_REGISTRATION,
           line,
-          message: `binding slug ${slug} is already registered; re-point it with \`uc rebind\` or release it with \`uc unbind\``,
+          message: `binding slug ${slug} is already registered; re-point it with \`use-cases rebind\` or release it with \`use-cases unbind\``,
           binding_slug: slug,
           row_id: row
         });
@@ -22103,7 +22103,7 @@ function parseFrontmatter(source, sourcePath, diagnostics) {
 }
 function extractCliCommands(source, sourcePath) {
   const references = [];
-  for (const match of source.matchAll(/`(?:uc|pnpm cli --)\s+([^`]+?)`/g)) {
+  for (const match of source.matchAll(/`(?:use-cases|pnpm cli --)\s+([^`]+?)`/g)) {
     const tokens = match[1].trim().split(/\s+/);
     if (tokens.length >= 2) {
       references.push({ command: `${tokens[0]} ${tokens[1]}`, source_path: sourcePath });
@@ -22779,7 +22779,7 @@ function deriveLocalStatus(allResults, currentContextHash, hBind) {
   if (results.length === 0) {
     return {
       local_status: "UNATTESTED_LOCAL",
-      local_reason: "a verification result exists for this row but carries no valid run attestation, so nothing proves a verifier was ever run for it here; run `uc verify` to record a real one"
+      local_reason: "a verification result exists for this row but carries no valid run attestation, so nothing proves a verifier was ever run for it here; run `use-cases verify` to record a real one"
     };
   }
   const passing = results.some(
@@ -22797,13 +22797,13 @@ function deriveLocalStatus(allResults, currentContextHash, hBind) {
   );
   let reason;
   if (contextDrifted) {
-    reason = "the verifier or its declared inputs changed since the last local run; re-run `uc verify`";
+    reason = "the verifier or its declared inputs changed since the last local run; re-run `use-cases verify`";
   } else if (bindingDrifted) {
-    reason = "the bound code span changed since the last local run; re-run `uc verify`";
+    reason = "the bound code span changed since the last local run; re-run `use-cases verify`";
   } else if (anyFailure) {
-    reason = "the last local verification did not pass; fix the row and re-run `uc verify`";
+    reason = "the last local verification did not pass; fix the row and re-run `use-cases verify`";
   } else {
-    reason = "the last local verification no longer matches the current row; re-run `uc verify`";
+    reason = "the last local verification no longer matches the current row; re-run `use-cases verify`";
   }
   return { local_status: "STALE_LOCAL", local_reason: reason };
 }
@@ -22866,9 +22866,9 @@ function deriveFreshness(input) {
     }
     if (error.code === "REGISTRY_ROW_MISSING") {
       const newRowId = error.row_id ? renamedTo.get(error.row_id) : void 0;
-      error.remediation = newRowId ? `looks like ${error.row_id} was renamed to ${newRowId}. \`uc bind\` fails closed while the stale registration stands, so release it first: run \`uc unbind --row ${error.row_id} --reason row_renamed\`, then \`uc bind --row ${newRowId} --file <file> --register-existing\`` : `the registry still binds ${error.row_id ?? "a row"}, which no longer exists in the matrix. Restore the row to the matrix, or release the stale registration with \`uc unbind --row ${error.row_id ?? "<row>"}\` and re-register the binding against the row that replaced it`;
+      error.remediation = newRowId ? `looks like ${error.row_id} was renamed to ${newRowId}. \`use-cases bind\` fails closed while the stale registration stands, so release it first: run \`use-cases unbind --row ${error.row_id} --reason row_renamed\`, then \`use-cases bind --row ${newRowId} --file <file> --register-existing\`` : `the registry still binds ${error.row_id ?? "a row"}, which no longer exists in the matrix. Restore the row to the matrix, or release the stale registration with \`use-cases unbind --row ${error.row_id ?? "<row>"}\` and re-register the binding against the row that replaced it`;
     } else if (error.code === "LEDGER_INTEGRITY_ERROR") {
-      error.remediation = "inspect the ledger with `uc validate-ledger` \u2014 a proof/binding ledger entry is malformed or out of order";
+      error.remediation = "inspect the ledger with `use-cases validate-ledger` \u2014 a proof/binding ledger entry is malformed or out of order";
     }
   }
   const evidenceByRow = /* @__PURE__ */ new Map();
@@ -22950,7 +22950,7 @@ function deriveFreshness(input) {
         file_path: detection.file_path,
         line: detection.start_line,
         message: `current marker ${detection.binding_slug} is not registered in the binding registry`,
-        remediation: previousId ? `looks like ${rowId} was renamed from ${previousId}. Release the old registration first \u2014 bind fails closed while it stands \u2014 with \`uc unbind --row ${previousId} --reason row_renamed\`, then run \`uc bind --row ${rowId} --file ${detection.file_path} --register-existing\`` : `register the marker already in the source with \`uc bind --row ${rowId} --file ${detection.file_path} --register-existing\`, or delete the marker if it is not wanted`
+        remediation: previousId ? `looks like ${rowId} was renamed from ${previousId}. Release the old registration first \u2014 bind fails closed while it stands \u2014 with \`use-cases unbind --row ${previousId} --reason row_renamed\`, then run \`use-cases bind --row ${rowId} --file ${detection.file_path} --register-existing\`` : `register the marker already in the source with \`use-cases bind --row ${rowId} --file ${detection.file_path} --register-existing\`, or delete the marker if it is not wanted`
       });
     }
     if (!inputRow) {
@@ -22962,7 +22962,7 @@ function deriveFreshness(input) {
         code: "ROW_NOT_FOUND",
         row_id: rowId,
         message: `row ${rowId} is bound or registered but is not a known use-case row`,
-        remediation: previousId ? `looks like ${previousId} was renamed to ${rowId} \u2014 add the renamed row to the matrix (or rename it back), release the old registration with \`uc unbind --row ${previousId} --reason row_renamed\`, then re-register with \`uc bind --row ${rowId} --file <file> --register-existing\`` : `add the row to the matrix, or \u2014 if the row id was RENAMED \u2014 update the \`@use-case:\` marker(s) in source to the new id and re-register with \`uc bind --row <new-id> --file <file> --register-existing\``
+        remediation: previousId ? `looks like ${previousId} was renamed to ${rowId} \u2014 add the renamed row to the matrix (or rename it back), release the old registration with \`use-cases unbind --row ${previousId} --reason row_renamed\`, then re-register with \`use-cases bind --row ${rowId} --file <file> --register-existing\`` : `add the row to the matrix, or \u2014 if the row id was RENAMED \u2014 update the \`@use-case:\` marker(s) in source to the new id and re-register with \`use-cases bind --row <new-id> --file <file> --register-existing\``
       });
     }
     const hashes = inputRow ? {
@@ -23044,11 +23044,11 @@ function deriveFreshness(input) {
     );
     let requiredAction = null;
     if (status === "SUSPECT" || status === "UNPROVEN") {
-      requiredAction = `uc prove --row ${rowId}`;
+      requiredAction = `use-cases prove --row ${rowId}`;
     } else if (status === "INVALID") {
-      requiredAction = "uc scan (resolve binding integrity errors)";
+      requiredAction = "use-cases scan (resolve binding integrity errors)";
     } else if (status === "UNBOUND") {
-      requiredAction = `uc bind --row ${rowId} --file <file> --mode <explicit|swift-func>`;
+      requiredAction = `use-cases bind --row ${rowId} --file <file> --mode <explicit|swift-func>`;
     }
     let localStatus;
     let localReason;
@@ -23182,7 +23182,7 @@ function deriveFreshness(input) {
     `${byEvidence.performed_run} performed run`
   ];
   if (summary.unattested_local > 0) {
-    parts.push(`${summary.unattested_local} unattested (run \`uc verify\`)`);
+    parts.push(`${summary.unattested_local} unattested (run \`use-cases verify\`)`);
   }
   const basis = parts.join(", ");
   return {
@@ -24399,7 +24399,7 @@ function runBindCommand(options) {
   if (registryValidation.registry.slugToRow.has(bindingSlug)) {
     return fail2(base, 4, {
       code: "DUPLICATE_REGISTRATION",
-      message: `binding slug ${bindingSlug} is already registered; re-point it with \`uc rebind --row ${options.rowId} --file <file> --mode <mode>\` or release it with \`uc unbind --row ${options.rowId}\``
+      message: `binding slug ${bindingSlug} is already registered; re-point it with \`use-cases rebind --row ${options.rowId} --file <file> --mode <mode>\` or release it with \`use-cases unbind --row ${options.rowId}\``
     });
   }
   let nextContents;
@@ -24461,7 +24461,7 @@ function runBindCommand(options) {
     ok: true,
     registry_event_appended: true,
     scan_result: scanResult,
-    next_command: `uc verify --row ${options.rowId}`,
+    next_command: `use-cases verify --row ${options.rowId}`,
     errors: []
   };
 }
@@ -24573,7 +24573,7 @@ function runUnbindCommand(options) {
     registry_event_appended: true,
     markers_removed: markersRemoved,
     // A released row proves nothing until it is bound again, so say so.
-    next_command: loaded.rowIds.has(options.rowId) ? `uc bind --row ${options.rowId} --file <file> --mode <mode>` : "uc scan",
+    next_command: loaded.rowIds.has(options.rowId) ? `use-cases bind --row ${options.rowId} --file <file> --mode <mode>` : "use-cases scan",
     errors: []
   };
 }
@@ -24634,7 +24634,7 @@ function runRebindCommand(options) {
   if (!validation.registry.slugToRow.has(bindingSlug)) {
     return fail4(base, 2, {
       code: "NOT_REGISTERED",
-      message: `binding slug ${bindingSlug} is not registered; bind it first with \`uc bind --row ${options.rowId} --file ${relFile} --mode ${options.mode}\``
+      message: `binding slug ${bindingSlug} is not registered; bind it first with \`use-cases bind --row ${options.rowId} --file ${relFile} --mode ${options.mode}\``
     });
   }
   const found = findSlugMarker({
@@ -24744,7 +24744,7 @@ function runRebindCommand(options) {
     scan_result: scanResult,
     // The row's old proof does not survive the move (the binding set it was
     // proven against no longer exists), so re-verification is the next step.
-    next_command: `uc verify --row ${options.rowId}`,
+    next_command: `use-cases verify --row ${options.rowId}`,
     errors: []
   };
 }
@@ -24892,7 +24892,7 @@ function proveOneRow(args) {
   if (rowVariants(loadedRow).length > 0) {
     return rowResult(rowId, sweep ? "skipped_variant_family" : "failed", {
       reason: "VARIANT_FAMILY_UNSUPPORTED",
-      message: `row ${rowId} is a variant family; signed proofs for variant families are not supported yet \u2014 use the keyless loop (\`uc verify --row ${rowId}\` then \`uc scan\`) for per-variant local acceptance`
+      message: `row ${rowId} is a variant family; signed proofs for variant families are not supported yet \u2014 use the keyless loop (\`use-cases verify --row ${rowId}\` then \`use-cases scan\`) for per-variant local acceptance`
     });
   }
   if (statusRow.status === "UNBOUND") {
@@ -24947,7 +24947,7 @@ function proveOneRow(args) {
       return rowResult(rowId, "failed", {
         ...hashes,
         reason: "NO_PASSING_RESULT",
-        message: `no verification result for row ${rowId}; run \`uc verify --row ${rowId} --out <path>\` first`
+        message: `no verification result for row ${rowId}; run \`use-cases verify --row ${rowId} --out <path>\` first`
       });
     }
     if (record.status === "blocked") {
@@ -25831,7 +25831,7 @@ function defaultRequiredAction(row) {
   if (row.required_action) {
     return row.required_action;
   }
-  return row.status === "UNBOUND" ? `uc bind --row ${row.row_id}` : `uc prove --row ${row.row_id}`;
+  return row.status === "UNBOUND" ? `use-cases bind --row ${row.row_id}` : `use-cases prove --row ${row.row_id}`;
 }
 function formatPrecommitWarning(row) {
   const reason = firstReasonCode(row);
@@ -26372,7 +26372,7 @@ function ensureAgentsMdDecision(repoRoot, today) {
     "",
     "This repo is use-case driven: every functional change starts in `use-cases/`,",
     "rows are agreed before tests, tests and code are wrapped in the row's markers,",
-    "and `uc scan` is the coverage number. The rules live in the Use Cases plugin's",
+    "and `use-cases scan` is the coverage number. The rules live in the Use Cases plugin's",
     "skills \u2014 `use-case-driven-development` for when and in what order, `use-cases`",
     "for the commands \u2014 and every agent working here follows them.",
     ""
@@ -26394,14 +26394,14 @@ function preCommitBlock() {
     'if [ -f "$(git rev-parse --show-toplevel)/use-cases.yml" ]; then',
     ...UC_LOOKUP.map((line) => `  ${line}`.replace(/^  $/, "")),
     '  root="$(git rev-parse --show-toplevel)"',
-    '  "$uc" matrix validate --repo "$root" --json >/dev/null \\',
-    '    || { echo "pre-commit: use-case matrix invalid \u2014 run: uc matrix validate --repo ." >&2; exit 1; }',
+    '  "$use_cases" matrix validate --repo "$root" --json >/dev/null \\',
+    '    || { echo "pre-commit: use-case matrix invalid \u2014 run: use-cases matrix validate --repo ." >&2; exit 1; }',
     '  key=""; [ -f "$root/.use-cases/trusted-ci-public-key.pem" ] && key="--public-key $root/.use-cases/trusted-ci-public-key.pem"',
-    '  "$uc" validate-ledger --repo "$root" $key --json >/dev/null \\',
-    '    || { echo "pre-commit: use-case ledger invalid \u2014 run: uc validate-ledger --repo ." >&2; exit 1; }',
+    '  "$use_cases" validate-ledger --repo "$root" $key --json >/dev/null \\',
+    '    || { echo "pre-commit: use-case ledger invalid \u2014 run: use-cases validate-ledger --repo ." >&2; exit 1; }',
     "  # A marker and its binding that disagree is INVALID; stale is fine here.",
-    `  if "$uc" scan --repo "$root" --json 2>/dev/null | grep -Eq '"status": *"INVALID"'; then`,
-    '    echo "pre-commit: a use-case marker and its binding disagree \u2014 run: uc scan --repo ." >&2',
+    `  if "$use_cases" scan --repo "$root" --json 2>/dev/null | grep -Eq '"status": *"INVALID"'; then`,
+    '    echo "pre-commit: a use-case marker and its binding disagree \u2014 run: use-cases scan --repo ." >&2',
     "    exit 1",
     "  fi",
     "fi"
@@ -26413,8 +26413,8 @@ function prePushBlock() {
     'if [ -f "$(git rev-parse --show-toplevel)/use-cases.yml" ]; then',
     ...UC_LOOKUP.map((line) => `  ${line}`.replace("pre-commit:", "pre-push:")),
     '  root="$(git rev-parse --show-toplevel)"',
-    '  "$uc" impact --repo "$root" 2>/dev/null || true',
-    '  "$uc" scan --repo "$root" 2>/dev/null | tail -n 20 || true',
+    '  "$use_cases" impact --repo "$root" 2>/dev/null || true',
+    '  "$use_cases" scan --repo "$root" 2>/dev/null | tail -n 20 || true',
     "fi",
     "exit 0"
   ];
@@ -26532,7 +26532,7 @@ function renderExampleUseCase() {
     "feature:",
     "  id: example.feature",
     "  name: Example feature",
-    "  summary: A sample use case vended by `uc init` \u2014 copy its shape for your own rows.",
+    "  summary: A sample use case vended by `use-cases init` \u2014 copy its shape for your own rows.",
     "metadata:",
     "  owner: unassigned",
     "  lifecycle: active",
@@ -26549,7 +26549,7 @@ function renderExampleUseCase() {
     "    # How often users hit it: common | occasional | rare.",
     "    usage_frequency: common",
     "    tags: [example]",
-    "    # Files the behaviour lives in. `uc bind` wraps the exact span with a marker.",
+    "    # Files the behaviour lives in. `use-cases bind` wraps the exact span with a marker.",
     "    source_refs:",
     "      - kind: file",
     "        path: src/example.ts",
@@ -26637,7 +26637,7 @@ function renderJsVitestTest(runCommand) {
     "//",
     "// Run this file directly with",
     `//   ${runCommand}`,
-    "// or let `uc verify` invoke the `js.vitest` preset for the row. Replace",
+    "// or let `use-cases verify` invoke the `js.vitest` preset for the row. Replace",
     "// these assertions as you replace the example row with your own use case.",
     'import { describe, expect, test } from "vitest";',
     'import { greet } from "../../src/example.js";',
@@ -26662,11 +26662,11 @@ function nextSteps(options = {}) {
   return [
     ...options.hooksPathSet === false && options.hooksDir === DEFAULT_HOOKS_DIR ? ["Point git at the hooks once the repo is initialised: `git config core.hooksPath .githooks`."] : [],
     "Copy use-cases/example.yml's row for your first real use case, then delete the example.",
-    "Run `uc matrix validate --repo . --json` to confirm the matrix is clean.",
-    "Bind the implementing code with `uc bind` \u2014 code-marker grammar in docs/markers-adoption.md.",
+    "Run `use-cases matrix validate --repo . --json` to confirm the matrix is clean.",
+    "Bind the implementing code with `use-cases bind` \u2014 code-marker grammar in docs/markers-adoption.md.",
     "Wire the `acceptance` verifier in use-cases.yml to your real test command (docs/cli.md).",
     "Generate an ed25519 keypair \u2014 commit the PUBLIC key, keep the PRIVATE key in a CI secret only (docs/security.md).",
-    "Let trusted CI mint FRESH proofs with `uc prove` (docs/cli.md, docs/security.md)."
+    "Let trusted CI mint FRESH proofs with `use-cases prove` (docs/cli.md, docs/security.md)."
   ];
 }
 function deriveComponentId(raw) {
@@ -26718,10 +26718,10 @@ var init_scaffold = __esm({
     DEFAULT_HOOKS_DIR = ".githooks";
     HOOK_BLOCK_MARKER = "# use-cases:";
     UC_LOOKUP = [
-      "# The plugin puts uc on PATH in Claude sessions; elsewhere set UC to <plugin>/bin/uc.",
-      'uc="${UC:-$(command -v uc 2>/dev/null || true)}"',
-      'if [ -z "$uc" ]; then',
-      '  echo "pre-commit: uc not found \u2014 install the Use Cases plugin (https://github.com/adammcarter/use-cases) or set UC=<plugin>/bin/uc" >&2',
+      "# The plugin puts use-cases on PATH in Claude sessions; elsewhere set USE_CASES to <plugin>/bin/use-cases.",
+      'use_cases="${USE_CASES:-$(command -v use-cases 2>/dev/null || true)}"',
+      'if [ -z "$use_cases" ]; then',
+      '  echo "pre-commit: use-cases not found \u2014 install the Use Cases plugin (https://github.com/adammcarter/use-cases) or set USE_CASES=<plugin>/bin/use-cases" >&2',
       "  exit 0",
       "fi"
     ];
@@ -26943,7 +26943,7 @@ import { fileURLToPath as fileURLToPath4 } from "node:url";
 import { resolve as resolve13 } from "node:path";
 
 // packages/cli/src/coreLoader.ts
-var MISSING_BUILD_MESSAGE = "uc: the compiled core is missing. Run `pnpm build` from the repository root before using the CLI.";
+var MISSING_BUILD_MESSAGE = "use-cases: the compiled core is missing. Run `pnpm build` from the repository root before using the CLI.";
 function isMissingCoreModule(error) {
   return error instanceof Error && "code" in error && error.code === "ERR_MODULE_NOT_FOUND";
 }
@@ -27051,13 +27051,13 @@ function scanRowAction(row) {
     return null;
   }
   if (row.status === "SUSPECT" || row.status === "UNPROVEN") {
-    return `run \`uc recover --row ${row.row_id}\``;
+    return `run \`use-cases recover --row ${row.row_id}\``;
   }
   if (row.status === "INVALID") {
-    return "resolve the binding integrity errors, then re-run `uc scan`";
+    return "resolve the binding integrity errors, then re-run `use-cases scan`";
   }
   if (row.status === "UNBOUND") {
-    return `bind it with \`uc bind --row ${row.row_id} \u2026\``;
+    return `bind it with \`use-cases bind --row ${row.row_id} \u2026\``;
   }
   return row.required_action ? `run \`${row.required_action}\`` : null;
 }
@@ -27158,7 +27158,7 @@ function renderVerify(data) {
       } else {
         lines.push(`  \u2717 ${entry2.row_id} \u2014 ${entry2.disposition.toUpperCase()}`);
         lines.push(
-          entry2.disposition === "blocked" ? `      no runnable verifier${entry2.verifier_id ? ` (${entry2.verifier_id} is not declared)` : ""}` : "      resolve the binding integrity errors first (`uc scan`)"
+          entry2.disposition === "blocked" ? `      no runnable verifier${entry2.verifier_id ? ` (${entry2.verifier_id} is not declared)` : ""}` : "      resolve the binding integrity errors first (`use-cases scan`)"
         );
       }
     }
@@ -27182,7 +27182,7 @@ function renderVerify(data) {
   for (const result of results) {
     lines.push(`  ${verifyBadge(result.status)} ${result.status.toUpperCase().padEnd(7)} ${result.row_id}`);
     if (result.status !== "pass") {
-      lines.push(`      \u2192 fix the row and re-run \`uc verify --row ${result.row_id}\``);
+      lines.push(`      \u2192 fix the row and re-run \`use-cases verify --row ${result.row_id}\``);
     }
   }
   return lines;
@@ -27210,14 +27210,14 @@ function renderImpact(data) {
   }
   for (const binding of impacted) {
     lines.push(`  \u2717 ${binding.row_id}`);
-    lines.push(`      \u2192 re-verify (span in ${binding.file}); run \`uc verify --row ${binding.row_id}\``);
+    lines.push(`      \u2192 re-verify (span in ${binding.file}); run \`use-cases verify --row ${binding.row_id}\``);
   }
   if (touched.length > 0) {
     lines.push("");
     lines.push(`touched (file changed, span not hit) \u2014 ${touched.length}, treat as affected until re-verified:`);
     for (const binding of touched) {
       lines.push(`  ? ${binding.row_id} (${binding.file})`);
-      lines.push(`      \u2192 re-verify to be sure; run \`uc verify --row ${binding.row_id}\``);
+      lines.push(`      \u2192 re-verify to be sure; run \`use-cases verify --row ${binding.row_id}\``);
     }
   }
   if (broken.length > 0) {
@@ -27268,7 +27268,7 @@ function renderApprovalRequest(data) {
     `  expires ${data.exp}`,
     "",
     "Sign out-of-band:",
-    "  uc approve-run --request <request-file> --key-file <out-of-scope-key> --key-id <keyring-key-id> --json"
+    "  use-cases approve-run --request <request-file> --key-file <out-of-scope-key> --key-id <keyring-key-id> --json"
   ];
 }
 function renderShowcaseStatus(data) {
@@ -28106,7 +28106,7 @@ function runPerformedCommand(argv, cwd) {
       envelope: errorEnvelope(
         "evidence.record",
         "evidence.run.command_required",
-        "--perform needs a command: `uc evidence record --use-case <id> --perform -- <cmd> [args...]`."
+        "--perform needs a command: `use-cases evidence record --use-case <id> --perform -- <cmd> [args...]`."
       )
     };
   }
@@ -28350,7 +28350,7 @@ function githubCiSnippet() {
     "        env:",
     "          UCM_CI_SIGNING_KEY: ${{ secrets.UCM_CI_SIGNING_KEY }}",
     "        run: |",
-    "          uc prove --all --trusted-ci \\",
+    "          use-cases prove --all --trusted-ci \\",
     "            --signing-key-env UCM_CI_SIGNING_KEY \\",
     "            --key-id ci-key-1",
     ""
@@ -29450,7 +29450,7 @@ var recoverCommand = {
         {
           code: "recover.verification_failed",
           severity: "error",
-          message: `recover could not restore ${named} to green: the verifier failed for ${named}. Fix the code or the test so the row's verifier passes, then re-run \`uc recover\`. Inspect the failure with \`uc verify --repo ${ctx.workspace_root} ${all ? "--all" : `--row ${rowId}`}\`.`,
+          message: `recover could not restore ${named} to green: the verifier failed for ${named}. Fix the code or the test so the row's verifier passes, then re-run \`use-cases recover\`. Inspect the failure with \`use-cases verify --repo ${ctx.workspace_root} ${all ? "--all" : `--row ${rowId}`}\`.`,
           source_path: null,
           json_pointer: null,
           entity_id: failedRows[0] ?? rowId ?? null,
@@ -29564,7 +29564,7 @@ var recoverCommand = {
     if (!recovered) {
       const named = notGreen.length > 0 ? notGreen.join(", ") : targetLabel;
       const needsPublicKey = wantFresh && flags.publicKey === void 0 && flags.keyring === void 0;
-      const hint = needsPublicKey ? "To read back the freshly signed proof, also pass --public-key <path> (the public half of --signing-key-env)." : scanResult.exit_code !== 0 ? `\`uc scan\` reported an integrity error (exit ${scanResult.exit_code}) \u2014 resolve it, then re-run \`uc recover\`.` : `Inspect the current state with \`uc scan --repo ${ctx.workspace_root}\`.`;
+      const hint = needsPublicKey ? "To read back the freshly signed proof, also pass --public-key <path> (the public half of --signing-key-env)." : scanResult.exit_code !== 0 ? `\`use-cases scan\` reported an integrity error (exit ${scanResult.exit_code}) \u2014 resolve it, then re-run \`use-cases recover\`.` : `Inspect the current state with \`use-cases scan --repo ${ctx.workspace_root}\`.`;
       return {
         envelope: createCliResult2(
           "markers.recover",
@@ -29610,7 +29610,7 @@ var recoverCommand = {
           verify: verifyResult,
           ...proveResult ? { prove: proveResult } : {},
           // Mirror scan's shape so callers can read data.status.rows[].local_status
-          // and .status exactly as they do from `uc scan`.
+          // and .status exactly as they do from `use-cases scan`.
           status: scanResult.status
         },
         {
@@ -30407,7 +30407,7 @@ var showcaseApproveCommand = {
     { key: "run", name: "--run", kind: "string", required: true, valueName: "<id>", summary: "Showcase run id." },
     { key: "statement", name: "--statement", kind: "string", required: true, valueName: "<text>", summary: "Approval statement." },
     { key: "actor", name: "--actor", kind: "string", valueName: "<type>", summary: "Actor type (defaults to agent; --approval-token forces user)." },
-    { key: "approvalToken", name: "--approval-token", kind: "string", valueName: "<path>", summary: "Signed approval token JSON from `uc approve-run` \u2014 the ONLY trusted human sign-off path (F3)." },
+    { key: "approvalToken", name: "--approval-token", kind: "string", valueName: "<path>", summary: "Signed approval token JSON from `use-cases approve-run` \u2014 the ONLY trusted human sign-off path (F3)." },
     { key: "keyring", name: "--keyring", kind: "string", valueName: "<path>", summary: "Public-key keyring that verifies --approval-token, or narrows pinned approval_trust." },
     { key: "publicKey", name: "--public-key", kind: "string", valueName: "<path>", summary: "Single public key that verifies --approval-token, or narrows pinned approval_trust." },
     { key: "idempotencyKey", name: "--idempotency-key", kind: "string", valueName: "<key>", summary: "Idempotency key (defaults to a derived cli: key)." },
@@ -30459,7 +30459,7 @@ var showcaseApproveCommand = {
         idempotencyKey: flags.idempotencyKey ?? `cli:approve:${runId}:${statement}`,
         recordedAt: flags.recordedAt ?? "2026-06-25T12:04:00.000Z",
         // SECURITY (F3): WITHOUT --approval-token these are all undefined, so the
-        // CLI path carries no signed token — an agent driving `uc showcase
+        // CLI path carries no signed token — an agent driving `use-cases showcase
         // approve` still gets untrusted_automation and a user-required plan stays
         // pending. WITH --approval-token, the (token, resolver, tierResolver,
         // policy-derived floor) bundle drives the existing verify+append gate; the trusted key
@@ -30495,7 +30495,7 @@ var showcaseRejectCommand = {
     { key: "run", name: "--run", kind: "string", required: true, valueName: "<id>", summary: "Showcase run id." },
     { key: "statement", name: "--statement", kind: "string", required: true, valueName: "<text>", summary: "Rejection statement." },
     { key: "actor", name: "--actor", kind: "string", valueName: "<type>", summary: "Actor type (defaults to user)." },
-    { key: "approvalToken", name: "--approval-token", kind: "string", valueName: "<path>", summary: "Signed approval token JSON from `uc approve-run` \u2014 the ONLY trusted human sign-off path (F3)." },
+    { key: "approvalToken", name: "--approval-token", kind: "string", valueName: "<path>", summary: "Signed approval token JSON from `use-cases approve-run` \u2014 the ONLY trusted human sign-off path (F3)." },
     { key: "keyring", name: "--keyring", kind: "string", valueName: "<path>", summary: "Public-key keyring that verifies --approval-token, or narrows pinned approval_trust." },
     { key: "publicKey", name: "--public-key", kind: "string", valueName: "<path>", summary: "Single public key that verifies --approval-token, or narrows pinned approval_trust." },
     { key: "idempotencyKey", name: "--idempotency-key", kind: "string", valueName: "<key>", summary: "Idempotency key (defaults to a derived cli: key)." },
@@ -30841,14 +30841,14 @@ function runHelp(argv, options = {}) {
   const tokens = argv.filter((arg) => !arg.startsWith("-"));
   const commands = selectUsageEntries(tokens);
   const requested = tokens.length > 0 ? tokens.join(" ") : null;
-  const unknownMessage = `No recognized command for '${requested ?? "(none)"}'. See the commands listed below or run \`uc --help\`.`;
+  const unknownMessage = `No recognized command for '${requested ?? "(none)"}'. See the commands listed below or run \`use-cases --help\`.`;
   if (!options.json) {
     process.stdout.write(renderHelpText(commands, { unknown: options.unknown, requested, unknownMessage }));
     return options.unknown ? 2 : 0;
   }
   const data = {
     schema_version: 1,
-    usage: "uc <command> [subcommand] [flags] --json",
+    usage: "use-cases <command> [subcommand] [flags] --json",
     requested,
     commands
   };
@@ -30879,8 +30879,8 @@ function renderHelpText(commands, options) {
   if (options.unknown) {
     lines.push(`error: ${options.unknownMessage}`, "");
   }
-  lines.push("uc \u2014 use-cases CLI", "");
-  lines.push("Usage: uc <command> [subcommand] [flags] [--json]", "");
+  lines.push("use-cases \u2014 the Use Cases CLI", "");
+  lines.push("Usage: use-cases <command> [subcommand] [flags] [--json]", "");
   const detailed = commands.length <= 3;
   const heading = options.requested ? `Commands matching '${options.requested}':` : "Commands:";
   lines.push(heading);
@@ -30895,7 +30895,7 @@ function renderHelpText(commands, options) {
   }
   lines.push("");
   if (!detailed) {
-    lines.push("Run `uc <command> --help` for that command's flags.");
+    lines.push("Run `use-cases <command> --help` for that command's flags.");
   }
   lines.push("Add --json to any command for the machine-readable result envelope.");
   return `${lines.join("\n")}
@@ -30948,7 +30948,7 @@ function runInit(argv, wantsJson) {
     process.stdout.write(`${lines.join("\n")}
 `);
   } else {
-    process.stderr.write(`${result.diagnostics[0]?.message ?? "uc init failed."}
+    process.stderr.write(`${result.diagnostics[0]?.message ?? "use-cases init failed."}
 `);
   }
   if (ok) {

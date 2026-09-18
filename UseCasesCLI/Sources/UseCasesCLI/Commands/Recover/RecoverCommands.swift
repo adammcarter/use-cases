@@ -1,4 +1,4 @@
-/// `uc recover` (packages/cli/src/commands/recover.ts): drive a drifted or
+/// `use-cases recover` (packages/cli/src/commands/recover.ts): drive a drifted or
 /// unproven row back to green in one command. Run in
 /// `RecoverCommands+Run.swift`.
 enum RecoverCommands {

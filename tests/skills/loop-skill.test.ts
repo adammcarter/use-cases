@@ -30,7 +30,7 @@ describe("the use-case-driven-development skill ships in the plugin, host-neutra
     for (const phase of ["UNDERSTAND", "FRAME", "BUILD", "VERIFY", "SIGN-OFF", "LAND"]) {
       expect(text, phase).toContain(phase);
     }
-    for (const cmd of ["uc bind", "uc verify", "uc scan", "uc recover", "use_case_upsert", "matrix_validate", "showcase_start", "uc scan --repo . --gate"]) {
+    for (const cmd of ["use-cases bind", "use-cases verify", "use-cases scan", "use-cases recover", "use_case_upsert", "matrix_validate", "showcase_start", "use-cases scan --repo . --gate"]) {
       expect(text, cmd).toContain(cmd);
     }
     expect(text).toContain("VERIFIED_LOCAL");

@@ -211,7 +211,7 @@ describe("the claim names what it rests on", () => {
       performed_runs: []
     });
     expect(status.acceptance_claim.proven).toBe(0);
-    expect(status.acceptance_claim.basis).toContain("1 unattested (run `uc verify`)");
+    expect(status.acceptance_claim.basis).toContain("1 unattested (run `use-cases verify`)");
   });
 
   test("omitting performed_runs entirely leaves existing callers unchanged", () => {

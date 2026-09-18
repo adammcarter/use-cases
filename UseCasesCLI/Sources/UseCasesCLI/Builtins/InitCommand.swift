@@ -1,7 +1,7 @@
 import Foundation
 import UseCasesCore
 
-/// `uc init` (packages/cli/src/builtins.ts `runInit`): scaffold a workspace.
+/// `use-cases init` (packages/cli/src/builtins.ts `runInit`): scaffold a workspace.
 ///
 /// A builtin, not a registry command, so its flags are never checked: an
 /// unknown one is ignored. `--repo` need not exist; scaffolding creates it.
@@ -95,7 +95,7 @@ enum InitCommand {
       )
     }
     guard isCreated else {
-      let message = scaffold.diagnostics.first?.message ?? "uc init failed."
+      let message = scaffold.diagnostics.first?.message ?? "use-cases init failed."
       return CliOutcome(standardOutput: "", standardError: message + "\n", exitCode: exitCode)
     }
     return CliOutcome(

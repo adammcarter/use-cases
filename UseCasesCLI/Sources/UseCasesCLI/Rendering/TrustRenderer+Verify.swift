@@ -34,7 +34,8 @@ extension TrustRenderer {
       let word = JavaScriptReading.padEnd(status.uppercased(), 7)
       lines.append("  \(glyph) \(word) \(rowIdentifier)")
       if status != "pass" {
-        lines.append("      \u{2192} fix the row and re-run `uc verify --row \(rowIdentifier)`")
+        lines
+          .append("      \u{2192} fix the row and re-run `use-cases verify --row \(rowIdentifier)`")
       }
     }
     return lines
@@ -69,7 +70,7 @@ extension TrustRenderer {
             : ""
           lines.append("      no runnable verifier\(declared)")
         } else {
-          lines.append("      resolve the binding integrity errors first (`uc scan`)")
+          lines.append("      resolve the binding integrity errors first (`use-cases scan`)")
         }
       }
     }

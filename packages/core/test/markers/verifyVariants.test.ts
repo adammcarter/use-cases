@@ -360,7 +360,7 @@ describe("verify/prove — variant family honesty fixes (review)", () => {
     const row = result.rows.find((r) => r.row_id === "cart.quantity");
     expect(row?.status).toBe("failed");
     expect(row?.reason).toBe("VARIANT_FAMILY_UNSUPPORTED");
-    expect(row?.message).not.toContain("run `uc verify");
+    expect(row?.message).not.toContain("run `use-cases verify");
   });
 
   test("prove --all SKIPS a variant family instead of failing the whole sweep", () => {

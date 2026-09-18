@@ -31,7 +31,7 @@ use_cases:
       other behaviour, so the incremental loop the docs recommend is safe to use.
     preconditions:
       - Several rows are bound and have passing local verification results.
-    trigger: An agent runs `uc verify --row <id>` after changing one behaviour.
+    trigger: An agent runs `use-cases verify --row <id>` after changing one behaviour.
     scenarios:
       - id: lifecycle.signals.verify_preserves_other_rows.golden_single_row
         kind: steps
@@ -120,7 +120,7 @@ use_cases:
       actually supported, so a green policy flag is never mistaken for proof.
     preconditions:
       - A matrix exists with at least one row.
-    trigger: An agent runs `uc scan` and looks for a signal to report against.
+    trigger: An agent runs `use-cases scan` and looks for a signal to report against.
     scenarios:
       - id: lifecycle.signals.acceptance_claim_is_honest.golden_all_proven
         kind: steps
@@ -203,7 +203,7 @@ use_cases:
       does not skip re-verifying the rows its change may have broken.
     preconditions:
       - A row is bound and its file is under version control.
-    trigger: An agent runs `uc impact` after editing code.
+    trigger: An agent runs `use-cases impact` after editing code.
     scenarios:
       - id: lifecycle.signals.impact_leads_with_the_union.golden_touched_not_hit
         kind: steps
@@ -279,7 +279,7 @@ use_cases:
       the likely cause (a rename) and the sequence that actually restores it.
     preconditions:
       - A row is bound, then renamed in both the matrix and the source marker.
-    trigger: An agent renames a bound behaviour and runs `uc scan`.
+    trigger: An agent renames a bound behaviour and runs `use-cases scan`.
     scenarios:
       - id: lifecycle.signals.errors_hand_back_the_cure.golden_rename
         kind: steps
@@ -366,7 +366,7 @@ use_cases:
       an expensive acceptance build is a decision rather than a surprise.
     preconditions:
       - At least one row is bound and declares a verifier.
-    trigger: An agent wants to know the cost of `uc verify` before running it.
+    trigger: An agent wants to know the cost of `use-cases verify` before running it.
     scenarios:
       - id: lifecycle.signals.verify_can_be_previewed.golden_dry_run
         kind: steps
@@ -511,7 +511,7 @@ use_cases:
       does not break the adopter's own clean-working-tree gates.
     preconditions:
       - A repository that does not yet use the tool.
-    trigger: An adopter runs `uc init`.
+    trigger: An adopter runs `use-cases init`.
     scenarios:
       - id: lifecycle.signals.transient_output_stays_out_of_git.golden_fresh_repo
         kind: steps
@@ -590,7 +590,7 @@ use_cases:
       the integrity gate.
     preconditions:
       - A repository whose subtree contains a directory carrying its own use-cases.yml.
-    trigger: An agent or CI runs `uc scan` from the parent repository root.
+    trigger: An agent or CI runs `use-cases scan` from the parent repository root.
     scenarios:
       - id: lifecycle.signals.nested_workspace_is_not_scanned.golden_nested_fixture_is_skipped
         kind: steps
@@ -688,12 +688,12 @@ use_cases:
     actor: agent
     intent: >-
       Declare the input shapes of one behaviour (0/1/many, negative, boundary) as
-      variants of a single use-case, prove them all with one `uc verify` invocation,
+      variants of a single use-case, prove them all with one `use-cases verify` invocation,
       and see exactly which shape fails without re-running anything.
     preconditions:
       - A use-case declares a non-empty variants list and its family is bound.
       - The family's verifier command carries a {variant} token.
-    trigger: An agent runs `uc verify --row <family>` (or `--all`).
+    trigger: An agent runs `use-cases verify --row <family>` (or `--all`).
     scenarios:
       - id: lifecycle.signals.variant_fanout.golden_loop
         kind: steps
@@ -803,15 +803,15 @@ use_cases:
       machine-local key that attests a record.
     preconditions:
       - A bound row exists and its verifier can be resolved.
-    trigger: An agent runs `uc verify`, then `uc scan` reads the results ledger.
+    trigger: An agent runs `use-cases verify`, then `use-cases scan` reads the results ledger.
     scenarios:
       - id: lifecycle.signals.local_results_are_attested.golden_real_run
         kind: steps
         steps:
-          - Run uc verify for a bound row so the verifier is actually spawned.
+          - Run use-cases verify for a bound row so the verifier is actually spawned.
           - Read the emitted record, then scan and read the row's local status.
         observable_outcomes:
-          - A record uc verify wrote carries a run attestation and reads VERIFIED_LOCAL.
+          - A record use-cases verify wrote carries a run attestation and reads VERIFIED_LOCAL.
           - Every record the tool emits carries an attestation, not only the passing ones.
       - id: lifecycle.signals.local_results_are_attested.bad_typed_line
         kind: steps
@@ -845,7 +845,7 @@ use_cases:
           - "Scan never mints a key: a read-only command cannot attest anything."
           - A read-only command leaves no new key on disk.
     observable_outcomes:
-      - A record `uc verify` wrote carries a run attestation and reads VERIFIED_LOCAL.
+      - A record `use-cases verify` wrote carries a run attestation and reads VERIFIED_LOCAL.
       - A hand-written record with byte-perfect hashes reads UNATTESTED_LOCAL and is never counted as proven.
       - Editing any field of an attested record — including flipping a failure to a pass — invalidates its attestation.
       - A results ledger written on another machine reads unattested here, because someone else's run is not your evidence.
@@ -902,12 +902,12 @@ use_cases:
       number while a typed line did.
     preconditions:
       - A bound row exists in the matrix.
-    trigger: An agent runs `uc evidence record --perform -- <cmd>` and then `uc scan`.
+    trigger: An agent runs `use-cases evidence record --perform -- <cmd>` and then `use-cases scan`.
     scenarios:
       - id: lifecycle.signals.performed_runs_count.golden_driven
         kind: steps
         steps:
-          - Drive the behaviour with uc evidence record --perform -- <cmd>.
+          - Drive the behaviour with use-cases evidence record --perform -- <cmd>.
           - Scan and read the acceptance claim.
         observable_outcomes:
           - A tool-executed passing run proves its row, and the claim counts it under performed_run.
@@ -1023,7 +1023,7 @@ use_cases:
       `live_demo` over one is overclaiming in a way the tool can prove.
     preconditions:
       - A bound row declares a verifier.
-    trigger: An agent runs `uc verify` for a row whose verifier resolves.
+    trigger: An agent runs `use-cases verify` for a row whose verifier resolves.
     scenarios:
       - id: lifecycle.signals.run_class_is_derived.golden_suite_preset
         kind: steps

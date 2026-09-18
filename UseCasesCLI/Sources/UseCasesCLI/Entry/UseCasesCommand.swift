@@ -12,7 +12,7 @@ import Foundation
 /// which ports the TypeScript parser as it is.
 public struct UseCasesCommand: AsyncParsableCommand {
   public static let configuration = CommandConfiguration(
-    commandName: "uc",
+    commandName: "use-cases",
     helpNames: [],
   )
 

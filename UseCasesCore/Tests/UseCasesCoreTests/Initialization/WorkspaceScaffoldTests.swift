@@ -3,7 +3,7 @@ import Testing
 import TestSupport
 @testable import UseCasesCore
 
-/// `uc init`'s scaffolding, against what the TypeScript's `scaffoldWorkspace`
+/// `use-cases init`'s scaffolding, against what the TypeScript's `scaffoldWorkspace`
 /// returned, threw and left on disk for the same sandbox.
 struct WorkspaceScaffoldTests {
   @Test(arguments: InitializationGoldenCorpus.caseNames)

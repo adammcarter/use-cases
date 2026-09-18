@@ -16,7 +16,7 @@ enum HelpPresenter {
     let entries = UsageCatalog.select(tokens: tokens)
     let requested = tokens.isEmpty ? nil : tokens.joined(separator: " ")
     let unknownMessage = "No recognized command for '\(requested ?? "(none)")'. "
-      + "See the commands listed below or run `uc --help`."
+      + "See the commands listed below or run `use-cases --help`."
     let exitCode: Int32 = isUnknown ? 2 : 0
 
     guard isJSON else {
@@ -32,7 +32,7 @@ enum HelpPresenter {
 
     let data = JSONValue.object(JSONObject([
       ("schema_version", .number(1)),
-      ("usage", .string("uc <command> [subcommand] [flags] --json")),
+      ("usage", .string("use-cases <command> [subcommand] [flags] --json")),
       ("requested", requested.map(JSONValue.string) ?? .null),
       ("commands", .array(entries.map(\.jsonValue))),
     ]))
@@ -59,8 +59,8 @@ enum HelpPresenter {
     if let unknownMessage {
       lines += ["error: \(unknownMessage)", ""]
     }
-    lines += ["uc \u{2014} use-cases CLI", ""]
-    lines += ["Usage: uc <command> [subcommand] [flags] [--json]", ""]
+    lines += ["use-cases \u{2014} the Use Cases CLI", ""]
+    lines += ["Usage: use-cases <command> [subcommand] [flags] [--json]", ""]
 
     let isDetailed = entries.count <= 3
     if let requested, !requested.isEmpty {
@@ -80,7 +80,7 @@ enum HelpPresenter {
 
     lines.append("")
     if !isDetailed {
-      lines.append("Run `uc <command> --help` for that command's flags.")
+      lines.append("Run `use-cases <command> --help` for that command's flags.")
     }
     lines.append("Add --json to any command for the machine-readable result envelope.")
     return lines.joined(separator: "\n") + "\n"

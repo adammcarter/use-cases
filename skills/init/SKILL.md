@@ -1,6 +1,6 @@
 ---
 name: init
-description: Use once in a repo that has decided to be use-case driven — runs uc init to scaffold the matrix, record the decision in AGENTS.md, vend a sample row and wire the git hooks, then hands straight over to the use-case-driven-development loop.
+description: Use once in a repo that has decided to be use-case driven — runs use-cases init to scaffold the matrix, record the decision in AGENTS.md, vend a sample row and wire the git hooks, then hands straight over to the use-case-driven-development loop.
 ---
 
 # Init
@@ -9,10 +9,10 @@ One command takes a repo from nothing to inside the loop. Run it from the repo
 root:
 
 ```sh
-uc init --repo .
+use-cases init --repo .
 ```
 
-`uc init` writes, in one go:
+`use-cases init` writes, in one go:
 
 - `use-cases.yml` and `use-cases/example.yml` — the workspace and a worked
   sample row (golden, bad and edge scenarios, every field explained). Copy the
@@ -31,7 +31,7 @@ lands with the work.
 
 ## Already initialised
 
-If `uc init` is blocked because `use-cases.yml` already exists, nothing needs
+If `use-cases init` is blocked because `use-cases.yml` already exists, nothing needs
 scaffolding. Read the recorded answer in `AGENTS.md` (a `no` is as binding as a
 `yes`) and go straight to the loop.
 

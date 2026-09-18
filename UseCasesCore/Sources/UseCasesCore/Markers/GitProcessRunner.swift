@@ -33,7 +33,7 @@ public enum GitError: Error, Equatable, Sendable {
   }
 }
 
-/// Runs git: the process externality behind the base-ref read and `uc impact`.
+/// Runs git: the process externality behind the base-ref read and `use-cases impact`.
 public protocol GitRunning: Sendable {
   /// git's stdout as UTF-8 text.
   func run(

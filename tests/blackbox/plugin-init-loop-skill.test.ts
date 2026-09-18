@@ -64,13 +64,13 @@ describe("plugin.init.loop_skill_ported", () => {
       expect(body, `the loop must cover ${phase}`).toContain(phase);
     }
     for (const command of ["bind", "verify", "scan", "recover"]) {
-      expect(body, `the loop must name uc ${command}`).toMatch(new RegExp(`\\b${command}\\b`));
+      expect(body, `the loop must name use-cases ${command}`).toMatch(new RegExp(`\\b${command}\\b`));
     }
   });
 
-  // Every uc command the skill cites must be one the CLI actually ships — the
+  // Every use-cases command the skill cites must be one the CLI actually ships — the
   // same guarantee the agent bodies are held to.
-  test("every uc command the skill cites is one the CLI ships", () => {
+  test("every use-cases command the skill cites is one the CLI ships", () => {
     const help = runUc(["--help"]);
     expect(help.status).toBe(0);
     const dispatchable = new Set(
@@ -80,13 +80,13 @@ describe("plugin.init.loop_skill_ported", () => {
         .filter((value): value is string => Boolean(value))
     );
 
-    for (const match of skillBody().matchAll(/`uc\s+([^`]+?)`/g)) {
+    for (const match of skillBody().matchAll(/`use-cases\s+([^`]+?)`/g)) {
       const tokens = match[1].trim().split(/\s+/);
       const [first, second] = tokens;
       const cited = second && !second.startsWith("-") ? `${first} ${second}` : first;
       expect(
         dispatchable.has(cited) || dispatchable.has(first),
-        `the skill cites \`uc ${cited}\`, which the CLI does not ship`
+        `the skill cites \`use-cases ${cited}\`, which the CLI does not ship`
       ).toBe(true);
     }
   });

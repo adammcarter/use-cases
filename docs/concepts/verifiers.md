@@ -104,7 +104,7 @@ verification_policy:
       minimum_count: 1
 ```
 
-`uc verify --row <family>` (or `--all`) then runs the command **once per
+`use-cases verify --row <family>` (or `--all`) then runs the command **once per
 declared variant** — `{slug}` = the family id, `{variant}` = the variant key —
 and each spawn's **exit code is that variant's verdict**. Every variant gets its
 own ledger record (`<family>::<key>`, with its own `row_hash` /
@@ -117,9 +117,9 @@ Two honesty rules are enforced:
   (`VARIANT_TOKEN_MISSING`): the identical process would "prove" every shape at
   once, so verify records every variant `blocked` and spawns nothing.
   `--dry-run` previews exactly the same refusal.
-- **`uc prove` refuses variant families** (`VARIANT_FAMILY_UNSUPPORTED`): the
+- **`use-cases prove` refuses variant families** (`VARIANT_FAMILY_UNSUPPORTED`): the
   signed tier has no variant model yet. Variant families live on the keyless
-  loop (`uc verify` → `uc scan`), where scan aggregates: the family is
+  loop (`use-cases verify` → `use-cases scan`), where scan aggregates: the family is
   `VERIFIED_LOCAL` iff every variant passes, and `variant_local_status` names
   any failing shape.
 

@@ -71,8 +71,8 @@ struct RegistryFold {
         line: line,
         message: conflicting
           ? "binding_slug \(slug) already registered to \(existing); cannot reassign to \(row)"
-          : "binding slug \(slug) is already registered; re-point it with `uc rebind` "
-          + "or release it with `uc unbind`",
+          : "binding slug \(slug) is already registered; re-point it with `use-cases rebind` "
+          + "or release it with `use-cases unbind`",
         bindingSlug: slug,
         rowIdentifier: row,
       ))

@@ -46,7 +46,7 @@ cleanup() {
 }
 
 # The Node bundle is still shipped, so a failure can name a way to keep working.
-# It names the bundle by its own path, not bin/uc: every bin/ entry point now
+# It names the bundle by its own path, not bin/use-cases: every bin/ entry point now
 # resolves to whatever this script is being asked for. The hint disappears on
 # its own when dist/ goes.
 #
