@@ -235,7 +235,7 @@ use_cases:
       - kind: file
         path: skills/showcase/SKILL.md
       - kind: file
-        path: tests/skills/p7-skills.test.ts
+        path: UseCasesOracle/Tests/OracleTests/Cli/SkillsAssetsDemoGatesTests.swift
     actor: agent
     intent: Run a live demo only when the user says they are ready, let them choose who drives, and turn their approve/reject/talk answer into the correct recorded outcome without the user touching commands.
     preconditions:
@@ -286,13 +286,15 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/skills/p7-skills.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - SkillsAssetsDemoGatesTests
           inputs:
-            - tests/skills/p7-skills.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/SkillsAssetsDemoGatesTests.swift
+            - skills/showcase/SKILL.md
       requirements:
         - evidence_kind: test_result
           required_verifiers:

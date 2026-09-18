@@ -14,7 +14,7 @@ import Testing
 /// is not JSON fails naming the command.
 ///
 /// One faithfulness note. `tests/blackbox/harness.test.ts` asserts the default
-/// is `packages/cli/dist/index.js` and does so by deleting and setting
+/// is a path outside this repository and does so by deleting and setting
 /// `process.env.UC_BIN` around each case. Swift Testing runs a suite in one
 /// process in parallel, where `setenv` is unsafe and would be seen by every
 /// other test, so the override is passed to ``CliBinary/resolved(override:)``

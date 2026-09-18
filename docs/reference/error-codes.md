@@ -1,6 +1,7 @@
 <!-- GENERATED FILE — do not edit by hand.
-     Regenerate with `node packages/core/scripts/generate-error-codes.mjs`
-     (source of truth: packages/core/src/errors/registry.ts). -->
+     Rendered by ErrorCodesDocument.render() from
+     UseCasesCore/Sources/UseCasesCore/Errors/PublicErrorRegistry.swift;
+     PublicErrorRegistryTests fails the suite when this file drifts. -->
 
 # Error Codes
 

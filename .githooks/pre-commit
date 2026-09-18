@@ -18,14 +18,47 @@ fi
 # Blocking, fast, deterministic. Stale rows are fine here; INVALID is not.
 set -u
 root="$(git rev-parse --show-toplevel)"
-uc="node $root/dist/uc.js"
+
+# use-cases: which binary drives the checks below.
+#
+# The committed Node bundle these hooks used to run went with
+# ADR 0007 row 10d, so this repository drives its own product: the Swift CLI it
+# builds. Resolution order, most explicit first:
+#
+#   $USE_CASES                      an override, the same name the scaffolded
+#                                   hook uses
+#   UseCasesCLI/.build/…/use-cases  this checkout's own debug build
+#   command -v use-cases            an installed plugin on PATH
+#
+# Nothing found is a WARNING and exit 0, not a block: a fresh clone has not
+# built anything yet, and `.github/workflows/swift.yml` is the gate that cannot
+# be skipped.
+resolve_use_cases() {
+    if [ -n "${USE_CASES:-}" ]; then
+        printf '%s' "$USE_CASES"
+        return 0
+    fi
+    local built="$root/UseCasesCLI/.build/out/Products/Debug/use-cases"
+    if [ -x "$built" ]; then
+        printf '%s' "$built"
+        return 0
+    fi
+    command -v use-cases 2>/dev/null || true
+}
+
 if [ -f "$root/use-cases.yml" ]; then
-    $uc matrix validate --repo "$root" --json >/dev/null \
+    uc="$(resolve_use_cases)"
+    if [ -z "$uc" ]; then
+        echo "pre-commit: no use-cases binary — build one with: swift build --package-path UseCasesCLI" >&2
+        echo "pre-commit: skipping the matrix checks (the swift workflow still gates them)." >&2
+        exit 0
+    fi
+    "$uc" matrix validate --repo "$root" --json >/dev/null \
         || { echo "pre-commit: use-case matrix invalid — run: use-cases matrix validate --repo ." >&2; exit 1; }
     key=""; [ -f "$root/.use-cases/trusted-ci-public-key.pem" ] && key="--public-key $root/.use-cases/trusted-ci-public-key.pem"
-    $uc validate-ledger --repo "$root" $key --json >/dev/null \
+    "$uc" validate-ledger --repo "$root" $key --json >/dev/null \
         || { echo "pre-commit: use-case ledger invalid — run: use-cases validate-ledger --repo ." >&2; exit 1; }
-    if $uc scan --repo "$root" --json 2>/dev/null | grep -Eq '"status": *"INVALID"'; then
+    if "$uc" scan --repo "$root" --json 2>/dev/null | grep -Eq '"status": *"INVALID"'; then
         echo "pre-commit: a use-case marker and its binding disagree — run: use-cases scan --repo ." >&2
         exit 1
     fi

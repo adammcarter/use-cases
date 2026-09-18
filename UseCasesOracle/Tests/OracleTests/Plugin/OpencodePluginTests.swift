@@ -119,6 +119,16 @@ struct OpencodePluginTests {
     #expect(manifest["type"]?.stringValue == "module")
     #expect(FileManager.default.fileExists(atPath: Self.modulePath))
 
+    // ADR 0007 row 10d: this file survives as a HOST manifest and nothing else.
+    // The JavaScript toolchain it used to carry is gone, and a build key
+    // reappearing here would mean the repository had grown one back.
+    for build in ["scripts", "dependencies", "devDependencies", "packageManager", "workspaces"] {
+      #expect(
+        manifest[build] == nil,
+        Comment(rawValue: "package.json is a host manifest; it must declare no \(build)"),
+      )
+    }
+
     let source = try String(contentsOfFile: Self.modulePath, encoding: .utf8)
     for line in source.components(separatedBy: "\n") where line.hasPrefix("import ") {
       #expect(line.contains("from \"node:"), Comment(rawValue: line))

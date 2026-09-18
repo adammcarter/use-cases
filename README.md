@@ -68,9 +68,9 @@ Typical workflows: **continuous** (keep the matrix live as you build), **backfil
 ```bash
 # No npm, no build: the plugin installs straight from GitHub into each host and
 # runs its own bin/ entry points. Those fetch the binary for your machine from
-# the release for the installed version, verify its checksum and cache it; until
-# a release publishes one they run the committed, dependency-free bundle in
-# dist/, which needs nothing but Node. Pick your host.
+# the release for the installed version, verify its checksum against the
+# release's SHA256SUMS and cache it. There is no fallback: a version whose
+# release publishes no binary fails saying so. Pick your host.
 
 # Claude Code — next session: /use-cases:* skills, agents, MCP tools, use-cases on PATH
 /plugin marketplace add adammcarter/use-cases
@@ -126,10 +126,10 @@ For the technically curious — the high-level shape:
 - **Contract-first.** Every command returns a versioned, schema-validated JSON envelope (`ok`, `complete`, `data`, `diagnostics`, `context`). The MCP tools wrap the exact same envelopes, so agents get identical behaviour over either transport.
 - **The trust core.** A behaviour row → a code-span *marker* → an append-only *binding registry* → a *signed proof event* in the evidence ledger. CI is the only authority that can mint proof (Ed25519 key held as a CI secret; a public-key keyring verifies it). `scan` derives each row's freshness (`FRESH` / `SUSPECT` / `UNPROVEN` / `UNBOUND` / `INVALID`) from the current code, the registry, and the proofs.
 - **Markers are language-agnostic.** `//: @use-case:<id>` … `//: @use-case:end <id>` with the comment prefix inferred per file type (`#` for Python/shell/YAML, shebang-detected for extensionless scripts, a dedicated mode for Swift functions).
-- **Built-in CI + precommit.** `.github/workflows/use-cases.yml` runs `validate-ledger` and `scan`, and (on release) `verify → prove → release-gate` so required rows must be `FRESH` to ship. An optional local precommit hook gives fast, non-authoritative feedback. Publishing uses npm Trusted Publishing (OIDC) with build provenance — no tokens.
+- **Built-in CI + precommit.** `.github/workflows/use-cases.yml` runs `validate-ledger` and `scan`, and (on release) `verify → prove → release-gate` so required rows must be `FRESH` to ship. An optional local precommit hook gives fast, non-authoritative feedback. Releases publish checksummed binaries as GitHub release assets; there is no npm package.
 - **Append-only everywhere.** The matrix, the binding registry, the evidence ledger, and showcase runs are all event-sourced and content-addressed: status is *derived* from history, never asserted.
 
-Ships as a single self-contained package: **`use-cases`** (binaries `use-cases` and `use-cases-mcp`). The `core` / `cli` / `mcp` workspaces are bundled inside it, not published separately.
+Ships as a single self-contained plugin: **`use-cases`** (binaries `use-cases` and `use-cases-mcp`). The `UseCasesCore` / `UseCasesCLI` / `UseCasesMCP` Swift modules are compiled into those two executables, not published separately.
 
 Deeper reading: [CLI reference](docs/cli.md) · [data model](docs/data-model.md) · [code markers & freshness](docs/markers-adoption.md) · [evidence & security](docs/security.md) · [showcase runs](docs/showcase.md) · [activation](docs/activation.md) · [MCP](docs/mcp.md).
 

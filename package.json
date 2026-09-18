@@ -1,4 +1,5 @@
 {
+  "_comment": "Not a build manifest. ADR 0007 row 10d deleted the TypeScript and its toolchain; what is left is the HOST manifest OpenCode needs, and it sits beside .claude-plugin/plugin.json and .codex-plugin/ rather than beside a build. OpenCode installs this plugin as a package (`opencode plugin add 'github:adammcarter/use-cases'`) and resolves it through `exports`; `type: module` is what makes opencode/plugin.js load as the ES module it is. Nothing here is installed, built or published: there are no scripts, no dependencies and no package manager, and `private` keeps it off npm (publishing went at 0.7.0). Removing this file would break the OpenCode install and the row plugin.install.opencode_from_git that pins it.",
   "name": "@adammcarter/use-cases",
   "version": "0.7.0",
   "license": "MIT",
@@ -7,29 +8,6 @@
     "url": "git+https://github.com/adammcarter/use-cases.git"
   },
   "type": "module",
-  "packageManager": "pnpm@11.9.0",
-  "engines": {
-    "node": ">=22"
-  },
-  "scripts": {
-    "build": "tsc -b packages/core packages/cli packages/mcp && node packages/core/scripts/copy-schemas.mjs && chmod +x packages/cli/dist/index.js packages/mcp/dist/index.js && node scripts/bundle.mjs",
-    "clean": "rm -rf packages/*/dist coverage",
-    "cli": "node packages/cli/dist/index.js",
-    "lint": "tsc -b --pretty false --dry",
-    "test": "vitest run",
-    "typecheck": "tsc -b --pretty false",
-    "bundle": "node scripts/bundle.mjs"
-  },
-  "devDependencies": {
-    "@types/node": "26.1.0",
-    "esbuild": "0.28.2",
-    "typescript": "6.0.3",
-    "vitest": "4.1.10"
-  },
-  "dependencies": {
-    "ajv": "^8.20.0",
-    "yaml": "^2.9.0"
-  },
   "private": true,
   "exports": {
     ".": "./opencode/plugin.js"

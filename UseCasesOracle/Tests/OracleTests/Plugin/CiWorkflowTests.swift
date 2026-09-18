@@ -5,7 +5,7 @@ import Testing
 /// The black-box oracle for ci.gate.swift_packages_are_built_tested_and_gated.
 ///
 /// New in row 10b. `.github/workflows/swift.yml` is what keeps the Swift product
-/// gated once row 10d deletes `pnpm -s test`, and a workflow is exactly the kind
+/// gated now that row 10d has deleted `pnpm -s test`, and a workflow is exactly the kind
 /// of file that rots silently: it is read by GitHub and by nobody else. So the
 /// same treatment `ReleaseWorkflowTests` gives the publisher, this gives the
 /// gate — the file is parsed, not grepped, and the assertions are about what the
@@ -13,8 +13,8 @@ import Testing
 ///
 /// What it cannot prove is that the workflow RUNS: it has never been fired, and
 /// nothing here can fire it. The runner label, the availability of `brew install
-/// swiftformat swiftlint`, the pip install of pytest and the whole `verify --all`
-/// step are unproven until GitHub runs this file for the first time.
+/// swiftformat swiftlint` and the whole `verify --all` step are unproven until
+/// GitHub runs this file for the first time.
 struct CiWorkflowTests {
   static let path = "\(OracleLayout.repositoryRoot)/.github/workflows/swift.yml"
 
@@ -159,19 +159,21 @@ struct CiWorkflowTests {
   @Test
   func `the Swift gate is its own workflow and leaves the existing gates alone`() throws {
     let source = try Self.source()
-    let ciWorkflow = try String(
-      contentsOfFile: "\(OracleLayout.repositoryRoot)/.github/workflows/ci.yml",
-      encoding: .utf8,
-    )
 
     #expect(FileManager.default.fileExists(atPath: Self.path))
-    // ci.yml still gates the TypeScript. 10d removes that file whole; until it
-    // does, this gate is additive and neither replaces nor edits it.
-    #expect(ciWorkflow.contains("pnpm -s test"))
-    #expect(!ciWorkflow.contains("swift "))
-    // The gate publishes nothing: releases are release.yml's job alone.
+    // The half of this test that read ci.yml went with ci.yml: ADR 0007 row 10d
+    // deleted the TypeScript and the workflow that gated it, so this IS the
+    // build-and-test gate now. Its surviving purpose stands unchanged — the
+    // gate publishes nothing, because releases are release.yml's job alone.
     #expect(!source.contains("gh release"))
     #expect(!source.contains("SHA256SUMS"))
+    // And the toolchain it deleted has not crept back in through the gate. The
+    // parsed STEPS, not the file text: the header comment explains what was
+    // removed and naming it there is the point.
+    for step in try Self.steps() {
+      #expect(!step.contains("pnpm"), Comment(rawValue: step))
+      #expect(!step.contains("vitest"), Comment(rawValue: step))
+    }
   }
 }
 

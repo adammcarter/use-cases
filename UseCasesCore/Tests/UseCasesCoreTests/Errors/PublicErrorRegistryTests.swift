@@ -55,11 +55,35 @@ struct PublicErrorRegistryTests {
     #expect(Array(ErrorCodesDocument.render().utf8) == Array(committed))
   }
 
+  /// The page's BODY — every code, surface, message and escaped cell — still
+  /// equals what the TypeScript renderer wrote, byte for byte.
+  ///
+  /// The generated-file header is compared separately, because it is the one
+  /// part that had to change: it named `node packages/core/scripts/generate-
+  /// error-codes.mjs` and `packages/core/src/errors/registry.ts`, both deleted
+  /// at ADR 0007 row 10d. Splitting the two keeps the table pinned to the
+  /// TypeScript's bytes while letting the provenance line tell the truth.
   @Test
-  func `the rendered page equals the TypeScript renderer's output`() throws {
+  func `the rendered page's body equals the TypeScript renderer's output`() throws {
     let expected = try #require(Self.registry()["markdown"]?.stringValue)
+    let marker = "-->\n"
 
-    #expect(ErrorCodesDocument.render() == expected)
+    let renderedBody = try #require(ErrorCodesDocument.render().components(separatedBy: marker)
+      .last)
+    let expectedBody = try #require(expected.components(separatedBy: marker).last)
+
+    #expect(renderedBody == expectedBody)
+    #expect(!renderedBody.isEmpty, "splitting on the header marker must leave a page")
+    #expect(
+      ErrorCodesDocument.render().hasPrefix(
+        """
+        <!-- GENERATED FILE — do not edit by hand.
+             Rendered by ErrorCodesDocument.render() from
+             UseCasesCore/Sources/UseCasesCore/Errors/PublicErrorRegistry.swift;
+             PublicErrorRegistryTests fails the suite when this file drifts. -->
+        """,
+      ),
+    )
   }
 
   @Test

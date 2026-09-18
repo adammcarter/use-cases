@@ -86,7 +86,7 @@ def checkout():
 
 | Use-case row | Code |
 |---|---|
-| `evidence.ledger.crash_durable_ledger_writes` | `packages/core/src/durableWrite.ts` :: `fsyncBestEffortForTemp` (explicit span) |
+| `evidence.ledger.crash_durable_ledger_writes` | `UseCasesCore/Sources/UseCasesCore/Evidence/DurableWrite.swift` (explicit span) |
 
 Registration: `.use-cases/bindings.jsonl`. Current status on a clean checkout:
 **UNPROVEN** (linked, awaiting a trusted CI proof) — 1 row bound, 81 unbound.
@@ -107,12 +107,12 @@ trusted proof.
 
 ## Finding fixed while dogfooding
 
-`scan` also walked `dist/`, where tsc preserves the `//:` marker comment from
-source — that read as a duplicate slug (src + dist) and marked the row INVALID.
-Fixed: `collectSourceInputs` now skips common build-output dirs
+`scan` also walked the TypeScript build output, where `tsc` preserved the `//:`
+marker comment from source — that read as a duplicate slug (src + dist) and
+marked the row INVALID. Fixed: the marker walk skips common build-output dirs
 (`dist`, `dist-ts`, `build`, `out`, `coverage`, `.next`, `.turbo`, `.svelte-kit`)
-in addition to `.git` / `node_modules` / `.use-cases`. Covered by
-`packages/core/test/markers/skipBuildDirs.test.ts`.
+in addition to `.git` / `node_modules` / `.use-cases`. The skip list is in
+`UseCasesCore/Sources/UseCasesCore/Markers/Commands/MarkerCommandInputs.swift`.
 
 ## Next adoption steps
 

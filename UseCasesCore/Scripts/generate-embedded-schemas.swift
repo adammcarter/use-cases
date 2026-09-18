@@ -3,7 +3,7 @@ import Foundation
 // Regenerates `Sources/UseCasesCore/Schema/EmbeddedSchemas.swift` from the 27
 // frozen schema files in `schemas/v1`, and
 // `Sources/UseCasesCore/Markers/EmbeddedMarkerSchemas.swift` from the three
-// INTERNAL marker validator schemas in `packages/core/src/markers/schemas`.
+// INTERNAL marker validator schemas in `schemas/markers`.
 //
 //   swift UseCasesCore/Scripts/generate-embedded-schemas.swift
 //
@@ -33,7 +33,7 @@ let schemasDirectory = repositoryRoot.appendingPathComponent("schemas/v1", isDir
 let targetURL = packageRoot
   .appendingPathComponent("Sources/UseCasesCore/Schema/EmbeddedSchemas.swift")
 let markerSchemasDirectory = repositoryRoot
-  .appendingPathComponent("packages/core/src/markers/schemas", isDirectory: true)
+  .appendingPathComponent("schemas/markers", isDirectory: true)
 let markerTargetURL = packageRoot
   .appendingPathComponent("Sources/UseCasesCore/Markers/EmbeddedMarkerSchemas.swift")
 
@@ -119,7 +119,7 @@ let markerSource = """
 // swiftlint:disable single_line_closure_body line_length
 // A generated data file: each schema below is one string literal, and the
 // regex-based lint rules read its contents as if they were code.
-// Generated from `packages/core/src/markers/schemas` — DO NOT EDIT BY HAND.
+// Generated from `schemas/markers` — DO NOT EDIT BY HAND.
 //
 // The INTERNAL marker validator schemas (binding registry events, proof events,
 // freshness status). They are not published: they never appear in
@@ -129,7 +129,7 @@ let markerSource = """
 // `EmbeddedMarkerSchemasTests` fails the suite when this file drifts from disk.
 enum EmbeddedMarkerSchemas {
   /// Every marker schema file, keyed by file name, byte for byte as it is
-  /// committed under `packages/core/src/markers/schemas`.
+  /// committed under `schemas/markers`.
   static let byFileName: [String: String] = [
 \(markerEntries.joined(separator: "\n"))
   ]

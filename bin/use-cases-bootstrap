@@ -45,29 +45,14 @@ cleanup() {
   fi
 }
 
-# The Node bundle is still shipped, so a failure can name a way to keep working.
-# It names the bundle by its own path, not bin/use-cases: every bin/ entry point now
-# resolves to whatever this script is being asked for. The hint disappears on
-# its own when dist/ goes.
-#
-# `exe` is only set once the arguments are parsed, and `die` can fire before
-# that, so the CLI bundle is the hint when there is no executable yet.
-fallback_hint() {
-  local bundle="dist/uc.js"
-  if [ "${exe:-}" = "use-cases-mcp" ]; then
-    bundle="dist/uc-mcp.js"
-  fi
-  if [ -f "$plugin_root/$bundle" ]; then
-    printf 'use-cases: the committed Node bundle is still available: node %s/%s.\n' "$plugin_root" "$bundle" >&2
-  fi
-}
-
+# There is no fallback to name (ADR 0007 row 10d deleted the committed Node
+# bundle): the release either carries the verified binary for this machine or
+# this script fails saying so.
 die() {
   local line
   for line in "$@"; do
     printf 'use-cases: %s\n' "$line" >&2
   done
-  fallback_hint
   cleanup
   exit 1
 }

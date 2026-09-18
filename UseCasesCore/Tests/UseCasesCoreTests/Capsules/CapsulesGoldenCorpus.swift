@@ -6,9 +6,11 @@
 // runDemoCapsule returned or threw for each workspace, and what a run left
 // behind.
 //
-// Regenerate with:
-//   pnpm --filter @adammcarter/use-cases-core build
-//   node UseCasesCore/Scripts/generate-capsules-corpus.mjs
+// NOT REGENERABLE. Its generator (`UseCasesCore/Scripts/generate-capsules-corpus.mjs`) ran the
+// TypeScript that ADR 0007 row 10d deleted, and was retired with it. These
+// bytes are the record of what the TypeScript answered and are now the source
+// of truth: a case that has to change is changed by hand, deliberately, with
+// the reason written down.
 enum CapsulesGoldenCorpus {
   static let loadCaseNames: [String] = [
     "no_demo_capsules_directory",

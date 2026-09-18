@@ -1,3 +1,12 @@
+# Retired on 2026-09-18 (ADR 0007 row 10d) when the committed Node bundle in
+# dist/ was deleted with the TypeScript: the behaviour this row describes — the
+# bundle running from a clean clone with no node_modules — no longer exists.
+# Both bindings were released with `unbind --reason row_retired`. The row stays
+# as lifecycle: removed rather than going entirely, because the evidence ledger
+# holds a signed proof naming it and that history has to stay valid; this is the
+# rule use-cases/hosts/retired.yml states. Nothing binds to it and nothing
+# verifies it, so its verifier and its dist/ references are inert records of
+# what was once true.
 schema_version: 1
 feature:
   id: plugin.bundle
@@ -6,7 +15,7 @@ feature:
 use_cases:
   - id: plugin.bundle.runs_from_clean_clone
     title: Committed bundle runs from a clean clone
-    lifecycle: active
+    lifecycle: removed
     value_tier: critical
     journey_role: golden
     usage_frequency: common

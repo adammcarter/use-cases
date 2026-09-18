@@ -6,8 +6,11 @@ import Testing
 /// the 27 published ones, and must never leak into the published catalogue:
 /// `schema list` and its 27 ids are frozen contract (ADR 0007 decision 8).
 ///
-/// Their source is `packages/core/src/markers/schemas`. The final ladder step
-/// deletes `packages/`; the drift test's input has to move then.
+/// Their source is `schemas/markers`, a sibling of the published `schemas/v1`
+/// that nothing scanning the catalogue reads. They lived under
+/// `packages/core/src/markers/schemas` until ADR 0007 row 10d deleted the
+/// TypeScript; the files moved rather than went, because this drift test is the
+/// only thing stopping the embedded copies and the committed ones parting.
 struct EmbeddedMarkerSchemasTests {
   static let fileNames = [
     "binding-registry-event.schema.json",
@@ -17,7 +20,7 @@ struct EmbeddedMarkerSchemasTests {
 
   private static var markerSchemasDirectory: URL {
     SchemaFixtures.repositoryRoot
-      .appendingPathComponent("packages/core/src/markers/schemas", isDirectory: true)
+      .appendingPathComponent("schemas/markers", isDirectory: true)
   }
 
   @Test(arguments: fileNames)

@@ -4,9 +4,11 @@
 //
 // What node dist/uc-mcp.js answered for each request line, over real stdio.
 //
-// Regenerate with:
-//   pnpm build
-//   node UseCasesMCP/Scripts/generate-mcp-corpus.mjs
+// NOT REGENERABLE. Its generator (`UseCasesMCP/Scripts/generate-mcp-corpus.mjs`) ran the
+// TypeScript that ADR 0007 row 10d deleted, and was retired with it. These
+// bytes are the record of what the TypeScript answered and are now the source
+// of truth: a case that has to change is changed by hand, deliberately, with
+// the reason written down.
 enum McpGoldenCorpus {
   static let caseNames: [String] = [
     "initialize",

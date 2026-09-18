@@ -5,9 +5,11 @@
 // Every expected value is what packages/core/dist/markers/cli returned for the
 // input beside it. The temporary root is spelled <ROOT>.
 //
-// Regenerate with:
-//   pnpm --filter @adammcarter/use-cases-core build
-//   node UseCasesCore/Scripts/generate-verify-prove-corpus.mjs
+// NOT REGENERABLE. Its generator (`UseCasesCore/Scripts/generate-verify-prove-corpus.mjs`) ran the
+// TypeScript that ADR 0007 row 10d deleted, and was retired with it. These
+// bytes are the record of what the TypeScript answered and are now the source
+// of truth: a case that has to change is changed by hand, deliberately, with
+// the reason written down.
 enum VerifyProveGoldenCorpus {
   static let verifyCaseNames: [String] = [
     "pass_fail_and_rows_preserved_across_runs",

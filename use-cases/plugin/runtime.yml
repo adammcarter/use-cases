@@ -1,8 +1,15 @@
+# The sibling row plugin.runtime.pre_swift_versions_run_the_committed_bundle was
+# RETIRED on 2026-09-18 (ADR 0007 row 10d) and removed from this file entirely:
+# the resolver's Node branch and the committed bundle it ran are both gone, and
+# no proof event ever named the row, so nothing in the ledger needed it to stay.
+# Where a retired row DOES have ledger history it stays as lifecycle: removed
+# instead — see use-cases/plugin/bundle.yml and use-cases/hosts/retired.yml.
+# Its binding was released first, with `unbind --reason row_retired`.
 schema_version: 1
 feature:
   id: plugin.runtime
   name: Plugin runtime
-  summary: One resolver in bin/ decides what every host-facing command executes — the checksum-verified Swift binary from the release for this plugin version, or the committed Node bundle for the versions that published none — so the hosts name the plugin's own entry points and never an interpreter and a bundle path.
+  summary: One resolver in bin/ decides what every host-facing command executes — the checksum-verified Swift binary from the release for this plugin version, and nothing else — so the hosts name the plugin's own entry points and never an interpreter and a bundle path.
 use_cases:
   - id: plugin.runtime.release_versions_run_the_verified_swift_binary
     title: A version whose release publishes Swift assets runs the verified binary
@@ -36,7 +43,7 @@ use_cases:
           - Run bin/use-cases and bin/use-cases-mcp against it with an empty cache.
         observable_outcomes:
           - Both exec the checksum-verified executable out of the release archive, so the command name a host uses does not change what runs.
-          - bin/use-cases runs the Swift CLI, not the committed Node bundle.
+          - bin/use-cases runs the Swift CLI out of the release, never a runtime that happens to be lying around.
       - id: plugin.runtime.release_versions_run_the_verified_swift_binary.golden_the_mcp_entry_point_the_manifests_name_serves_a_host
         kind: steps
         steps:
@@ -50,7 +57,7 @@ use_cases:
           - Point a Swift-era version at a release that publishes no archive for this machine.
           - Run bin/use-cases and read the exit code, stdout and stderr.
         observable_outcomes:
-          - It exits nonzero naming the release and the asset it wanted, and the committed Node bundle is never run in its place.
+          - It exits nonzero naming the release and the asset it wanted, and nothing is run in its place.
           - A missing release is never masked by falling back to another runtime.
       - id: plugin.runtime.release_versions_run_the_verified_swift_binary.edge_a_version_that_is_not_a_version_is_refused
         kind: steps
@@ -87,98 +94,6 @@ use_cases:
             - RuntimeResolverTests
           inputs:
             - UseCasesOracle/Tests/OracleTests/Plugin/RuntimeResolverTests.swift
-            - bin/use-cases-runtime
-            - bin/use-cases
-            - bin/use-cases-mcp
-      requirements:
-        - evidence_kind: test_result
-          required_verifiers:
-            - script
-          minimum_count: 1
-    approval_policy:
-      mode: none
-  - id: plugin.runtime.pre_swift_versions_run_the_committed_bundle
-    title: A version whose release published no Swift asset runs the committed bundle
-    lifecycle: active
-    value_tier: critical
-    journey_role: golden
-    usage_frequency: common
-    tags:
-      - plugin
-      - install
-      - runtime
-      - bundle
-    source_refs:
-      - kind: file
-        path: bin/use-cases-runtime
-      - kind: file
-        path: dist/uc.js
-      - kind: file
-        path: dist/uc-mcp.js
-    actor: host
-    intent: Keep every installed plugin working while the Swift releases do not exist yet. The releases before the first Swift one provably carry no archive, so the resolver runs the committed Node bundle for them — chosen from the version before any download is attempted, so it can never stand in for a release that should have been there.
-    preconditions:
-      - The plugin version is below the first release that publishes the Swift archives.
-      - The committed bundle is in dist/, as it is in every clone until the TypeScript is deleted.
-    trigger: A host, a skill or a shell runs bin/use-cases or bin/use-cases-mcp on an installed plugin at such a version.
-    scenarios:
-      - id: plugin.runtime.pre_swift_versions_run_the_committed_bundle.golden_the_cli_entry_points_run_the_bundle
-        kind: steps
-        steps:
-          - Run bin/use-cases version --json at the plugin's own version.
-          - Read the envelope and what produced it.
-        observable_outcomes:
-          - It prints the version envelope, produced by the committed bundle, so an installed plugin keeps working today.
-      - id: plugin.runtime.pre_swift_versions_run_the_committed_bundle.golden_the_mcp_entry_point_the_manifests_name_answers
-        kind: steps
-        steps:
-          - Start bin/use-cases-mcp — the command every host manifest now names — at the plugin's own version.
-          - Send initialize and tools/list over stdio.
-        observable_outcomes:
-          - The committed MCP server answers, so the manifests can name the plugin's own entry point before any Swift release exists.
-      - id: plugin.runtime.pre_swift_versions_run_the_committed_bundle.bad_the_bundle_is_missing
-        kind: steps
-        steps:
-          - Remove the committed bundle from a copy of the plugin and run its bin/use-cases.
-          - Read the exit code and stderr.
-        observable_outcomes:
-          - It exits nonzero naming the bundle it expected and the release that would have carried a binary instead, rather than failing as a bare interpreter error.
-      - id: plugin.runtime.pre_swift_versions_run_the_committed_bundle.edge_no_download_is_attempted
-        kind: steps
-        steps:
-          - Point the release root at a host that refuses connections and run bin/use-cases version --json at the plugin's own version.
-          - Read the envelope, the exit code and the cache.
-        observable_outcomes:
-          - "The envelope is printed and nothing was fetched or cached: the branch is decided by the version, never by a download failing."
-    observable_outcomes:
-      - An installed plugin keeps working on every host while no release carries the Swift assets.
-      - The bundle branch is decided by the version before any download, so it can never mask a release that should have carried a binary.
-      - "The branch retires itself: the version bump moves every command onto the Swift binary with no other edit."
-    host_applicability:
-      - host_surface: claude.cli
-        supported: true
-      - host_surface: codex.cli
-        supported: true
-      - host_surface: copilot.cli
-        supported: true
-      - host_surface: opencode.cli
-        supported: true
-    verification_policy:
-      mode: requirements
-      verifiers:
-        script:
-          kind: script
-          evidence_kind: test_result
-          command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/plugin/runtime-resolver.test.ts
-            - -t
-            - a version whose release published no Swift asset
-          inputs:
-            - tests/plugin/runtime-resolver.test.ts
             - bin/use-cases-runtime
             - bin/use-cases
             - bin/use-cases-mcp

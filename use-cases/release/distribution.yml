@@ -304,7 +304,7 @@ use_cases:
           - Read the exit code and stderr.
         observable_outcomes:
           - The bootstrap exits non-zero, names the asset it wanted, the release it looked in and the URL it tried, and says the release does not carry it.
-          - Where a Node bundle is still present the message names it as the way to keep working.
+          - "It offers no alternative runtime, because there is none: the message is the whole answer."
       - id: release.distribution.failed_download_says_what_to_do.bad_unreachable_host_is_reported_as_a_download_failure
         kind: steps
         steps:

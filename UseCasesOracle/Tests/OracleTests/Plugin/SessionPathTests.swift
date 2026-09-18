@@ -40,20 +40,37 @@ struct SessionPathTests {
     return try #require(payload.at("hookSpecificOutput.additionalContext")?.stringValue)
   }
 
-  @Test
+  /// The wrapper resolves its runtime from its OWN location, never from the
+  /// caller's working directory.
+  ///
+  /// It ran `bin/use-cases version --json` with no environment until ADR 0007
+  /// row 10d: at 0.7.0 that resolved to the committed Node bundle, which is now
+  /// deleted, so the same call would try to fetch a real release. It is pointed
+  /// at a stand-in release instead — which makes what actually ran visible, and
+  /// is therefore the stronger assertion: the STAND-IN executable answered, from
+  /// a directory that is not the repository.
+  @Test(.enabled(if: ReleaseStandIn.canRunBootstrap))
   func `bin-use-cases runs the resolved runtime from any working directory`() async throws {
+    let release = try await ReleaseStandIn.publish()
+    let cache = try TemporaryDirectory("cache")
     let elsewhere = try TemporaryDirectory("cwd")
 
-    let result = try await OracleProcess.run(
-      executable: "\(OracleLayout.repositoryRoot)/bin/use-cases",
+    let result = try await ReleaseStandIn.run(
+      entry: .useCases,
       arguments: ["version", "--json"],
+      environment: [
+        "USE_CASES_VERSION": release.version,
+        "USE_CASES_RELEASE_BASE_URL": release.baseUrl,
+        "USE_CASES_CACHE_DIR": cache.path,
+      ],
       cwd: elsewhere.path,
-      environment: [:],
     )
 
     #expect(result.exitCode == 0, Comment(rawValue: result.standardError))
-    let envelope = try OracleJson.parse(result.standardOutput)
-    #expect(envelope["command"]?.stringValue == "version")
+    #expect(
+      result.standardOutput.trimmingCharacters(in: .whitespacesAndNewlines)
+        == "stand-in use-cases args:version --json",
+    )
   }
 
   @Test
@@ -74,12 +91,16 @@ struct SessionPathTests {
     #expect(exportsPath, Comment(rawValue: exported))
     #expect(exported.contains("\(OracleLayout.repositoryRoot)/bin"))
 
-    // Sourcing the file must make use-cases resolvable.
+    // Sourcing the file must make use-cases resolvable. It used to RUN the
+    // command too; running it now resolves a release rather than the deleted
+    // committed bundle (ADR 0007 row 10d), and that is the sibling test above,
+    // where a stand-in release makes it hermetic. What belongs here is the
+    // exported PATH doing its job, which needs no runtime at all.
     let probe = try await OracleProcess.run(
       executable: "/bin/bash",
       arguments: [
         "-c",
-        "source \"\(envFile)\" && command -v use-cases && use-cases version --json",
+        "source \"\(envFile)\" && command -v use-cases",
       ],
       cwd: OracleLayout.repositoryRoot,
       environment: [:],

@@ -5,9 +5,11 @@
 // A snapshot of this repository's use-cases/ tree, what the TypeScript loader
 // returned for it, and the bytes each mutation wrote into each file.
 //
-// Regenerate with:
-//   pnpm --filter @adammcarter/use-cases-core build
-//   node UseCasesCore/Scripts/generate-use-cases-corpus.mjs
+// NOT REGENERABLE. Its generator (`UseCasesCore/Scripts/generate-use-cases-corpus.mjs`) ran the
+// TypeScript that ADR 0007 row 10d deleted, and was retired with it. These
+// bytes are the record of what the TypeScript answered and are now the source
+// of truth: a case that has to change is changed by hand, deliberately, with
+// the reason written down.
 enum UseCasesRepositoryMatrixCorpus {
   static let mutationCaseNames: [String] = [
     "use-cases/agents/roster.yml:unchanged",

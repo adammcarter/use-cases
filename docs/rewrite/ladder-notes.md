@@ -1472,6 +1472,371 @@ Mutation-proved, each broken at an ASSERTION, watched fail through
 `ShowcaseCommandsGoldenCorpusTests` goes from 2 passed to 2 failed with 610
 issues — because its row is UNBOUND and `verify` will not run it.
 
+## Row 10d — the TypeScript is deleted
+
+### Three rows retired, one row given a Swift carrier
+
+The owner's two decisions for this row, and the third retirement they implied,
+were all carried out BEFORE anything was deleted, so no row spent a moment
+unproven.
+
+- **`skills.assets.demo_gates` has a Swift carrier that reads the LIVE skill.**
+  `UseCasesOracle/Tests/OracleTests/Cli/SkillsAssetsDemoGatesTests.swift`, five
+  tests in one suite, reading `skills/showcase/SKILL.md` off
+  `OracleLayout.repositoryRoot` — the same shape `PluginInitLoopSkillTests` and
+  `AgentsRosterTests` already use for the live `skills/` and `agents/` trees.
+  `SkillsGoldenCorpus` pins a FROZEN snapshot and cannot see an edit to a real
+  skill body; this file can. The row was rebound onto it through the CLI and its
+  verifier re-pointed to
+  `swift test --package-path UseCasesOracle --filter SkillsAssetsDemoGatesTests`
+  (run and read: **5 tests in 1 suite**, not trusted from the string). Its
+  `inputs` name the test AND `skills/showcase/SKILL.md`, so editing the skill
+  moves the row's verification context hash as well as failing the test.
+  **Mutation-proved:** changing "A question NEVER rides in the same message as
+  its card" to "A question may ride in the same message as its card" in the real
+  skill fails the suite with
+  `skills/showcase/SKILL.md must still say a question never rides in the same
+  message as its card (/(?i)never rides in the same message/)`; reverted and
+  green again. A second mutation ("The card grows; it never mutates." →
+  "The card is replaced each turn.") failed a second test, so more than one
+  assertion bites.
+- **`diagnostics.contracts.missing_build_hint` is RETIRED.** Its behaviour
+  cannot exist once Core is linked statically. `unbind --reason row_retired`
+  first, then the row text removed from `use-cases/diagnostics/contracts.yml`.
+- **`plugin.bundle.runs_from_clean_clone` is RETIRED** (both bindings — the
+  `#bundler` one on `scripts/bundle.mjs` and the bare one on the test), and
+  `use-cases/plugin/bundle.yml` was the only row in its feature file, so the
+  file went whole — the same shape row 2a used for `use-cases/migration/`.
+- **`plugin.runtime.pre_swift_versions_run_the_committed_bundle` is RETIRED**
+  with `dist/`, and the resolver's Node branch and the bootstrap's
+  `fallback_hint` went in the same edit.
+
+Six further bindings were released with
+`unbind --reason "row 10d: the TypeScript is deleted; the Swift oracle span
+carries the row"`: every one was a DUPLICATE of a span the row already had in
+Swift (10c's list, re-measured here rather than trusted —
+`agents.roster.bodies_hold_the_line#bodies`,
+`agents.roster.command_allowlist_tracks_cli`,
+`agents.roster.shipped_with_plugin`, `plugin.init.loop_skill_ported`,
+`plugin.install.claude_from_github`, `skills.assets.host_declaration`).
+
+**112 bindings before, 102 after** (11 in doomed paths − 1 rebound onto Swift).
+**118 rows before, 115 after.**
+
+### What drove the CLI, and why it could not be `./bin/use-cases`
+
+Every bind, rebind and unbind ran through
+`UseCasesCLI/.build/out/Products/Debug/use-cases`, the built Swift binary, and
+all of them ran BEFORE `dist/` was deleted. `bin/use-cases` at 0.7.0 resolves
+through `bin/use-cases-runtime`, which below `FIRST_SWIFT_RELEASE` used to exec
+the committed bundle and now refuses outright — so after this row the wrapper
+cannot drive the matrix in this checkout at all, and the built binary is the
+only honest answer. `.github/workflows/swift.yml` already gates with the built
+binary for exactly this reason (10b's third guard).
+
+### `source_refs` were left alone, deliberately, and it is measured
+
+**119 references to `packages/**` survive across 25 row files.** They are
+documentation pointers, and the check that settles it was run rather than
+assumed: two `source_refs` in `use-cases/hosts/retired.yml` ALREADY name
+`tests/conformance/bootstrap/agent-hook-installer.test.ts` and
+`scripts/install-agent-hooks.mjs`, neither of which has existed for some time,
+and `matrix validate --repo .` answers `valid: true` with the integrity state
+`clean`. A dangling `source_refs` path is not an error, is not proof, and is not
+read by `impact` — which maps BINDINGS to rows. Repointing all 119 would have
+rewritten 25 row files and moved every one of their `row_hash`es on the most
+dangerous row of the ladder, for no change in what is proved. 10c's
+`packages/` → Swift mapping table is still the one a later pass needs; only
+`skills.assets.demo_gates`'s own ref was repointed here, because that row was
+being edited anyway.
+
+Verifier `command`s and `inputs` are the opposite case and did all move: those
+feed the verification context hash and are proof machinery.
+
+### The deletion, and the two things that came back
+
+Deleted with `git rm -r` so every removal is staged and reviewable:
+`packages/`, `tests/` (except the fixtures, below), `dist/`, `package.json`'s
+build half, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `vitest.config.ts`,
+`tsconfig.json`, `tsconfig.base.json`, `scripts/bundle.mjs`,
+`scripts/capture-cli-contract.mjs`, `scripts/use-cases-precommit.sh`,
+`.github/workflows/ci.yml`, and the **20 `.mjs` corpus generators** under
+`UseCasesCLI/Scripts`, `UseCasesCore/Scripts` and `UseCasesMCP/Scripts`.
+`node_modules/` and the empty `packages/` shell were untracked and removed with
+`rm -rf` after checking each path was non-empty, existed, lay under the
+repository root and was no longer tracked.
+
+Two things did NOT go:
+
+- **`tests/fixtures/` came back, and had to.** `SchemaCommands.defaultFixture`
+  is the literal string `tests/fixtures/workspaces/minimal-valid` — PRODUCT
+  behaviour, frozen by decision 8 and recorded in the CLI dispatch corpus — and
+  `FixtureWorkspaceValidatorTests` (15 assertions across 8 tests) validates that
+  workspace and its siblings. Deleting them broke 15 Core tests and 3 CLI
+  corpus cases; restoring the 55 data files fixed all 18. `backcompat/` came
+  back with them: row 9 calls it the highest-value item on its left-undone list
+  and nothing else preserves a capture of a published 0.5.5 binary.
+  `tests/fixtures/README.md` now says why the directory outlived its tests.
+- **`scripts/check-scenario-conventions.mjs` stayed.** It imports no TypeScript,
+  reads only `use-cases/`, and `docs/rewrite/scenario-conventions.md` names it
+  as the enforcement of the scenario naming convention. It is Node, but it is
+  not the TypeScript toolchain.
+
+### The corpus generators are gone, and the corpora are now the source of truth
+
+All 20 ran the built TypeScript and refused to run against a `dist` older than
+its `src`; with `packages/` gone they could not have worked. Each of the 21
+corpus files whose header said `Regenerate with: pnpm … / node …/generate-*.mjs`
+now says NOT REGENERABLE, names the generator that was retired, and says the
+bytes are the record of what the TypeScript answered.
+
+**This lands on row 11.** Row 6's note says the tool version is embedded in
+several corpora — `created_by.version`, 72 occurrences in the marker-commands
+corpus alone — and "regenerate them, don't hand-edit". There is nothing left to
+regenerate them WITH, and there would not have been either way, because the
+oracle they ran was the TypeScript. The 0.8.0 bump is now a deliberate,
+reviewed search-and-replace over the corpora. Worth the owner knowing before
+row 11 starts.
+
+`UseCasesCore/Scripts/generate-embedded-schemas.swift` is the one generator that
+survives: it is Swift and reads `schemas/`. Re-run here, it reproduced
+`EmbeddedSchemas.swift` byte for byte and changed only the two path comments in
+`EmbeddedMarkerSchemas.swift`.
+
+### The three internal marker schemas MOVED rather than died
+
+Row 10's note said the drift test's input "must move" once `packages/` goes. It
+moved: `packages/core/src/markers/schemas/*.json` →
+**`schemas/markers/`**, a sibling of the published `schemas/v1`. Checked first
+that nothing enumerates `schemas/` wholesale — `SchemaRegistry`,
+`SchemaFixtures`, the MCP resource reader and the generator all name
+`schemas/v1` exactly — so the new directory cannot leak into the 27 published
+ids. `EmbeddedMarkerSchemasTests` passes against the new path, and it is still
+the only thing stopping the embedded copies and the committed files parting.
+
+### What the deletion broke, all of it found by running things
+
+The compiler finds none of this: every one of these reads a shipped file by path
+at RUN time.
+
+1. **`FixtureWorkspaceValidatorTests` — 15 issues** and **`DispatchGoldenCorpus`
+   — 3 cases** (`schema_validate_fixtures_{valid,invalid_json,invalid_text}`).
+   Cured by restoring `tests/fixtures/`, above.
+2. **`PublicErrorRegistryTests.the rendered page equals the TypeScript
+   renderer's output`.** `ErrorCodesDocument` EMITS a generated-file header into
+   `docs/reference/error-codes.md` naming
+   `node packages/core/scripts/generate-error-codes.mjs` and
+   `packages/core/src/errors/registry.ts` — product output pointing at deleted
+   files. The header now names `ErrorCodesDocument.render()` and
+   `PublicErrorRegistry.swift`, the committed `.md` was updated to match, and
+   the test was split: the page's BODY is still compared to the TypeScript's
+   bytes exactly, and the header is asserted separately. The sibling test
+   (`equals the committed docs/reference/error-codes.md byte for byte`) is
+   untouched and still the real gate.
+3. **`BootstrapFailuresTests.an asset the release does not carry …`** asserted
+   the failure message named `dist/uc.js` AND that the path existed. Both are
+   now inverted: the message must NOT contain `dist/` or "still available". The
+   row `release.distribution.failed_download_says_what_to_do` lost its
+   "Where a Node bundle is still present the message names it" outcome to match.
+4. **`SessionPathTests`, two executions** (10b predicted one; there were two).
+   `bin-use-cases runs the resolved runtime from any working directory` now
+   publishes a stand-in release and asserts the STAND-IN executable answered
+   from a directory that is not the repository — a stronger assertion than the
+   old envelope parse, and gated on Apple Silicon like every other download
+   test. The second was the `source env.sh && command -v use-cases &&
+   use-cases version --json` probe inside `with CLAUDE_ENV_FILE set …`; the
+   execution was dropped there (the sibling test covers it hermetically) and the
+   probe now proves only what that test is about — the exported PATH resolving
+   the command. `ReleaseStandIn.run` gained a `cwd:` parameter for this.
+5. **`ReleaseWorkflowTests` and `CiWorkflowTests` both read `ci.yml`** (10b
+   flagged both). `ReleaseWorkflowTests` now reads `swift.yml` and
+   `use-cases.yml` and keeps the load-bearing half — no second workflow learns
+   to cut a release — with `swift.yml` being exactly the tempting place.
+   `CiWorkflowTests` dropped the `ci.yml` half and gained the inverse guard: no
+   STEP of the gate may name `pnpm` or `vitest`. Asserted over the PARSED steps,
+   not the file text, because the header comment explains what was removed and
+   naming it there is the point.
+6. **`.githooks/{pre-commit,pre-push}` both ran `node $root/dist/uc.js`.** They
+   now resolve `$USE_CASES`, then this checkout's own
+   `UseCasesCLI/.build/out/Products/Debug/use-cases`, then `use-cases` on PATH.
+   Nothing found is a warning and exit 0, not a block — the same contract the
+   product's own scaffolded hook has, and a fresh clone has built nothing yet.
+7. **Every verification context hash moved**, as row 10's note predicted:
+   `VerificationContextHash` hashes `pnpm-lock.yaml` by default and the file is
+   gone. Expected, not breakage; `verify --all` recovers it in one pass.
+
+### What still says `pnpm`, `vitest` or `packages/`, and why
+
+- **Product support for Node projects, and it must stay.** `VerifierPresets`
+  ships `js.vitest` / `js.npm-test`; `ScaffoldTemplates` writes
+  `npx vitest run …` for `--template js-vitest`; `VerificationContextHash`
+  hashes `pnpm-lock.yaml` by default; `common.schema.json` carries a `pnpm`
+  example. These are how the tool verifies SOMEBODY ELSE'S repository. Decision
+  8 freezes the schema and the presets. `docs/concepts/verifiers.md`,
+  `docs/getting-started.md`, `docs/cli.md`, `docs/concepts/evidence.md`,
+  `docs/README.md`, `docs/tutorials/python-pytest.md` and `DESIGN.md` document
+  them, and were deliberately not touched.
+- **Provenance comments in the Swift sources.** Roughly 150 files carry a
+  `packages/…` line saying where the behaviour came from. They are records of
+  the port, the same category as this file and the ADR; editing them would
+  churn span hashes on bound rows for nothing.
+- **`source_refs`**: the measured 119, above.
+- **`marker.schema.json`'s description** names
+  `packages/core/src/markers/constants.ts`. A published schema, frozen by
+  decision 8 — it cannot be edited, and that is the right answer.
+- **Records**: `docs/adr/`, `docs/acceptance/0.3.0/`, `docs/rewrite/`,
+  `showcase-runs/`, `evidence/`, the two `.use-cases/` ledgers, and the
+  `hosts/retired.yml` rows' vitest verifiers (three `lifecycle: removed` rows
+  that nothing ever runs, two of which already named a file that does not
+  exist). Left as history; the owner authorised three retirements, not four.
+- **`bin/use-cases-runtime`'s comment** says what row 10d removed. One line.
+
+### The AUTHORITY workflow was broken too, and is rewritten — unproven
+
+`.github/workflows/use-cases.yml` is what mints FRESH: `validate-ledger`, `scan`,
+and the release-only `verify → prove → persist → release gate`. Every one of its
+three jobs began `corepack pnpm install --frozen-lockfile` + `corepack pnpm build`
+and drove the CLI as `corepack pnpm cli -- …`. After this row all of that fails
+at the first step, which would mean **no row could ever reach FRESH again**. The
+brief did not name this file; `rg pnpm .github/` found it.
+
+Rewritten: each job builds the CLI from source, exports the path through
+`GITHUB_ENV`, and runs `"$USE_CASES" …`; the three toolchain jobs move to
+`macos-15`, the platform ADR 0007 decision 6 pins and the label `swift.yml` and
+`release.yml` already use (the `policy` job needs no toolchain and stays on
+ubuntu). The `prove` job gains `setup-node`, because `verify --all` runs
+`OpencodePluginTests`, which executes `opencode/plugin.js` — the one remaining
+reason this repository needs a JavaScript runtime at all.
+
+**Unproven until GitHub runs it**, the same disclosure 10b made for `swift.yml`.
+Nothing here can fire it, no Swift test reads it (`ReleaseWorkflowTests` only
+greps it for `gh release`), and the `verify --all` step it contains has only ever
+been run by hand, from a local checkout, against a built binary.
+
+### Two traps this row hit, both worth carrying forward
+
+- **A hand-edited row file can break YAML and `verify` will say something
+  else entirely.** Rewriting one outcome in `use-cases/release/distribution.yml`
+  to `- It offers no alternative runtime, because there is none: the message is
+  the whole answer.` made YAML read it as a MAPPING (the unquoted `": "`), so the
+  file stopped loading, four `release.distribution.*` rows became
+  `ROW_NOT_FOUND`, and `verify --repo . --all` answered
+  **`no bound behaviours to verify`, exit 4** — a message that says nothing about
+  YAML. `matrix validate --repo .` names the real fault immediately. Run it after
+  every hand edit to a row file, not once at the end.
+- **`validate-ledger --base-ref` is silently vacuous, and it is PRE-EXISTING.**
+  The append-only check does `git show <ref>:<path>` with an ABSOLUTE path, which
+  git always refuses (`fatal: path '…' exists on disk, but not in 'HEAD'`);
+  `AppendOnly.isAbsentAtBase` matches exactly that wording, returns `""`, and the
+  check then compares the ledger against an EMPTY base — which can only pass.
+  Measured here on both ledgers. It is a faithful port of the TypeScript, so
+  decision 8 covers it and it was NOT fixed in this row, but the consequence is
+  that `append_only: true` in CI today proves nothing. Owner's call.
+
+### Docs repointed
+
+`AGENTS.md` (the `pnpm build` discipline line → the Swift packages and the
+now-frozen corpora), `CONTRIBUTING.md` (setup, layout table, Green CI),
+`README.md` (the quickstart's "runs the committed bundle" promise, the npm
+Trusted Publishing line, the packaging paragraph),
+`docs/reference/stability.md` (the workspaces line, and "Supported
+environments: Node — active LTS" which was simply false),
+`docs/markers-adoption.md` (two dead paths).
+
+### A retired row with LEDGER HISTORY cannot simply vanish
+
+This is the one place the brief's instruction ("retire it the way 2a did — the
+row goes") could not be followed literally, and the repository's own rule is
+what settled it.
+
+Deleting the row TEXT for `diagnostics.contracts.missing_build_hint` and
+`plugin.bundle.runs_from_clean_clone` left signed PROOF events in
+`.use-cases/proofs.jsonl` naming rows the matrix no longer knows: six for the
+first, one for the second. `validate-ledger` reports `EVIDENCE_ROW_MISSING`,
+the evidence ledger is INVALID, and `verify --all` refuses to run at all —
+answering `no bound behaviours to verify`, exit 4. The proof ledger is
+append-only and signed, so the lines cannot be removed to suit the matrix.
+
+`use-cases/hosts/retired.yml` states the rule in its own header, from the npm
+retirement of 2026-09-16: rows "stay in the matrix as lifecycle: removed so the
+evidence ledger's history for them remains valid; nothing binds to them and
+nothing is verified against them." 2a could delete its five `migration.*` rows
+outright only because none had ever been proven.
+
+So the retirement is history-driven, and each file says which it got:
+
+| row | proof events | treatment |
+|---|---|---|
+| `diagnostics.contracts.missing_build_hint` | 6 | `lifecycle: removed`, kept in `use-cases/diagnostics/contracts.yml` |
+| `plugin.bundle.runs_from_clean_clone` | 1 | `lifecycle: removed`, `use-cases/plugin/bundle.yml` restored for it |
+| `plugin.runtime.pre_swift_versions_run_the_committed_bundle` | 0 | row text removed, 2a's shape |
+
+All three were released with `unbind --reason row_retired` first, whichever way
+they went. The two surviving rows keep their `pnpm -s vitest` verifiers and
+their `dist/` prose exactly as they were: a `removed` row is never verified, and
+rewriting a record of what was once true would be the dishonest edit — the same
+reasoning `hosts/retired.yml` already stands on. **The matrix is 117 rows: 115
+live plus these 2 records.**
+
+### Numbers
+
+Measured on 2026-09-18 against the built Swift binary
+(`UseCasesCLI/.build/out/Products/Debug/use-cases`), never `bin/use-cases`.
+
+- **Suites, all green:** UseCasesCore **605** tests in 95 suites; UseCasesCLI
+  **45** in 17; UseCasesMCP **28** in 5; UseCasesOracle **298** in 81 (17
+  skipped — 10a's six todos, 10b's three `live:` cases, and the Apple-Silicon
+  trait where it does not apply). The oracle was **293** before this row; the
+  five new ones are `SkillsAssetsDemoGatesTests`.
+- **`verify --repo . --all`: 86 behaviours, 86 passed, exit 0, 225s.** 89 before,
+  minus the three retired rows.
+- **`scan --repo . --gate --policy-mode feature`: exit 0, gate passed** — 3
+  required behaviours meet VERIFIED_LOCAL. 117 rows, 102 bindings, **0 integrity
+  errors**. Summary: 76 verified_local, **0 stale_local**, 72 unproven, 34
+  unbound, 11 suspect, 0 invalid, 0 policy_blocked. The `stale_local: 0` is the
+  measurement that matters here: deleting `pnpm-lock.yaml` moved every
+  verification context hash (73 rows read `stale_local` immediately after), and
+  ONE `verify --all` pass recovered all of them, exactly as row 10's note
+  predicted. The 11 SUSPECT rows are stale SIGNED proofs, pre-existing and
+  ungated.
+- **`validate-ledger --repo . --base-ref HEAD --public-key
+  .use-cases/trusted-ci-public-key.pem`: exit 0** — evidence valid, registry
+  valid, 139 proof events, 371 registry events, chain verified over all 139
+  entries with no legacy prefix, 0 errors. (With the append-only caveat above.)
+- **`swiftformat --lint .`: 0/610 files require formatting.
+  `swiftlint lint --strict`: 0 violations, 0 serious, in 610 files.**
+
+### The clean-clone proof
+
+`git ls-files -z` piped through `tar` into a `mktemp` sandbox — exactly the
+tracked tree a fresh clone gets, taken from the working tree — then built and
+driven there. **840 files.** None of `packages/`, `tests/agents`, `tests/cli`,
+`dist`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `vitest.config.ts`,
+`tsconfig*.json`, `node_modules` or `.github/workflows/ci.yml` is present.
+
+- the three products build from cold (9.2s, 8.7s, 8.9s);
+- the built CLI answers `version --json` and `matrix validate --repo . --json`
+  (`valid: true`) inside the sandbox;
+- `scan --repo . --gate` exits **1** there, and that is correct rather than a
+  regression: `.use-cases/verification-results.jsonl` is gitignored, so a clean
+  clone has no local ✓ ledger until it runs `verify` itself — 10b recorded the
+  same thing for CI;
+- all four suites pass from the clean copy: **605 / 45 / 28 / 298**;
+- **the plugin's entry points fail HONESTLY.** At 0.7.0, with no Swift release
+  in existence, `./bin/use-cases version` exits 1 with
+  `release v0.7.0 publishes no use-cases binary, and this plugin no longer
+  carries a fallback runtime. / Install a release from 0.8.0 on, or set
+  USE_CASES_VERSION to one.` — and `./bin/use-cases-mcp` says the same for its
+  own executable. Forced to a Swift-era version against a release that does not
+  exist, the bootstrap refuses at the checksums:
+  `release v0.8.0 published no checksums … / Refusing to run an unverified
+  binary.` That is the expected 0.7.0 behaviour after this row, not breakage;
+- `hooks/session-start` exits 0 and still delivers the bootstrap
+  (`<EXTREMELY_IMPORTANT>` …);
+- `node` loading `opencode/plugin.js` registers `mcp:use-cases` and all five
+  skills (`init`, `showcase`, `use-case-driven-development`, `use-cases`,
+  `walkthrough`) — the minimal `package.json` still resolves the module.
+
 ## Row 10 — delete TypeScript
 
 - **Every verification context hash changes.** `verificationContextHash.ts`

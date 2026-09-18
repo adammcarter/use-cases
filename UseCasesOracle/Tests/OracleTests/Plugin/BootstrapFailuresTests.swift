@@ -35,14 +35,13 @@ struct BootstrapFailuresTests {
         .contains("\(release.baseUrl)/v\(release.version)/\(release.assetName)"),
     )
     #expect(result.standardError.contains("does not carry"))
-    // bin/use-cases now runs whatever the resolver picks, so the escape hatch a
-    // failed download names is the committed bundle itself, by its path.
-    let bundle = "\(OracleLayout.repositoryRoot)/dist/uc.js"
-    #expect(result.standardError.contains(bundle))
-    #expect(
-      FileManager.default.fileExists(atPath: bundle),
-      "the hint must name a path that exists",
-    )
+    // There is no escape hatch left to name. The failure used to end by
+    // offering the committed Node bundle; ADR 0007 row 10d deleted it, and the
+    // bootstrap's hint went with it. A release that should carry a binary and
+    // does not now fails and says only that — which is the property this row
+    // has always been about, with the one softening removed.
+    #expect(!result.standardError.contains("dist/"))
+    #expect(!result.standardError.contains("still available"))
     #expect(ReleaseStandIn.fileTree(cache.path).isEmpty)
   }
 

@@ -5,9 +5,11 @@
 // Every expected value is what packages/core/dist/showcase returned, threw or
 // wrote for the workspace, clock, uuid, keys and options beside it.
 //
-// Regenerate with:
-//   pnpm --filter @adammcarter/use-cases-core build
-//   node UseCasesCore/Scripts/generate-showcase-corpus.mjs
+// NOT REGENERABLE. Its generator (`UseCasesCore/Scripts/generate-showcase-corpus.mjs`) ran the
+// TypeScript that ADR 0007 row 10d deleted, and was retired with it. These
+// bytes are the record of what the TypeScript answered and are now the source
+// of truth: a case that has to change is changed by hand, deliberately, with
+// the reason written down.
 enum ShowcaseGoldenCorpus {
   static let runCaseNames: [String] = [
     "plan_file_lifecycle_with_trusted_approval",

@@ -5,9 +5,12 @@
 // Every expected value is what packages/core/dist/markers/cli returned, or left
 // on disk, for the input beside it.
 //
-// Regenerate with:
-//   pnpm --filter @adammcarter/use-cases-core build
-//   node UseCasesCore/Scripts/generate-marker-commands-corpus.mjs
+// NOT REGENERABLE. Its generator (`UseCasesCore/Scripts/generate-marker-commands-corpus.mjs`) ran
+// the
+// TypeScript that ADR 0007 row 10d deleted, and was retired with it. These
+// bytes are the record of what the TypeScript answered and are now the source
+// of truth: a case that has to change is changed by hand, deliberately, with
+// the reason written down.
 enum MarkerCommandsGoldenCorpus {
   static let commandCaseNames: [String] = [
     "swift_func_bind",

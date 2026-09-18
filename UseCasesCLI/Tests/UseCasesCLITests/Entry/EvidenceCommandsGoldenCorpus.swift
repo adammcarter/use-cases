@@ -5,9 +5,12 @@
 // What node packages/cli/dist/index.js wrote, returned and left on disk for
 // each step of each evidence-command case.
 //
-// Regenerate with:
-//   pnpm build
-//   node UseCasesCLI/Scripts/generate-evidence-commands-corpus.mjs
+// NOT REGENERABLE. Its generator (`UseCasesCLI/Scripts/generate-evidence-commands-corpus.mjs`) ran
+// the
+// TypeScript that ADR 0007 row 10d deleted, and was retired with it. These
+// bytes are the record of what the TypeScript answered and are now the source
+// of truth: a case that has to change is changed by hand, deliberately, with
+// the reason written down.
 enum EvidenceCommandsGoldenCorpus {
   static let caseNames: [String] = [
     "record_self_reported_json",

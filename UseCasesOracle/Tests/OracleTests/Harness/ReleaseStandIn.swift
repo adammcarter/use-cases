@@ -263,12 +263,17 @@ enum ReleaseStandIn {
   ///
   /// An environment value of `nil` DELETES the variable, which is how the
   /// TypeScript's `{ XDG_CACHE_HOME: undefined }` reads.
+  ///
+  /// `cwd` defaults to the repository, because the entry points resolve
+  /// everything from their own location; a case that is ABOUT the working
+  /// directory passes a different one.
   static func run(
     entry: Entry = .useCases,
     arguments: [String] = [],
     environment: [String: String?] = [:],
     pathPrefix: String? = nil,
     executable: String? = nil,
+    cwd: String? = nil,
   ) async throws -> CliBinary.Outcome {
     // A HOME nothing else shares: an unset cache override must not reach
     // ~/Library. Held until the run finishes, then removed with the value.
@@ -294,7 +299,7 @@ enum ReleaseStandIn {
     let outcome = try await OracleProcess.run(
       executable: executable ?? entry.scriptPath,
       arguments: arguments,
-      cwd: OracleLayout.repositoryRoot,
+      cwd: cwd ?? OracleLayout.repositoryRoot,
       environment: resolved,
       inheritEnvironment: false,
     )

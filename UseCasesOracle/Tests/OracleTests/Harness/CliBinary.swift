@@ -2,11 +2,13 @@ import Foundation
 
 /// The one place a black-box test learns where the CLI binary is.
 ///
-/// This is the Swift half of `tests/helpers/uc-binary.ts`, and it keeps that
-/// file's seam: `UC_BIN`, unset, runs the Swift build sitting in
-/// `UseCasesCLI/.build`; set, it runs whatever it names — which is how the same
-/// oracle is pointed at the committed Node bundle (`dist/uc.js`) to prove the
-/// port did not quietly weaken an assertion.
+/// This is the Swift half of the TypeScript oracle's `uc-binary` helper, and it
+/// keeps that file's seam: `UC_BIN`, unset, runs the Swift build sitting in
+/// `UseCasesCLI/.build`; set, it runs whatever it names. That is how a CI job
+/// points the oracle at the binary it just built rather than at a stale one,
+/// and it is how row 10a ran this suite against the TypeScript bundle and the
+/// Swift build in turn to prove the port had not quietly weakened an assertion.
+/// The bundle is gone (ADR 0007 row 10d); the seam is not.
 ///
 /// The one thing it must never do is fall back. A harness that answered "the
 /// binary you named is missing, here is the other one" would keep every test

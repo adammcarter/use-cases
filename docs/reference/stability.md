@@ -102,11 +102,15 @@ promoted. They are called out here so adopters can depend on them with eyes open
   opt-in release-gate authority requirement are documented in
   [CI hardening](../security/ci-hardening.md).
 - Any other CLI command's **human-readable** (non-`--json`) formatting.
-- The `core` / `cli` / `mcp` workspaces are an internal implementation detail: they are bundled into the `use-cases` package, **not** a published programmatic import surface. The stable contract is the CLI, the MCP tools, the JSON envelope, the schemas, and the persisted file formats — not TypeScript imports.
+- The `UseCasesCore` / `UseCasesCLI` / `UseCasesMCP` Swift modules are an internal implementation detail: they are compiled into the two shipped executables, **not** a published programmatic import surface. The stable contract is the CLI, the MCP tools, the JSON envelope, the schemas, and the persisted file formats — never a module import.
 
 ## Supported environments
 
-- **Node**: active LTS lines.
+- **The shipped runtime**: macOS on Apple Silicon. The plugin resolves a
+  release archive for the machine, verifies its checksum and execs it
+  (ADR 0007 decisions 3 and 6); there is no interpreter to install. Node is
+  needed only by hosts that load `opencode/plugin.js`, which is the OpenCode
+  registration module and not the product.
 - **CI**: GitHub Actions is the reference, first-class path. The verify/prove
   contract is CI-neutral and documented for other providers (best-effort) in
   [CI hardening](../security/ci-hardening.md), which also covers the opt-in

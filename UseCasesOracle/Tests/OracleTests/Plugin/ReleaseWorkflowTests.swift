@@ -192,21 +192,24 @@ struct ReleaseWorkflowTests {
     }
   }
 
+  /// Publishing lives in one workflow and nowhere else.
+  ///
+  /// It read `ci.yml` until ADR 0007 row 10d deleted that file with the
+  /// TypeScript it gated. The other two workflows took its place in the
+  /// assertion, which is the half that was ever load-bearing: a second file
+  /// learning to cut a release is the regression, and `swift.yml` is now the
+  /// gate that would be the tempting place to add one.
   @Test
   func `the release pipeline is its own workflow and leaves the existing gates alone`() throws {
-    let ciWorkflow = try String(
-      contentsOfFile: "\(OracleLayout.repositoryRoot)/.github/workflows/ci.yml",
-      encoding: .utf8,
-    )
-    let useCases = try String(
-      contentsOfFile: "\(OracleLayout.repositoryRoot)/.github/workflows/use-cases.yml",
-      encoding: .utf8,
-    )
+    let others = try ["swift.yml", "use-cases.yml"].map { name in
+      try String(
+        contentsOfFile: "\(OracleLayout.repositoryRoot)/.github/workflows/\(name)",
+        encoding: .utf8,
+      )
+    }
 
     #expect(FileManager.default.fileExists(atPath: Self.workflowPath))
-    #expect(ciWorkflow.contains("pnpm -s test"))
-    #expect(ciWorkflow.contains("pnpm -s build"))
-    for other in [ciWorkflow, useCases] {
+    for other in others {
       #expect(Self.matches("gh release", in: other).isEmpty)
       #expect(!other.contains("SHA256SUMS"))
     }

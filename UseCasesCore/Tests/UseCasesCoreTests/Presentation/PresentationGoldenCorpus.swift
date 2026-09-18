@@ -5,9 +5,11 @@
 // Every expected value is what packages/core/dist/presentation returned,
 // rendered or threw for the tree, rows, request or item beside it.
 //
-// Regenerate with:
-//   pnpm --filter @adammcarter/use-cases-core build
-//   node UseCasesCore/Scripts/generate-presentation-corpus.mjs
+// NOT REGENERABLE. Its generator (`UseCasesCore/Scripts/generate-presentation-corpus.mjs`) ran the
+// TypeScript that ADR 0007 row 10d deleted, and was retired with it. These
+// bytes are the record of what the TypeScript answered and are now the source
+// of truth: a case that has to change is changed by hand, deliberately, with
+// the reason written down.
 enum PresentationGoldenCorpus {
   static let planCaseNames: [String] = [
     "showcase_default_ranking",

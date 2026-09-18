@@ -47,31 +47,31 @@ jobs:
 
   validate-ledger:
     needs: policy
-    runs-on: ubuntu-latest
+    # macOS, like the Swift gate and the release pipeline: ADR 0007 decision 6
+    # pins the toolchain, and every job below builds the Swift CLI.
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      # Node, then Corepack (puts pnpm on PATH), then setup-node again with
-      # cache -- `cache: pnpm` invokes pnpm to find the store, so pnpm must
-      # exist before the cache step runs.
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-      - run: corepack enable
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: pnpm
-      - run: corepack pnpm install --frozen-lockfile
-      - run: corepack pnpm build
+      # The CLI is built from source. This repository IS the product, so the
+      # authority gate has to run the build under test -- never `bin/use-cases`,
+      # which resolves a published release, and never a binary from anywhere
+      # else. USE_CASES carries the path to the later steps.
+      - name: build the CLI
+        run: |
+          set -euo pipefail
+          swift build --package-path UseCasesCLI
+          use_cases="$(swift build --package-path UseCasesCLI --show-bin-path)/use-cases"
+          test -x "$use_cases"
+          echo "USE_CASES=$use_cases" >> "$GITHUB_ENV"
       # Authority gate: append-only discipline, schemas, signatures, internal
       # hash consistency. Blocks the build on any failure (exit 4).
       - name: validate-ledger
         run: |
           key_args=()
           if [ -f "$UCM_PUBLIC_KEY" ]; then key_args=(--public-key "$UCM_PUBLIC_KEY"); fi
-          corepack pnpm cli -- validate-ledger \
+          "$USE_CASES" validate-ledger \
             --repo . \
             --proofs "$UCM_PROOFS" \
             --bindings "$UCM_BINDINGS" \
@@ -81,24 +81,22 @@ jobs:
 
   scan:
     needs: policy
-    runs-on: ubuntu-latest
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      # Node, then Corepack (puts pnpm on PATH), then setup-node again with
-      # cache -- `cache: pnpm` invokes pnpm to find the store, so pnpm must
-      # exist before the cache step runs.
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-      - run: corepack enable
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: pnpm
-      - run: corepack pnpm install --frozen-lockfile
-      - run: corepack pnpm build
+      # The CLI is built from source. This repository IS the product, so the
+      # authority gate has to run the build under test -- never `bin/use-cases`,
+      # which resolves a published release, and never a binary from anywhere
+      # else. USE_CASES carries the path to the later steps.
+      - name: build the CLI
+        run: |
+          set -euo pipefail
+          swift build --package-path UseCasesCLI
+          use_cases="$(swift build --package-path UseCasesCLI --show-bin-path)/use-cases"
+          test -x "$use_cases"
+          echo "USE_CASES=$use_cases" >> "$GITHUB_ENV"
       # Integrity scan: ALWAYS feature mode (blocks INVALID only). The release gate
       # — "every required_for_release row must be FRESH" — deliberately runs AFTER
       # the prove job mints proofs (see the "release gate" step there), NOT here:
@@ -109,7 +107,7 @@ jobs:
         run: |
           key_args=()
           if [ -f "$UCM_PUBLIC_KEY" ]; then key_args=(--public-key "$UCM_PUBLIC_KEY"); fi
-          corepack pnpm cli -- scan \
+          "$USE_CASES" scan \
             --repo . \
             --product-root . \
             --proofs "$UCM_PROOFS" \
@@ -124,7 +122,7 @@ jobs:
     # Optional: only the release policy mints signed proof events, and only when a
     # signing key secret is configured. Never runs on feature branches.
     if: needs.policy.outputs.mode == 'release'
-    runs-on: ubuntu-latest
+    runs-on: macos-15
     permissions:
       contents: write
     # Serialise prove runs per ref: the persist step below pushes the ledger back,
@@ -142,19 +140,24 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      # Node, then Corepack (puts pnpm on PATH), then setup-node again with
-      # cache -- `cache: pnpm` invokes pnpm to find the store, so pnpm must
-      # exist before the cache step runs.
+      # `verify --all` runs every bound row's verifier, and one of them
+      # (plugin.install.opencode_from_git -> OpencodePluginTests) executes
+      # `opencode/plugin.js` under node. It is the only JavaScript left in the
+      # repository, and the only reason this job needs a runtime pinned.
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - run: corepack enable
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: pnpm
-      - run: corepack pnpm install --frozen-lockfile
-      - run: corepack pnpm build
+      # The CLI is built from source. This repository IS the product, so the
+      # authority gate has to run the build under test -- never `bin/use-cases`,
+      # which resolves a published release, and never a binary from anywhere
+      # else. USE_CASES carries the path to the later steps.
+      - name: build the CLI
+        run: |
+          set -euo pipefail
+          swift build --package-path UseCasesCLI
+          use_cases="$(swift build --package-path UseCasesCLI --show-bin-path)/use-cases"
+          test -x "$use_cases"
+          echo "USE_CASES=$use_cases" >> "$GITHUB_ENV"
       # Phase 1 -- VERIFY: run each bound row's resolved verifier(s) and write an
       # UNSIGNED results ledger (one JSONL line per row). This step runs arbitrary
       # repo test commands, so for key hygiene the verifier subprocesses MUST NOT
@@ -170,7 +173,7 @@ jobs:
           unset UCM_CI_SIGNING_KEY
           key_args=()
           if [ -f "$UCM_PUBLIC_KEY" ]; then key_args=(--public-key "$UCM_PUBLIC_KEY"); fi
-          corepack pnpm cli -- verify \
+          "$USE_CASES" verify \
             --repo . \
             --product-root . \
             --proofs "$UCM_PROOFS" \
@@ -189,7 +192,7 @@ jobs:
         run: |
           key_args=()
           if [ -f "$UCM_PUBLIC_KEY" ]; then key_args=(--public-key "$UCM_PUBLIC_KEY"); fi
-          corepack pnpm cli -- prove \
+          "$USE_CASES" prove \
             --repo . \
             --product-root . \
             --proofs "$UCM_PROOFS" \
@@ -231,7 +234,7 @@ jobs:
         run: |
           key_args=()
           if [ -f "$UCM_PUBLIC_KEY" ]; then key_args=(--public-key "$UCM_PUBLIC_KEY"); fi
-          corepack pnpm cli -- scan \
+          "$USE_CASES" scan \
             --repo . \
             --product-root . \
             --proofs "$UCM_PROOFS" \

@@ -1,11 +1,11 @@
 name: swift
 
-# The Swift gate (ADR 0007, row 10b).
+# The Swift gate (ADR 0007, rows 10b and 10d).
 #
-# ci.yml gates the TypeScript with `pnpm -s test`; row 10d deletes the
-# TypeScript, and with it that gate. This workflow is what has to exist first,
-# so the deletion never leaves the repository ungated. It is ADDITIVE: ci.yml
-# and use-cases.yml are untouched here, and 10d removes ci.yml whole.
+# ci.yml gated the TypeScript with `pnpm -s test`. Row 10b landed this workflow
+# first so the deletion never left the repository ungated; row 10d then deleted
+# the TypeScript and removed ci.yml whole. This is now the only build-and-test
+# gate: use-cases.yml proves and signs the matrix, release.yml publishes.
 #
 # macOS, and Apple Silicon specifically. UseCasesOracle links nothing and drives
 # the real binaries as processes, and its bootstrap suites only run on
@@ -31,36 +31,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Node is pinned rather than taken from the image because two things still
-      # need a JavaScript runtime. One is PERMANENT: the oracle's
-      # OpencodePluginTests runs `opencode/plugin.js`, which is JavaScript the
-      # host executes, so proving what it registers means running it.
+      # Node is pinned rather than taken from the image, and it is the ONE
+      # remaining JavaScript dependency: the oracle's OpencodePluginTests runs
+      # `opencode/plugin.js`, which is JavaScript an OpenCode host executes, so
+      # proving what it registers means running it. Nothing is installed and
+      # nothing is built — there are no dependencies left to install.
       #
-      # `pnpm` is the other, and it is TEMPORARY. Row 10c moved 86 of the 90
-      # runnable row verifiers onto `swift test`; FOUR still run
-      # `pnpm -s vitest`, because the behaviour they pin is TypeScript that has
-      # no Swift counterpart and that 10d deletes with it —
-      # `diagnostics.contracts.missing_build_hint` (the CLI's "run the build"
-      # hint, which cannot exist once Core is linked statically),
+      # The `corepack pnpm install` / `pnpm -s build` prelude that stood here is
+      # GONE with row 10d: every row verifier now runs `swift test`, and the
+      # four rows that could not leave vitest were retired or given Swift
+      # carriers (`diagnostics.contracts.missing_build_hint`,
       # `plugin.bundle.runs_from_clean_clone` and
-      # `plugin.runtime.pre_swift_versions_run_the_committed_bundle` (both about
-      # `dist/`), and `skills.assets.demo_gates` (the live `skills/` bodies,
-      # which nothing in Swift reads). Until those four are retired or given
-      # carriers, `verify --all` below needs pnpm and the built TypeScript.
-      #
-      # The `pip install pytest` step that stood here is GONE:
-      # `signing.tier.recover_never_fakes_green` no longer runs
-      # `tests/cli/recover.test.ts`, and no remaining verifier spawns pytest.
-      # Measured: `swift test --package-path UseCasesOracle --filter
-      # LifecycleRunClassTests` — the only suite that feeds a `python.pytest`
-      # preset into a real `verify` — passes all 5 tests with pytest off PATH,
-      # because it asserts the derived `run_class`, not the run's verdict.
+      # `plugin.runtime.pre_swift_versions_run_the_committed_bundle` retired;
+      # `skills.assets.demo_gates` moved onto SkillsAssetsDemoGatesTests, which
+      # reads the live `skills/` bodies).
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - run: corepack enable
-      - run: corepack pnpm install --frozen-lockfile
-      - run: corepack pnpm -s build
 
       # ADR 0007 decision 6 pins the toolchain; print what the runner has, so a
       # failure is readable from the log without a rerun.
@@ -150,7 +137,8 @@ jobs:
 
       # The matrix gates itself with its own product: the Swift binary this job
       # just built runs every bound row's verifier and then the integrity gate.
-      # Not the plugin wrapper and not the Node bundle — the build under test.
+      # Not `bin/use-cases`, which resolves a DOWNLOADED release — the build
+      # under test.
       #
       # `--policy-mode feature` is passed EXPLICITLY, the way use-cases.yml passes
       # it, rather than left to the default. It is the same bar the default

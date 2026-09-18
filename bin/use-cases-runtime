@@ -14,15 +14,15 @@
 #       the release archive for this machine, verifies it against the release's
 #       SHA256SUMS and execs it. There is no fallback out of that path: a
 #       release that should carry the assets and does not must fail loudly.
-#   version <  FIRST_SWIFT_RELEASE  ->  the committed Node bundle in dist/,
-#       because those releases provably published no Swift archive (measured in
-#       ladder row 6 against v0.7.0). Choosing it on the version alone, with no
-#       download attempted, is what keeps it from ever standing in for a
-#       release that should have been there.
+#   version <  FIRST_SWIFT_RELEASE  ->  nothing runs. Those releases provably
+#       published no Swift archive (measured in ladder row 6 against v0.7.0),
+#       and ADR 0007 row 10d deleted the committed Node bundle they used to
+#       fall to. Saying so is the honest answer; downloading an asset that was
+#       never published would fail later and less clearly.
 #
 # So the switch flips itself: bumping the version in .claude-plugin/plugin.json
 # to the first Swift release is the whole cut-over, and no manifest, hook or
-# doc changes when it happens. The Node branch retires with dist/.
+# doc changes when it happens.
 set -euo pipefail
 
 # The first release that publishes the Swift archives (ADR 0007 decision 9).
@@ -51,14 +51,6 @@ case " $RUNTIME_EXECUTABLES " in
   *" $exe "*) ;;
   *) die "no runtime named $exe; this plugin runs: ${RUNTIME_EXECUTABLES// /, }." ;;
 esac
-
-# The committed bundle that answers for each executable, until dist/ goes.
-bundle_for() {
-  case "$1" in
-    use-cases) printf 'dist/uc.js' ;;
-    use-cases-mcp) printf 'dist/uc-mcp.js' ;;
-  esac
-}
 
 # --- which version ----------------------------------------------------------
 
@@ -113,12 +105,5 @@ if at_least "$version" "$FIRST_SWIFT_RELEASE"; then
   exec "$here/use-cases-bootstrap" "$exe" "$@"
 fi
 
-bundle="$plugin_root/$(bundle_for "$exe")"
-if [ ! -f "$bundle" ]; then
-  die "release v$version publishes no Swift binary, and the committed bundle it falls to is missing at $bundle." \
-    "A checkout of this plugin carries $(bundle_for "$exe"); install it again, or set USE_CASES_VERSION to a release from $FIRST_SWIFT_RELEASE on."
-fi
-if ! command -v node >/dev/null 2>&1; then
-  die "release v$version publishes no Swift binary, so $exe runs the committed bundle $(bundle_for "$exe"), and node is not on PATH."
-fi
-exec node "$bundle" "$@"
+die "release v$version publishes no $exe binary, and this plugin no longer carries a fallback runtime." \
+  "Install a release from $FIRST_SWIFT_RELEASE on, or set USE_CASES_VERSION to one."

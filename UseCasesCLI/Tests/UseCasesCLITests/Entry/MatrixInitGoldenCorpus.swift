@@ -5,9 +5,11 @@
 // What node packages/cli/dist/index.js wrote, returned and left on disk for
 // each init and matrix argv.
 //
-// Regenerate with:
-//   pnpm build
-//   node UseCasesCLI/Scripts/generate-matrix-init-corpus.mjs
+// NOT REGENERABLE. Its generator (`UseCasesCLI/Scripts/generate-matrix-init-corpus.mjs`) ran the
+// TypeScript that ADR 0007 row 10d deleted, and was retired with it. These
+// bytes are the record of what the TypeScript answered and are now the source
+// of truth: a case that has to change is changed by hand, deliberately, with
+// the reason written down.
 enum MatrixInitGoldenCorpus {
   static let caseNames: [String] = [
     "validate_clean_json",

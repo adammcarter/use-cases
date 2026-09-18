@@ -95,3 +95,42 @@ unchanged.
   stays a pinned dependency used for its `StdioTransport`, while the JSON-RPC
   dispatch and the response bytes are ours through `JSONWriter`. Decision 7's
   library list is unchanged; decision 8 is unbroken.
+- **2026-09-18 — three rows retired with the TypeScript (row 10d).** Deleting
+  the TypeScript deletes behaviour, not just an implementation, so the rows that
+  described that behaviour were RETIRED rather than rebound: each was released
+  with `unbind --reason row_retired` first, so the binding ledger records why it
+  ended, and the row text was then removed.
+  `diagnostics.contracts.missing_build_hint` described the CLI's "run the build"
+  hint, which existed only because the TypeScript CLI `await import`ed
+  `core/dist/index.js` and translated `ERR_MODULE_NOT_FOUND`; SwiftPM links
+  `UseCasesCore` statically, so the condition cannot arise.
+  `plugin.bundle.runs_from_clean_clone` and
+  `plugin.runtime.pre_swift_versions_run_the_committed_bundle` both described
+  the committed Node bundle in `dist/`, which this row deleted; the resolver's
+  Node branch and the bootstrap's fallback hint went with them. Like the
+  migration retirements above, these are deliberate retirements rather than
+  changes made under the freeze, so decision 8 does not apply.
+  **How far a retired row goes is decided by its ledger history**, and that is a
+  rule rather than a preference: `missing_build_hint` has six signed proof events
+  and `runs_from_clean_clone` one, and a proof naming a row the matrix no longer
+  knows makes the evidence ledger INVALID and stops `verify` running at all. Both
+  therefore stay as `lifecycle: removed`, exactly as the npm retirement of
+  2026-09-16 left `use-cases/hosts/retired.yml` and for the reason that file
+  states. `pre_swift_versions_run_the_committed_bundle` had no proof event and
+  its text was removed outright, the way 2a removed the five `migration.*` rows.
+  The matrix is 117 rows: 115 live and 2 records.
+- **2026-09-18 — `package.json` survives as a HOST manifest (row 10d).**
+  Decision 5 says the final step deletes the TypeScript; `package.json` is the
+  file where that collides with a shipped behaviour. OpenCode installs this
+  plugin as a package (`opencode plugin add 'github:adammcarter/use-cases'`) and
+  resolves `opencode/plugin.js` through `exports["."]`, with `"type": "module"`
+  making it load as the ES module it is — the behaviour row
+  `plugin.install.opencode_from_git` pins, and one of the four hosts the plugin
+  supports. The alternatives were retiring that row, which is a product
+  regression taken for a file count, or a different registration, which no host
+  offers. So the file stays, stripped to name, version, licence, repository,
+  `type`, `private` and `exports`: no scripts, no dependencies, no package
+  manager, no workspaces. `OpencodePluginTests` asserts those build keys are
+  absent, so the toolchain cannot grow back through it. It now sits beside
+  `.claude-plugin/plugin.json` and `.codex-plugin/`, and nothing installs,
+  builds or publishes from it.

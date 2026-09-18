@@ -10,33 +10,42 @@ never a public issue.
 
 ## Development setup
 
-Use Cases is a pnpm-managed TypeScript monorepo. You need Node (active LTS) and
-Corepack (bundled with Node) to pin pnpm.
+Use Cases is a Swift package set. You need the Swift toolchain pinned by
+[ADR 0007](docs/adr/0007-swift-rewrite.md) (Xcode's Swift 6.1 or newer) on
+Apple Silicon, plus `swiftformat` and `swiftlint` (`brew install swiftformat
+swiftlint`). Node is needed for one thing only: the OpenCode plugin module is
+JavaScript, and the oracle runs it.
 
 ```bash
-corepack pnpm install      # install workspace dependencies
-corepack pnpm -s build     # build all three packages (tsc -b + schema copy)
-corepack pnpm -s test      # run the full vitest suite
+swift build --package-path UseCasesCLI                # the CLI
+swift test  --package-path UseCasesCore               # the library suite
+swift test  --package-path UseCasesCLI                # the CLI suite
+swift test  --package-path UseCasesMCP                # the MCP suite
+swift test  --package-path UseCasesOracle             # the black-box suite
 ```
 
-Useful extras:
+`UseCasesOracle` drives the real binaries. Point it at the ones you just built,
+or it resolves whatever it can find:
 
 ```bash
-corepack pnpm -s typecheck             # tsc -b, no emit
-corepack pnpm cli -- matrix validate --repo . --json   # run the built CLI
+UC_BIN="$(swift build --package-path UseCasesCLI --show-bin-path)/use-cases" \
+UC_MCP_BIN="$(swift build --package-path UseCasesMCP --show-bin-path)/use-cases-mcp" \
+  swift test --package-path UseCasesOracle
 ```
 
-## Monorepo layout
+## Repository layout
 
-| Path | Package | What it is |
-|---|---|---|
-| `packages/core` | `@adammcarter/use-cases-core` | Core domain library: matrix, bindings, verify/prove, freshness, ledger, evidence, showcase, capsule, plan, host. The schemas live under `schemas/v1`. |
-| `packages/cli` | `@adammcarter/use-cases-cli` | The `use-cases` CLI (alias `use-cases`). Thin command layer over core; owns the `--json` envelopes and exit codes. |
-| `packages/mcp` | `@adammcarter/use-cases-mcp` | The `use-cases-mcp` MCP server. Wraps the same envelopes for agents over local stdio. |
-| `docs/` | — | Reference and security docs. `docs/reference/stability.md` is the SemVer contract. |
-| `tests/` | — | Cross-package and acceptance tests. |
+| Path | What it is |
+|---|---|
+| `UseCasesCore` | Core domain library: matrix, bindings, verify/prove, freshness, ledger, evidence, showcase, capsule, plan, host. The published schemas live under `schemas/v1`; the three internal marker schemas under `schemas/markers`. |
+| `UseCasesCLI` | The `use-cases` CLI. Thin command layer over core; owns the `--json` envelopes and exit codes. |
+| `UseCasesMCP` | The `use-cases-mcp` MCP server. Wraps the same envelopes for agents over local stdio. |
+| `UseCasesOracle` | The black-box suite. Links nothing; drives the built binaries and the shipped files as processes. |
+| `bin/`, `hooks/`, `opencode/` | The host-facing entry points: the runtime resolver, the release bootstrap, the session hook, the OpenCode plugin module. |
+| `docs/` | Reference and security docs. `docs/reference/stability.md` is the SemVer contract. |
 
-The three packages stay **on the same version**.
+The three products stay **on the same version**, which is the one in
+`.claude-plugin/plugin.json`.
 
 ## The trust model in one paragraph
 
@@ -62,12 +71,15 @@ MCP.
   additive it's a **minor**; if it removes/renames/repurposes a contract or
   changes an output shape it's a **major** — call that out in the PR.
 - **Keep it generic.** Use Cases is language/CI-neutral. Don't bake in a hidden
-  dependency on pnpm/vitest or GitHub Actions; `pnpm`/`vitest` is one verifier
-  preset, not an assumption.
+  dependency on a particular runner or on GitHub Actions; `js.vitest` is one
+  verifier preset among several, not an assumption. That the product is written
+  in Swift says nothing about the repositories it verifies.
 
 ## Pull request expectations
 
-- **Green CI.** `corepack pnpm -s build` and `corepack pnpm -s test` must pass.
+- **Green CI.** `.github/workflows/swift.yml` must pass: it builds the three
+  products, runs all four suites, lints, and then gates the matrix with the
+  binary it just built (`verify --repo . --all`, `scan --repo . --gate`).
 - **Conventional-ish commits.** Use clear, imperative, prefixed messages
   (`feat:`, `fix:`, `docs:`, `test:`, `chore:`, `refactor:`). One logical change
   per commit.

@@ -7,9 +7,12 @@
 // is embedded in proofs already in ledgers, so these bytes are frozen contract
 // (ADR 0007 decision 8).
 //
-// Regenerate with:
-//   pnpm --filter @adammcarter/use-cases-core build
-//   node UseCasesCore/Scripts/generate-markers-freshness-corpus.mjs
+// NOT REGENERABLE. Its generator (`UseCasesCore/Scripts/generate-markers-freshness-corpus.mjs`) ran
+// the
+// TypeScript that ADR 0007 row 10d deleted, and was retired with it. These
+// bytes are the record of what the TypeScript answered and are now the source
+// of truth: a case that has to change is changed by hand, deliberately, with
+// the reason written down.
 enum MarkersFreshnessGoldenCorpus {
   static let presetCaseNames: [String] = [
     "preset_command.generic",

@@ -5,9 +5,11 @@
 // What packages/core/dist/skills' validateSkillAssets returned or threw for each
 // workspace, and the canonical skill, agent and CLI command lists.
 //
-// Regenerate with:
-//   pnpm --filter @adammcarter/use-cases-core build
-//   node UseCasesCore/Scripts/generate-skills-corpus.mjs
+// NOT REGENERABLE. Its generator (`UseCasesCore/Scripts/generate-skills-corpus.mjs`) ran the
+// TypeScript that ADR 0007 row 10d deleted, and was retired with it. These
+// bytes are the record of what the TypeScript answered and are now the source
+// of truth: a case that has to change is changed by hand, deliberately, with
+// the reason written down.
 enum SkillsGoldenCorpus {
   static let caseNames: [String] = [
     "repository_as_shipped",

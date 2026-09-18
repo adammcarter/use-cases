@@ -14,18 +14,18 @@ import Testing
 /// release's default version (9.9.9-standin) is above the first Swift release,
 /// so these tests need no switch of their own.
 ///
-/// The file's SECOND half — `plugin.runtime.pre_swift_versions_run_the_committed_bundle`,
-/// four tests driving the committed Node bundle — is deliberately NOT carried.
-/// Row 10's note schedules that row for RETIREMENT rather than rebinding: the
-/// behaviour it pins is the resolver's Node branch, which 10d deletes along with
-/// `dist/`. Porting it would be writing Swift for behaviour that is about to
-/// stop existing.
+/// The TypeScript file's SECOND half —
+/// `plugin.runtime.pre_swift_versions_run_the_committed_bundle`, four tests
+/// driving the committed Node bundle — was never carried, and the row was
+/// RETIRED at row 10d with the bundle it described. The resolver now has one
+/// branch: at or above the first Swift release it execs the bootstrap, and
+/// below it, it refuses and says why.
 ///
-/// One test of this half has the same fate and is carried anyway, flagged here
-/// so it is not a silent drop: `a version that is not a semantic version is
-/// refused` pins `bin/use-cases-runtime`'s version parsing, and row 10 says the
-/// resolver "can be folded away entirely" once the Node branch goes. When it is,
-/// this test goes with it — the refusal will belong to the bootstrap.
+/// `a version that is not a semantic version is refused` still pins
+/// `bin/use-cases-runtime`'s version parsing. Row 10 says the resolver "can be
+/// folded away entirely" now that the Node branch has gone; it was kept because
+/// folding it away would move this refusal, and the row bound to this file,
+/// onto the bootstrap — a separate change with its own proof.
 struct RuntimeResolverTests {
   /// An executable that reports the pid it is running as.
   static let pidReporter: @Sendable (String) -> String = { name in
