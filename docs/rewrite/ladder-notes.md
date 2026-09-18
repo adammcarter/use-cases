@@ -969,6 +969,276 @@ already Apple-Silicon-gated — or does 10d land with `pnpm -s test` gone and no
 Swift gate until a later row? 10d cannot safely remove the TypeScript until this
 is answered.
 
+## Row 10b — the surviving script tests, and the Swift CI gate
+
+### The file set is ten, measured
+
+Row 9 named `tests/plugin/*`, `tests/conformance/bootstrap/session-start.test.ts`
+and `tests/skills/init-skill.test.ts` as SURVIVES-ROW-10. Measured here by
+reading every import in `tests/**` (`from "…packages/…"`, `dist/`, `node_modules`,
+`pnpm`): **ten files** import no TypeScript and test bash, YAML, markdown and
+JSON only —
+
+  `tests/plugin/{bootstrap-cache,bootstrap-failures,bootstrap-first-run,
+  host-manifests,opencode-plugin,release-workflow,runtime-resolver,
+  session-path}.test.ts`, `tests/conformance/bootstrap/session-start.test.ts`,
+  `tests/skills/init-skill.test.ts`.
+
+Two files in `tests/plugin/` are NOT in the set, each for its own reason:
+`claude-install.test.ts` imports `CANONICAL_SKILLS` from `packages/core` and dies
+with it (it is on row 9's left-undone list), and `bundle.test.ts` is on row 9's
+"dies with the TypeScript, deliberately" list.
+
+### Where they went, and why
+
+`UseCasesOracle`, as new files under `Tests/OracleTests/Plugin/`. The subjects are
+processes and shipped files — `bin/use-cases-bootstrap`, `bin/use-cases`,
+`hooks/session-start`, the four host manifests, `.github/workflows/release.yml`,
+`opencode/plugin.js`, `skills/init/SKILL.md` — which is exactly what the oracle
+package exists to drive: it links NOTHING, so it can survive 10d, and it already
+owns `OracleProcess`, `TemporaryDirectory` and the `UC_BIN` seam. Putting them in
+`UseCasesCore`'s test target would have linked the product into tests that must
+not see it; putting them in `UseCasesCLI` or `UseCasesMCP` would have tied files
+about the PLUGIN to one of the two binaries.
+
+Per file, TS tests → Swift `@Test` functions:
+
+| TypeScript file | TS | Swift | Swift file |
+|---|---|---|---|
+| plugin/bootstrap-first-run | 7 | 7 | `BootstrapFirstRunTests` |
+| plugin/bootstrap-cache | 4 | 4 | `BootstrapCacheTests` |
+| plugin/bootstrap-failures | 7 | 7 | `BootstrapFailuresTests` |
+| plugin/release-workflow | 8 | 8 | `ReleaseWorkflowTests` |
+| plugin/host-manifests | 5 | 5 | `HostManifestsTests` (2 disabled) |
+| plugin/opencode-plugin | 4 | 4 | `OpencodePluginTests` (1 disabled) |
+| plugin/session-path | 7 | 7 | `SessionPathTests` |
+| plugin/runtime-resolver | 8 | **4** | `RuntimeResolverTests` — see below |
+| conformance/bootstrap/session-start | 6 | 6 | `SessionStartBootstrapTests` |
+| skills/init-skill | 2 | 2 | `InitSkillTests` |
+| **total** | **58** | **54** | |
+
+The four differences, all deliberate:
+
+- **`runtime-resolver`'s second describe is not carried.** Its four tests pin
+  `plugin.runtime.pre_swift_versions_run_the_committed_bundle` — the resolver's
+  Node branch — which row 10 already schedules for RETIREMENT rather than
+  rebinding, and which 10d deletes with `dist/`. Porting it would be writing
+  Swift for behaviour that is about to stop existing. One test of the FIRST
+  describe shares that fate and is carried anyway, flagged in the file:
+  `a version that is not a semantic version is refused` pins
+  `bin/use-cases-runtime`'s version parsing, and row 10 says the resolver can be
+  folded away entirely once the Node branch goes.
+- **The three `test.skip("live: …")` cases are `@Test(.disabled(…))`** with a body
+  that records an issue if reached — 10a's shape, so they are listed, skipped
+  with their reason, and cannot go green by accident.
+- **Four TypeScript in-test loops became `arguments:`** (the two unsupported
+  machines, the two host shapes of the session bootstrap, the two `bin/` entry
+  points, and the YAML reader's refused constructs). Function count unchanged,
+  case count higher.
+- **One fixture moved.** `opencode-plugin`'s "a missing bootstrap" case points at
+  `tests/fixtures/workspaces/minimal-valid`, a tree 10d deletes; the Swift test
+  uses an empty temporary directory, which proves the same thing and leaves 10d
+  nothing to trip over.
+
+Three new Swift files have no TypeScript counterpart: `Harness/ReleaseStandIn.swift`
+(below), `Harness/OracleYaml.swift` + its 3 tests, and `Plugin/CiWorkflowTests.swift`
+(7 tests, the new row). Oracle totals: **229 → 293 test functions in 80 suites passed
+(9 skipped)** — the 6 todos 10a carried plus the 3 `live:` cases above — against
+both the Swift binaries and `dist/uc.js` / `dist/uc-mcp.js`, at the same count on
+each side.
+
+### Apple-Silicon gating, in Swift
+
+`describe.skipIf(!canRunBootstrap)` has no home in the house style (no `@Suite`),
+so the condition is a trait on each test: `@Test(.enabled(if: ReleaseStandIn.canRunBootstrap))`.
+Twenty-three of the fifty-four migrated tests carry it — all of
+`Bootstrap{FirstRun,Cache,Failures}Tests`, two of `ReleaseWorkflowTests` and three
+of `RuntimeResolverTests`, which is the same set the TypeScript gates.
+
+`canRunBootstrap` reads `uname(2)` at runtime, exactly as `platform()`/`arch()` did.
+Proved BOTH ways, because a trait that is always false skips silently and exits 0:
+
+- as it stands (darwin/arm64) the five gated suites run 30 tests, none skipped;
+- with the flag forced to `false`, the same five report **23 skipped and 7 run**
+  (the six text-only `ReleaseWorkflowTests` and the one version-refusal case).
+
+The first measurement caught a real bug in this file: `utsname`'s fields are C
+char arrays, and reading one through an `Any` parameter boxes a copy, so the
+first version answered `""` and **every download test skipped while the suite
+reported 7 tests passed**. `hostPlatform()` now THROWS off Apple Silicon rather
+than answering a slug nothing publishes, so a future download test that forgets
+the trait fails loudly instead of passing against the wrong asset.
+
+### The stand-in release needs no server
+
+`tests/helpers/release-stand-in.ts` never ran an HTTP server — it publishes a
+release into a temp directory and hands back a `file://` URL, and the bootstrap's
+`curl` reads that with the same exit codes it gives for a missing remote asset
+(37 → "absent"). `Harness/ReleaseStandIn.swift` is the same shape, with three
+deliberate differences:
+
+- **No `scratch()` / `cleanupScratch()`.** Every temporary tree is a
+  `TemporaryDirectory` owned by the value that needs it; a module-level list
+  emptied in an `afterEach` is shared mutable state across tests that now run in
+  parallel in one process.
+- **The archive's SHA256 is computed with CryptoKit**, not by shelling out to
+  `shasum`. The oracle computing the digest itself is the stronger side of a
+  black box.
+- **`baseUrl` has its trailing slash trimmed.** `URL(fileURLWithPath:).absoluteString`
+  ends a directory with `/` and Node's `pathToFileURL` does not; the bootstrap
+  strips one either way, but the tests compare the URL it echoes back.
+
+`OracleProcess.run` gained `inheritEnvironment:` for this. The bootstrap suite's
+whole hermeticity rests on every `USE_CASES_*` and `XDG_CACHE_HOME` being ABSENT,
+and a merge over the test process's environment cannot express an absence.
+
+### A YAML reader the oracle owns
+
+The TypeScript parsed workflows with the `yaml` npm package. A zero-dependency
+oracle cannot, and must not borrow `UseCasesCore`'s parser — a black-box test that
+read a workflow with the product's own reader stops being black-box the moment
+that reader is wrong. `Harness/OracleYaml.swift` is the independent replacement,
+the same argument `OracleJson` already carries: block mappings, block sequences,
+literal/folded scalars and comments, and a THROW on anything else (flow
+collections, anchors, aliases, tags). Refusing rather than half-reading is the
+point — a reader that silently returned an empty mapping would make every "this
+key is absent" assertion pass having read nothing, which is the `/bin/cat` class
+of vacuity 10a found. Its three tests pin that, and the three workflow mutations
+below prove it bites in the positive direction.
+
+One simplification: `on:` is a key like any other here, so the TypeScript's
+`workflow.on ?? workflow["true"]` dance for YAML 1.1's boolean `on` disappears.
+
+### Two harness faults found while porting
+
+- **`OracleJson.encoded` escaped forward slashes.** `JSONSerialization` writes
+  `"a\/b"` where `JSON.stringify` writes `"a/b"`, so every `encoded.contains("<a
+  path>")` carried over from the TypeScript was false — and the ones asserting an
+  ABSENCE passed having read nothing. `PluginInstallClaudeTests`' "no host
+  manifest names the committed bundle" was one of them. Fixed with
+  `.withoutEscapingSlashes` and measured: pointing the Claude manifest at
+  `dist/uc-mcp.js` now fails that assertion, and did not before.
+- **`#expect(!(a?.b ?? c).d)` reports a false failure**, exactly as 10a recorded.
+  Hit once (a skill body's `hasPrefix("---")`); the value is bound to a `let`
+  first.
+
+### The CI gate
+
+`.github/workflows/swift.yml`, new, additive: `ci.yml` and `use-cases.yml` are
+untouched, so 10d removes `ci.yml` whole rather than editing it. One job on
+**`macos-15`** — GitHub's Apple Silicon image, and the same label `release.yml`
+publishes from, so the gate runs on the machine the release is built on. It
+builds the three products, tests all four packages, points the oracle at the
+freshly built binaries through `UC_BIN`/`UC_MCP_BIN` (checking the executable bit
+first, because a harness that cannot find its binary must fail rather than fall
+back), runs `swiftformat --lint` and `swiftlint lint --strict`, and ends by
+gating the matrix with the binary it just built: `verify --repo . --all` then
+`scan --repo . --gate`.
+
+Three guards exist because of faults this ladder has already measured:
+
+- **the runner's architecture is asserted, not taken from the label.** On a
+  non-arm64 runner every bootstrap suite skips and the job passes having proved
+  nothing about `release.distribution.*`, so `uname -m` is checked and the job
+  refuses.
+- **each lint step proves it READ something.** A package missing from
+  `.swiftlint.yml`'s `included:` lints zero files and reports zero violations
+  (10a). Both steps grep their own output for a non-zero file count.
+- **the gate runs the built binary, not `bin/use-cases`.** The wrapper resolves
+  to the committed Node bundle at 0.7.0; gating through it would prove the wrong
+  product.
+
+`--policy-mode feature` is passed explicitly rather than inherited, because the
+mode is what sets the bar. Measured with the built binary: default and
+`--policy-mode feature` both exit 0, `--policy-mode release` exits 1 (nothing is
+FRESH — there are no signed proofs, and minting them is `use-cases.yml`'s prove
+job with a key this workflow never sees). `--public-key` is deliberately NOT
+passed: with it, 41 rows read SUSPECT against stale signed proofs, which changes
+the report without changing the gate. `actions/checkout@v4`'s default
+`fetch-depth: 1` is also deliberate — `use-cases.yml` needs `0` because it passes
+`--base-ref` for the append-only check, and this gate passes none.
+
+**The gate cannot be pure Swift yet, and that is an ordering fact, not a choice.**
+All 93 row verifiers are still `pnpm -s vitest run <file>`, and one of them
+(`tests/cli/recover.test.ts`) runs a REAL pytest verifier. Measured: with `pnpm`
+off PATH a verifier command exits 127 (`command not found`) and `verify` records
+`status: fail` with `exit_code: 1`, and on
+a pristine `git archive` checkout `scan --gate` exits 1 (the local-✓ ledger
+`.use-cases/verification-results.jsonl` is gitignored, so CI has to produce it by
+running `verify` itself). So the workflow carries `setup-node`, `pnpm install`,
+`pnpm -s build` and a `pip install pytest` ahead of the gate. Everything but
+`setup-node` goes with 10c, which re-points the verifiers onto `swift test`;
+`setup-node` stays, because `OpencodePluginTests` runs `opencode/plugin.js` and
+proving what JavaScript registers means running it.
+
+**What is unproven until the workflow first runs.** It has never fired and
+nothing here can fire it. Validated locally: the YAML parses (through the `yaml`
+package and through `OracleYaml`), and every step's commands were run by hand on
+this machine — the arm64 guard, all four `swift test` invocations with `UC_BIN`
+set the way the step sets it, both lint gates including their file-count greps,
+`pnpm install --frozen-lockfile`, `pnpm -s build`, `verify --repo . --all` (89/89,
+2m46s) and `scan --repo . --gate` (exit 0). `actionlint` is not installed on this
+machine and was not run. Unproven: that `macos-15` resolves to an arm64 image
+(the guard is what turns that from a silent skip into a failure), that
+`brew install swiftformat swiftlint` succeeds on the runner and installs versions
+whose defaults agree with 0.62.1 / 0.65.1, that `python3 -m pip install --user
+pytest` works on the image, that the runner's Node and the frozen lockfile
+install cleanly, and the wall-clock of a full `verify --all` there.
+
+### The row, and the first Swift marker
+
+New row `ci.gate.swift_packages_are_built_tested_and_gated` in a new feature file
+`use-cases/ci/gate.yml` (feature `ci.gate`), five scenarios, vended with
+`matrix upsert`. `matrix upsert` REFUSES to create a file and refuses to mutate an
+incomplete matrix, so a new feature file cannot be born from the CLI alone: the
+file was seeded with the row and then upserted over, which is a no-op hash
+(`before_hash == after_hash`) and leaves the committed bytes the CLI's own
+rendering. Worth knowing before the next new feature file.
+
+Its verifier is the first `swift test` verifier in the matrix:
+`swift test --package-path UseCasesOracle --filter CiWorkflowTests`, run and read
+(7 tests, 1 suite) rather than trusted — row 9's `--filter` trap.
+
+Bound with `bind --mode explicit` onto `CiWorkflowTests.swift`, the first
+use-case marker in a Swift file. Two things learned:
+
+- **the marker cannot sit between a doc comment and its declaration** — swiftlint
+  reports `orphaned_doc_comment`. The span therefore starts at line 1, above the
+  imports: the whole file is the row's proof anyway.
+- **swiftformat wants a blank line before the closing marker**, and inserting it
+  changes the span's hash. Format first, then `verify`; doing it the other way
+  round leaves the row SUSPECT for no reason.
+
+Nothing else was rebound: the ten migrated files' rows still point at the
+TypeScript, exactly as 10a left the oracle's twenty-two, and 10c moves them.
+
+### Owner questions
+
+- **`package.json` and OpenCode.** `opencode-plugin.test.ts`'s first test asserts
+  `package.json` exports `./opencode/plugin.js` and `"type": "module"` — which is
+  how OpenCode resolves the plugin from a git install. It is carried as it stands,
+  because it is true today, but 10d deleting `package.json` either breaks the
+  OpenCode install, or keeps a minimal `package.json` for exactly these two keys,
+  or retires `plugin.install.opencode_from_git`. That is a decision, not a
+  migration detail.
+- **`verify --all` in CI.** The temporary Node/pnpm/pytest prelude is the honest
+  way to have the gate actually gate today. The alternatives were: land the Swift
+  gate without `verify`/`scan` until 10c re-points the verifiers, or give the
+  gate `continue-on-error` (rejected outright — a gate that cannot fail is not
+  one). If the prelude is unwanted, the verify and scan steps belong to 10c.
+- **After 10d, `SessionPathTests`' first test downloads.** `bin/use-cases` at a
+  Swift-era version goes to the bootstrap, so "runs the resolved runtime from any
+  working directory" would try to fetch a real release in CI. 10c or 10d has to
+  point it at a stand-in release or retire it.
+- **Two migrated tests READ `ci.yml` and throw the day it is deleted.**
+  `ReleaseWorkflowTests.the release pipeline is its own workflow and leaves the
+  existing gates alone` asserts `ci.yml` still carries `pnpm -s test` and
+  `pnpm -s build`; `CiWorkflowTests.the Swift gate is its own workflow and leaves
+  the existing gates alone` asserts `ci.yml` names no `swift`. Both are true and
+  worth having until 10d; both are a file read that fails once `ci.yml` is gone.
+  10d owns them — the second one's purpose (the Swift gate publishes nothing)
+  survives without the `ci.yml` half.
+
 ## Row 10 — delete TypeScript
 
 - **Every verification context hash changes.** `verificationContextHash.ts`

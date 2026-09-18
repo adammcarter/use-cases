@@ -157,8 +157,18 @@ enum OracleJson: Sendable, Equatable {
     return String(value)
   }
 
+  /// `withoutEscapingSlashes` matters, and not only cosmetically:
+  /// `JSONSerialization` writes `"a\/b"` by default while `JSON.stringify`
+  /// writes `"a/b"`, so every `encoded.contains("<a path>")` assertion carried
+  /// over from the TypeScript was false — and the ones asserting an ABSENCE
+  /// passed having read nothing. Measured against
+  /// `PluginInstallClaudeTests`'s "no host manifest names the committed
+  /// bundle", which only bites with this option set.
   private static func quoted(_ value: String) -> String {
-    let data = try? JSONSerialization.data(withJSONObject: [value], options: [])
+    let data = try? JSONSerialization.data(
+      withJSONObject: [value],
+      options: [.withoutEscapingSlashes],
+    )
     guard let data, let text = String(data: data, encoding: .utf8) else {
       return "\"\(value)\""
     }

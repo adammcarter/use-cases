@@ -57,6 +57,10 @@ struct CliBinary: Sendable {
     let exitCode: Int32
     let standardOutput: String
     let standardError: String
+    /// The pid of the process that was spawned. `RuntimeResolverTests` compares
+    /// it against the pid the executable REPORTS: they are equal only when every
+    /// wrapper in `bin/` exec'd, leaving no shell holding the server's pipes.
+    var processIdentifier: Int32 = 0
   }
 
   /// The v1 result envelope every `--json` command emits.
@@ -241,11 +245,16 @@ enum OracleLayout {
 /// to be read while the process runs — a `scan` over a thousand rows outruns a
 /// 64KB pipe buffer, and a reader that is not draining it deadlocks.
 enum OracleProcess {
+  /// `inheritEnvironment: false` runs with EXACTLY the environment passed in.
+  /// The bootstrap suites need that: their whole hermeticity rests on every
+  /// `USE_CASES_*` variable and `XDG_CACHE_HOME` being absent, and a merge over
+  /// the test process's own environment cannot express an absence.
   static func run(
     executable: String,
     arguments: [String],
     cwd: String,
     environment: [String: String],
+    inheritEnvironment: Bool = true,
   ) async throws -> CliBinary.Outcome {
     let scratch = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
       .appendingPathComponent("use-cases-oracle-\(UUID().uuidString)", isDirectory: true)
@@ -263,7 +272,7 @@ enum OracleProcess {
     process.executableURL = URL(fileURLWithPath: executable)
     process.arguments = arguments
     process.currentDirectoryURL = URL(fileURLWithPath: cwd)
-    process.environment = inherited(environment)
+    process.environment = inheritEnvironment ? inherited(environment) : environment
     process.standardOutput = try FileHandle(forWritingTo: outputURL)
     process.standardError = try FileHandle(forWritingTo: errorURL)
 
@@ -273,6 +282,7 @@ enum OracleProcess {
       termination.finish()
     }
     try process.run()
+    let pid = process.processIdentifier
     var exitCode: Int32 = -1
     for await status in terminations {
       exitCode = status
@@ -281,6 +291,7 @@ enum OracleProcess {
       exitCode: exitCode,
       standardOutput: (try? String(contentsOf: outputURL, encoding: .utf8)) ?? "",
       standardError: (try? String(contentsOf: errorURL, encoding: .utf8)) ?? "",
+      processIdentifier: pid,
     )
   }
 
