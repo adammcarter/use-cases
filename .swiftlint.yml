@@ -2,6 +2,7 @@ included:
   - UseCasesCore
   - UseCasesCLI
   - UseCasesMCP
+  - UseCasesOracle
 excluded:
   - .build
   - DerivedData
@@ -11,6 +12,8 @@ excluded:
   - UseCasesCLI/.swiftpm
   - UseCasesMCP/.build
   - UseCasesMCP/.swiftpm
+  - UseCasesOracle/.build
+  - UseCasesOracle/.swiftpm
 
 opt_in_rules:
   - force_unwrapping

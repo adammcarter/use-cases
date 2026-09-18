@@ -728,6 +728,247 @@ across sessions.
   `edge_live_mcp_not_yet_observed` stays a scenario the row does not claim.
   Changing the manifest does not turn it into an observation.
 
+## Row 10a — the black-box oracle, rewritten in Swift
+
+### Where it lives, and why it depends on nothing
+
+A fourth package, `UseCasesOracle/`, whose `Package.swift` declares ONE target:
+a test target with no dependencies at all. That is the structural expression of
+"black box". An oracle that linked `UseCasesCore` could shortcut an assertion
+through the very code it is meant to hold to account, and one that depended on
+the CLI or MCP package would stop compiling the day 10d deletes something. It
+also cannot live inside `UseCasesCLI` or `UseCasesMCP`, because it drives BOTH
+binaries and neither package depends on the other.
+
+The price of zero dependencies is that `swift test --package-path UseCasesOracle`
+does not build the binaries. So the binaries must already be built, and a
+missing or unrunnable one FAILS LOUDLY and is never replaced by a fallback —
+which is exactly what `harness.test.ts` exists to pin. `TestSupport`'s
+`TemporaryDirectory` was copied rather than imported, for the same reason.
+
+- `UC_BIN` unset resolves `UseCasesCLI/.build/{debug,release}/use-cases`;
+  `UC_MCP_BIN` unset resolves `UseCasesMCP/.build/{debug,release}/use-cases-mcp`.
+- Either variable, set, names the binary verbatim — which is how the same suite
+  was pointed at `dist/uc.js` and `dist/uc-mcp.js` (both are executable with a
+  `#!/usr/bin/env node` shebang, so no wrapper script is needed).
+- `.swiftlint.yml` gained `UseCasesOracle` under `included:` — checked by
+  deliberately breaking a line and watching lint fail, because a package absent
+  from `included:` lints 0 violations having read nothing. Same silent-green
+  class as row 9's `--filter` trap.
+
+### The two helpers
+
+- `Harness/CliBinary.swift` — the Swift shape of `tests/helpers/uc-binary.ts`:
+  resolve (command + leading args + `overridden`), `run` (never throws on a
+  nonzero exit), `runJson` (throws only on unparseable stdout, naming the
+  command and attaching stderr). Both streams go to FILES under a private temp
+  directory, never pipes: a `scan` over a large repo outruns a 64KB pipe buffer
+  and a reader that is not draining it deadlocks. The process is awaited on an
+  `AsyncStream` fed by `terminationHandler` — nothing polls.
+- `Harness/McpSession.swift` — the Swift shape of `tests/helpers/mcp-server.ts`:
+  an `actor` holding the pending table, stdout chunks arriving on an
+  `AsyncStream` fed by the pipe's `readabilityHandler`, newline framing, ids
+  matched across interleaved lines, a 15 second ceiling per request implemented
+  as a `withThrowingTaskGroup` race against `Task.sleep`. A released session
+  terminates its server in `deinit`, which is what the TypeScript's
+  `afterAll(() => sessions.forEach(s => s.stop()))` did in one place.
+- `Harness/OracleJson.swift` — a small independent JSON reader. The oracle
+  cannot borrow `UseCasesCore`'s `JSONValue`: a black-box test that decoded with
+  the product's own decoder stops being black-box the moment that decoder is
+  wrong.
+
+### Two harness bugs the port had to find, both measured
+
+- **`FileHandle.bytes` starves the cooperative pool.** The first `McpSession`
+  read stdout with `handle.bytes.lines`. With six MCP sessions in parallel every
+  request timed out at 15s; one test passed. `readabilityHandler` + an
+  `AsyncStream<Data>` (the exact shape of `child.stdout.on("data")`) fixed it.
+- **Registering the continuation AFTER writing the frame is a real race.** Under
+  a loaded full-suite run the server answered while the caller was still hopping
+  onto the actor, `consume` found no pending id, dropped the line, and the
+  request sat until the ceiling. The frame is now written INSIDE the continuation
+  body, after the id is in the table — which is the order `mcp-server.ts` keeps.
+  Two runs failed this way before the fix; every run since has passed.
+
+### The faithfulness proof
+
+Both binaries, same suite, same numbers:
+
+| run | result |
+|---|---|
+| Swift `use-cases` + `use-cases-mcp` (default resolution) | **229 tests in 68 suites passed** (6 skipped), 39.6s |
+| `UC_BIN=dist/uc.js UC_MCP_BIN=dist/uc-mcp.js` | **229 tests in 68 suites passed** (6 skipped), 11.7s |
+
+229 is test FUNCTIONS, which is how the runner counts them, and it INCLUDES the
+6 disabled todos (223 ran, 6 skipped) — so it compares like for like with the
+TS column below, which includes its 6 `test.todo`. 10 of the 229 are
+parameterised and expand to 30 cases, so 249 cases are executed.
+
+Equal counts on both sides is the check that matters: a Swift-229 / Node-fewer
+pair would mean some tests silently no-opped against one binary. Both sides were
+run three times consecutively at this count (Swift 50.7s / 41.1s / 39.6s, Node
+11.7s / 12.2s / 12.3s) — the parallel race described above was load-dependent,
+so a single green run is not evidence of a stable one.
+
+**What the 229 actually exercises.** Not all of them talk to the binary under
+test, and the honest number is worth stating in a subrow about not overstating
+an oracle. Running the whole suite against a binary that does nothing
+(`UC_BIN=<a script that exits 0>`, `UC_MCP_BIN=/bin/cat`) leaves **18 test
+functions (32 test cases) still passing**: the `plugin-install-claude` manifest
+checks, most of `agents-roster`'s body assertions, two of the
+`plugin-init-loop-skill` pattern checks, and all six `HarnessTests` (which drive
+shell stubs, or the built Swift CLI by construction). Fifteen of those 18 read shipped
+repository artifacts; the other three are the `HarnessTests` default-resolution
+cases, which drive the built Swift CLI by construction. Either way they are
+constant across the two binaries by design. The
+cross-check above is therefore a claim about **211 test functions**, which is
+still the whole of the product surface these files cover.
+
+### The oracle can fail
+
+A suite that cannot go red proves nothing, and two of the three helper bugs
+found here were of the kind that turns a test into a no-op. So both seams were
+measured against a lying binary:
+
+| liar | result |
+|---|---|
+| `UC_BIN=<script: exit 0>` over four CLI suites | 14 tests, **19 issues**, all red |
+| `UC_MCP_BIN=/bin/cat` over all 9 MCP suites | 26 tests, **74 issues**, all red |
+
+`/bin/cat` is the sharpest MCP liar available: it echoes each request back, so
+the reply carries the right `id` and the session resolves normally — only the
+`result` is missing. A test that passes against it is not reading the server.
+
+The first `/bin/cat` run found exactly two such tests, both of them assertions
+about an ABSENCE (`prove` is not in the tool list; a read mutates nothing), which
+an empty answer satisfies. Each now carries a positive guard for the surface it
+is an absence from — the tool list has to have been listed, each resource read
+has to have returned content — and both go red against `/bin/cat`. A third,
+`a results ledger attested on another machine reads unattested here`, had the
+same shape for a different reason: it re-serialises the record with sorted keys
+before changing the machine key, so a byte-sensitive attestation would fail for
+the wrong reason. It now reads the rewritten ledger under the ORIGINAL key first
+and expects `VERIFIED_LOCAL`, which passes — the product hashes the parsed
+record, not the raw line — so the second read isolates the key, as intended.
+
+Per file, TS tests → Swift `@Test` functions (the TS counts include `test.todo`):
+
+| TypeScript file | TS | Swift | Swift file(s) |
+|---|---|---|---|
+| agents-roster | 10 | 10 | `AgentsRosterTests` (3 suites) |
+| capsule-demos | 14 | 14 | `CapsuleDemosTests` 7 + `CapsuleCommandSafetyTests` 7 |
+| capsule-runner | 3 | 3 | `CapsuleRunnerTests` |
+| diagnostics-contracts | 11 | 11 | `DiagnosticsContractsTests` (4 suites) |
+| evidence-core | 3 | 3 | `EvidenceCoreTests` |
+| evidence-ledger | 9 | 9 | `EvidenceLedgerTests` (4 suites) |
+| harness | 5 | **6** | `HarnessTests` — one ADDED, see below |
+| lifecycle-bindings | 15 | 15 | `LifecycleBindingsTests` (3 suites) |
+| lifecycle-signals | 50 | 50 | 9 files, 12 suites |
+| matrix-core | 7 | 7 | `MatrixCoreTests` (2 suites) |
+| matrix-product-inventory | 9 | 9 | `MatrixProductInventoryTests` (3 suites) |
+| matrix-product | 5 | 5 | `MatrixProductTests` (2 suites) |
+| mcp-resources | 8 | 8 | `McpResourcesTests` (3 suites) |
+| mcp-surface | 12 | 12 | `McpSurfaceTests` (5 suites) |
+| mcp-wrapper | 6 | 6 | `McpWrapperTests` |
+| planning-cards | 14 | 14 | `PlanningCardsTests` (5 suites) |
+| plugin-init-loop-skill | 4 | 4 | `PluginInitLoopSkillTests` |
+| plugin-install-claude | 5 | 5 | `PluginInstallClaudeTests` |
+| security-redaction | 4 | 4 | `SecurityRedactionTests` |
+| showcase-flow | 20 | 20 | `ShowcaseFlowTests` 9 + `ShowcaseFailureDecisionsTests` 7 + `ShowcaseApprovalBoundaryTests` 4 |
+| skills-assets-validation | 6 | 6 | `SkillsAssetsValidationTests` (2 suites) |
+| skills-assets | 8 | 8 | `SkillsAssetsTests` (2 suites) |
+| **total** | **228** | **229** | |
+
+Nothing was dropped. The differences, all deliberate:
+
+- **`harness.test.ts` could not be transcribed, and gained a test.** It asserts
+  the TS seam's NODE default (`leadingArgs[0]` ends `packages/cli/dist/index.js`)
+  and mutates `process.env.UC_BIN` around each case. Swift Testing runs a suite
+  in one process in parallel, where `setenv` is unsafe and visible to every other
+  test, so the override is a PARAMETER (`CliBinary.resolved(override:)`) and the
+  default under test is the Swift build. The five properties are all carried
+  (default resolves to the build under test; `UC_BIN` is honoured; a nonzero exit
+  is returned not thrown; unparseable stdout fails naming the command; `run`
+  hands back raw stdout). The sixth is NEW and is the reason the file exists: a
+  `UC_BIN` naming a missing or non-executable path is REFUSED, never silently
+  replaced by the default. In TypeScript that mistake was unrepresentable —
+  `spawnSync` simply failed; in Swift the seam resolves a path itself and could
+  fall back, and nothing else would notice.
+- **Two files never touch a binary, so their dual-run pass proves nothing about
+  either build.** `plugin-install-claude` reads only the shipped manifests, and
+  `HarnessTests`' default-resolution case always runs the Swift build whichever
+  binary the run is pointed at. Both are still worth having; neither is evidence
+  of parity.
+- **Parameterisation, per house style.** Nine `@Test` functions carry
+  `arguments:` where the TypeScript looped inside one test (e.g. the roster's
+  three agent bodies, the redaction forbidden-pattern list, the three showcase
+  actors). The function count is unchanged; the case count is higher.
+
+### The six todos
+
+Swift Testing has no `todo`, so each is `@Test(.disabled("<the same reason>"))`
+with a body that records an issue if it is ever reached. They are listed in the
+run, reported as skipped with their reason, and cannot go green by accident:
+
+- `plugin-install-claude`: `edge_live_session` (a host observation).
+- `skills-assets`: `bad_misdirected` (the row claims behaviour the tool lacks).
+- `matrix-product-inventory`: `golden_cli`'s usage/scenario half (`matrix list`
+  projects neither).
+- `showcase-flow`: all three `revision_epoch_staleness` scenarios (no CLI
+  command appends an `epoch_started` event).
+
+### Found while porting
+
+- **`#expect(!(x?.y ?? []).isEmpty)` reports a FALSE FAILURE.** The Swift
+  Testing macro expands a negated property access over an optional chain into
+  `__checkPropertyAccess` on the OPTIONAL, and the `?? []` is lost: the check
+  fails while the array is non-empty. Hit three times, on assertions that were
+  correct. It fails LOUD (never a false pass), but the cure is to bind the value
+  to a `let` first, and every site in the oracle now does.
+- **`FileManager.enumerator` answers `/private/var/…` while a
+  `TemporaryDirectory`'s own `path` is `/var/…`**, so trimming the prefix off
+  enumerated paths silently yielded ABSOLUTE paths. Two "the run directory holds
+  only the ledger" assertions caught it; three earlier uses had masked it by
+  comparing two lists produced the same way. Both sides are now resolved before
+  the trim, and `TemporaryDirectory.realPath` (realpath(3), which is what Node's
+  `realpathSync` answers and what a product process reports as its cwd) is
+  separate from `resolvingSymlinksInPath()`, which strips `/private`.
+- **The oracle needed an ed25519 keypair without a dependency.** `showcase-flow`
+  mints one with `node:crypto`. Swift uses CryptoKit — a system framework, not a
+  package dependency — wrapped in the two fixed DER envelopes RFC 8410 defines
+  for this curve (16-byte PKCS#8 prefix, 12-byte SPKI prefix, raw key appended).
+  `approve-run` accepts the PEM and the signed token verifies, so the key stays
+  INDEPENDENT of the binary under test, which is the property that matters.
+- **The `skills-assets` pair share one `ShippedPluginCopy` helper.** Each
+  TypeScript file carried its own byte-identical `makePluginCopy`; a Swift test
+  target is one module with one namespace. The helper builds a layout and
+  asserts nothing, so an edit to it cannot restate what a row promises.
+- **`impact --repo .` against this repository takes ~47s**, which is most of the
+  oracle's wall clock. It is what `agents-roster.test.ts` does too.
+
+### Left for 10b/10c/10d
+
+Nothing here was rebound and no TypeScript was deleted: the 22 oracle files, the
+markers in them, every row's verifier and the vitest suite are all untouched, so
+`pnpm test` and `use-cases verify --all` still measure exactly what they did
+before. `.swiftlint.yml` is the only config that needed a line (the package is
+outside the existing `included:` roots); `.gitignore` needed none, because its
+bare `.build/` matches at any depth — `git status --untracked-files=all
+UseCasesOracle` lists no build or `.swiftpm` path, so the untracked directory
+can be added whole. `UseCasesOracle` is not in `.github/workflows/ci.yml`, which runs on
+ubuntu and builds no Swift at all — wiring the Swift suites into CI is a
+separate job that 10d will have to face when `pnpm -s test` stops existing.
+
+### Owner question
+
+`.github/workflows/ci.yml` runs on ubuntu and builds no Swift, so today the only
+gate in CI is the vitest suite that 10d deletes. Should the Swift suites (Core,
+CLI, MCP and `UseCasesOracle`) be wired into CI as part of 10b — which needs a
+macOS runner, since the oracle drives real binaries and the bootstrap suites are
+already Apple-Silicon-gated — or does 10d land with `pnpm -s test` gone and no
+Swift gate until a later row? 10d cannot safely remove the TypeScript until this
+is answered.
+
 ## Row 10 — delete TypeScript
 
 - **Every verification context hash changes.** `verificationContextHash.ts`
