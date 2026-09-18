@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 
+//: @use-case:capsule.live_runner.scripted#blackbox
 /// The black-box oracle for capsule/runner.yml.
 ///
 /// This is the one place a demo capsule stops being prepared material and
@@ -272,3 +273,5 @@ struct CapsuleRunnerTests {
     #expect(performed.data.at("status.approval_state")?.stringValue == "not_required")
   }
 }
+
+//: @use-case:end capsule.live_runner.scripted#blackbox

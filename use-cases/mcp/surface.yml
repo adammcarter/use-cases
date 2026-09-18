@@ -67,16 +67,15 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/mcp-surface.test.ts
-            - -t
-            - mcp.surface.cli_contract_transport
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - McpSurfaceTransportTests
           inputs:
-            - tests/blackbox/mcp-surface.test.ts
-            - tests/helpers/mcp-server.ts
+            - UseCasesOracle/Tests/OracleTests/Mcp/McpSurfaceTests.swift
+            - UseCasesOracle/Tests/OracleTests/Harness/McpSession.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -153,16 +152,15 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/mcp-surface.test.ts
-            - -t
-            - mcp.surface.write_gating
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - McpSurfaceWriteGatingTests
           inputs:
-            - tests/blackbox/mcp-surface.test.ts
-            - tests/helpers/mcp-server.ts
+            - UseCasesOracle/Tests/OracleTests/Mcp/McpSurfaceTests.swift
+            - UseCasesOracle/Tests/OracleTests/Harness/McpSession.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -234,16 +232,15 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/mcp-surface.test.ts
-            - -t
-            - mcp.surface.approval_request_only
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - McpSurfaceApprovalTests
           inputs:
-            - tests/blackbox/mcp-surface.test.ts
-            - tests/helpers/mcp-server.ts
+            - UseCasesOracle/Tests/OracleTests/Mcp/McpSurfaceTests.swift
+            - UseCasesOracle/Tests/OracleTests/Harness/McpSession.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -313,16 +310,15 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/mcp-surface.test.ts
-            - -t
-            - mcp.surface.domain_results_not_transport_failures
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - McpSurfaceDomainResultsTests
           inputs:
-            - tests/blackbox/mcp-surface.test.ts
-            - tests/helpers/mcp-server.ts
+            - UseCasesOracle/Tests/OracleTests/Mcp/McpSurfaceTests.swift
+            - UseCasesOracle/Tests/OracleTests/Harness/McpSession.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -389,16 +385,15 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/mcp-surface.test.ts
-            - -t
-            - mcp.surface.declared_tool_schemas
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - McpSurfaceToolSchemasTests
           inputs:
-            - tests/blackbox/mcp-surface.test.ts
-            - tests/helpers/mcp-server.ts
+            - UseCasesOracle/Tests/OracleTests/Mcp/McpSurfaceTests.swift
+            - UseCasesOracle/Tests/OracleTests/Harness/McpSession.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:

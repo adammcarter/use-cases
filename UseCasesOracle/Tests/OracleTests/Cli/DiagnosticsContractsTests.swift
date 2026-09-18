@@ -81,6 +81,7 @@ enum DiagnosticsWorkspace {
   }
 }
 
+//: @use-case:diagnostics.contracts.root_resolution#blackbox
 /// The black-box oracle for diagnostics/contracts.yml, row `root_resolution`.
 ///
 /// Four of the file's five rows are here. The fifth, missing_build_hint, is
@@ -157,6 +158,9 @@ struct DiagnosticsRootResolutionTests {
   }
 }
 
+//: @use-case:end diagnostics.contracts.root_resolution#blackbox
+
+//: @use-case:diagnostics.contracts.schema_contract_surface#blackbox
 /// The black-box oracle for diagnostics/contracts.yml, row
 /// `schema_contract_surface`.
 struct DiagnosticsSchemaSurfaceTests {
@@ -232,6 +236,9 @@ struct DiagnosticsSchemaSurfaceTests {
   }
 }
 
+//: @use-case:end diagnostics.contracts.schema_contract_surface#blackbox
+
+//: @use-case:diagnostics.contracts.identity_consistency#blackbox
 /// The black-box oracle for diagnostics/contracts.yml, row
 /// `identity_consistency`.
 struct DiagnosticsIdentityTests {
@@ -272,6 +279,9 @@ struct DiagnosticsIdentityTests {
   }
 }
 
+//: @use-case:end diagnostics.contracts.identity_consistency#blackbox
+
+//: @use-case:diagnostics.contracts.cli_self_documents#blackbox
 /// The black-box oracle for diagnostics/contracts.yml, row
 /// `cli_self_documents`.
 struct DiagnosticsSelfDocumentingTests {
@@ -319,3 +329,5 @@ struct DiagnosticsSelfDocumentingTests {
     #expect(printed.contains("use-cases --help"))
   }
 }
+
+//: @use-case:end diagnostics.contracts.cli_self_documents#blackbox

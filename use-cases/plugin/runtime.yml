@@ -79,15 +79,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/plugin/runtime-resolver.test.ts
-            - -t
-            - a version whose release publishes Swift assets
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - RuntimeResolverTests
           inputs:
-            - tests/plugin/runtime-resolver.test.ts
+            - UseCasesOracle/Tests/OracleTests/Plugin/RuntimeResolverTests.swift
             - bin/use-cases-runtime
             - bin/use-cases
             - bin/use-cases-mcp

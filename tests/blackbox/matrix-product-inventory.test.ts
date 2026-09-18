@@ -137,7 +137,6 @@ function status(workspace: Workspace) {
   });
 }
 
-//: @use-case:matrix.product.product_inventory#blackbox
 describe("matrix.product.product_inventory", () => {
   // golden_cli. A product-tier row and a primitive/support-tier row coexist in
   // one list, and each carries the value/journey metadata a selection is made
@@ -204,9 +203,7 @@ describe("matrix.product.product_inventory", () => {
     expect(supporting, "but it is still directly retrievable as supporting proof").toEqual(["probe.primitive.op"]);
   });
 });
-//: @use-case:end matrix.product.product_inventory#blackbox
 
-//: @use-case:matrix.product.sharded_human_readable_files#blackbox
 describe("matrix.product.sharded_human_readable_files", () => {
   // golden_layout. Two feature shards, each with one feature summary and one
   // related row, validate together as a single matrix.
@@ -262,9 +259,7 @@ describe("matrix.product.sharded_human_readable_files", () => {
     expect(byFile.get("use-cases/beta.yml")).toEqual(new Set(["probe.beta"]));
   });
 });
-//: @use-case:end matrix.product.sharded_human_readable_files#blackbox
 
-//: @use-case:matrix.product.status_summary#blackbox
 describe("matrix.product.status_summary", () => {
   // golden_report. Row counts, integrity state, and evidence coverage are all
   // readable from the one `matrix status` call.
@@ -315,4 +310,3 @@ describe("matrix.product.status_summary", () => {
     expect(envelope.data.matrix.integrity.blocking_diagnostic_count).toBeGreaterThan(0);
   });
 });
-//: @use-case:end matrix.product.status_summary#blackbox

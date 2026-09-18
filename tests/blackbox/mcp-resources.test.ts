@@ -97,7 +97,6 @@ const WORKSPACE_URIS = [
   "use-cases://ledger", "use-cases://evidence", "use-cases://schemas", "use-cases://config"
 ];
 
-//: @use-case:mcp.resources.workspace_state_is_readable_and_read_only#blackbox
 describe("mcp.resources.workspace_state_is_readable_and_read_only", () => {
   // golden_list_and_read.
   test("initialize advertises resources and prompts, and the expected URIs are listed and readable", async () => {
@@ -144,9 +143,7 @@ describe("mcp.resources.workspace_state_is_readable_and_read_only", () => {
     expect(snapshot(dir), "a read must leave the workspace byte-for-byte").toEqual(before);
   });
 });
-//: @use-case:end mcp.resources.workspace_state_is_readable_and_read_only#blackbox
 
-//: @use-case:mcp.resources.schemas_are_readable_without_a_repo#blackbox
 describe("mcp.resources.schemas_are_readable_without_a_repo", () => {
   // golden_named_schema and edge_index_lists_ids. The contract is what an
   // integrator depends on, and it does not belong to any one repo.
@@ -168,9 +165,7 @@ describe("mcp.resources.schemas_are_readable_without_a_repo", () => {
     expect((one.result?.contents as Array<{ text: string }>)[0].text).toContain("$schema");
   });
 });
-//: @use-case:end mcp.resources.schemas_are_readable_without_a_repo#blackbox
 
-//: @use-case:mcp.resources.prompts_guide_without_widening_the_surface#blackbox
 describe("mcp.resources.prompts_guide_without_widening_the_surface", () => {
   // golden_list_and_get.
   test("the four guided prompts are listed and a get returns a grounded message", async () => {
@@ -206,4 +201,3 @@ describe("mcp.resources.prompts_guide_without_widening_the_surface", () => {
     expect(JSON.stringify(got)).toMatch(/error|unknown|not.?found/i);
   });
 });
-//: @use-case:end mcp.resources.prompts_guide_without_widening_the_surface#blackbox

@@ -34,25 +34,33 @@ jobs:
       # Node is pinned rather than taken from the image because two things still
       # need a JavaScript runtime. One is PERMANENT: the oracle's
       # OpencodePluginTests runs `opencode/plugin.js`, which is JavaScript the
-      # host executes, so proving what it registers means running it. The rest is
-      # TEMPORARY and is what 10c and 10d delete from this file — every row's
-      # verifier is still `pnpm -s vitest run <file>`, and one of them
-      # (tests/cli/recover.test.ts) runs a REAL pytest verifier, so the
-      # `verify --all` at the bottom cannot pass without pnpm, the built
-      # TypeScript and pytest. When 10c re-points the verifiers onto
-      # `swift test`, everything but setup-node goes.
+      # host executes, so proving what it registers means running it.
+      #
+      # `pnpm` is the other, and it is TEMPORARY. Row 10c moved 86 of the 90
+      # runnable row verifiers onto `swift test`; FOUR still run
+      # `pnpm -s vitest`, because the behaviour they pin is TypeScript that has
+      # no Swift counterpart and that 10d deletes with it —
+      # `diagnostics.contracts.missing_build_hint` (the CLI's "run the build"
+      # hint, which cannot exist once Core is linked statically),
+      # `plugin.bundle.runs_from_clean_clone` and
+      # `plugin.runtime.pre_swift_versions_run_the_committed_bundle` (both about
+      # `dist/`), and `skills.assets.demo_gates` (the live `skills/` bodies,
+      # which nothing in Swift reads). Until those four are retired or given
+      # carriers, `verify --all` below needs pnpm and the built TypeScript.
+      #
+      # The `pip install pytest` step that stood here is GONE:
+      # `signing.tier.recover_never_fakes_green` no longer runs
+      # `tests/cli/recover.test.ts`, and no remaining verifier spawns pytest.
+      # Measured: `swift test --package-path UseCasesOracle --filter
+      # LifecycleRunClassTests` — the only suite that feeds a `python.pytest`
+      # preset into a real `verify` — passes all 5 tests with pytest off PATH,
+      # because it asserts the derived `run_class`, not the run's verdict.
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
       - run: corepack enable
       - run: corepack pnpm install --frozen-lockfile
       - run: corepack pnpm -s build
-      - name: pytest, for the one verifier that runs a real toolchain
-        run: |
-          set -euo pipefail
-          python3 -m pip install --user --quiet pytest \
-            || python3 -m pip install --quiet --break-system-packages pytest
-          echo "$(python3 -m site --user-base)/bin" >>"$GITHUB_PATH"
 
       # ADR 0007 decision 6 pins the toolchain; print what the runner has, so a
       # failure is readable from the log without a rerun.

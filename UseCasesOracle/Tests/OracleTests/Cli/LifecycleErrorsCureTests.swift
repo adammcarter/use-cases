@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 
+//: @use-case:lifecycle.signals.errors_hand_back_the_cure#blackbox
 /// The black-box oracle for lifecycle/signals.yml, row
 /// `errors_hand_back_the_cure`.
 struct LifecycleErrorsCureTests {
@@ -109,3 +110,5 @@ struct LifecycleErrorsCureTests {
     )
   }
 }
+
+//: @use-case:end lifecycle.signals.errors_hand_back_the_cure#blackbox

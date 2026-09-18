@@ -92,7 +92,6 @@ const GITIGNORE_ENTRIES: { pattern: string; comment: string }[] = [
 // Ensure every entry is present in .gitignore. APPEND-ONLY: an adopter's file is
 // never rewritten or reordered, and an entry they already wrote is left alone.
 // Returns true when the file was created or modified.
-//: @use-case:lifecycle.signals.transient_output_stays_out_of_git
 function ensureGitignoreEntries(repoRoot: string): boolean {
   const gitignorePath = join(repoRoot, GITIGNORE_FILE);
   const existing = existsSync(gitignorePath) ? readFileSync(gitignorePath, "utf8") : null;
@@ -121,7 +120,6 @@ function ensureGitignoreEntries(repoRoot: string): boolean {
   );
   return true;
 }
-//: @use-case:end lifecycle.signals.transient_output_stays_out_of_git
 
 export function scaffoldWorkspace(options: ScaffoldWorkspaceOptions): ScaffoldWorkspaceResult {
   const template: InitTemplate = options.template ?? "generic";
@@ -225,7 +223,6 @@ export function scaffoldWorkspace(options: ScaffoldWorkspaceOptions): ScaffoldWo
 const AGENTS_MD_FILE = "AGENTS.md";
 const DECISION_HEADING = "## Use-case driven development";
 
-//: @use-case:plugin.init.records_decision_in_agents_md#code
 function ensureAgentsMdDecision(
   repoRoot: string,
   today: string
@@ -261,7 +258,6 @@ function ensureAgentsMdDecision(
   writeFileSync(path, `${existing}${separator}${spacer}${section}`, "utf8");
   return { status: "appended", decision: "yes" };
 }
-//: @use-case:end plugin.init.records_decision_in_agents_md#code
 
 // ---------------------------------------------------------------------------
 // Git hooks — enforcement from the first commit.
@@ -316,7 +312,6 @@ function prePushBlock(): string[] {
   ];
 }
 
-//: @use-case:plugin.init.wires_git_hooks#code
 function ensureGitHooks(repoRoot: string): { hooks_dir: string; hooks_path_set: boolean; written: string[]; extended: string[] } {
   const isGitRepo = spawnSync("git", ["rev-parse", "--git-dir"], { cwd: repoRoot, encoding: "utf8" }).status === 0;
   const configured = isGitRepo
@@ -351,7 +346,6 @@ function ensureGitHooks(repoRoot: string): { hooks_dir: string; hooks_path_set: 
   }
   return { hooks_dir: hooksDir, hooks_path_set: hooksPathSet, written, extended };
 }
-//: @use-case:end plugin.init.wires_git_hooks#code
 
 type VerifierPlan = {
   // The YAML body for the `acceptance` verifier entry (indented two extra spaces
@@ -440,7 +434,6 @@ function renderConfig(componentId: string, verifier: VerifierPlan): string {
   ].join("\n");
 }
 
-//: @use-case:plugin.init.vends_sample_matrix#code
 function renderExampleUseCase(): string {
   return [
     "schema_version: 1",
@@ -518,7 +511,6 @@ function renderExampleUseCase(): string {
     ""
   ].join("\n");
 }
-//: @use-case:end plugin.init.vends_sample_matrix#code
 
 // Extra files that make a template's scaffolded example RUNNABLE out of the
 // box. The `generic`, `python-pytest`, and `go-test` templates ship none here

@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 
+//: @use-case:lifecycle.signals.impact_leads_with_the_union#blackbox
 /// The black-box oracle for lifecycle/signals.yml, row
 /// `impact_leads_with_the_union`.
 struct LifecycleImpactUnionTests {
@@ -83,6 +84,9 @@ struct LifecycleImpactUnionTests {
   }
 }
 
+//: @use-case:end lifecycle.signals.impact_leads_with_the_union#blackbox
+
+//: @use-case:lifecycle.signals.transient_output_stays_out_of_git#blackbox
 /// The black-box oracle for lifecycle/signals.yml, row
 /// `transient_output_stays_out_of_git`.
 struct LifecycleTransientOutputTests {
@@ -140,3 +144,5 @@ struct LifecycleTransientOutputTests {
     }
   }
 }
+
+//: @use-case:end lifecycle.signals.transient_output_stays_out_of_git#blackbox

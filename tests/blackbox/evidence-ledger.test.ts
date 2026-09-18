@@ -120,7 +120,6 @@ function status(workspace: Workspace) {
   });
 }
 
-//: @use-case:evidence.ledger.product_proof_map#blackbox
 describe("evidence.ledger.product_proof_map", () => {
   // golden_record. Proof is traceable from the event back to the row and the
   // hash of the row as it was when the evidence was taken.
@@ -177,9 +176,7 @@ describe("evidence.ledger.product_proof_map", () => {
     ).toContain("probe.core.beta");
   });
 });
-//: @use-case:end evidence.ledger.product_proof_map#blackbox
 
-//: @use-case:evidence.ledger.append_only_corrections#blackbox
 describe("evidence.ledger.append_only_corrections", () => {
   // golden_void and edge_history_survives_the_correction.
   test("a void is appended with the correct head, and the original event survives", () => {
@@ -219,9 +216,7 @@ describe("evidence.ledger.append_only_corrections", () => {
     expect(readFileSync(join(workspace.dir, ledger_path), "utf8")).toBe(before);
   });
 });
-//: @use-case:end evidence.ledger.append_only_corrections#blackbox
 
-//: @use-case:evidence.ledger.assurance_and_freshness#blackbox
 describe("evidence.ledger.assurance_and_freshness", () => {
   // golden_assurance_class. The class reflects how the proof was CAPTURED, not
   // what it claims: a written summary is `reported` whatever it says.
@@ -257,9 +252,7 @@ describe("evidence.ledger.assurance_and_freshness", () => {
     ).not.toContain(currentRowHash(workspace, "alpha"));
   });
 });
-//: @use-case:end evidence.ledger.assurance_and_freshness#blackbox
 
-//: @use-case:evidence.ledger.damaged_ledger_replay#blackbox
 describe("evidence.ledger.damaged_ledger_replay", () => {
   // golden_partial. Valid events survive a damaged neighbour.
   test("a torn line does not cost the valid events around it", () => {
@@ -298,4 +291,3 @@ describe("evidence.ledger.damaged_ledger_replay", () => {
     expect(JSON.stringify(envelope.diagnostics)).toContain("evidence_parse_error");
   });
 });
-//: @use-case:end evidence.ledger.damaged_ledger_replay#blackbox

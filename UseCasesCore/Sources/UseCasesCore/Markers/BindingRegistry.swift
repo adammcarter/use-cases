@@ -180,6 +180,7 @@ public enum BindingRegistry {
     validate(read(text), yamlRowIdentifiers: yamlRowIdentifiers)
   }
 
+  //: @use-case:lifecycle.bindings.retired_row_can_leave_the_matrix
   /// Validate in order against the schema and the spec 4.3 rules, folding the
   /// accepted events. Rule 5 (the row exists) runs over the LIVE slugs after
   /// the fold, so a row may leave the matrix once its bindings are released.
@@ -214,6 +215,8 @@ public enum BindingRegistry {
       registry: fold.registry,
     )
   }
+
+  //: @use-case:end lifecycle.bindings.retired_row_can_leave_the_matrix
 
   /// Fold already-validated events; no conflict checks are repeated.
   public static func materialize(_ events: [RegistryEvent]) -> MaterializedRegistry {

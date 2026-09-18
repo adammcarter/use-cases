@@ -169,7 +169,6 @@ function verifiedWorkspace(): { workspace: Workspace; record: Record<string, unk
   return { workspace, record: readOnlyRecord(workspace) };
 }
 
-//: @use-case:lifecycle.signals.local_results_are_attested#blackbox
 describe("lifecycle.signals.local_results_are_attested", () => {
   // edge_scan_never_mints_a_key. The keyless tier rests on scan being unable to
   // attest anything, and the only way to see that from outside is that no key
@@ -259,7 +258,6 @@ describe("lifecycle.signals.local_results_are_attested", () => {
     ).toBe("UNATTESTED_LOCAL");
   });
 });
-//: @use-case:end lifecycle.signals.local_results_are_attested#blackbox
 
 /** Drive the behaviour through the tool, which is what a performed run means. */
 function drive(workspace: Workspace, key: string, argv: string[]) {
@@ -270,7 +268,6 @@ function drive(workspace: Workspace, key: string, argv: string[]) {
   );
 }
 
-//: @use-case:lifecycle.signals.performed_runs_count#blackbox
 describe("lifecycle.signals.performed_runs_count", () => {
   // edge_same_row_driven_twice. Driving one behaviour twice must not report two
   // proofs — otherwise the acceptance claim inflates with repetition, which is
@@ -416,9 +413,7 @@ describe("lifecycle.signals.performed_runs_count", () => {
     expect(status.acceptance_claim.claimable).toBe(false);
   });
 });
-//: @use-case:end lifecycle.signals.performed_runs_count#blackbox
 
-//: @use-case:lifecycle.signals.run_class_is_derived#blackbox
 describe("lifecycle.signals.run_class_is_derived", () => {
   // A preset verifier carries NO `kind:` — the preset IS the kind, and adding
   // one makes the row invalid. Measured against the schema, not assumed.
@@ -507,7 +502,6 @@ describe("lifecycle.signals.run_class_is_derived", () => {
     expect(envelope.data.overclaimed_rows).not.toContain("probe.core.thing");
   });
 });
-//: @use-case:end lifecycle.signals.run_class_is_derived#blackbox
 
 
 // ---------------------------------------------------------------------------
@@ -629,7 +623,6 @@ function rowStatus(workspace: Workspace, row: string) {
   return scan(workspace).rows.find((r) => r.row_id === `probe.core.${row}`);
 }
 
-//: @use-case:lifecycle.signals.verify_preserves_other_rows#blackbox
 describe("lifecycle.signals.verify_preserves_other_rows", () => {
   // golden_single_row. The incremental loop the docs recommend has to be safe:
   // verifying one row must not cost another row its evidence.
@@ -690,9 +683,7 @@ describe("lifecycle.signals.verify_preserves_other_rows", () => {
     expect(ledgerLineCount(workspace), "a run that targeted nothing must write nothing away").toBe(before);
   });
 });
-//: @use-case:end lifecycle.signals.verify_preserves_other_rows#blackbox
 
-//: @use-case:lifecycle.signals.acceptance_claim_is_honest#blackbox
 describe("lifecycle.signals.acceptance_claim_is_honest", () => {
   // bad_nothing_proven. The field an agent quotes must say NOT_SUPPORTED while
   // nothing is proven, even though the policy guard is green — the guard is
@@ -742,9 +733,7 @@ describe("lifecycle.signals.acceptance_claim_is_honest", () => {
     expect(status.acceptance_claim.claimable, "keyless green is still green").toBe(true);
   });
 });
-//: @use-case:end lifecycle.signals.acceptance_claim_is_honest#blackbox
 
-//: @use-case:lifecycle.signals.verify_can_be_previewed#blackbox
 describe("lifecycle.signals.verify_can_be_previewed", () => {
   // golden_dry_run. The plan names each targeted row and the exact command.
   test("the plan names each targeted row and the command that would run", () => {
@@ -789,9 +778,7 @@ describe("lifecycle.signals.verify_can_be_previewed", () => {
     expect(rowStatus(workspace, "alpha")?.local_status).not.toBe("VERIFIED_LOCAL");
   });
 });
-//: @use-case:end lifecycle.signals.verify_can_be_previewed#blackbox
 
-//: @use-case:lifecycle.signals.bind_names_the_next_step#blackbox
 describe("lifecycle.signals.bind_names_the_next_step", () => {
   // golden_after_bind. Rows were being bound and then abandoned; a successful
   // bind ends with the command that actually proves the behaviour.
@@ -817,7 +804,6 @@ describe("lifecycle.signals.bind_names_the_next_step", () => {
     expect(scan(workspace).acceptance_claim.claimable).toBe(false);
   });
 });
-//: @use-case:end lifecycle.signals.bind_names_the_next_step#blackbox
 
 
 /** A bare git repo with no workspace, for the commands that create one. */
@@ -838,7 +824,6 @@ function spawnGit(cwd: string, args: string[]): void {
   if (result.status !== 0) throw new Error(`git ${args.join(" ")} failed: ${result.stderr}`);
 }
 
-//: @use-case:lifecycle.signals.impact_leads_with_the_union#blackbox
 describe("lifecycle.signals.impact_leads_with_the_union", () => {
   function editedWorkspace(replace: [string, string]): Workspace {
     const workspace = makeMultiRowWorkspace({ rows: ["alpha"] });
@@ -892,9 +877,7 @@ describe("lifecycle.signals.impact_leads_with_the_union", () => {
     expect(hitOut).toContain("re-verify");
   });
 });
-//: @use-case:end lifecycle.signals.impact_leads_with_the_union#blackbox
 
-//: @use-case:lifecycle.signals.transient_output_stays_out_of_git#blackbox
 describe("lifecycle.signals.transient_output_stays_out_of_git", () => {
   const TRANSIENT = ["showcase-runs/", ".use-cases/verification-results.jsonl"];
 
@@ -935,9 +918,7 @@ describe("lifecycle.signals.transient_output_stays_out_of_git", () => {
     }
   });
 });
-//: @use-case:end lifecycle.signals.transient_output_stays_out_of_git#blackbox
 
-//: @use-case:lifecycle.signals.nested_workspace_is_not_scanned#blackbox
 describe("lifecycle.signals.nested_workspace_is_not_scanned", () => {
   /** Put a nested workspace, with its own config and a marked file, at `where`. */
   function withNestedWorkspace(workspace: Workspace, where: string): void {
@@ -1024,10 +1005,8 @@ use_cases:
     expect(ids).not.toContain("probe.core.alpha");
   });
 });
-//: @use-case:end lifecycle.signals.nested_workspace_is_not_scanned#blackbox
 
 
-//: @use-case:lifecycle.signals.variant_fanout#blackbox
 describe("lifecycle.signals.variant_fanout", () => {
   /** A family whose verifier passes for every variant except `failing`. */
   function makeFamily(options: { token?: boolean; failing?: string } = {}): Workspace {
@@ -1173,9 +1152,7 @@ use_cases:
     expect(envelope.data.planned.every((p) => p.disposition === "blocked")).toBe(true);
   });
 });
-//: @use-case:end lifecycle.signals.variant_fanout#blackbox
 
-//: @use-case:lifecycle.signals.errors_hand_back_the_cure#blackbox
 describe("lifecycle.signals.errors_hand_back_the_cure", () => {
   /** A workspace where the row was renamed in BOTH the matrix and the marker. */
   function renamedWorkspace(oldId: string, newId: string): Workspace {
@@ -1249,4 +1226,3 @@ describe("lifecycle.signals.errors_hand_back_the_cure", () => {
     );
   });
 });
-//: @use-case:end lifecycle.signals.errors_hand_back_the_cure#blackbox

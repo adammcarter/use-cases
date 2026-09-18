@@ -119,7 +119,6 @@ function validate(workspace: Workspace) {
   });
 }
 
-//: @use-case:matrix.product.coverage_by_value_and_journey#blackbox
 describe("matrix.product.coverage_by_value_and_journey", () => {
   // golden_selection. High-value rows separate cleanly from the long tail,
   // which is what makes a short showcase selectable at all.
@@ -159,9 +158,7 @@ describe("matrix.product.coverage_by_value_and_journey", () => {
     expect(goldenOnly.length, "the golden cut is narrower than the whole matrix").toBeLessThan(all.length);
   });
 });
-//: @use-case:end matrix.product.coverage_by_value_and_journey#blackbox
 
-//: @use-case:matrix.product.integrity_degraded_nonfatal#blackbox
 describe("matrix.product.integrity_degraded_nonfatal", () => {
   // golden_partial. Damaged YAML must not bring the system down: the valid
   // rows stay addressable.
@@ -215,4 +212,3 @@ describe("matrix.product.integrity_degraded_nonfatal", () => {
     ).toBeGreaterThan(0);
   });
 });
-//: @use-case:end matrix.product.integrity_degraded_nonfatal#blackbox

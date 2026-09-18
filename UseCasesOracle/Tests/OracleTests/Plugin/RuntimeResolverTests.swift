@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 
+//: @use-case:plugin.runtime.release_versions_run_the_verified_swift_binary
 /// The black-box oracle for
 /// plugin.runtime.release_versions_run_the_verified_swift_binary — the Swift
 /// shape of the FIRST half of `tests/plugin/runtime-resolver.test.ts`.
@@ -136,3 +137,5 @@ struct RuntimeResolverTests {
     #expect(result.standardOutput.isEmpty)
   }
 }
+
+//: @use-case:end plugin.runtime.release_versions_run_the_verified_swift_binary

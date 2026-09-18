@@ -37,6 +37,7 @@ struct HostManifestsTests {
     )
   }
 
+  //: @use-case:plugin.install.copilot_from_github
   // plugin.install.copilot_from_github
   @Test
   func `no root Agent Plugins manifest ships; Copilot reads the Claude manifest and hook`() throws {
@@ -91,6 +92,9 @@ struct HostManifestsTests {
     Issue.record("unreachable: this test is disabled")
   }
 
+  //: @use-case:end plugin.install.copilot_from_github
+
+  //: @use-case:plugin.install.codex_from_github
   // plugin.install.codex_from_github
   @Test
   func `codex-plugin plugin json declares skills, MCP and the hook in Codex's own form`() throws {
@@ -135,4 +139,5 @@ struct HostManifestsTests {
   func `live: codex lists the skills and the MCP tools`() {
     Issue.record("unreachable: this test is disabled")
   }
+  //: @use-case:end plugin.install.codex_from_github
 }

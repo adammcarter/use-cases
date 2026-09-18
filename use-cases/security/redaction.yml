@@ -2,11 +2,7 @@ schema_version: 1
 feature:
   id: security.redaction
   name: Secret redaction on the way into a ledger
-  summary: >-
-    Evidence summaries, showcase observations and capsule command output all land
-    in append-only ledgers that are committed. A secret written into one cannot be
-    taken back out, so high-confidence secret shapes are redacted at the point of
-    append. This behaviour was tested in four places and described by no row.
+  summary: Evidence summaries, showcase observations and capsule command output all land in append-only ledgers that are committed. A secret written into one cannot be taken back out, so high-confidence secret shapes are redacted at the point of append. This behaviour was tested in four places and described by no row.
 use_cases:
   - id: security.redaction.secrets_never_reach_an_append_only_ledger
     title: A secret in a summary or observation is redacted before it is written
@@ -27,11 +23,7 @@ use_cases:
       - kind: file
         path: packages/core/test/redact.test.ts
     actor: script
-    intent: >-
-      Catch the high-confidence secret shapes on the way into a ledger, because
-      an append-only record cannot be edited afterwards and is usually committed.
-      Conservative on purpose: the cost of mangling legitimate prose is paid on
-      every record, while the cost of missing an exotic secret shape is paid once.
+    intent: "Catch the high-confidence secret shapes on the way into a ledger, because an append-only record cannot be edited afterwards and is usually committed. Conservative on purpose: the cost of mangling legitimate prose is paid on every record, while the cost of missing an exotic secret shape is paid once."
     preconditions:
       - Text is about to be appended to an evidence or showcase ledger.
     trigger: An agent records evidence, an observation, or a capsule command result.
@@ -80,13 +72,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/security-redaction.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - SecurityRedactionTests
           inputs:
-            - tests/blackbox/security-redaction.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/SecurityRedactionTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:

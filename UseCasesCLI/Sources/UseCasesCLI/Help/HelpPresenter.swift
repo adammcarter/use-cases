@@ -1,5 +1,6 @@
 import UseCasesCore
 
+//: @use-case:diagnostics.contracts.cli_self_documents
 /// The usage answer to `--help`, a bare invocation, or a command nothing
 /// recognises (packages/cli/src/builtins.ts `runHelp` and `renderHelpText`).
 /// Human text by default, the `help` envelope with `--json`; an unrecognised
@@ -94,3 +95,5 @@ enum HelpPresenter {
     text + String(repeating: " ", count: max(0, width - text.utf16.count))
   }
 }
+
+//: @use-case:end diagnostics.contracts.cli_self_documents

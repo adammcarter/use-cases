@@ -18,7 +18,6 @@ afterEach(() => {
   cleanupScratch();
 });
 
-//: @use-case:release.distribution.failed_download_says_what_to_do
 describe.skipIf(!canRunBootstrap)("a download that cannot be completed says what went wrong and what to do", () => {
   test("an asset the release does not carry names the asset, the release and the URL", () => {
     const release = publishStandInRelease({ omitArchive: true });
@@ -158,4 +157,3 @@ describe.skipIf(!canRunBootstrap)("a download that cannot be completed says what
     expect(result.stderr).toContain("use-cases-mcp");
   });
 });
-//: @use-case:end release.distribution.failed_download_says_what_to_do

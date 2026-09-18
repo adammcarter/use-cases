@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 
+//: @use-case:evidence.core.record#blackbox
 /// The black-box oracle for evidence/core.yml.
 ///
 /// One row, and until now its whole scenario body was a single line: "Run
@@ -147,3 +148,5 @@ struct EvidenceCoreTests {
     )
   }
 }
+
+//: @use-case:end evidence.core.record#blackbox

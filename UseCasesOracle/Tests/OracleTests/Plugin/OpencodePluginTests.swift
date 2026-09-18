@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 
+//: @use-case:plugin.install.opencode_from_git
 /// The black-box oracle for plugin.install.opencode_from_git — the Swift shape
 /// of `tests/plugin/opencode-plugin.test.ts`.
 ///
@@ -208,3 +209,5 @@ struct OpencodePluginTests {
     Issue.record("unreachable: this test is disabled")
   }
 }
+
+//: @use-case:end plugin.install.opencode_from_git

@@ -90,7 +90,6 @@ function storedSummary(workspace: Workspace, summary: string): string {
   return envelope.data.event.payload.summary;
 }
 
-//: @use-case:security.redaction.secrets_never_reach_an_append_only_ledger#blackbox
 describe("security.redaction.secrets_never_reach_an_append_only_ledger", () => {
   // golden_labelled_assignments. The LABEL survives so a reader can still see
   // what kind of thing was removed; the value does not. Its case is preserved
@@ -156,4 +155,3 @@ describe("security.redaction.secrets_never_reach_an_append_only_ledger", () => {
     expect(stored.endsWith(" end")).toBe(true);
   });
 });
-//: @use-case:end security.redaction.secrets_never_reach_an_append_only_ledger#blackbox

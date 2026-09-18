@@ -90,6 +90,7 @@ private struct FreshnessTally {
     }
   }
 
+  //: @use-case:lifecycle.signals.acceptance_claim_is_honest
   /// Claimable only when every row is proven by some tier and nothing blocks.
   func acceptanceClaim(
     total: Int,
@@ -117,4 +118,5 @@ private struct FreshnessTally {
       unattested: summary.unattestedLocal,
     )
   }
+  //: @use-case:end lifecycle.signals.acceptance_claim_is_honest
 }

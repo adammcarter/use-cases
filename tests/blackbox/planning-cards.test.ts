@@ -182,7 +182,6 @@ function evidenceStatus(workspace: Workspace) {
   });
 }
 
-//: @use-case:planning.cards.showcase_selection#blackbox
 describe("planning.cards.showcase_selection", () => {
   // golden_cli. A short showcase must prioritise the critical golden path
   // over the core/supporting rows, and must respect the item limit it was
@@ -237,9 +236,7 @@ describe("planning.cards.showcase_selection", () => {
     expect(plan.known_gaps.map((g) => g.code)).toContain("prepared_not_performed");
   });
 });
-//: @use-case:end planning.cards.showcase_selection#blackbox
 
-//: @use-case:planning.cards.walkthrough_coverage#blackbox
 describe("planning.cards.walkthrough_coverage", () => {
   // golden_cli. A walkthrough is a deeper cut than a showcase: it must reach
   // the edge, negative AND failure rows a showcase would leave out. A local,
@@ -290,9 +287,7 @@ describe("planning.cards.walkthrough_coverage", () => {
     }
   });
 });
-//: @use-case:end planning.cards.walkthrough_coverage#blackbox
 
-//: @use-case:planning.cards.prepared_not_performed#blackbox
 describe("planning.cards.prepared_not_performed", () => {
   // golden_guard. A freshly generated plan always reports itself as prepared,
   // not performed.
@@ -336,9 +331,7 @@ describe("planning.cards.prepared_not_performed", () => {
     expect(JSON.stringify(second.envelope.diagnostics)).toContain("showcase_plan_hash_mismatch");
   });
 });
-//: @use-case:end planning.cards.prepared_not_performed#blackbox
 
-//: @use-case:planning.cards.audience_timebox_fit#blackbox
 describe("planning.cards.audience_timebox_fit", () => {
   // golden_adjust. The plan is generated to fit the caller's stated audience
   // and timebox, not a fixed default.
@@ -377,9 +370,7 @@ describe("planning.cards.audience_timebox_fit", () => {
     expect(plan.selected_items.length + excludedIds.length).toBe(ROWS.length);
   });
 });
-//: @use-case:end planning.cards.audience_timebox_fit#blackbox
 
-//: @use-case:planning.cards.partial_matrix_warning#blackbox
 describe("planning.cards.partial_matrix_warning", () => {
   // golden_strict. Non-strict planning over a partial matrix requires
   // acknowledgement; strict planning refuses to produce a plan at all.
@@ -435,4 +426,3 @@ describe("planning.cards.partial_matrix_warning", () => {
     expect(status.counts.aggregates_total).toBe(0);
   });
 });
-//: @use-case:end planning.cards.partial_matrix_warning#blackbox

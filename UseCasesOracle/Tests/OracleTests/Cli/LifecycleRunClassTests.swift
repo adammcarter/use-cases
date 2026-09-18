@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 
+//: @use-case:lifecycle.signals.run_class_is_derived#blackbox
 /// The black-box oracle for lifecycle/signals.yml, row `run_class_is_derived`.
 struct LifecycleRunClassTests {
   /// A preset verifier carries NO `kind:` — the preset IS the kind, and adding
@@ -130,3 +131,5 @@ struct LifecycleRunClassTests {
     #expect(!overclaimed.contains("probe.core.thing"))
   }
 }
+
+//: @use-case:end lifecycle.signals.run_class_is_derived#blackbox

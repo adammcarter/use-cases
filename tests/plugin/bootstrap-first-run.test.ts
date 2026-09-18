@@ -20,7 +20,6 @@ function cachedPath(cacheDir: string, version: string, exe: string): string {
   return join(cacheDir, "bin", version, hostPlatform(), exe);
 }
 
-//: @use-case:release.distribution.first_run_downloads_and_verifies
 describe.skipIf(!canRunBootstrap)("the first run downloads the machine's binary, verifies its checksum and caches it", () => {
   test("downloads the matching archive, verifies it, caches both executables and execs the one asked for", () => {
     const release = publishStandInRelease();
@@ -177,4 +176,3 @@ describe.skipIf(!canRunBootstrap)("the first run downloads the machine's binary,
     expect(absent.stdout).toBe("");
   });
 });
-//: @use-case:end release.distribution.first_run_downloads_and_verifies

@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 
+//: @use-case:lifecycle.signals.verify_can_be_previewed#blackbox
 /// The black-box oracle for lifecycle/signals.yml, row
 /// `verify_can_be_previewed`.
 struct LifecycleVerifyPreviewTests {
@@ -77,6 +78,9 @@ struct LifecycleVerifyPreviewTests {
   }
 }
 
+//: @use-case:end lifecycle.signals.verify_can_be_previewed#blackbox
+
+//: @use-case:lifecycle.signals.bind_names_the_next_step#blackbox
 /// The black-box oracle for lifecycle/signals.yml, row
 /// `bind_names_the_next_step`.
 struct LifecycleBindNextStepTests {
@@ -110,3 +114,5 @@ struct LifecycleBindNextStepTests {
     #expect(SignalsWorkspace.claimable(scanned) == false)
   }
 }
+
+//: @use-case:end lifecycle.signals.bind_names_the_next_step#blackbox

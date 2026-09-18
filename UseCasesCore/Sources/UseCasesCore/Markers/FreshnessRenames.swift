@@ -61,6 +61,7 @@ enum FreshnessRenames {
     return total == 0 ? 0 : Double(2 * shared) / Double(total)
   }
 
+  //: @use-case:lifecycle.signals.errors_hand_back_the_cure
   /// Each unregistered binding slug mapped to the row id it was most likely
   /// renamed FROM, in unregistered order. `candidates` are row ids of lost
   /// rows; a non-string one scores zero, exactly as it does in the TypeScript.
@@ -99,6 +100,8 @@ enum FreshnessRenames {
     }
     return result
   }
+
+  //: @use-case:end lifecycle.signals.errors_hand_back_the_cure
 
   /// The reverse view: previous row id to the id it was probably renamed TO.
   /// Later renames of the same previous row overwrite earlier ones.

@@ -94,7 +94,6 @@ function blockingRegistryErrors(
   });
 }
 
-//: @use-case:lifecycle.bindings.unbind_releases_a_registration
 export function runUnbindCommand(options: UnbindCommandOptions): UnbindCommandResult {
   const fs = options.fs ?? nodeMarkerFs;
   const bindingSlug = options.suffix ? `${options.rowId}#${options.suffix}` : options.rowId;
@@ -192,4 +191,3 @@ export function runUnbindCommand(options: UnbindCommandOptions): UnbindCommandRe
     errors: []
   };
 }
-//: @use-case:end lifecycle.bindings.unbind_releases_a_registration

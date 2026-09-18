@@ -10,13 +10,16 @@ use_cases:
     value_tier: core
     journey_role: golden
     usage_frequency: common
-    tags: [evidence, ledger]
+    tags:
+      - evidence
+      - ledger
     source_refs:
       - kind: file
         path: packages/core/src/evidence/appendEvidenceEvent.ts
     actor: agent
     intent: Persist proof without creating summary state.
-    preconditions: [A target use case resolves.]
+    preconditions:
+      - A target use case resolves.
     trigger: Agent records test, demo, or observation proof.
     scenarios:
       - id: evidence.core.record.golden_cli
@@ -40,7 +43,8 @@ use_cases:
           - Confirm only the append-only history exists.
         observable_outcomes:
           - Proof is persisted without creating summary state, so the events remain the only source of truth.
-    observable_outcomes: [A JSONL event is appended under evidence.]
+    observable_outcomes:
+      - A JSONL event is appended under evidence.
     host_applicability:
       - host_surface: codex.cli
         supported: true
@@ -51,13 +55,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/evidence-core.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - EvidenceCoreTests
           inputs:
-            - tests/blackbox/evidence-core.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/EvidenceCoreTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:

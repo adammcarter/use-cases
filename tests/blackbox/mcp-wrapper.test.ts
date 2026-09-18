@@ -92,7 +92,6 @@ function matrixText(dir: string): string {
   return readFileSync(join(dir, "use-cases", "probe.yml"), "utf8");
 }
 
-//: @use-case:mcp.use_case_mutation.safe#blackbox
 describe("mcp.use_case_mutation.safe", () => {
   // golden_upsert. The matrix must still be complete AFTER the write, not just
   // before it — otherwise the wrapper could leave a workspace it cannot fix.
@@ -177,9 +176,7 @@ describe("mcp.use_case_mutation.safe", () => {
     expect(refused.envelope.ok, "a damaged matrix cannot be edited further").toBe(false);
   });
 });
-//: @use-case:end mcp.use_case_mutation.safe#blackbox
 
-//: @use-case:mcp.wrapper.parity#blackbox
 describe("mcp.wrapper.parity", () => {
   // golden_cli and edge_compiled_stdio_loads_the_packaged_core. Parity has to
   // hold for the artifact that actually ships, which is why this drives the
@@ -210,4 +207,3 @@ describe("mcp.wrapper.parity", () => {
     expect((envelope as unknown as { complete: boolean }).complete, "asking does not finish the act").toBe(false);
   });
 });
-//: @use-case:end mcp.wrapper.parity#blackbox

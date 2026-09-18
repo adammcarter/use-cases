@@ -42,7 +42,6 @@ function missingPaths(dir: string, m: PluginManifest): string[] {
   return declaredPaths(m).filter((p) => !existsSync(join(dir, p.replace(/^\.\//, ""))));
 }
 
-//: @use-case:plugin.install.claude_from_github#blackbox
 describe("plugin.install.claude_from_github", () => {
   // golden_manifests_point_at_real_files. Every declared path resolves, and the
   // MCP server is addressed through ${CLAUDE_PLUGIN_ROOT} so it works wherever
@@ -131,4 +130,3 @@ describe("plugin.install.claude_from_github", () => {
   // claims to cover.
   test.todo("edge_live_session — a host observation; cannot be driven from a test");
 });
-//: @use-case:end plugin.install.claude_from_github#blackbox

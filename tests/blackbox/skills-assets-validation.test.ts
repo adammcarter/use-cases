@@ -69,7 +69,6 @@ function codes(envelope: { diagnostics: Array<{ code: string }> }): string[] {
   return envelope.diagnostics.map((d) => d.code);
 }
 
-//: @use-case:skills.assets.asset_validation#blackbox
 describe("skills.assets.asset_validation", () => {
   // golden_doctor. Every shipped skill is discovered, each with a name, path,
   // description and a complete: true front-matter check.
@@ -137,9 +136,7 @@ describe("skills.assets.asset_validation", () => {
     expect(initEntry?.name, "the discovered name follows the frontmatter, so a mismatch is visible here").toBe("not-init");
   });
 });
-//: @use-case:end skills.assets.asset_validation#blackbox
 
-//: @use-case:skills.assets.degraded_assets#blackbox
 describe("skills.assets.degraded_assets", () => {
   // golden_report. A skill missing a required asset (its SKILL.md) is
   // reported with a diagnostic rather than silently omitted from the result.
@@ -188,4 +185,3 @@ describe("skills.assets.degraded_assets", () => {
     }
   });
 });
-//: @use-case:end skills.assets.degraded_assets#blackbox

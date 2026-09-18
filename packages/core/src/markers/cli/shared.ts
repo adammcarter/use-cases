@@ -89,13 +89,11 @@ const DEFAULT_SKIP_DIRS = new Set([
 // rule — and covers test fixtures and vendored sample apps, which hit the same
 // wall. The nested workspace's own `scan --repo <dir>` is unaffected, since that
 // config sits at ITS product root rather than below it.
-//: @use-case:lifecycle.signals.nested_workspace_is_not_scanned
 const WORKSPACE_CONFIG_FILES = ["use-cases.yml", "use-cases.yaml"];
 
 function isNestedWorkspace(fs: MarkerFs, dir: string): boolean {
   return WORKSPACE_CONFIG_FILES.some((name) => fs.readText(join(dir, name)) !== null);
 }
-//: @use-case:end lifecycle.signals.nested_workspace_is_not_scanned
 
 export interface CollectSourceOptions {
   fs?: MarkerFs;

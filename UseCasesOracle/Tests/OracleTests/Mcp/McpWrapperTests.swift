@@ -85,6 +85,7 @@ struct McpWrapperTests {
     return try await McpSession.start(cwd: directory.path, environment: environment)
   }
 
+  //: @use-case:mcp.use_case_mutation.safe#blackbox
   // golden_upsert. The matrix must still be complete AFTER the write, not just
   // before it — otherwise the wrapper could leave a workspace it cannot fix.
   @Test
@@ -203,6 +204,9 @@ struct McpWrapperTests {
     #expect(refused.isOk == false, "a damaged matrix cannot be edited further")
   }
 
+  //: @use-case:end mcp.use_case_mutation.safe#blackbox
+
+  //: @use-case:mcp.wrapper.parity#blackbox
   // golden_cli and edge_compiled_stdio_loads_the_packaged_core. Parity has to
   // hold for the artifact that actually ships, which is why this drives the
   // COMPILED server over stdio rather than calling into the module.
@@ -238,4 +242,5 @@ struct McpWrapperTests {
     #expect(requested.data["trusted_confirmation_required"]?.boolValue == true)
     #expect(requested.envelope.complete == false, "asking does not finish the act")
   }
+  //: @use-case:end mcp.wrapper.parity#blackbox
 }

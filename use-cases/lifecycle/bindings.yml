@@ -2,9 +2,7 @@ schema_version: 1
 feature:
   id: lifecycle.bindings
   name: Ending and re-pointing a binding
-  summary: >-
-    A binding can be moved to the right declaration or released outright, so a
-    marker on the wrong code and a row leaving the matrix are both recoverable.
+  summary: A binding can be moved to the right declaration or released outright, so a marker on the wrong code and a row leaving the matrix are both recoverable.
 use_cases:
   - id: lifecycle.bindings.rebind_repoints_a_binding
     title: A binding on the wrong declaration can be moved to the right one
@@ -22,11 +20,7 @@ use_cases:
       - kind: file
         path: packages/core/test/markers/rebind.test.ts
     actor: agent
-    intent: >-
-      Make a wrongly-placed binding correctable. A marker on a declaration that
-      cannot fail when the claim does reads as proven from every angle the tool
-      reports on, so finding one and being unable to move it is the worst state a
-      matrix can hold.
+    intent: Make a wrongly-placed binding correctable. A marker on a declaration that cannot fail when the claim does reads as proven from every angle the tool reports on, so finding one and being unable to move it is the worst state a matrix can hold.
     preconditions:
       - A row is bound to a code span.
       - A better declaration for that row exists, in this file or another.
@@ -96,15 +90,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/lifecycle-bindings.test.ts
-            - -t
-            - lifecycle.bindings.rebind_repoints_a_binding
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - LifecycleRebindTests
           inputs:
-            - tests/blackbox/lifecycle-bindings.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/LifecycleBindingsTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -112,7 +105,6 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
-
   - id: lifecycle.bindings.unbind_releases_a_registration
     title: A binding can be released, freeing its slug and its row
     lifecycle: active
@@ -128,10 +120,7 @@ use_cases:
       - kind: file
         path: packages/core/test/markers/rebind.test.ts
     actor: agent
-    intent: >-
-      Give a binding an exit. Removing a marker by hand never released its
-      registration, so a retired behaviour stayed registered forever and its slug
-      could never be bound again.
+    intent: Give a binding an exit. Removing a marker by hand never released its registration, so a retired behaviour stayed registered forever and its slug could never be bound again.
     preconditions:
       - A slug is registered in the binding registry.
     trigger: A behaviour is retired, or its binding has to be released before rebinding.
@@ -198,15 +187,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/lifecycle-bindings.test.ts
-            - -t
-            - lifecycle.bindings.unbind_releases_a_registration
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - LifecycleUnbindTests
           inputs:
-            - tests/blackbox/lifecycle-bindings.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/LifecycleBindingsTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -214,7 +202,6 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
-
   - id: lifecycle.bindings.retired_row_can_leave_the_matrix
     title: A retired row can leave the matrix without stranding the workspace
     lifecycle: active
@@ -230,10 +217,7 @@ use_cases:
       - kind: file
         path: packages/core/test/markers/bindingRegistry.test.ts
     actor: agent
-    intent: >-
-      Stop a deleted or renamed row from failing the whole workspace forever. Its
-      registration used to be judged line by line, so a row that left the matrix
-      left REGISTRY_ROW_MISSING behind with no supported way back.
+    intent: Stop a deleted or renamed row from failing the whole workspace forever. Its registration used to be judged line by line, so a row that left the matrix left REGISTRY_ROW_MISSING behind with no supported way back.
     preconditions:
       - A row is bound and registered.
     trigger: The behaviour is retired or the row id is renamed.
@@ -278,15 +262,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/lifecycle-bindings.test.ts
-            - -t
-            - lifecycle.bindings.retired_row_can_leave_the_matrix
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - LifecycleRetiredRowTests
           inputs:
-            - tests/blackbox/lifecycle-bindings.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/LifecycleBindingsTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:

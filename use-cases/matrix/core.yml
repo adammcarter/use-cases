@@ -49,15 +49,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/matrix-core.test.ts
-            - -t
-            - matrix.core.validate
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - MatrixCoreValidateTests
           inputs:
-            - tests/blackbox/matrix-core.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/MatrixCoreTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -145,15 +144,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/matrix-core.test.ts
-            - -t
-            - matrix.core.mutate
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - MatrixCoreMutateTests
           inputs:
-            - tests/blackbox/matrix-core.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/MatrixCoreTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:

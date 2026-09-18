@@ -226,7 +226,6 @@ export function validateRegistryEvents(
 
   // Rule 5, over the live set: a slug still bound to a row the matrix no longer
   // has is a dangling registration and stays an error. A released one is not.
-  //: @use-case:lifecycle.bindings.retired_row_can_leave_the_matrix
   for (const [slug, line] of registeredAtLine) {
     const row = slugToRow.get(slug);
     if (row !== undefined && !yamlRowIds.has(row)) {
@@ -239,7 +238,6 @@ export function validateRegistryEvents(
       });
     }
   }
-  //: @use-case:end lifecycle.bindings.retired_row_can_leave_the_matrix
 
   return {
     ok: errors.length === 0,

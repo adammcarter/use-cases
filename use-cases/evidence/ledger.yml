@@ -70,15 +70,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/evidence-ledger.test.ts
-            - -t
-            - evidence.ledger.product_proof_map
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - EvidenceLedgerProofMapTests
           inputs:
-            - tests/blackbox/evidence-ledger.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/EvidenceLedgerTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -146,15 +145,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/evidence-ledger.test.ts
-            - -t
-            - evidence.ledger.append_only_corrections
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - EvidenceLedgerCorrectionsTests
           inputs:
-            - tests/blackbox/evidence-ledger.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/EvidenceLedgerTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -226,15 +224,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/evidence-ledger.test.ts
-            - -t
-            - evidence.ledger.assurance_and_freshness
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - EvidenceLedgerAssuranceTests
           inputs:
-            - tests/blackbox/evidence-ledger.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/EvidenceLedgerTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -299,15 +296,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/evidence-ledger.test.ts
-            - -t
-            - evidence.ledger.damaged_ledger_replay
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - EvidenceLedgerDamageTests
           inputs:
-            - tests/blackbox/evidence-ledger.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/EvidenceLedgerTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -431,13 +427,15 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/use-cases/crash_durable_ledger_writes.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesCore
+            - --filter
+            - DurableWriteTests
           inputs:
-            - tests/use-cases/crash_durable_ledger_writes.test.ts
+            - UseCasesCore/Tests/UseCasesCoreTests/Evidence/EvidenceDerivationTests.swift
+            - UseCasesCore/Sources/UseCasesCore/Evidence/DurableWrite.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:

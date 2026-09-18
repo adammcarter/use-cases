@@ -94,7 +94,6 @@ function matrixText(dir: string): string {
   return readFileSync(join(dir, "use-cases", "probe.yml"), "utf8");
 }
 
-//: @use-case:mcp.surface.cli_contract_transport#blackbox
 describe("mcp.surface.cli_contract_transport", () => {
   // golden_parity. The same command, reached two ways, gives the same answer.
   test("an MCP tool returns the same semantic envelope as the CLI command", async () => {
@@ -136,9 +135,7 @@ describe("mcp.surface.cli_contract_transport", () => {
     expect(viaMcp.envelope.data.valid).toBe(viaCli.envelope.data.valid);
   });
 });
-//: @use-case:end mcp.surface.cli_contract_transport#blackbox
 
-//: @use-case:mcp.surface.write_gating#blackbox
 describe("mcp.surface.write_gating", () => {
   // bad_read_only_session_cannot_mutate. TWO independent locks, and this is the
   // session one.
@@ -205,9 +202,7 @@ describe("mcp.surface.write_gating", () => {
     expect(envelope.data.diagnostics.map((d) => d.code)).toContain("matrix.mutation_path_escape");
   });
 });
-//: @use-case:end mcp.surface.write_gating#blackbox
 
-//: @use-case:mcp.surface.approval_request_only#blackbox
 describe("mcp.surface.approval_request_only", () => {
   // golden_boundary and edge_no_event_is_appended. MCP may ASK; it may never
   // answer. Asking and answering stay separate acts.
@@ -241,9 +236,7 @@ describe("mcp.surface.approval_request_only", () => {
     ).toEqual([]);
   });
 });
-//: @use-case:end mcp.surface.approval_request_only#blackbox
 
-//: @use-case:mcp.surface.domain_results_not_transport_failures#blackbox
 describe("mcp.surface.domain_results_not_transport_failures", () => {
   // golden_envelope and bad_never_an_opaque_transport_failure. A domain problem
   // must never be disguised as a broken connection.
@@ -260,9 +253,7 @@ describe("mcp.surface.domain_results_not_transport_failures", () => {
     expect(envelope.data.valid).toBe(false);
   });
 });
-//: @use-case:end mcp.surface.domain_results_not_transport_failures#blackbox
 
-//: @use-case:mcp.surface.declared_tool_schemas#blackbox
 describe("mcp.surface.declared_tool_schemas", () => {
   // golden_declared and edge_repo_stays_required.
   test("high-value tools declare named parameters, with repo required", async () => {
@@ -301,4 +292,3 @@ describe("mcp.surface.declared_tool_schemas", () => {
     }
   });
 });
-//: @use-case:end mcp.surface.declared_tool_schemas#blackbox

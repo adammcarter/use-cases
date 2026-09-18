@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 
+//: @use-case:showcase.flow.failure_decisions#blackbox
 /// The black-box oracle for showcase/flow.yml, row `failure_decisions`.
 struct ShowcaseFailureDecisionsTests {
   /// Start a single-item run and record a failing verdict, answering the run
@@ -176,6 +177,8 @@ struct ShowcaseFailureDecisionsTests {
     #expect(beta["item_currency"]?.stringValue == "current")
   }
 }
+
+//: @use-case:end showcase.flow.failure_decisions#blackbox
 
 /// The black-box oracle for showcase/flow.yml, row
 /// `revision_epoch_staleness` — which is not driveable through the binary.

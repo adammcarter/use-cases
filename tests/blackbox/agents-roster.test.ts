@@ -38,7 +38,6 @@ function frontmatter(source: string): Record<string, string> {
   return fields;
 }
 
-//: @use-case:agents.roster.shipped_with_plugin#blackbox
 describe("agents.roster.shipped_with_plugin", () => {
   // golden_declared, less the retired packaging step.
   test("the agents directory holds exactly the roster, and the manifest declares each one", () => {
@@ -80,9 +79,7 @@ describe("agents.roster.shipped_with_plugin", () => {
     expect(manifest.agents.length).toBe(CANONICAL_AGENTS.length);
   });
 });
-//: @use-case:end agents.roster.shipped_with_plugin#blackbox
 
-//: @use-case:agents.roster.bodies_hold_the_line#blackbox
 describe("agents.roster.bodies_hold_the_line", () => {
   // golden_frontmatter_matches_the_filename.
   test("every agent opens with frontmatter whose name matches its filename", () => {
@@ -152,9 +149,7 @@ describe("agents.roster.bodies_hold_the_line", () => {
     }
   });
 });
-//: @use-case:end agents.roster.bodies_hold_the_line#blackbox
 
-//: @use-case:agents.roster.command_allowlist_tracks_cli#blackbox
 describe("agents.roster.command_allowlist_tracks_cli", () => {
   // golden_nested_command_parity and golden_flat_command_parity. The observable
   // half of the parity guarantee: the surface an agent body may cite is the
@@ -201,4 +196,3 @@ describe("agents.roster.command_allowlist_tracks_cli", () => {
     ).not.toContain("unknown_cli_command");
   });
 });
-//: @use-case:end agents.roster.command_allowlist_tracks_cli#blackbox

@@ -72,15 +72,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/agents-roster.test.ts
-            - -t
-            - agents.roster.shipped_with_plugin
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - AgentsRosterShippedTests
           inputs:
-            - tests/blackbox/agents-roster.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/AgentsRosterTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -160,15 +159,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/agents-roster.test.ts
-            - -t
-            - agents.roster.bodies_hold_the_line
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - AgentsRosterBodiesTests
           inputs:
-            - tests/blackbox/agents-roster.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/AgentsRosterTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -240,15 +238,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/agents-roster.test.ts
-            - -t
-            - agents.roster.command_allowlist_tracks_cli
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - AgentsRosterAllowlistTests
           inputs:
-            - tests/blackbox/agents-roster.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/AgentsRosterTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:

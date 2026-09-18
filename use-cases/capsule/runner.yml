@@ -10,7 +10,11 @@ use_cases:
     value_tier: core
     journey_role: golden
     usage_frequency: common
-    tags: [capsule, showcase, live-demo, command]
+    tags:
+      - capsule
+      - showcase
+      - live-demo
+      - command
     source_refs:
       - kind: file
         path: packages/core/src/capsules/runCapsule.ts
@@ -66,15 +70,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/capsule-runner.test.ts
-            - -t
-            - capsule.live_runner.scripted
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - CapsuleRunnerTests
           inputs:
-            - tests/blackbox/capsule-runner.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/CapsuleRunnerTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:

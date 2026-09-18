@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 
+//: @use-case:showcase.flow.approval_authority_boundary#blackbox
 /// The black-box oracle for showcase/flow.yml, row
 /// `approval_authority_boundary`.
 struct ShowcaseApprovalBoundaryTests {
@@ -155,3 +156,5 @@ struct ShowcaseApprovalBoundaryTests {
     )
   }
 }
+
+//: @use-case:end showcase.flow.approval_authority_boundary#blackbox

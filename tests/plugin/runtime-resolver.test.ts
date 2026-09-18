@@ -39,7 +39,6 @@ afterEach(() => {
   cleanupScratch();
 });
 
-//: @use-case:plugin.runtime.release_versions_run_the_verified_swift_binary
 describe("a version whose release publishes Swift assets runs the verified binary", () => {
   // golden_every_entry_point_execs_the_downloaded_binary
   test.skipIf(!canRunBootstrap)("bin/use-cases and bin/use-cases-mcp both exec the verified executable", () => {
@@ -120,7 +119,6 @@ describe("a version whose release publishes Swift assets runs the verified binar
     expect(result.stdout).toBe("");
   });
 });
-//: @use-case:end plugin.runtime.release_versions_run_the_verified_swift_binary
 
 //: @use-case:plugin.runtime.pre_swift_versions_run_the_committed_bundle
 describe("a version whose release published no Swift asset runs the committed bundle", () => {

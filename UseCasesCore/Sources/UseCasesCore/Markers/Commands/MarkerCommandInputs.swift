@@ -230,6 +230,7 @@ public enum MarkerCommandInputs {
       }
     }
 
+    //: @use-case:lifecycle.signals.nested_workspace_is_not_scanned
     /// A config is detected by READING it, as the TypeScript does, so a probe
     /// that fails for a reason other than absence is raised.
     private func isNestedWorkspace(
@@ -243,5 +244,6 @@ public enum MarkerCommandInputs {
       }
       return false
     }
+    //: @use-case:end lifecycle.signals.nested_workspace_is_not_scanned
   }
 }

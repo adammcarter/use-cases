@@ -74,7 +74,6 @@ function performedRunsOf(
 // Every row backed by at least one current, tool-executed, passing run. One
 // entry per row (a row driven three times is still one proven row), in stable
 // row-id order.
-//: @use-case:lifecycle.signals.performed_runs_count
 export function collectPerformedRuns(
   snapshot: EvidenceSnapshot,
   currentSemanticHashes: ReadonlyMap<string, string>
@@ -91,4 +90,3 @@ export function collectPerformedRuns(
     left.row_id < right.row_id ? -1 : left.row_id > right.row_id ? 1 : 0
   );
 }
-//: @use-case:end lifecycle.signals.performed_runs_count

@@ -49,6 +49,7 @@ enum ShippedPluginCopy {
   }
 }
 
+//: @use-case:skills.assets.host_declaration#blackbox
 /// The black-box oracle for skills/assets.yml, row `host_declaration`.
 ///
 /// Self-contained: a shared oracle file means one edit stales every row bound
@@ -113,6 +114,9 @@ struct SkillsAssetsHostDeclarationTests {
   }
 }
 
+//: @use-case:end skills.assets.host_declaration#blackbox
+
+//: @use-case:skills.assets.unreachable_skills_fail_doctor#blackbox
 /// The black-box oracle for skills/assets.yml, row
 /// `unreachable_skills_fail_doctor`.
 struct SkillsAssetsUnreachableTests {
@@ -187,3 +191,5 @@ struct SkillsAssetsUnreachableTests {
     Issue.record("unreachable: this test is disabled")
   }
 }
+
+//: @use-case:end skills.assets.unreachable_skills_fail_doctor#blackbox

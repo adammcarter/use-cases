@@ -66,6 +66,7 @@ enum AgentsRoster {
   }
 }
 
+//: @use-case:agents.roster.shipped_with_plugin#blackbox
 /// The black-box oracle for agents/roster.yml, row `shipped_with_plugin`.
 ///
 /// These rows are about SHIPPED ARTEFACTS — the agent bodies, the Claude
@@ -133,6 +134,9 @@ struct AgentsRosterShippedTests {
   }
 }
 
+//: @use-case:end agents.roster.shipped_with_plugin#blackbox
+
+//: @use-case:agents.roster.bodies_hold_the_line#blackbox
 /// The black-box oracle for agents/roster.yml, row `bodies_hold_the_line`.
 struct AgentsRosterBodiesTests {
   // golden_frontmatter_matches_the_filename.
@@ -224,6 +228,9 @@ struct AgentsRosterBodiesTests {
   }
 }
 
+//: @use-case:end agents.roster.bodies_hold_the_line#blackbox
+
+//: @use-case:agents.roster.command_allowlist_tracks_cli#blackbox
 /// The black-box oracle for agents/roster.yml, row
 /// `command_allowlist_tracks_cli`.
 struct AgentsRosterAllowlistTests {
@@ -288,3 +295,5 @@ struct AgentsRosterAllowlistTests {
     )
   }
 }
+
+//: @use-case:end agents.roster.command_allowlist_tracks_cli#blackbox

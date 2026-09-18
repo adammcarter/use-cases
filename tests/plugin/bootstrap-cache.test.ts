@@ -23,7 +23,6 @@ function cachedPath(cacheDir: string, version: string, exe = "use-cases"): strin
   return join(cacheDir, "bin", version, hostPlatform(), exe);
 }
 
-//: @use-case:release.distribution.cached_binary_runs_without_network
 describe.skipIf(!canRunBootstrap)("a cached binary runs without touching the network", () => {
   test("the second run succeeds against a host that refuses connections, and caches nothing new", () => {
     const release = publishStandInRelease();
@@ -123,4 +122,3 @@ describe.skipIf(!canRunBootstrap)("a cached binary runs without touching the net
     expect(again.stdout.trim()).toBe("stand-in use-cases args:three");
   });
 });
-//: @use-case:end release.distribution.cached_binary_runs_without_network

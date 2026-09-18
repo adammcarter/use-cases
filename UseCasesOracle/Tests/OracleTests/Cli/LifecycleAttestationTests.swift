@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 
+//: @use-case:lifecycle.signals.local_results_are_attested#blackbox
 /// The black-box oracle for lifecycle/signals.yml, row
 /// `local_results_are_attested`.
 struct LifecycleAttestationTests {
@@ -142,3 +143,5 @@ struct LifecycleAttestationTests {
     )
   }
 }
+
+//: @use-case:end lifecycle.signals.local_results_are_attested#blackbox

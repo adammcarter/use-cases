@@ -121,6 +121,7 @@ enum MatrixProductWorkspace {
   }
 }
 
+//: @use-case:matrix.product.coverage_by_value_and_journey#blackbox
 /// The black-box oracle for matrix/product.yml, row
 /// `coverage_by_value_and_journey`.
 ///
@@ -191,6 +192,9 @@ struct MatrixProductCoverageTests {
   }
 }
 
+//: @use-case:end matrix.product.coverage_by_value_and_journey#blackbox
+
+//: @use-case:matrix.product.integrity_degraded_nonfatal#blackbox
 /// The black-box oracle for matrix/product.yml, row
 /// `integrity_degraded_nonfatal`.
 struct MatrixProductIntegrityTests {
@@ -265,3 +269,5 @@ struct MatrixProductIntegrityTests {
     )
   }
 }
+
+//: @use-case:end matrix.product.integrity_degraded_nonfatal#blackbox

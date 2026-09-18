@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 
+//: @use-case:release.distribution.first_run_downloads_and_verifies
 /// The black-box oracle for release.distribution.first_run_downloads_and_verifies —
 /// the Swift shape of `tests/plugin/bootstrap-first-run.test.ts`.
 ///
@@ -259,3 +260,5 @@ struct BootstrapFirstRunTests {
     #expect(absent.standardOutput.isEmpty)
   }
 }
+
+//: @use-case:end release.distribution.first_run_downloads_and_verifies

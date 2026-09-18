@@ -89,7 +89,6 @@ function fail(base: Base, exitCode: number, error: RebindCommandError): RebindCo
   };
 }
 
-//: @use-case:lifecycle.bindings.rebind_repoints_a_binding
 export function runRebindCommand(options: RebindCommandOptions): RebindCommandResult {
   const fs = options.fs ?? nodeMarkerFs;
   const bindingSlug = options.suffix ? `${options.rowId}#${options.suffix}` : options.rowId;
@@ -271,4 +270,3 @@ export function runRebindCommand(options: RebindCommandOptions): RebindCommandRe
     errors: []
   };
 }
-//: @use-case:end lifecycle.bindings.rebind_repoints_a_binding

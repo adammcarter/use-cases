@@ -108,7 +108,6 @@ function rowCount(workspace: Workspace): number {
   return featureFile(workspace).split("\n").filter((l) => /^ {2}- id: /.test(l)).length;
 }
 
-//: @use-case:matrix.core.validate#blackbox
 describe("matrix.core.validate", () => {
   // golden_cli.
   test("a clean workspace reports clean integrity", () => {
@@ -135,9 +134,7 @@ describe("matrix.core.validate", () => {
     expect(envelope.diagnostics.length, "the damage must be named").toBeGreaterThan(0);
   });
 });
-//: @use-case:end matrix.core.validate#blackbox
 
-//: @use-case:matrix.core.mutate#blackbox
 describe("matrix.core.mutate", () => {
   // golden_upsert. A mutation returns before and after hashes so a caller can
   // see exactly what moved, and the matrix stays clean afterwards.
@@ -233,4 +230,3 @@ describe("matrix.core.mutate", () => {
     expect((blocked.envelope.data as unknown as MutationData).status).toBe("blocked");
   });
 });
-//: @use-case:end matrix.core.mutate#blackbox

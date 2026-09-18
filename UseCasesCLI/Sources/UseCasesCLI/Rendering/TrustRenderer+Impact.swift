@@ -1,6 +1,7 @@
 import UseCasesCore
 
 extension TrustRenderer {
+  //: @use-case:lifecycle.signals.impact_leads_with_the_union
   /// `renderImpact`: the headline counts span-hit and file-touched rows
   /// TOGETHER, because a touched row is impacted until re-verified; then each
   /// with the command to re-verify it, then broken bindings.
@@ -40,6 +41,8 @@ extension TrustRenderer {
     lines += brokenLines(broken)
     return lines
   }
+
+  //: @use-case:end lifecycle.signals.impact_leads_with_the_union
 
   private static func touchedLines(_ touched: [JSONValue]) -> [String] {
     var lines: [String] = []

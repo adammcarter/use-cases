@@ -82,6 +82,7 @@ enum ScaffoldTemplates {
     ] + verifier.yaml + [""]).joined(separator: "\n")
   }
 
+  //: @use-case:plugin.init.vends_sample_matrix#code
   static let exampleUseCase = [
     "schema_version: 1",
     "# A worked example of one use-case row. Copy it for your first real row, then",
@@ -158,6 +159,7 @@ enum ScaffoldTemplates {
     "      mode: none",
     "",
   ].joined(separator: "\n")
+  //: @use-case:end plugin.init.vends_sample_matrix#code
 
   /// The js-vitest runnable example: a marked source file and its test.
   static func templateFiles(

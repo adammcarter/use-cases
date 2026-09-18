@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 
+//: @use-case:plugin.install.claude_from_github#blackbox
 /// The black-box oracle for plugin.install.claude_from_github.
 ///
 /// The row is about what a host finds when it installs this repo, so the test
@@ -185,3 +186,5 @@ struct PluginInstallClaudeTests {
     Issue.record("unreachable: this test is disabled")
   }
 }
+
+//: @use-case:end plugin.install.claude_from_github#blackbox

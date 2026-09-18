@@ -126,6 +126,7 @@ enum EvidenceLedgerWorkspace {
   """
 }
 
+//: @use-case:evidence.ledger.product_proof_map#blackbox
 /// The black-box oracle for evidence/ledger.yml, row `product_proof_map`.
 ///
 /// Self-contained: a shared oracle file means one edit stales every row bound
@@ -210,6 +211,9 @@ struct EvidenceLedgerProofMapTests {
   }
 }
 
+//: @use-case:end evidence.ledger.product_proof_map#blackbox
+
+//: @use-case:evidence.ledger.append_only_corrections#blackbox
 /// The black-box oracle for evidence/ledger.yml, row
 /// `append_only_corrections`.
 struct EvidenceLedgerCorrectionsTests {
@@ -267,6 +271,9 @@ struct EvidenceLedgerCorrectionsTests {
   }
 }
 
+//: @use-case:end evidence.ledger.append_only_corrections#blackbox
+
+//: @use-case:evidence.ledger.assurance_and_freshness#blackbox
 /// The black-box oracle for evidence/ledger.yml, row
 /// `assurance_and_freshness`.
 struct EvidenceLedgerAssuranceTests {
@@ -331,6 +338,9 @@ struct EvidenceLedgerAssuranceTests {
   }
 }
 
+//: @use-case:end evidence.ledger.assurance_and_freshness#blackbox
+
+//: @use-case:evidence.ledger.damaged_ledger_replay#blackbox
 /// The black-box oracle for evidence/ledger.yml, row `damaged_ledger_replay`.
 struct EvidenceLedgerDamageTests {
   // golden_partial. Valid events survive a damaged neighbour.
@@ -375,3 +385,5 @@ struct EvidenceLedgerDamageTests {
     #expect(damaged.envelope.diagnostics.encoded.contains("evidence_parse_error"))
   }
 }
+
+//: @use-case:end evidence.ledger.damaged_ledger_replay#blackbox

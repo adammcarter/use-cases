@@ -39,7 +39,6 @@ afterEach(() => {
   cleanupScratch();
 });
 
-//: @use-case:release.distribution.release_publishes_checksummed_assets
 describe("a release publishes a checksummed archive for every supported platform", () => {
   test("the workflow builds both executables in release configuration for the published platform", () => {
     const source = releaseSource();
@@ -172,4 +171,3 @@ describe("a release publishes a checksummed archive for every supported platform
     expect(result.stdout.trim()).toBe("stand-in use-cases args:layout");
   });
 });
-//: @use-case:end release.distribution.release_publishes_checksummed_assets

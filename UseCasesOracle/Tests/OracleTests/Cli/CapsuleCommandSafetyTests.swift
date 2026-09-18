@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 
+//: @use-case:capsule.demos.runner_command_safety#blackbox
 /// The black-box oracle for capsule/demos.yml, row `runner_command_safety`.
 struct CapsuleCommandSafetyTests {
   static func commandResults(_ outcome: CliBinary.JsonOutcome) -> [OracleJson] {
@@ -192,6 +193,9 @@ struct CapsuleCommandSafetyTests {
   }
 }
 
+//: @use-case:end capsule.demos.runner_command_safety#blackbox
+
+//: @use-case:capsule.demos.stale_reference_warning#blackbox
 /// The black-box oracle for capsule/demos.yml, row `stale_reference_warning`.
 struct CapsuleStaleReferenceTests {
   // golden_validate. Whatever a capsule has to report about its references,
@@ -344,3 +348,5 @@ struct CapsuleStaleReferenceTests {
     )
   }
 }
+
+//: @use-case:end capsule.demos.stale_reference_warning#blackbox

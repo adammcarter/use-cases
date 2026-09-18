@@ -65,14 +65,15 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - packages/core/test/init/scaffold-agents-md.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesCore
+            - --filter
+            - WorkspaceScaffoldTests
           inputs:
-            - packages/core/test/init/scaffold-agents-md.test.ts
-            - packages/core/src/init/scaffold.ts
+            - UseCasesCore/Tests/UseCasesCoreTests/Initialization/WorkspaceScaffoldTests.swift
+            - UseCasesCore/Sources/UseCasesCore/Initialization/ScaffoldFiles.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -143,14 +144,15 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - packages/core/test/init/scaffold-git-hooks.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesCore
+            - --filter
+            - WorkspaceScaffoldTests
           inputs:
-            - packages/core/test/init/scaffold-git-hooks.test.ts
-            - packages/core/src/init/scaffold.ts
+            - UseCasesCore/Tests/UseCasesCoreTests/Initialization/WorkspaceScaffoldTests.swift
+            - UseCasesCore/Sources/UseCasesCore/Initialization/ScaffoldFiles.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -212,14 +214,15 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - packages/core/test/init/scaffold-sample.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesCore
+            - --filter
+            - ScaffoldedWorkspaceTests
           inputs:
-            - packages/core/test/init/scaffold-sample.test.ts
-            - packages/core/src/init/scaffold.ts
+            - UseCasesCore/Tests/UseCasesCoreTests/Initialization/ScaffoldedWorkspaceTests.swift
+            - UseCasesCore/Sources/UseCasesCore/Initialization/ScaffoldTemplates.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -274,13 +277,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/skills/init-skill.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - InitSkillTests
           inputs:
-            - tests/skills/init-skill.test.ts
+            - UseCasesOracle/Tests/OracleTests/Plugin/InitSkillTests.swift
             - skills/init/SKILL.md
       requirements:
         - evidence_kind: test_result
@@ -351,15 +355,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/plugin-init-loop-skill.test.ts
-            - -t
-            - plugin.init.loop_skill_ported
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - PluginInitLoopSkillTests
           inputs:
-            - tests/blackbox/plugin-init-loop-skill.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/PluginInitLoopSkillTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:

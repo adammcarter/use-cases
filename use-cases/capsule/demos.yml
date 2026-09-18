@@ -60,15 +60,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/capsule-demos.test.ts
-            - -t
-            - capsule.demos.persisted_smoke_runbook
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - CapsulePersistedRunbookTests
           inputs:
-            - tests/blackbox/capsule-demos.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/CapsuleDemosTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -125,15 +124,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/capsule-demos.test.ts
-            - -t
-            - capsule.demos.adhoc_release_demo
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - CapsuleAdhocDemoTests
           inputs:
-            - tests/blackbox/capsule-demos.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/CapsuleDemosTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -203,15 +201,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/capsule-demos.test.ts
-            - -t
-            - capsule.demos.runner_command_safety
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - CapsuleCommandSafetyTests
           inputs:
-            - tests/blackbox/capsule-demos.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/CapsuleCommandSafetyTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -273,15 +270,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/capsule-demos.test.ts
-            - -t
-            - capsule.demos.stale_reference_warning
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - CapsuleStaleReferenceTests
           inputs:
-            - tests/blackbox/capsule-demos.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/CapsuleCommandSafetyTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -337,15 +333,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/capsule-demos.test.ts
-            - -t
-            - capsule.demos.runbook_not_proof
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - CapsuleRunbookNotProofTests
           inputs:
-            - tests/blackbox/capsule-demos.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/CapsuleDemosTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:

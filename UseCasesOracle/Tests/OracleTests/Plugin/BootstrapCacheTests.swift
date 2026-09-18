@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 
+//: @use-case:release.distribution.cached_binary_runs_without_network
 /// The black-box oracle for release.distribution.cached_binary_runs_without_network —
 /// the Swift shape of `tests/plugin/bootstrap-cache.test.ts`.
 ///
@@ -138,3 +139,5 @@ struct BootstrapCacheTests {
     )
   }
 }
+
+//: @use-case:end release.distribution.cached_binary_runs_without_network

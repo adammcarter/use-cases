@@ -35,7 +35,6 @@ export type VerifierPresetId = (typeof VERIFIER_PRESET_IDS)[number];
 // `make.target` and `command.generic` are NOT here: a make target or a
 // bring-your-own argv may genuinely drive the shipped product, and the tool
 // cannot tell from the outside. Silence there is honest; guessing would not be.
-//: @use-case:lifecycle.signals.run_class_is_derived
 const TEST_SUITE_PRESETS = new Set<VerifierPresetId>([
   "js.vitest",
   "js.npm-test",
@@ -46,7 +45,6 @@ const TEST_SUITE_PRESETS = new Set<VerifierPresetId>([
 export function isTestSuitePreset(preset: string | undefined): boolean {
   return preset !== undefined && TEST_SUITE_PRESETS.has(preset as VerifierPresetId);
 }
-//: @use-case:end lifecycle.signals.run_class_is_derived
 
 export interface ExpandedPreset {
   kind: "script";

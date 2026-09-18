@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 
+//: @use-case:lifecycle.signals.nested_workspace_is_not_scanned#blackbox
 /// The black-box oracle for lifecycle/signals.yml, row
 /// `nested_workspace_is_not_scanned`.
 struct LifecycleNestedWorkspaceTests {
@@ -124,3 +125,5 @@ struct LifecycleNestedWorkspaceTests {
     #expect(!identifiers.contains("probe.core.alpha"))
   }
 }
+
+//: @use-case:end lifecycle.signals.nested_workspace_is_not_scanned#blackbox

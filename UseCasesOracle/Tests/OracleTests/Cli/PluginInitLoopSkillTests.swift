@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 
+//: @use-case:plugin.init.loop_skill_ported#blackbox
 /// The black-box oracle for plugin.init.loop_skill_ported.
 ///
 /// The row is about a SHIPPED ARTEFACT — the loop skill every host reads — so
@@ -111,3 +112,5 @@ struct PluginInitLoopSkillTests {
     }
   }
 }
+
+//: @use-case:end plugin.init.loop_skill_ported#blackbox

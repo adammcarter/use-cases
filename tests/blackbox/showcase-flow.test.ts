@@ -201,7 +201,6 @@ function readEvents(workspace: Workspace, runId: string): Array<Record<string, u
     .map((line) => JSON.parse(line) as Record<string, unknown>);
 }
 
-//: @use-case:showcase.flow.live_acceptance_flow#blackbox
 describe("showcase.flow.live_acceptance_flow", () => {
   // golden_cli. The claim under test is "derived from events, not a summary
   // anyone wrote": prove it by reading status TWICE off the same ledger (a
@@ -272,7 +271,6 @@ describe("showcase.flow.live_acceptance_flow", () => {
     expect(request.binding.finish_event_id, "the approval binding must name the finish event").toBe(finishEventId);
   });
 });
-//: @use-case:end showcase.flow.live_acceptance_flow#blackbox
 
 /** Drive one item through observation + a passing verdict recorded under `actor`. */
 function performUnderActor(actor: string, seed: string) {
@@ -286,7 +284,6 @@ function performUnderActor(actor: string, seed: string) {
   return { recorded, verdictEvent, status: status(workspace, runId).envelope.data };
 }
 
-//: @use-case:showcase.flow.control_modes#blackbox
 describe("showcase.flow.control_modes", () => {
   // golden_mixed. "Mixed" is reachable through the binary only at the verdict
   // layer (see the file header comment) — this proves that layer: the actor
@@ -327,7 +324,6 @@ describe("showcase.flow.control_modes", () => {
     }
   });
 });
-//: @use-case:end showcase.flow.control_modes#blackbox
 
 /** A two-row fixture, needed only by the correction test below: `showcase start
  * --adhoc` selects exactly one item (--select takes a single id), so a run with
@@ -395,7 +391,6 @@ function startFromPlan(workspace: Workspace, key: string): string {
   return startResult.envelope.data.run_id;
 }
 
-//: @use-case:showcase.flow.failure_decisions#blackbox
 describe("showcase.flow.failure_decisions", () => {
   // golden_branch. "continue" is the branch that proves failed items are not
   // silently skipped: it clears the finish gate, but the failing verdict —
@@ -470,7 +465,6 @@ describe("showcase.flow.failure_decisions", () => {
     expect(betaItem.item_currency).toBe("current");
   });
 });
-//: @use-case:end showcase.flow.failure_decisions#blackbox
 
 // The core has appendShowcaseEpoch (packages/core/src/showcase/appendShowcaseEvent.ts,
 // which replayRun.ts understands: an epoch_started event marks named items'
@@ -599,7 +593,6 @@ function appendRawEvent(
   return eventId;
 }
 
-//: @use-case:showcase.flow.approval_authority_boundary#blackbox
 describe("showcase.flow.approval_authority_boundary", () => {
   const HUMAN_KEY = ed25519Pem();
 
@@ -687,9 +680,7 @@ describe("showcase.flow.approval_authority_boundary", () => {
     expect(readEvents(workspace, runId).length, "a refused approval must not mutate the ledger").toBe(before);
   });
 });
-//: @use-case:end showcase.flow.approval_authority_boundary#blackbox
 
-//: @use-case:showcase.flow.status_separation#blackbox
 describe("showcase.flow.status_separation", () => {
   // golden_status. Four axes, four separate fields — none derivable from any
   // of the others, which is this row's whole design point.
@@ -748,4 +739,3 @@ describe("showcase.flow.status_separation", () => {
     expect(after.unresolved_failure_count).toBe(1);
   });
 });
-//: @use-case:end showcase.flow.status_separation#blackbox

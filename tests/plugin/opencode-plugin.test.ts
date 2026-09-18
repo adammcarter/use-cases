@@ -38,7 +38,6 @@ async function runSetup(root: string): Promise<Captured> {
   return captured;
 }
 
-//: @use-case:plugin.install.opencode_from_git
 describe("OpenCode installs the plugin from git", () => {
   test("package.json exports the plugin module and it is plain JavaScript", () => {
     const pkg = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8"));
@@ -78,4 +77,3 @@ describe("OpenCode installs the plugin from git", () => {
 
   test.skip("live: opencode run shows use-cases from the plugin bin, the use-cases tools and the bootstrap", () => {});
 });
-//: @use-case:end plugin.install.opencode_from_git

@@ -83,6 +83,7 @@ public struct RebindCommandResult: Equatable, Sendable {
   }
 }
 
+//: @use-case:lifecycle.bindings.rebind_repoints_a_binding
 /// `runRebindCommand`: move a binding to the right declaration. The marker
 /// moves and the registration moves with it, or neither does.
 public enum RebindCommand {
@@ -353,3 +354,5 @@ private struct MarkerMove {
     )
   }
 }
+
+//: @use-case:end lifecycle.bindings.rebind_repoints_a_binding

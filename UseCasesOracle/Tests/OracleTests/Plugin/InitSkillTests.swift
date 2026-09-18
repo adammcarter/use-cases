@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 
+//: @use-case:plugin.init.skill_hands_off
 /// The black-box oracle for plugin.init.skill_hands_off — the Swift shape of
 /// `tests/skills/init-skill.test.ts`.
 ///
@@ -45,3 +46,5 @@ struct InitSkillTests {
     #expect(readsTheAnswer)
   }
 }
+
+//: @use-case:end plugin.init.skill_hands_off

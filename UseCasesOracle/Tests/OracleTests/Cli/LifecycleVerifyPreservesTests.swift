@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 
+//: @use-case:lifecycle.signals.verify_preserves_other_rows#blackbox
 /// The black-box oracle for lifecycle/signals.yml, row
 /// `verify_preserves_other_rows`.
 struct LifecycleVerifyPreservesTests {
@@ -91,6 +92,9 @@ struct LifecycleVerifyPreservesTests {
   }
 }
 
+//: @use-case:end lifecycle.signals.verify_preserves_other_rows#blackbox
+
+//: @use-case:lifecycle.signals.acceptance_claim_is_honest#blackbox
 /// The black-box oracle for lifecycle/signals.yml, row
 /// `acceptance_claim_is_honest`.
 struct LifecycleAcceptanceClaimTests {
@@ -162,3 +166,5 @@ struct LifecycleAcceptanceClaimTests {
     #expect(SignalsWorkspace.claimable(scanned) == true, "keyless green is still green")
   }
 }
+
+//: @use-case:end lifecycle.signals.acceptance_claim_is_honest#blackbox

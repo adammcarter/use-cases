@@ -59,15 +59,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/diagnostics-contracts.test.ts
-            - -t
-            - diagnostics.contracts.root_resolution
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - DiagnosticsRootResolutionTests
           inputs:
-            - tests/blackbox/diagnostics-contracts.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/DiagnosticsContractsTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -132,15 +131,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/diagnostics-contracts.test.ts
-            - -t
-            - diagnostics.contracts.schema_contract_surface
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - DiagnosticsSchemaSurfaceTests
           inputs:
-            - tests/blackbox/diagnostics-contracts.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/DiagnosticsContractsTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -203,15 +201,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/diagnostics-contracts.test.ts
-            - -t
-            - diagnostics.contracts.identity_consistency
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - DiagnosticsIdentityTests
           inputs:
-            - tests/blackbox/diagnostics-contracts.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/DiagnosticsContractsTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -269,15 +266,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/diagnostics-contracts.test.ts
-            - -t
-            - diagnostics.contracts.cli_self_documents
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - DiagnosticsSelfDocumentingTests
           inputs:
-            - tests/blackbox/diagnostics-contracts.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/DiagnosticsContractsTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:

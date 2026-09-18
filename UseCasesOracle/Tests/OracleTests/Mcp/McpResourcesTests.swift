@@ -85,6 +85,7 @@ enum McpResourcesWorkspace {
   }
 }
 
+//: @use-case:mcp.resources.workspace_state_is_readable_and_read_only#blackbox
 /// The black-box oracle for mcp/resources.yml, row
 /// `workspace_state_is_readable_and_read_only`.
 ///
@@ -182,6 +183,9 @@ struct McpResourcesWorkspaceStateTests {
   }
 }
 
+//: @use-case:end mcp.resources.workspace_state_is_readable_and_read_only#blackbox
+
+//: @use-case:mcp.resources.schemas_are_readable_without_a_repo#blackbox
 /// The black-box oracle for mcp/resources.yml, row
 /// `schemas_are_readable_without_a_repo`.
 struct McpResourcesSchemasTests {
@@ -219,6 +223,9 @@ struct McpResourcesSchemasTests {
   }
 }
 
+//: @use-case:end mcp.resources.schemas_are_readable_without_a_repo#blackbox
+
+//: @use-case:mcp.resources.prompts_guide_without_widening_the_surface#blackbox
 /// The black-box oracle for mcp/resources.yml, row
 /// `prompts_guide_without_widening_the_surface`.
 struct McpResourcesPromptsTests {
@@ -301,3 +308,5 @@ struct McpResourcesPromptsTests {
     #expect(OracleText.contains("(?i)error|unknown|not.?found", in: got.json.encoded))
   }
 }
+
+//: @use-case:end mcp.resources.prompts_guide_without_widening_the_surface#blackbox

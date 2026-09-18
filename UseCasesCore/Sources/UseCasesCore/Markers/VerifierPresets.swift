@@ -60,6 +60,7 @@ public enum PresetExpansion: Equatable, Sendable {
 /// answer to "what command verifies this row", expanded with `{slug}` (and, for
 /// a variant row, `{variant}`) substituted everywhere it appears.
 public enum VerifierPresets {
+  //: @use-case:lifecycle.signals.run_class_is_derived
   /// Is this preset, by definition, a TEST SUITE — a runner invoked over a test
   /// file or package? `make.target` and `command.generic` are not: they may
   /// genuinely drive the shipped product, and the tool cannot tell.
@@ -69,6 +70,8 @@ public enum VerifierPresets {
     }
     return testSuitePresets.contains(identifier)
   }
+
+  //: @use-case:end lifecycle.signals.run_class_is_derived
 
   /// Expand `presetIdentifier` for `slug`; an unknown id is BLOCKED.
   public static func expand(

@@ -8,6 +8,7 @@ enum SkillHostRegistration {
   /// Claude always scans `skills/` at the plugin root, declared or not.
   static let implicitSkillRoots = ["./skills"]
 
+  //: @use-case:skills.assets.unreachable_skills_fail_doctor
   static func validate(
     root: String,
     diagnostics: inout [Diagnostic],
@@ -57,6 +58,8 @@ enum SkillHostRegistration {
       )],
     )
   }
+
+  //: @use-case:end skills.assets.unreachable_skills_fail_doctor
 
   /// The manifest's `skills` (a string or the strings of an array) and the
   /// implicit root, each without one leading `./` or any trailing `/`, kept

@@ -32,7 +32,6 @@ function bootstrapContext(stdout: string): string {
   return JSON.parse(stdout).hookSpecificOutput.additionalContext as string;
 }
 
-//: @use-case:plugin.install.uc_on_path_in_session
 describe("use-cases is a plain command inside any session", () => {
   test("bin/use-cases runs the resolved runtime from any working directory", () => {
     const cwd = scratch();
@@ -113,4 +112,3 @@ describe("use-cases is a plain command inside any session", () => {
     expect(ok.stdout).toContain(`${repoRoot}/bin/use-cases`);
   });
 });
-//: @use-case:end plugin.install.uc_on_path_in_session

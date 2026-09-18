@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 
+//: @use-case:showcase.flow.live_acceptance_flow#blackbox
 /// The black-box oracle for showcase/flow.yml, row `live_acceptance_flow`.
 struct ShowcaseLiveAcceptanceTests {
   // golden_cli. The claim under test is "derived from events, not a summary
@@ -122,6 +123,9 @@ struct ShowcaseLiveAcceptanceTests {
   }
 }
 
+//: @use-case:end showcase.flow.live_acceptance_flow#blackbox
+
+//: @use-case:showcase.flow.control_modes#blackbox
 /// The black-box oracle for showcase/flow.yml, row `control_modes`.
 struct ShowcaseControlModesTests {
   // golden_mixed. "Mixed" is reachable through the binary only at the verdict
@@ -186,6 +190,9 @@ struct ShowcaseControlModesTests {
   }
 }
 
+//: @use-case:end showcase.flow.control_modes#blackbox
+
+//: @use-case:showcase.flow.status_separation#blackbox
 /// The black-box oracle for showcase/flow.yml, row `status_separation`.
 struct ShowcaseStatusSeparationTests {
   static func passedAndFinished(
@@ -302,3 +309,5 @@ struct ShowcaseStatusSeparationTests {
     #expect(after["unresolved_failure_count"]?.intValue == 1)
   }
 }
+
+//: @use-case:end showcase.flow.status_separation#blackbox

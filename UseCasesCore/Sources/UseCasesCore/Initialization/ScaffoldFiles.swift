@@ -53,6 +53,7 @@ struct ScaffoldFiles {
 
   // MARK: - .gitignore
 
+  //: @use-case:lifecycle.signals.transient_output_stays_out_of_git
   /// Appends each missing entry, with its comment; a line that trims to the
   /// pattern counts as present. True when the file was created or changed.
   func ensureGitignoreEntries() throws(WorkspaceScaffoldError) -> Bool {
@@ -78,8 +79,11 @@ struct ScaffoldFiles {
     return true
   }
 
+  //: @use-case:end lifecycle.signals.transient_output_stays_out_of_git
+
   // MARK: - AGENTS.md
 
+  //: @use-case:plugin.init.records_decision_in_agents_md#code
   /// Records `yes` under the decision heading unless the heading is already
   /// there, in which case the first `yes` or `no` starting a line after it is
   /// read back.
@@ -122,6 +126,8 @@ struct ScaffoldFiles {
     try write(existing + separator + spacer + section, to: path)
     return AgentsMarkdownOutcome(status: .appended, decision: .agreed)
   }
+
+  //: @use-case:end plugin.init.records_decision_in_agents_md#code
 
   /// `after.match(/^\s*(yes|no)\b/m)?.[1]`: at the first line start (the text's
   /// start, or after `\n`, `\r`, U+2028 or U+2029) where optional whitespace is
@@ -166,6 +172,7 @@ struct ScaffoldFiles {
     let extended: [String]
   }
 
+  //: @use-case:plugin.init.wires_git_hooks#code
   /// Writes or extends pre-commit and pre-push in the configured hooks
   /// directory (`.githooks` when none), marks them executable, and points
   /// core.hooksPath at `.githooks` in a repository that had none configured.
@@ -208,6 +215,8 @@ struct ScaffoldFiles {
       extended: extended,
     )
   }
+
+  //: @use-case:end plugin.init.wires_git_hooks#code
 
   private enum HookWrite {
     case written

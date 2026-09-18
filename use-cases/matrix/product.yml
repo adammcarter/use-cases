@@ -54,15 +54,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/matrix-product-inventory.test.ts
-            - -t
-            - matrix.product.product_inventory
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - MatrixProductInventoryTests
           inputs:
-            - tests/blackbox/matrix-product-inventory.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/MatrixProductInventoryTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -126,15 +125,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/matrix-product-inventory.test.ts
-            - -t
-            - matrix.product.sharded_human_readable_files
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - MatrixShardedFilesTests
           inputs:
-            - tests/blackbox/matrix-product-inventory.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/MatrixProductInventoryTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -199,15 +197,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/matrix-product.test.ts
-            - -t
-            - matrix.product.integrity_degraded_nonfatal
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - MatrixProductIntegrityTests
           inputs:
-            - tests/blackbox/matrix-product.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/MatrixProductTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -266,15 +263,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/matrix-product.test.ts
-            - -t
-            - matrix.product.coverage_by_value_and_journey
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - MatrixProductCoverageTests
           inputs:
-            - tests/blackbox/matrix-product.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/MatrixProductTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -386,15 +382,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/matrix-product-inventory.test.ts
-            - -t
-            - matrix.product.status_summary
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - MatrixStatusSummaryTests
           inputs:
-            - tests/blackbox/matrix-product-inventory.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/MatrixProductInventoryTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:

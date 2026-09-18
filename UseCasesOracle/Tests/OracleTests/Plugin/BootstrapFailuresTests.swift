@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 
+//: @use-case:release.distribution.failed_download_says_what_to_do
 /// The black-box oracle for release.distribution.failed_download_says_what_to_do —
 /// the Swift shape of `tests/plugin/bootstrap-failures.test.ts`.
 ///
@@ -184,3 +185,5 @@ struct BootstrapFailuresTests {
     #expect(result.standardError.contains("use-cases-mcp"))
   }
 }
+
+//: @use-case:end release.distribution.failed_download_says_what_to_do

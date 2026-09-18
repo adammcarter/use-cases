@@ -97,6 +97,7 @@ public struct BindCommandResult: Equatable, Sendable {
   }
 }
 
+//: @use-case:lifecycle.signals.bind_names_the_next_step
 /// `runBindCommand` (spec 8.1): place and register an identity-only marker,
 /// appending ONE `binding_registered` event — and only once the edited source
 /// scans clean. It never writes evidence and never accepts a caller's hash.
@@ -274,3 +275,5 @@ public enum BindCommand {
     }
   }
 }
+
+//: @use-case:end lifecycle.signals.bind_names_the_next_step

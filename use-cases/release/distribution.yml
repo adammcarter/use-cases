@@ -86,13 +86,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/plugin/release-workflow.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - ReleaseWorkflowTests
           inputs:
-            - tests/plugin/release-workflow.test.ts
+            - UseCasesOracle/Tests/OracleTests/Plugin/ReleaseWorkflowTests.swift
             - .github/workflows/release.yml
             - bin/use-cases-bootstrap
       requirements:
@@ -178,14 +179,15 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/plugin/bootstrap-first-run.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - BootstrapFirstRunTests
           inputs:
-            - tests/plugin/bootstrap-first-run.test.ts
-            - tests/helpers/release-stand-in.ts
+            - UseCasesOracle/Tests/OracleTests/Plugin/BootstrapFirstRunTests.swift
+            - UseCasesOracle/Tests/OracleTests/Harness/ReleaseStandIn.swift
             - bin/use-cases-bootstrap
             - bin/use-cases
       requirements:
@@ -258,14 +260,15 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/plugin/bootstrap-cache.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - BootstrapCacheTests
           inputs:
-            - tests/plugin/bootstrap-cache.test.ts
-            - tests/helpers/release-stand-in.ts
+            - UseCasesOracle/Tests/OracleTests/Plugin/BootstrapCacheTests.swift
+            - UseCasesOracle/Tests/OracleTests/Harness/ReleaseStandIn.swift
             - bin/use-cases-bootstrap
       requirements:
         - evidence_kind: test_result
@@ -352,14 +355,15 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/plugin/bootstrap-failures.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - BootstrapFailuresTests
           inputs:
-            - tests/plugin/bootstrap-failures.test.ts
-            - tests/helpers/release-stand-in.ts
+            - UseCasesOracle/Tests/OracleTests/Plugin/BootstrapFailuresTests.swift
+            - UseCasesOracle/Tests/OracleTests/Harness/ReleaseStandIn.swift
             - bin/use-cases-bootstrap
       requirements:
         - evidence_kind: test_result

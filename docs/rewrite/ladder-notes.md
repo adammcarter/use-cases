@@ -1239,6 +1239,239 @@ TypeScript, exactly as 10a left the oracle's twenty-two, and 10c moves them.
   10d owns them — the second one's purpose (the Swift gate publishes nothing)
   survives without the `ci.yml` half.
 
+## Row 10c — the markers and the verifiers move off the TypeScript
+
+### The measured starting point
+
+`scan --json` over 118 rows, 2026-09-18, before any change: **123 bindings**, of
+which 32 lived in `packages/**`, 67 in `tests/blackbox/**`, 19 elsewhere under
+`tests/**`, 1 in `scripts/bundle.mjs`, 3 in shell/JS that survives
+(`bin/use-cases`, `hooks/session-start`, `opencode/plugin.js`) and 1 already in
+Swift (10b's `CiWorkflowTests`). **94 verifiers**, 93 of them
+`pnpm -s vitest run <file>`.
+
+Row 9's framing — "for the 24 rows bound into BOTH `packages/` and
+`tests/blackbox/`, the rebind is dropping the `packages/` span and keeping the
+black-box one" — was written before 10a. It is stale: the black-box span is no
+longer a safe harbour, because `tests/blackbox/*.test.ts` dies with the
+TypeScript too. 10b's own note is the one that holds ("the ten migrated files'
+rows still point at the TypeScript, exactly as 10a left the oracle's twenty-two,
+and 10c moves them"), so BOTH spans moved.
+
+**112 of the 123 bindings are now in Swift** (98 Swift + 3 surviving shell/JS +
+11 left in TypeScript, listed below). Of the 94 verifiers, **87 now run `swift test`** (78
+`UseCasesOracle`, 7 `UseCasesCore`, 2 `UseCasesCLI`) — 86 of them moved here, the
+87th being 10b's `ci.gate` row. Four active rows and the three `removed`
+`hosts.profiles.*` rows still run vitest. Verifier INPUTS moved with the
+commands: the only `packages/`, `scripts/` or `tests/` paths left in any
+verifier's `inputs` belong to those seven rows.
+
+### `swift test --filter` also matches the SOURCE FILE NAME
+
+New, measured here, and it changes how row 9's trap reads. `--filter` is an
+unanchored ICU regex matched against the suite name, the test name **and the
+file the test is declared in**:
+
+- `--filter ShowcaseFlowTests` — a filename with no struct of that name — runs
+  **9 tests in 3 suites**, every suite in `ShowcaseFlowTests.swift`.
+- `--filter MatrixCoreValidateTests` — a struct that is NOT its file's name —
+  runs **2 tests in 1 suite**, and its sibling `MatrixCoreMutateTests` does not.
+- `--filter ZzzNoSuchThing` still prints `warning: No matching test cases were
+  run` and **exits 0**. The trap is unchanged.
+
+So seven selectors here (`CapsuleCommandSafetyTests`,
+`LifecycleVerifyPreservesTests`, `LifecycleVerifyPreviewTests`,
+`MatrixProductInventoryTests`, `SkillsAssetsValidationTests`,
+`ShowcaseFailureDecisionsTests`, `WorkspaceScaffoldTests`) name a struct that is
+also its file's basename and therefore select that file's other suites as well.
+That is a superset, never a subset — the row's own tests always run — but it
+means those rows go red for a neighbour's failure. Deliberate and recorded
+rather than worked around: splitting the files would churn 10a/10b's layout.
+
+Every selector written was run exactly as written and its count read. 83 distinct
+(package, filter) pairs, **all non-zero, none warning**. Counts: 1–9 tests, most
+2–5. The full table is in the row 10c report.
+
+### The swift-testing test ID has backticks in it
+
+`swift test list` prints
+``OracleTests.LifecycleVariantFanoutTests/`a dry run previews …`()``. A
+function-level filter written the obvious way —
+`LifecycleVariantFanoutTests/a dry run` — matches NOTHING, because the backtick
+sits between the `/` and the name. Measured both ways.
+
+### `{variant}` forced a test rename
+
+`lifecycle.signals.variant_fanout` declares four variants, and `verify` fans a
+variant row out by substituting `{variant}` into the command. A command with no
+token is not "run once" — `VerifyRun` records `familyTokenMissing` for the whole
+family, which is a spec error that spawns nothing (the oracle's own
+`a family with no variant token is a spec error and spawns nothing` pins it). So
+the token had to survive the port, and the Swift test names carried no variant
+key to match on. The four tests were renamed to end `(variant: spawn|verdict|
+names|dry)` and the command is
+`--filter "LifecycleVariantFanoutTests.*variant: {variant}"`. Measured: one test
+per variant, and `verify --row lifecycle.signals.variant_fanout` produces four
+`::<key>` records, all `pass`. The fifth test in that suite (the no-token spec
+error) is matched by no variant and runs only under the full suite — exactly as
+the TypeScript's `-t "variant_fanout {variant}"` left it.
+
+### Two `--filter` flags, not one alternation
+
+`signing.tier.validate_ledger_holds_the_append_only_line` needs two suites. The
+command array is eight elements ending
+`…,"--filter","EvidenceLedgerTests","--filter","LedgerChainRulesTests"` — 9 tests
+in 2 suites. A single element `"EvidenceLedgerTests --filter LedgerChainRulesTests"`
+would be one argv and would match nothing; the written YAML was read back, not
+just the measured count.
+
+### `verify --all` never runs an UNBOUND row's verifier
+
+Measured: `verify --row signing.tier.keygen_keeps_the_private_key_out_of_the_tree`
+answers `no bound behaviours to verify`, `ok: true`, zero results. The same is
+true of `lifecycle: removed` rows. So:
+
+- the five `signing.tier.*` rows now carry correct, hand-measured `swift test`
+  verifiers (`SigningKeyGenerationTests` 4, `VerifyProveTests` 3,
+  `EvidenceLedgerTests`+`LedgerChainRulesTests` 9, `MarkerCommandsGoldenCorpusTests`
+  4, `ShowcaseCommandsGoldenCorpusTests` 2) — but **nothing runs them**, because
+  the rows are still UNBOUND. Row 9 said they "need real carriers or an explicit
+  owner decision"; the carriers exist and are named, and binding them is the
+  decision that is still open.
+- the three `hosts.profiles.*` rows are `removed` and were left alone. Two of
+  them already name `tests/conformance/bootstrap/agent-hook-installer.test.ts`,
+  **a file that does not exist** — pre-existing rot, harmless only because the
+  rows are never verified.
+
+### The four rows that cannot leave vitest, and why
+
+None has a Swift carrier, and each is a deletion decision rather than a
+migration one:
+
+| row | verifier | why there is no Swift carrier |
+|---|---|---|
+| `diagnostics.contracts.missing_build_hint` | `tests/conformance/cli/cli-ergonomics.test.ts` | the hint exists only because `coreLoader.ts` `await import`s `core/dist/index.js` and translates `ERR_MODULE_NOT_FOUND`. SwiftPM links `UseCasesCore` statically; the behaviour CANNOT exist. Retire it. |
+| `plugin.bundle.runs_from_clean_clone` | `tests/plugin/bundle.test.ts` | row 9's "dies with the TypeScript, deliberately". |
+| `plugin.runtime.pre_swift_versions_run_the_committed_bundle` | `tests/plugin/runtime-resolver.test.ts` | row 10 already schedules it for RETIREMENT with `dist/`. |
+| `skills.assets.demo_gates` | `tests/skills/p7-skills.test.ts` | it reads the LIVE `skills/showcase/SKILL.md` body. `SkillsGoldenCorpus` pins a FROZEN snapshot, so nothing in Swift fails when a real skill body changes. A genuine gap, not an artefact. |
+
+Their bindings stayed where they are, deliberately: unbinding now would hand 10d
+a quieter tree, and a marker in a file 10d deletes fails LOUDLY, which is the
+correct coupling. Same reasoning for the other seven TypeScript bindings left
+behind, all of them duplicates of a span the row now also has in Swift:
+`tests/agents/canonical-agents.test.ts` (×2), `tests/cli/known-commands-parity.test.ts`,
+`tests/plugin/claude-install.test.ts`, `tests/skills/loop-skill.test.ts`,
+`tests/skills/p7-skills.test.ts` (the `host_declaration` one) and
+`scripts/bundle.mjs`.
+
+### `tests/cli/recover.test.ts`, answered
+
+`signing.tier.recover_never_fakes_green` now runs
+`swift test --package-path UseCasesCLI --filter MarkerCommandsGoldenCorpusTests`
+(4 tests), which is row 9's named carrier for the `recoverVariants` half. The
+other half — `recover` driving a REAL `pytest` against `examples/python-pytest`
+through a `pnpm pack` → `npm install` harness — has no Swift carrier and its
+harness dies with the TypeScript regardless. **No Swift test runs a real
+verifier toolchain**, which is row 9's finding restated and still open.
+Consequence: `pip install pytest` left `.github/workflows/swift.yml`. Measured
+before removing it — `swift test --package-path UseCasesOracle --filter
+LifecycleRunClassTests`, the only suite that feeds a `python.pytest` preset into
+a real `verify`, passes all 5 tests with pytest off PATH, because it asserts the
+derived `run_class`, not the run's verdict.
+
+### The workflow prelude: `setup-node` and pnpm stay, pytest goes
+
+`setup-node` is permanent (`OpencodePluginTests` runs `opencode/plugin.js`).
+`corepack pnpm install --frozen-lockfile` and `corepack pnpm -s build` stay
+because the four rows above still need vitest and the built TypeScript for
+`verify --all` to pass. `CiWorkflowTests` asserts nothing about the prelude —
+only that the final gate step uses neither `node ` nor `bin/use-cases ` — and it
+still passes 7/7 after the edit.
+
+### Markers in Swift, three placement rules learned
+
+- **Above the doc comment, never between it and the declaration** (10b's
+  `orphaned_doc_comment`). Every span therefore starts at the first `///` line.
+- **swiftformat wants a blank line before the closing marker**
+  (`blankLinesBetweenScopes` fires on the `//: @use-case:end` line when a
+  declaration follows). Format the whole tree AFTER all the rebinds and BEFORE
+  `verify`, or every reformatted span is SUSPECT for no reason.
+- **Rebind bottom-up within a file.** The marker pair adds two lines, so any
+  span below the one just written shifts. Twenty-one files carry more than one
+  row.
+
+### `plugin.init.*` span asymmetry, disclosed
+
+`WorkspaceScaffoldTests` carries two rows and two markers cannot overlap, so
+`wires_git_hooks` took the corpus test (`a workspace is scaffolded as the
+TypeScript scaffolded it`) and `records_decision_in_agents_md` took the
+dated-clock test. The VERIFIER is `--filter WorkspaceScaffoldTests` for both, so
+the proof is identical; only `impact`'s file→row mapping is narrower for
+`records_decision_in_agents_md`. Forced by the file's shape, not chosen.
+
+### `source_refs` were NOT repointed — and the mapping 10d needs is here
+
+Out of scope as briefed (10c is markers, verifiers, the workflow and
+`recover.test.ts`), and measured so the next pass starts from a number:
+**79 rows still name a `packages/**` path in `source_refs`, 117 references in
+all.** They are documentation pointers, not proof, but every one of them rots at
+10d.
+
+The `packages/` → Swift source mapping was established here while moving the
+white-box markers, and it is the same mapping that pass needs. Recorded so it is
+not searched for twice (each line is where the BEHAVIOUR went, not a file
+rename):
+
+| TypeScript | Swift |
+|---|---|
+| `packages/cli/src/builtins.ts` (`runHelp`, `renderHelpText`) | `UseCasesCLI/…/Help/HelpPresenter.swift` (`present`, `text`) |
+| `packages/cli/src/coreLoader.ts` | **nothing** — SwiftPM links Core statically |
+| `packages/cli/src/trustRender.ts` (`renderImpact`) | `UseCasesCLI/…/Rendering/TrustRenderer+Impact.swift` (`impactLines`, `touchedLines`, `brokenLines`) |
+| `packages/core/src/durableWrite.ts` | `UseCasesCore/…/Evidence/DurableWrite.swift` |
+| `packages/core/src/evidence/appendEvidenceEvent.ts` | `UseCasesCore/…/Evidence/EvidenceAppender.swift` (+ `EvidenceEventRecord`) |
+| `packages/core/src/evidence/assurance.ts` | `UseCasesCore/…/Evidence/EvidenceAssurance.swift` (`derive`, `evaluateFreshness`) |
+| `packages/core/src/evidence/jsonlLedger.ts` | `UseCasesCore/…/Evidence/EvidenceLedgerReader.swift` (`parseLedger`, `LedgerReading`) |
+| `packages/core/src/evidence/linkEvidence.ts` | `UseCasesCore/…/Evidence/EvidenceMatrixLinker.swift` |
+| `packages/core/src/evidence/performedRuns.ts` | `UseCasesCore/…/Evidence/PerformedRuns.swift` |
+| `packages/core/src/init/scaffold.ts` | `UseCasesCore/…/Initialization/ScaffoldFiles.swift` (`ensureGitignoreEntries`, `ensureAgentsMarkdownDecision`, `ensureGitHooks`) + `ScaffoldTemplates.swift` (`exampleUseCase`) + `WorkspaceScaffold.swift` |
+| `packages/core/src/markers/cli/bind.ts` | `UseCasesCore/…/Markers/Commands/BindCommand.swift` |
+| `packages/core/src/markers/cli/rebind.ts` | `UseCasesCore/…/Markers/Commands/RebindCommand.swift` |
+| `packages/core/src/markers/cli/shared.ts` | `UseCasesCore/…/Markers/Commands/MarkerCommandInputs.swift` (`SourceWalk.isNestedWorkspace`, `workspaceConfigurationFiles`) |
+| `packages/core/src/markers/cli/unbind.ts` | `UseCasesCore/…/Markers/Commands/UnbindCommand.swift` |
+| `packages/core/src/markers/cli/verify.ts` | `UseCasesCore/…/Markers/Commands/VerifyRun.swift` (`plan`, `verify`, `verifyUnit`, `attest`, `VerificationResultsLedger.merge`) + `VerifiedRowInputs.swift` (`VerifyUnit.units`) |
+| `packages/core/src/markers/freshness.ts` | `UseCasesCore/…/Markers/Freshness.swift` (`acceptanceClaim`) + `FreshnessRenames.swift` (`infer`) |
+| `packages/core/src/markers/registry.ts` | `UseCasesCore/…/Markers/BindingRegistry.swift` (`validate`) |
+| `packages/core/src/markers/verifierPresets.ts` | `UseCasesCore/…/Markers/VerifierPresets.swift` (`isTestSuitePreset`, `testSuitePresets`) |
+| `packages/core/src/skills/validateSkillAssets.ts` | `UseCasesCore/…/Skills/SkillHostRegistration.swift` (`validate`, `declaredSkillRoots`) |
+| `packages/core/src/useCases/integrity.ts` (`buildMatrixSnapshot`) | `UseCasesCore/…/UseCases/MatrixSnapshot.swift` (`init(context:files:candidates:diagnostics:)`, `RowGrouping`) |
+| `packages/core/src/useCases/query.ts` | `UseCasesCore/…/UseCases/UseCaseQuery.swift` (`queryUseCases`) |
+| `packages/mcp/src/toolSchemas.ts` | `UseCasesMCP/…/Tools/McpToolSchemas.swift` |
+| `packages/core/test/init/scaffold-{agents-md,git-hooks}.test.ts` | `UseCasesCore/Tests/…/Initialization/WorkspaceScaffoldTests.swift` |
+| `packages/core/test/init/scaffold-sample.test.ts` | `UseCasesCore/Tests/…/Initialization/ScaffoldedWorkspaceTests.swift` |
+
+### Numbers
+
+`verify --repo . --all` through the built Swift binary: **89 behaviours, 89
+passed**, in **203s on the first run** (cold SwiftPM caches after the rebinds)
+and **178s on the second** (warm). The TypeScript-era run was 89/89 in 2m46s, so
+86 `swift test` spawns cost roughly 10-40s more depending on cache state.
+`verify` runs verifiers sequentially — no `TaskGroup`, no `async let` in
+`VerifyRun` — so the SwiftPM build lock is never contended, which is the new
+failure mode a parallel `verify` would have introduced.
+`scan --repo . --gate --policy-mode feature` exits 0;
+`validate-ledger --base-ref HEAD --public-key …` exits 0, so the ~240 appended
+binding events are append-only.
+
+Mutation-proved, each broken at an ASSERTION, watched fail through
+`verify --row`, restored and re-verified: `matrix.core.validate` (Oracle/Cli),
+`mcp.surface.write_gating` (Oracle/Mcp),
+`release.distribution.release_publishes_checksummed_assets` (Oracle/Plugin),
+`plugin.init.vends_sample_matrix` and `plugin.init.wires_git_hooks` and
+`evidence.ledger.crash_durable_ledger_writes` (UseCasesCore). The
+`UseCasesCLI` selector was proved the same way one level down —
+`ShowcaseCommandsGoldenCorpusTests` goes from 2 passed to 2 failed with 610
+issues — because its row is UNBOUND and `verify` will not run it.
+
 ## Row 10 — delete TypeScript
 
 - **Every verification context hash changes.** `verificationContextHash.ts`

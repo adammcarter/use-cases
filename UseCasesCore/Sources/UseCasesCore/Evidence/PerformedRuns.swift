@@ -15,6 +15,7 @@ public struct EvidencePerformedRun: Sendable, Equatable {
 /// packages/core/src/evidence/performedRuns.ts: the evidence tier the
 /// acceptance claim may honestly count.
 public enum PerformedRuns {
+  //: @use-case:lifecycle.signals.performed_runs_count
   /// `collectPerformedRuns`: every row backed by at least one current,
   /// tool-executed, passing run — one entry per row, the first run found, in
   /// row-id code-unit order.
@@ -42,6 +43,8 @@ public enum PerformedRuns {
       JavaScriptString.precedes(left.rowIdentifier, right.rowIdentifier)
     }
   }
+
+  //: @use-case:end lifecycle.signals.performed_runs_count
 
   /// `performedRunsOf`: each clause is a way the record could be a claim
   /// rather than a run.

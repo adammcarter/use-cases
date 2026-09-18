@@ -62,15 +62,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/skills-assets-validation.test.ts
-            - -t
-            - skills.assets.asset_validation
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - SkillsAssetsValidationTests
           inputs:
-            - tests/blackbox/skills-assets-validation.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/SkillsAssetsValidationTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -134,15 +133,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/skills-assets-validation.test.ts
-            - -t
-            - skills.assets.degraded_assets
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - SkillsAssetsDegradedTests
           inputs:
-            - tests/blackbox/skills-assets-validation.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/SkillsAssetsValidationTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -208,15 +206,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/skills-assets.test.ts
-            - -t
-            - skills.assets.host_declaration
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - SkillsAssetsHostDeclarationTests
           inputs:
-            - tests/blackbox/skills-assets.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/SkillsAssetsTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -379,15 +376,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/skills-assets.test.ts
-            - -t
-            - skills.assets.unreachable_skills_fail_doctor
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - SkillsAssetsUnreachableTests
           inputs:
-            - tests/blackbox/skills-assets.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/SkillsAssetsTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:

@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 
+//: @use-case:capsule.demos.persisted_smoke_runbook#blackbox
 /// The black-box oracle for capsule/demos.yml, row `persisted_smoke_runbook`.
 struct CapsulePersistedRunbookTests {
   // golden_plan. Validate the capsule file, then generate a plan from it, and
@@ -89,6 +90,9 @@ struct CapsulePersistedRunbookTests {
   }
 }
 
+//: @use-case:end capsule.demos.persisted_smoke_runbook#blackbox
+
+//: @use-case:capsule.demos.adhoc_release_demo#blackbox
 /// The black-box oracle for capsule/demos.yml, row `adhoc_release_demo`.
 struct CapsuleAdhocDemoTests {
   // golden_start. An ad hoc demo has no capsule file at all: the selection is
@@ -127,6 +131,9 @@ struct CapsuleAdhocDemoTests {
   }
 }
 
+//: @use-case:end capsule.demos.adhoc_release_demo#blackbox
+
+//: @use-case:capsule.demos.runbook_not_proof#blackbox
 /// The black-box oracle for capsule/demos.yml, row `runbook_not_proof`.
 struct CapsuleRunbookNotProofTests {
   // golden_guard. The plan describes itself, explicitly, as prepared and not
@@ -184,3 +191,5 @@ struct CapsuleRunbookNotProofTests {
     #expect(ledgers.isEmpty)
   }
 }
+
+//: @use-case:end capsule.demos.runbook_not_proof#blackbox

@@ -68,6 +68,7 @@ public struct EvidenceFreshnessResult: Sendable, Equatable {
 
 /// packages/core/src/evidence/assurance.ts.
 public enum EvidenceAssurance {
+  //: @use-case:evidence.ledger.assurance_and_freshness
   /// `deriveEvidenceAssurance`: `{ origin, capture_method, execution_method,
   /// integrity, reproducibility, result, class }`, an `undefined` origin or
   /// capture method left out.
@@ -103,6 +104,8 @@ public enum EvidenceAssurance {
     assurance["class"] = .string(assuranceClass)
     return assurance
   }
+
+  //: @use-case:end evidence.ledger.assurance_and_freshness
 
   /// `evaluateEvidenceFreshness`.
   public static func evaluateFreshness(_ input: EvidenceFreshnessInput) -> EvidenceFreshnessResult {

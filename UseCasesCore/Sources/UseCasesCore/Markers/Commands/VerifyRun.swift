@@ -10,6 +10,7 @@ struct VerifyRun {
 
   // MARK: - Dry run
 
+  //: @use-case:lifecycle.signals.verify_can_be_previewed
   /// Resolve exactly what a real run would execute, and stop: nothing is
   /// spawned, written or minted, and a variant family that would block
   /// previews as blocked.
@@ -36,6 +37,8 @@ struct VerifyRun {
     }
     return VerifyCommandResult(exitCode: 0, planned: planned, errors: errors)
   }
+
+  //: @use-case:end lifecycle.signals.verify_can_be_previewed
 
   private func planUnit(
     _ unit: VerifyUnit,
@@ -69,6 +72,7 @@ struct VerifyRun {
 
   // MARK: - Real run
 
+  //: @use-case:lifecycle.signals.variant_fanout
   mutating func verify(
     _ targets: [String],
     files: some MarkerFileSystem,
@@ -104,6 +108,8 @@ struct VerifyRun {
       }
     }
   }
+
+  //: @use-case:end lifecycle.signals.variant_fanout
 
   private mutating func verifyUnit(
     _ unit: VerifyUnit,
@@ -162,6 +168,7 @@ struct VerifyRun {
 
   // MARK: - Attestation and the results ledger
 
+  //: @use-case:lifecycle.signals.local_results_are_attested
   /// Every record, fail and blocked included, carries the HMAC only this
   /// machine's key produces. The key is minted only when there is a record.
   mutating func attest(
@@ -191,6 +198,8 @@ struct VerifyRun {
       }
     }
   }
+
+  //: @use-case:end lifecycle.signals.local_results_are_attested
 
   /// The results ledger written when asked for, and the run's verdict: exit 0
   /// only when every record passed.
@@ -345,6 +354,7 @@ private struct UnitBase {
 
 /// The unsigned results ledger `verify --out` maintains.
 enum VerificationResultsLedger {
+  //: @use-case:lifecycle.signals.verify_preserves_other_rows
   /// The new file body: every prior line that parses to an object with a
   /// string `row_id` this run did not re-verify (kept as its trimmed text,
   /// duplicates included), then this run's records, stably sorted by row id
@@ -382,6 +392,8 @@ enum VerificationResultsLedger {
     let body = ordered.map(\.element.line).joined(separator: "\n")
     return body.isEmpty ? "" : body + "\n"
   }
+
+  //: @use-case:end lifecycle.signals.verify_preserves_other_rows
 
   private static func priorRowIdentifier(_ line: String) -> String? {
     do throws(SchemaError) {

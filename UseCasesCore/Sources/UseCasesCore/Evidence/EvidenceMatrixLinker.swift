@@ -37,6 +37,7 @@ public struct EvidenceMatrixLink: Sendable, Equatable {
 
 /// packages/core/src/evidence/linkEvidence.ts.
 public enum EvidenceMatrixLinker {
+  //: @use-case:evidence.ledger.product_proof_map
   /// `linkEvidenceToMatrix`: every target of every aggregate, resolved, then
   /// sorted by `` `${evidenceId}:${useCaseId}` `` with `localeCompare`.
   public static func link(
@@ -53,6 +54,8 @@ public enum EvidenceMatrixLinker {
       JavaScriptStringOrder.localeAscending(sortKey(left), sortKey(right))
     }
   }
+
+  //: @use-case:end evidence.ledger.product_proof_map
 
   private static func link(
     _ evidenceIdentifier: String,

@@ -153,6 +153,7 @@ enum MatrixInventoryWorkspace {
   }
 }
 
+//: @use-case:matrix.product.product_inventory#blackbox
 /// The black-box oracle for matrix/product.yml, row `product_inventory`.
 ///
 /// `MatrixProductTests` already covers coverage_by_value_and_journey and
@@ -249,6 +250,9 @@ struct MatrixProductInventoryTests {
   }
 }
 
+//: @use-case:end matrix.product.product_inventory#blackbox
+
+//: @use-case:matrix.product.sharded_human_readable_files#blackbox
 /// The black-box oracle for matrix/product.yml, row
 /// `sharded_human_readable_files`.
 struct MatrixShardedFilesTests {
@@ -375,6 +379,9 @@ struct MatrixShardedFilesTests {
   }
 }
 
+//: @use-case:end matrix.product.sharded_human_readable_files#blackbox
+
+//: @use-case:matrix.product.status_summary#blackbox
 /// The black-box oracle for matrix/product.yml, row `status_summary`.
 struct MatrixStatusSummaryTests {
   static let alphaOne = MatrixShardedFilesTests.alphaOne
@@ -458,3 +465,5 @@ struct MatrixStatusSummaryTests {
     #expect(blocking > 0)
   }
 }
+
+//: @use-case:end matrix.product.status_summary#blackbox

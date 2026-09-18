@@ -7,7 +7,6 @@ const repoRoot = resolve(import.meta.dirname, "../..");
 const read = (path: string) => JSON.parse(readFileSync(join(repoRoot, path), "utf8"));
 const claude = read(".claude-plugin/plugin.json");
 
-//: @use-case:plugin.install.copilot_from_github
 describe("Copilot CLI installs the plugin straight from GitHub", () => {
   test("no root Agent Plugins manifest ships; Copilot reads the Claude manifest and hook", () => {
     // A root plugin.json switches Copilot into a mode that ignores hooks/hooks.json,
@@ -38,9 +37,7 @@ describe("Copilot CLI installs the plugin straight from GitHub", () => {
     // Performed 2026-09-16 against the worktree; recorded as showcase evidence, not here.
   });
 });
-//: @use-case:end plugin.install.copilot_from_github
 
-//: @use-case:plugin.install.codex_from_github
 describe("Codex installs the plugin from its marketplace", () => {
   test(".codex-plugin/plugin.json declares skills, MCP and the hook in Codex's own form", () => {
     const codex = read(".codex-plugin/plugin.json");
@@ -63,4 +60,3 @@ describe("Codex installs the plugin from its marketplace", () => {
 
   test.skip("live: skills listed as use-cases:<name>; MCP tools blocked by the usage cap until 2026-09-21", () => {});
 });
-//: @use-case:end plugin.install.codex_from_github

@@ -58,16 +58,15 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/mcp-wrapper.test.ts
-            - -t
-            - mcp.wrapper.parity
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - McpWrapperTests
           inputs:
-            - tests/blackbox/mcp-wrapper.test.ts
-            - tests/helpers/mcp-server.ts
+            - UseCasesOracle/Tests/OracleTests/Mcp/McpWrapperTests.swift
+            - UseCasesOracle/Tests/OracleTests/Harness/McpSession.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -164,16 +163,15 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/mcp-wrapper.test.ts
-            - -t
-            - mcp.use_case_mutation.safe
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - McpWrapperTests
           inputs:
-            - tests/blackbox/mcp-wrapper.test.ts
-            - tests/helpers/mcp-server.ts
+            - UseCasesOracle/Tests/OracleTests/Mcp/McpWrapperTests.swift
+            - UseCasesOracle/Tests/OracleTests/Harness/McpSession.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:

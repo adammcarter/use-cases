@@ -79,7 +79,6 @@ function makeWorkspace(dataRoot = "."): { dir: string; env: Record<string, strin
   return { dir, env };
 }
 
-//: @use-case:diagnostics.contracts.root_resolution#blackbox
 describe("diagnostics.contracts.root_resolution", () => {
   // golden_doctor. The two roots are separate facts, not one path.
   test("doctor roots reports the workspace root and the data root distinctly", () => {
@@ -134,9 +133,7 @@ describe("diagnostics.contracts.root_resolution", () => {
     expect(JSON.stringify(envelope.diagnostics)).toContain("workspace_config");
   });
 });
-//: @use-case:end diagnostics.contracts.root_resolution#blackbox
 
-//: @use-case:diagnostics.contracts.schema_contract_surface#blackbox
 describe("diagnostics.contracts.schema_contract_surface", () => {
   // golden_validate. The contract is enumerable and its fixtures validate, so
   // an integrator can depend on it.
@@ -180,9 +177,7 @@ describe("diagnostics.contracts.schema_contract_surface", () => {
     expect(envelope.diagnostics, "a clean run reports no drift").toHaveLength(0);
   });
 });
-//: @use-case:end diagnostics.contracts.schema_contract_surface#blackbox
 
-//: @use-case:diagnostics.contracts.identity_consistency#blackbox
 describe("diagnostics.contracts.identity_consistency", () => {
   // golden_envelope.
   test("every envelope reports the configured component id", () => {
@@ -214,9 +209,7 @@ describe("diagnostics.contracts.identity_consistency", () => {
     }
   });
 });
-//: @use-case:end diagnostics.contracts.identity_consistency#blackbox
 
-//: @use-case:diagnostics.contracts.cli_self_documents#blackbox
 describe("diagnostics.contracts.cli_self_documents", () => {
   // golden_usage. An agent can discover the surface from the CLI itself.
   test("a bare invocation and --help both print usage listing the commands", () => {
@@ -244,4 +237,3 @@ describe("diagnostics.contracts.cli_self_documents", () => {
     expect(human.stdout + human.stderr).toContain("use-cases --help");
   });
 });
-//: @use-case:end diagnostics.contracts.cli_self_documents#blackbox

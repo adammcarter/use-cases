@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 
+//: @use-case:plugin.install.uc_on_path_in_session
 /// The black-box oracle for plugin.install.uc_on_path_in_session — the Swift
 /// shape of `tests/plugin/session-path.test.ts`.
 ///
@@ -181,3 +182,5 @@ struct SessionPathTests {
     #expect(current.standardOutput.contains("\(OracleLayout.repositoryRoot)/bin/use-cases"))
   }
 }
+
+//: @use-case:end plugin.install.uc_on_path_in_session

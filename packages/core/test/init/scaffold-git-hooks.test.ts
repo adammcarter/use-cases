@@ -18,7 +18,6 @@ function runHook(repoRoot: string, hook: string, env: Record<string, string> = {
   });
 }
 
-//: @use-case:plugin.init.wires_git_hooks
 describe("use-cases init wires the pre-commit and pre-push hooks", () => {
   let repoRoot: string;
   beforeEach(() => {
@@ -87,4 +86,3 @@ describe("use-cases init wires the pre-commit and pre-push hooks", () => {
     }
   });
 });
-//: @use-case:end plugin.init.wires_git_hooks

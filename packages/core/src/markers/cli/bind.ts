@@ -88,7 +88,6 @@ function fail(
   };
 }
 
-//: @use-case:lifecycle.signals.bind_names_the_next_step
 export function runBindCommand(options: BindCommandOptions): BindCommandResult {
   const fs = options.fs ?? nodeMarkerFs;
   const bindingSlug = options.suffix ? `${options.rowId}#${options.suffix}` : options.rowId;
@@ -240,4 +239,3 @@ export function runBindCommand(options: BindCommandOptions): BindCommandResult {
     errors: []
   };
 }
-//: @use-case:end lifecycle.signals.bind_names_the_next_step

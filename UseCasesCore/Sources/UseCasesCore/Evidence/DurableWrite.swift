@@ -16,6 +16,7 @@ enum NodeOperatingSystem {
 /// packages/core/src/durableWrite.ts. It belongs with Foundation/ in spirit;
 /// Foundation/ is closed, and the evidence append path is its only caller.
 enum DurableWrite {
+  //: @use-case:evidence.ledger.crash_durable_ledger_writes
   /// `fsyncBestEffortForTemp`: `fsync`, forgiving EIO, EINVAL, ENOSYS and
   /// ENOTSUP only for a file inside the OS temporary directory, where some
   /// filesystems cannot sync. Anywhere else a failed sync is raised.
@@ -39,6 +40,8 @@ enum DurableWrite {
     }
     throw FileAccessError(errorNumber: failure, operation: "fsync", path: nil)
   }
+
+  //: @use-case:end evidence.ledger.crash_durable_ledger_writes
 
   static func isBestEffortTemporarySyncFailure(
     errorNumber: Int32,

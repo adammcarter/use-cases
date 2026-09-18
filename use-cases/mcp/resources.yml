@@ -2,10 +2,7 @@ schema_version: 1
 feature:
   id: mcp.resources
   name: MCP resources and prompts
-  summary: >-
-    The MCP server exposes eight read-only workspace-state resources and four
-    guided-workflow prompts alongside its tools. Neither had a row until now,
-    which left a third of the MCP surface undescribed.
+  summary: The MCP server exposes eight read-only workspace-state resources and four guided-workflow prompts alongside its tools. Neither had a row until now, which left a third of the MCP surface undescribed.
 use_cases:
   - id: mcp.resources.workspace_state_is_readable_and_read_only
     title: Workspace state is readable over MCP, and reading never writes
@@ -23,10 +20,7 @@ use_cases:
       - kind: file
         path: tests/conformance/mcp/p15-mcp-resources-prompts.test.ts
     actor: agent
-    intent: >-
-      Let an agent read matrix, freshness, bindings, ledger, evidence and config
-      state as MCP resources rather than shelling out, while guaranteeing a read
-      can never change the workspace.
+    intent: Let an agent read matrix, freshness, bindings, ledger, evidence and config state as MCP resources rather than shelling out, while guaranteeing a read can never change the workspace.
     preconditions:
       - The MCP server is registered and a repo is configured or passed.
     trigger: An agent lists or reads a use-cases:// resource.
@@ -90,16 +84,15 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/mcp-resources.test.ts
-            - -t
-            - mcp.resources.workspace_state_is_readable_and_read_only
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - McpResourcesWorkspaceStateTests
           inputs:
-            - tests/blackbox/mcp-resources.test.ts
-            - tests/helpers/mcp-server.ts
+            - UseCasesOracle/Tests/OracleTests/Mcp/McpResourcesTests.swift
+            - UseCasesOracle/Tests/OracleTests/Harness/McpSession.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -107,7 +100,6 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
-
   - id: mcp.resources.schemas_are_readable_without_a_repo
     title: The public schema index is readable without any workspace
     lifecycle: active
@@ -125,10 +117,7 @@ use_cases:
       - kind: file
         path: tests/conformance/mcp/p15-mcp-resources-prompts.test.ts
     actor: agent
-    intent: >-
-      Let an integrator read the published schema contract over MCP before they
-      have a workspace at all, because the contract is what they integrate
-      against and it does not belong to any one repo.
+    intent: Let an integrator read the published schema contract over MCP before they have a workspace at all, because the contract is what they integrate against and it does not belong to any one repo.
     preconditions:
       - The MCP server is running.
     trigger: An agent reads use-cases://schemas or use-cases://schemas/{name}.
@@ -162,16 +151,15 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/mcp-resources.test.ts
-            - -t
-            - mcp.resources.schemas_are_readable_without_a_repo
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - McpResourcesSchemasTests
           inputs:
-            - tests/blackbox/mcp-resources.test.ts
-            - tests/helpers/mcp-server.ts
+            - UseCasesOracle/Tests/OracleTests/Mcp/McpResourcesTests.swift
+            - UseCasesOracle/Tests/OracleTests/Harness/McpSession.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -179,7 +167,6 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
-
   - id: mcp.resources.prompts_guide_without_widening_the_surface
     title: Guided prompts are offered, and never offer prove
     lifecycle: active
@@ -196,10 +183,7 @@ use_cases:
       - kind: file
         path: tests/conformance/mcp/p15-mcp-resources-prompts.test.ts
     actor: agent
-    intent: >-
-      Offer four grounded workflows — adopt a repo, bind a row, recover a suspect
-      row, review a release — without the prompt surface becoming a way to reach
-      the signing tier that is deliberately absent from the tools.
+    intent: Offer four grounded workflows — adopt a repo, bind a row, recover a suspect row, review a release — without the prompt surface becoming a way to reach the signing tier that is deliberately absent from the tools.
     preconditions:
       - The MCP server is registered.
     trigger: An agent lists the prompts or gets one.
@@ -242,16 +226,15 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/mcp-resources.test.ts
-            - -t
-            - mcp.resources.prompts_guide_without_widening_the_surface
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - McpResourcesPromptsTests
           inputs:
-            - tests/blackbox/mcp-resources.test.ts
-            - tests/helpers/mcp-server.ts
+            - UseCasesOracle/Tests/OracleTests/Mcp/McpResourcesTests.swift
+            - UseCasesOracle/Tests/OracleTests/Harness/McpSession.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:

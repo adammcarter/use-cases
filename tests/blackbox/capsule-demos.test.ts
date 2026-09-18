@@ -128,7 +128,6 @@ interface MatrixStatusData {
   evidence: { ledgers: unknown[]; counts: { aggregates_active: number } };
 }
 
-//: @use-case:capsule.demos.persisted_smoke_runbook#blackbox
 describe("capsule.demos.persisted_smoke_runbook", () => {
   const CAPSULE = `schema_version: 1
 capsule_id: capsule.probe.smoke
@@ -202,9 +201,7 @@ permissions:
     expect(secondData.plan_result.plan).toEqual(firstData.plan_result.plan);
   });
 });
-//: @use-case:end capsule.demos.persisted_smoke_runbook#blackbox
 
-//: @use-case:capsule.demos.adhoc_release_demo#blackbox
 describe("capsule.demos.adhoc_release_demo", () => {
   // golden_start. An ad hoc demo has no capsule file at all: the selection is
   // made on the command line and `run_started` is the audit trail of what was
@@ -235,9 +232,7 @@ describe("capsule.demos.adhoc_release_demo", () => {
     expect(existsSync(join(workspace.dir, "demo-capsules")), "no capsule file was created").toBe(false);
   });
 });
-//: @use-case:end capsule.demos.adhoc_release_demo#blackbox
 
-//: @use-case:capsule.demos.runner_command_safety#blackbox
 describe("capsule.demos.runner_command_safety", () => {
   function commandCapsule(step: Record<string, unknown>, permitted: boolean): string {
     return [
@@ -393,9 +388,7 @@ describe("capsule.demos.runner_command_safety", () => {
     expect(result.stdout.length).toBeLessThan(50000);
   });
 });
-//: @use-case:end capsule.demos.runner_command_safety#blackbox
 
-//: @use-case:capsule.demos.stale_reference_warning#blackbox
 describe("capsule.demos.stale_reference_warning", () => {
   const CAPSULE = `schema_version: 1
 capsule_id: capsule.probe.smoke
@@ -521,9 +514,7 @@ permissions:
     );
   });
 });
-//: @use-case:end capsule.demos.stale_reference_warning#blackbox
 
-//: @use-case:capsule.demos.runbook_not_proof#blackbox
 describe("capsule.demos.runbook_not_proof", () => {
   const CAPSULE = `schema_version: 1
 capsule_id: capsule.probe.smoke
@@ -577,4 +568,3 @@ permissions:
     expect(data.evidence.ledgers).toEqual([]);
   });
 });
-//: @use-case:end capsule.demos.runbook_not_proof#blackbox

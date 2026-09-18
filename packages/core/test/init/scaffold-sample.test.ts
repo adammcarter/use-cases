@@ -13,7 +13,6 @@ function ucJson(args: string[], cwd: string): any {
   return JSON.parse(result.stdout);
 }
 
-//: @use-case:plugin.init.vends_sample_matrix
 describe("use-cases init vends a sample row that shows the whole shape", () => {
   let repoRoot: string;
   beforeEach(() => { repoRoot = mkdtempSync(join(tmpdir(), "ucm-init-sample-")); scaffoldWorkspace({ repoRoot }); });
@@ -48,4 +47,3 @@ describe("use-cases init vends a sample row that shows the whole shape", () => {
     expect(out.data.status.summary.invalid).toBe(0);
   });
 });
-//: @use-case:end plugin.init.vends_sample_matrix

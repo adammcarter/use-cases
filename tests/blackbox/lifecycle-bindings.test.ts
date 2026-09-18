@@ -152,7 +152,6 @@ function registryLineCount(workspace: Workspace): number {
     .filter(Boolean).length;
 }
 
-//: @use-case:lifecycle.bindings.rebind_repoints_a_binding#blackbox
 describe("lifecycle.bindings.rebind_repoints_a_binding", () => {
   // golden_same_file. A marker on a declaration that cannot fail when its claim
   // does reads as proven from every angle the tool reports on. Being unable to
@@ -238,9 +237,7 @@ describe("lifecycle.bindings.rebind_repoints_a_binding", () => {
     expect(lines.filter((l) => l.includes("#two"))).toHaveLength(2);
   });
 });
-//: @use-case:end lifecycle.bindings.rebind_repoints_a_binding#blackbox
 
-//: @use-case:lifecycle.bindings.unbind_releases_a_registration#blackbox
 describe("lifecycle.bindings.unbind_releases_a_registration", () => {
   // golden_clean. Removing a marker by hand never released its registration, so
   // a retired behaviour stayed registered forever and its slug could never be
@@ -319,9 +316,7 @@ describe("lifecycle.bindings.unbind_releases_a_registration", () => {
     expect(rowOf(workspace, "alpha")?.current_binding_slugs).toEqual(["probe.core.alpha#two"]);
   });
 });
-//: @use-case:end lifecycle.bindings.unbind_releases_a_registration#blackbox
 
-//: @use-case:lifecycle.bindings.retired_row_can_leave_the_matrix#blackbox
 describe("lifecycle.bindings.retired_row_can_leave_the_matrix", () => {
   function deleteRow(workspace: Workspace, row: string): void {
     const path = join(workspace.dir, "use-cases", "probe.yml");
@@ -371,4 +366,3 @@ describe("lifecycle.bindings.retired_row_can_leave_the_matrix", () => {
     expect(codes).not.toContain("REGISTRY_ROW_MISSING");
   });
 });
-//: @use-case:end lifecycle.bindings.retired_row_can_leave_the_matrix#blackbox

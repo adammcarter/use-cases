@@ -59,15 +59,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/planning-cards.test.ts
-            - -t
-            - planning.cards.showcase_selection
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - PlanningShowcaseSelectionTests
           inputs:
-            - tests/blackbox/planning-cards.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/PlanningCardsTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -131,15 +130,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/planning-cards.test.ts
-            - -t
-            - planning.cards.walkthrough_coverage
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - PlanningWalkthroughTests
           inputs:
-            - tests/blackbox/planning-cards.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/PlanningCardsTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -202,15 +200,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/planning-cards.test.ts
-            - -t
-            - planning.cards.prepared_not_performed
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - PlanningPreparedNotPerformedTests
           inputs:
-            - tests/blackbox/planning-cards.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/PlanningCardsTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -268,15 +265,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/planning-cards.test.ts
-            - -t
-            - planning.cards.audience_timebox_fit
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - PlanningAudienceTimeboxTests
           inputs:
-            - tests/blackbox/planning-cards.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/PlanningCardsTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -338,15 +334,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/planning-cards.test.ts
-            - -t
-            - planning.cards.partial_matrix_warning
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - PlanningPartialMatrixTests
           inputs:
-            - tests/blackbox/planning-cards.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/PlanningCardsTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:

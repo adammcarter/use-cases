@@ -9,7 +9,6 @@ export type EvidenceAssuranceInput = {
   digestComputedByTool?: boolean;
 };
 
-//: @use-case:evidence.ledger.assurance_and_freshness
 export function deriveEvidenceAssurance(input: EvidenceAssuranceInput): EvidenceAssurance {
   const executionMethod =
     input.executionMethod ??
@@ -33,7 +32,6 @@ export function deriveEvidenceAssurance(input: EvidenceAssuranceInput): Evidence
     class: assuranceClass
   };
 }
-//: @use-case:end evidence.ledger.assurance_and_freshness
 
 export function evaluateEvidenceFreshness(input: {
   explicitInvalidation?: boolean;

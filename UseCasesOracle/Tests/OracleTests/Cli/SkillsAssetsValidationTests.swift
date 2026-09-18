@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 
+//: @use-case:skills.assets.asset_validation#blackbox
 /// The black-box oracle for two remaining rows of skills/assets.yml:
 /// asset_validation and degraded_assets.
 ///
@@ -127,6 +128,9 @@ struct SkillsAssetsValidationTests {
   }
 }
 
+//: @use-case:end skills.assets.asset_validation#blackbox
+
+//: @use-case:skills.assets.degraded_assets#blackbox
 /// The black-box oracle for skills/assets.yml, row `degraded_assets`.
 struct SkillsAssetsDegradedTests {
   /// Corrupt the opening frontmatter delimiter so no YAML block is found.
@@ -199,3 +203,5 @@ struct SkillsAssetsDegradedTests {
     }
   }
 }
+
+//: @use-case:end skills.assets.degraded_assets#blackbox

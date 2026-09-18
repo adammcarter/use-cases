@@ -39,6 +39,7 @@ public struct MatrixSnapshot: Sendable {
   /// which the id pattern does not constrain.
   private let rowsByIdentifier: [CodeUnitKey: [LoadedUseCase]]
 
+  //: @use-case:matrix.product.integrity_degraded_nonfatal
   /// Assemble a snapshot from what a load found.
   public init(
     context: ResolvedWorkspaceContext,
@@ -90,6 +91,8 @@ public struct MatrixSnapshot: Sendable {
     approvalTrust = context.approvalTrust
     rowsByIdentifier = grouping.rowsByIdentifier
   }
+
+  //: @use-case:end matrix.product.integrity_degraded_nonfatal
 
   /// The row with `identifier`, or why there is not exactly one.
   public func resolveUseCase(_ identifier: String) -> UseCaseResolution {

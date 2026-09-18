@@ -2,13 +2,7 @@ schema_version: 1
 feature:
   id: lifecycle.signals
   name: Honest signals in the daily loop
-  summary: >-
-    The signals an agent reads during the keyless loop must mean what they say:
-    verifying one row must not destroy another's evidence, a green light must not
-    appear while nothing is proven, an impact headline must not claim nothing is
-    affected, and every error must hand back the command that actually fixes it.
-    These behaviours exist because agents using the tool in the field acted on
-    signals that were technically true and practically misleading.
+  summary: "The signals an agent reads during the keyless loop must mean what they say: verifying one row must not destroy another's evidence, a green light must not appear while nothing is proven, an impact headline must not claim nothing is affected, and every error must hand back the command that actually fixes it. These behaviours exist because agents using the tool in the field acted on signals that were technically true and practically misleading."
 use_cases:
   - id: lifecycle.signals.verify_preserves_other_rows
     title: Verifying one row never destroys another row's evidence
@@ -26,9 +20,7 @@ use_cases:
       - kind: file
         path: packages/core/test/markers/verify.test.ts
     actor: agent
-    intent: >-
-      Re-verify a single changed behaviour without losing the evidence for every
-      other behaviour, so the incremental loop the docs recommend is safe to use.
+    intent: Re-verify a single changed behaviour without losing the evidence for every other behaviour, so the incremental loop the docs recommend is safe to use.
     preconditions:
       - Several rows are bound and have passing local verification results.
     trigger: An agent runs `use-cases verify --row <id>` after changing one behaviour.
@@ -82,15 +74,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/lifecycle-signals.test.ts
-            - -t
-            - lifecycle.signals.verify_preserves_other_rows
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - LifecycleVerifyPreservesTests
           inputs:
-            - tests/blackbox/lifecycle-signals.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/LifecycleVerifyPreservesTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -98,7 +89,6 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
-
   - id: lifecycle.signals.acceptance_claim_is_honest
     title: Scan states whether acceptance can honestly be claimed
     lifecycle: active
@@ -115,9 +105,7 @@ use_cases:
       - kind: file
         path: packages/core/test/markers/freshness-local.test.ts
     actor: agent
-    intent: >-
-      Give an agent a single field it can quote that says whether acceptance is
-      actually supported, so a green policy flag is never mistaken for proof.
+    intent: Give an agent a single field it can quote that says whether acceptance is actually supported, so a green policy flag is never mistaken for proof.
     preconditions:
       - A matrix exists with at least one row.
     trigger: An agent runs `use-cases scan` and looks for a signal to report against.
@@ -166,15 +154,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/lifecycle-signals.test.ts
-            - -t
-            - lifecycle.signals.acceptance_claim_is_honest
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - LifecycleAcceptanceClaimTests
           inputs:
-            - tests/blackbox/lifecycle-signals.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/LifecycleVerifyPreservesTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -182,7 +169,6 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
-
   - id: lifecycle.signals.impact_leads_with_the_union
     title: Impact never claims nothing is affected while a bound file was touched
     lifecycle: active
@@ -198,9 +184,7 @@ use_cases:
       - kind: file
         path: tests/cli/impact.test.ts
     actor: agent
-    intent: >-
-      Make the impact headline conservative, so an agent that reads it and stops
-      does not skip re-verifying the rows its change may have broken.
+    intent: Make the impact headline conservative, so an agent that reads it and stops does not skip re-verifying the rows its change may have broken.
     preconditions:
       - A row is bound and its file is under version control.
     trigger: An agent runs `use-cases impact` after editing code.
@@ -241,15 +225,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/lifecycle-signals.test.ts
-            - -t
-            - lifecycle.signals.impact_leads_with_the_union
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - LifecycleImpactUnionTests
           inputs:
-            - tests/blackbox/lifecycle-signals.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/LifecycleImpactAndGitTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -257,7 +240,6 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
-
   - id: lifecycle.signals.errors_hand_back_the_cure
     title: Errors name the cause and the command that fixes it
     lifecycle: active
@@ -274,9 +256,7 @@ use_cases:
       - kind: file
         path: tests/cli/actionable-output.test.ts
     actor: agent
-    intent: >-
-      Turn a broken registry from a dead end into a recoverable state, by naming
-      the likely cause (a rename) and the sequence that actually restores it.
+    intent: Turn a broken registry from a dead end into a recoverable state, by naming the likely cause (a rename) and the sequence that actually restores it.
     preconditions:
       - A row is bound, then renamed in both the matrix and the source marker.
     trigger: An agent renames a bound behaviour and runs `use-cases scan`.
@@ -331,15 +311,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/lifecycle-signals.test.ts
-            - -t
-            - lifecycle.signals.errors_hand_back_the_cure
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - LifecycleErrorsCureTests
           inputs:
-            - tests/blackbox/lifecycle-signals.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/LifecycleErrorsCureTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -347,7 +326,6 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
-
   - id: lifecycle.signals.verify_can_be_previewed
     title: Verify can be previewed before paying for it
     lifecycle: active
@@ -361,9 +339,7 @@ use_cases:
       - kind: file
         path: packages/core/src/markers/cli/verify.ts
     actor: agent
-    intent: >-
-      Let an agent see which verifiers a run would execute before running them, so
-      an expensive acceptance build is a decision rather than a surprise.
+    intent: Let an agent see which verifiers a run would execute before running them, so an expensive acceptance build is a decision rather than a surprise.
     preconditions:
       - At least one row is bound and declares a verifier.
     trigger: An agent wants to know the cost of `use-cases verify` before running it.
@@ -405,15 +381,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/lifecycle-signals.test.ts
-            - -t
-            - lifecycle.signals.verify_can_be_previewed
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - LifecycleVerifyPreviewTests
           inputs:
-            - tests/blackbox/lifecycle-signals.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/LifecycleVerifyPreviewTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -421,7 +396,6 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
-
   - id: lifecycle.signals.bind_names_the_next_step
     title: Binding a row says the row is not yet proven
     lifecycle: active
@@ -438,9 +412,7 @@ use_cases:
       - kind: file
         path: tests/cli/actionable-output.test.ts
     actor: agent
-    intent: >-
-      Stop rows being bound and then abandoned, by ending a successful bind with
-      the command that actually proves the behaviour.
+    intent: Stop rows being bound and then abandoned, by ending a successful bind with the command that actually proves the behaviour.
     preconditions:
       - A row exists in the matrix and a marker can be placed in its code.
     trigger: An agent binds a behaviour to code.
@@ -473,15 +445,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/lifecycle-signals.test.ts
-            - -t
-            - lifecycle.signals.bind_names_the_next_step
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - LifecycleBindNextStepTests
           inputs:
-            - tests/blackbox/lifecycle-signals.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/LifecycleVerifyPreviewTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -489,7 +460,6 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
-
   - id: lifecycle.signals.transient_output_stays_out_of_git
     title: The tool's own transient output never dirties the working tree
     lifecycle: active
@@ -506,9 +476,7 @@ use_cases:
       - kind: file
         path: packages/core/test/init/scaffold-gitignore.test.ts
     actor: adopter
-    intent: >-
-      Keep showcase runs and the local verification ledger out of git, so the tool
-      does not break the adopter's own clean-working-tree gates.
+    intent: Keep showcase runs and the local verification ledger out of git, so the tool does not break the adopter's own clean-working-tree gates.
     preconditions:
       - A repository that does not yet use the tool.
     trigger: An adopter runs `use-cases init`.
@@ -550,15 +518,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/lifecycle-signals.test.ts
-            - -t
-            - lifecycle.signals.transient_output_stays_out_of_git
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - LifecycleTransientOutputTests
           inputs:
-            - tests/blackbox/lifecycle-signals.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/LifecycleImpactAndGitTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -566,7 +533,6 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
-
   - id: lifecycle.signals.nested_workspace_is_not_scanned
     title: A nested workspace's markers are never read as the parent's
     lifecycle: active
@@ -583,11 +549,7 @@ use_cases:
       - kind: file
         path: packages/core/test/markers/skipBuildDirs.test.ts
     actor: agent
-    intent: >-
-      Scan a repository that contains a nested workspace — a shipped example, a
-      test fixture, a vendored sample app — without the nested workspace's own
-      `@use-case:` markers being charged against the parent's matrix and failing
-      the integrity gate.
+    intent: Scan a repository that contains a nested workspace — a shipped example, a test fixture, a vendored sample app — without the nested workspace's own `@use-case:` markers being charged against the parent's matrix and failing the integrity gate.
     preconditions:
       - A repository whose subtree contains a directory carrying its own use-cases.yml.
     trigger: An agent or CI runs `use-cases scan` from the parent repository root.
@@ -653,15 +615,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/lifecycle-signals.test.ts
-            - -t
-            - lifecycle.signals.nested_workspace_is_not_scanned
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - LifecycleNestedWorkspaceTests
           inputs:
-            - tests/blackbox/lifecycle-signals.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/LifecycleNestedWorkspaceTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -669,7 +630,6 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
-
   - id: lifecycle.signals.variant_fanout
     title: One family verifier proves every declared input variant
     lifecycle: active
@@ -686,10 +646,7 @@ use_cases:
       - kind: file
         path: packages/core/test/markers/verifyVariants.test.ts
     actor: agent
-    intent: >-
-      Declare the input shapes of one behaviour (0/1/many, negative, boundary) as
-      variants of a single use-case, prove them all with one `use-cases verify` invocation,
-      and see exactly which shape fails without re-running anything.
+    intent: Declare the input shapes of one behaviour (0/1/many, negative, boundary) as variants of a single use-case, prove them all with one `use-cases verify` invocation, and see exactly which shape fails without re-running anything.
     preconditions:
       - A use-case declares a non-empty variants list and its family is bound.
       - The family's verifier command carries a {variant} token.
@@ -752,15 +709,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/lifecycle-signals.test.ts
-            - -t
-            - variant_fanout {variant}
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - "LifecycleVariantFanoutTests.*variant: {variant}"
           inputs:
-            - tests/blackbox/lifecycle-signals.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/LifecycleVariantFanoutTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -777,7 +733,6 @@ use_cases:
         title: A failing variant is named in the family breakdown
       - key: dry
         title: Dry-run previews the per-variant plan without spawning
-
   - id: lifecycle.signals.local_results_are_attested
     title: A verification result must prove a run wrote it
     lifecycle: active
@@ -796,11 +751,7 @@ use_cases:
       - kind: file
         path: packages/core/test/markers/verifyAttestsRuns.test.ts
     actor: agent
-    intent: >-
-      Stop the keyless tier rewarding the forgeable path. Matching hashes are
-      computable by anything that can read the repo, so they never separated a
-      run from a text edit; only the tool that spawned the verifier holds the
-      machine-local key that attests a record.
+    intent: Stop the keyless tier rewarding the forgeable path. Matching hashes are computable by anything that can read the repo, so they never separated a run from a text edit; only the tool that spawned the verifier holds the machine-local key that attests a record.
     preconditions:
       - A bound row exists and its verifier can be resolved.
     trigger: An agent runs `use-cases verify`, then `use-cases scan` reads the results ledger.
@@ -860,15 +811,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/lifecycle-signals.test.ts
-            - -t
-            - lifecycle.signals.local_results_are_attested
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - LifecycleAttestationTests
           inputs:
-            - tests/blackbox/lifecycle-signals.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/LifecycleAttestationTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -876,7 +826,6 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
-
   - id: lifecycle.signals.performed_runs_count
     title: A run the tool drove counts, and a self-reported one does not
     lifecycle: active
@@ -895,11 +844,7 @@ use_cases:
       - kind: file
         path: packages/core/test/evidence/performedRuns.test.ts
     actor: agent
-    intent: >-
-      Let the acceptance claim read the ledger of behaviour actually driven,
-      without letting it read prose. Before this the claim ignored
-      `evidence/by-id/**` entirely, so genuinely driving a behaviour moved no
-      number while a typed line did.
+    intent: Let the acceptance claim read the ledger of behaviour actually driven, without letting it read prose. Before this the claim ignored `evidence/by-id/**` entirely, so genuinely driving a behaviour moved no number while a typed line did.
     preconditions:
       - A bound row exists in the matrix.
     trigger: An agent runs `use-cases evidence record --perform -- <cmd>` and then `use-cases scan`.
@@ -982,15 +927,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/lifecycle-signals.test.ts
-            - -t
-            - lifecycle.signals.performed_runs_count
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - LifecyclePerformedRunsTests
           inputs:
-            - tests/blackbox/lifecycle-signals.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/LifecyclePerformedRunsTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -998,7 +942,6 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
-
   - id: lifecycle.signals.run_class_is_derived
     title: The ledger records what ran, not what the row called it
     lifecycle: active
@@ -1017,10 +960,7 @@ use_cases:
       - kind: file
         path: packages/core/test/markers/runClass.test.ts
     actor: agent
-    intent: >-
-      Stop the ledger repeating a row's own claim about how strong its evidence
-      is. A named test runner is a unit suite by definition, and a row declaring
-      `live_demo` over one is overclaiming in a way the tool can prove.
+    intent: Stop the ledger repeating a row's own claim about how strong its evidence is. A named test runner is a unit suite by definition, and a row declaring `live_demo` over one is overclaiming in a way the tool can prove.
     preconditions:
       - A bound row declares a verifier.
     trigger: An agent runs `use-cases verify` for a row whose verifier resolves.
@@ -1080,15 +1020,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/lifecycle-signals.test.ts
-            - -t
-            - lifecycle.signals.run_class_is_derived
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - LifecycleRunClassTests
           inputs:
-            - tests/blackbox/lifecycle-signals.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/LifecycleRunClassTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:

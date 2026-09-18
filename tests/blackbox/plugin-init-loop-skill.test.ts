@@ -29,7 +29,6 @@ function frontmatter(source: string): Record<string, string> {
   return fields;
 }
 
-//: @use-case:plugin.init.loop_skill_ported#blackbox
 describe("plugin.init.loop_skill_ported", () => {
   // golden_present_and_canonical. Named for its directory, and in the set the
   // doctor validates — otherwise no host sees it.
@@ -91,4 +90,3 @@ describe("plugin.init.loop_skill_ported", () => {
     }
   });
 });
-//: @use-case:end plugin.init.loop_skill_ported#blackbox

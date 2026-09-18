@@ -32,6 +32,7 @@ public struct UseCaseQuery: Sendable, Equatable {
 }
 
 extension MatrixSnapshot {
+  //: @use-case:matrix.product.coverage_by_value_and_journey
   /// `queryUseCases(snapshot, query)`: the addressable rows the query admits,
   /// by id in `localeCompare` order.
   public func queryUseCases(_ query: UseCaseQuery = UseCaseQuery()) -> [LoadedUseCase] {
@@ -48,6 +49,8 @@ extension MatrixSnapshot {
         JavaScriptStringOrder.localeAscending(left.identifier, right.identifier)
       }
   }
+
+  //: @use-case:end matrix.product.coverage_by_value_and_journey
 
   private static func includes(
     _ allowed: [String],

@@ -11,7 +11,6 @@ function agentsMd(repoRoot: string): string {
   return readFileSync(join(repoRoot, "AGENTS.md"), "utf8");
 }
 
-//: @use-case:plugin.init.records_decision_in_agents_md
 describe("use-cases init records the use-case-driven decision in AGENTS.md", () => {
   let repoRoot: string;
   beforeEach(() => { repoRoot = mkdtempSync(join(tmpdir(), "ucm-init-agents-")); });
@@ -56,4 +55,3 @@ describe("use-cases init records the use-case-driven decision in AGENTS.md", () 
     expect(existsSync(join(repoRoot, "AGENTS.md"))).toBe(true);
   });
 });
-//: @use-case:end plugin.init.records_decision_in_agents_md

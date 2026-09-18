@@ -182,7 +182,6 @@ function ledgerEventTypes(workspace: Workspace, runId: string): string[] {
     .map((line) => (JSON.parse(line) as { event_type: string }).event_type);
 }
 
-//: @use-case:capsule.live_runner.scripted#blackbox
 describe("capsule.live_runner.scripted", () => {
   // golden_cli. Running the capsule with --execute-commands and a stable
   // idempotency key performs a real showcase run: it starts the run from the
@@ -252,4 +251,3 @@ describe("capsule.live_runner.scripted", () => {
     expect(data.status?.approval_state).toBe("not_required");
   });
 });
-//: @use-case:end capsule.live_runner.scripted#blackbox

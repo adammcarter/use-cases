@@ -55,7 +55,6 @@ function codes(envelope: { diagnostics: Array<{ code: string }> }): string[] {
   return envelope.diagnostics.map((d) => d.code);
 }
 
-//: @use-case:skills.assets.host_declaration#blackbox
 describe("skills.assets.host_declaration", () => {
   // golden_manifests. Skills sit where the host scans, and the marketplace
   // manifest is what makes the plugin manifest get read at all.
@@ -101,9 +100,7 @@ describe("skills.assets.host_declaration", () => {
     expect(claude.installable, "but nothing can install them").toBe(false);
   });
 });
-//: @use-case:end skills.assets.host_declaration#blackbox
 
-//: @use-case:skills.assets.unreachable_skills_fail_doctor#blackbox
 describe("skills.assets.unreachable_skills_fail_doctor", () => {
   // golden_intact_checkout.
   test("an intact checkout reports the skills as registered", () => {
@@ -161,4 +158,3 @@ describe("skills.assets.unreachable_skills_fail_doctor", () => {
   // belongs to the owner. Flagged here until they make it.
   test.todo("bad_misdirected — the row claims a behaviour the tool does not have; see the note above");
 });
-//: @use-case:end skills.assets.unreachable_skills_fail_doctor#blackbox

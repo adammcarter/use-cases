@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 
+//: @use-case:lifecycle.bindings.rebind_repoints_a_binding#blackbox
 /// The black-box oracle for lifecycle/bindings.yml, row
 /// `rebind_repoints_a_binding`.
 struct LifecycleRebindTests {
@@ -185,6 +186,9 @@ struct LifecycleRebindTests {
   }
 }
 
+//: @use-case:end lifecycle.bindings.rebind_repoints_a_binding#blackbox
+
+//: @use-case:lifecycle.bindings.unbind_releases_a_registration#blackbox
 /// The black-box oracle for lifecycle/bindings.yml, row
 /// `unbind_releases_a_registration`.
 struct LifecycleUnbindTests {
@@ -361,6 +365,9 @@ struct LifecycleUnbindTests {
   }
 }
 
+//: @use-case:end lifecycle.bindings.unbind_releases_a_registration#blackbox
+
+//: @use-case:lifecycle.bindings.retired_row_can_leave_the_matrix#blackbox
 /// The black-box oracle for lifecycle/bindings.yml, row
 /// `retired_row_can_leave_the_matrix`.
 struct LifecycleRetiredRowTests {
@@ -428,3 +435,5 @@ struct LifecycleRetiredRowTests {
     #expect(!codes.contains("REGISTRY_ROW_MISSING"))
   }
 }
+
+//: @use-case:end lifecycle.bindings.retired_row_can_leave_the_matrix#blackbox

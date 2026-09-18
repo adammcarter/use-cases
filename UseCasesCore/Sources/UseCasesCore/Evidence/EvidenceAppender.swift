@@ -181,6 +181,7 @@ public struct EvidenceAppender: Sendable {
     return try Self.written(event, to: ledgerPath, context: options.context)
   }
 
+  //: @use-case:evidence.ledger.append_only_corrections
   private func voidUnderLock(_ options: EvidenceVoidOptions) async throws(EvidenceEventError)
     -> EvidenceAppendResult
   {
@@ -214,6 +215,8 @@ public struct EvidenceAppender: Sendable {
     )
     return try Self.written(event, to: ledgerPath, context: options.context)
   }
+
+  //: @use-case:end evidence.ledger.append_only_corrections
 
   /// The event id (`uuidv7()`: `Date.now()`, then the random bytes), then the
   /// `new Date()` for `recorded_at` — the clock read twice, in that order.

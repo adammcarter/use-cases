@@ -29,6 +29,7 @@ enum McpToolSchemas {
     ("strict", McpSchemaFragments.boolean("Report ok=false when the matrix is incomplete.")),
   ])
 
+  //: @use-case:mcp.surface.declared_tool_schemas
   static let useCaseUpsert = McpSchemaFragments.workspaceSchema([
     ("file", McpSchemaFragments.string(
       "Workspace-relative matrix file the entry is written into.",
@@ -38,6 +39,7 @@ enum McpToolSchemas {
     ("actor_type", McpSchemaFragments.actorType),
     ("allow_write", McpSchemaFragments.allowWrite),
   ], required: ["file", "use_case"])
+  //: @use-case:end mcp.surface.declared_tool_schemas
 
   static let useCaseRemove = McpSchemaFragments.workspaceSchema([
     ("use_case", McpSchemaFragments.string("Canonical use-case id to mark removed.")),

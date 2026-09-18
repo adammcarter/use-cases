@@ -273,7 +273,6 @@ export function runVerifyCommand(options: VerifyCommandOptions): VerifyCommandRe
   // --dry-run: resolve exactly what a real run WOULD execute, then stop. Nothing
   // is spawned, no ledger is written, and no result record is minted — a plan is
   // not evidence.
-//: @use-case:lifecycle.signals.verify_can_be_previewed
   if (options.dryRun) {
     const planned: VerifyPlannedRow[] = [];
     for (const rowId of targetRowIds) {
@@ -345,7 +344,6 @@ export function runVerifyCommand(options: VerifyCommandOptions): VerifyCommandRe
       errors: verifyErrors
     });
   }
-//: @use-case:end lifecycle.signals.verify_can_be_previewed
 
   const results: VerificationResultRecord[] = [];
   const overclaimedRows: string[] = [];
@@ -383,7 +381,6 @@ export function runVerifyCommand(options: VerifyCommandOptions): VerifyCommandRe
     // A variant family fans out into one unit per declared variant; an ordinary row
     // is a single unit. Each unit produces ONE result record. The family stays the
     // bound row (slug = family id); a variant's record is keyed `<family>::<key>`.
-//: @use-case:lifecycle.signals.variant_fanout
     const variants = rowVariants(loadedRow);
     const units =
       variants.length === 0
@@ -483,7 +480,6 @@ export function runVerifyCommand(options: VerifyCommandOptions): VerifyCommandRe
       });
     }
   }
-//: @use-case:end lifecycle.signals.variant_fanout
 
   // ATTEST what was actually run. Every record above describes a spawn this
   // process performed (or a resolution it refused to spawn), and only this
@@ -493,7 +489,6 @@ export function runVerifyCommand(options: VerifyCommandOptions): VerifyCommandRe
   // here", and it can only do that if the failure is attested as well.
   //
   // Minted lazily: a run that produced no records never creates a key file.
-//: @use-case:lifecycle.signals.local_results_are_attested
   if (results.length > 0) {
     const runKey = resolveLocalRunKey(options.runKeyPath ?? defaultRunKeyPath(), fs);
     for (const record of results) {
@@ -503,7 +498,6 @@ export function runVerifyCommand(options: VerifyCommandOptions): VerifyCommandRe
       );
     }
   }
-//: @use-case:end lifecycle.signals.local_results_are_attested
 
   // Write the results ledger (one JSONL line per row) if requested. This is an
   // unsigned per-run snapshot — NOT the append-only trusted evidence ledger.
@@ -516,7 +510,6 @@ export function runVerifyCommand(options: VerifyCommandOptions): VerifyCommandRe
   // Staleness is NOT our call here — deriveFreshness re-checks each retained record's
   // hashes against the current code and demotes it if it no longer matches.
   let outPath: string | null = null;
-//: @use-case:lifecycle.signals.verify_preserves_other_rows
   if (options.outPath) {
     const supersededRowIds = new Set(results.map((record) => record.row_id));
     const merged: { rowId: string; line: string }[] = [];
@@ -556,7 +549,6 @@ export function runVerifyCommand(options: VerifyCommandOptions): VerifyCommandRe
     fs.writeText(options.outPath, body === "" ? "" : `${body}\n`);
     outPath = options.outPath;
   }
-//: @use-case:end lifecycle.signals.verify_preserves_other_rows
 
   // Exit 0 only if every targeted row passed; any fail/blocked is nonzero.
   const allPass = results.every((record) => record.status === "pass");

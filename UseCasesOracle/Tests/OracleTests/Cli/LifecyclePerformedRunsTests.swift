@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 
+//: @use-case:lifecycle.signals.performed_runs_count#blackbox
 /// The black-box oracle for lifecycle/signals.yml, row `performed_runs_count`.
 struct LifecyclePerformedRunsTests {
   static let passing = ["/bin/sh", "-c", "exit 0"]
@@ -183,3 +184,5 @@ struct LifecyclePerformedRunsTests {
     #expect(SignalsWorkspace.claimable(scanned) == false)
   }
 }
+
+//: @use-case:end lifecycle.signals.performed_runs_count#blackbox

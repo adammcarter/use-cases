@@ -105,6 +105,7 @@ public enum EvidenceLedgerReader {
     let diagnostics: [Diagnostic]
   }
 
+  //: @use-case:evidence.ledger.damaged_ledger_replay
   /// `readLedgerFile`, from the bytes on.
   static func parseLedger(
     bytes: [UInt8],
@@ -137,6 +138,8 @@ public enum EvidenceLedgerReader {
       diagnostics: reading.diagnostics,
     )
   }
+
+  //: @use-case:end evidence.ledger.damaged_ledger_replay
 
   /// `source.replaceAll("\r\n", "\n")`.
   private static func withoutCarriageReturnsBeforeLineFeeds(_ units: [UInt16]) -> [UInt16] {

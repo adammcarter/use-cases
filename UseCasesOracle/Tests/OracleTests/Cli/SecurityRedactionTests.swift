@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 
+//: @use-case:security.redaction.secrets_never_reach_an_append_only_ledger#blackbox
 /// The black-box oracle for security/redaction.yml.
 ///
 /// Redaction happens at APPEND time, on the way into a ledger that is
@@ -145,3 +146,5 @@ struct SecurityRedactionTests {
     #expect(stored.hasSuffix(" end"))
   }
 }
+
+//: @use-case:end security.redaction.secrets_never_reach_an_append_only_ledger#blackbox

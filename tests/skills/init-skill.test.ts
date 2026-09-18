@@ -5,7 +5,6 @@ import { describe, expect, test } from "vitest";
 const repoRoot = resolve(import.meta.dirname, "../..");
 const skillPath = join(repoRoot, "skills/init/SKILL.md");
 
-//: @use-case:plugin.init.skill_hands_off
 describe("the init skill runs use-cases init and hands over to the loop", () => {
   test("the skill runs use-cases init, reads AGENTS.md back, and ends by invoking the loop skill", () => {
     expect(existsSync(skillPath)).toBe(true);
@@ -23,4 +22,3 @@ describe("the init skill runs use-cases init and hands over to the loop", () => 
     expect(body).toMatch(/recorded answer|read the answer|AGENTS\.md/);
   });
 });
-//: @use-case:end plugin.init.skill_hands_off

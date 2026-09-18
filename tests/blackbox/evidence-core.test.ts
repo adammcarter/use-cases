@@ -105,7 +105,6 @@ function evidenceFiles(workspace: Workspace): string[] {
   return found;
 }
 
-//: @use-case:evidence.core.record#blackbox
 describe("evidence.core.record", () => {
   // golden_cli.
   test("recording evidence appends one JSONL event under evidence/", () => {
@@ -150,4 +149,3 @@ describe("evidence.core.record", () => {
     ).toEqual([]);
   });
 });
-//: @use-case:end evidence.core.record#blackbox

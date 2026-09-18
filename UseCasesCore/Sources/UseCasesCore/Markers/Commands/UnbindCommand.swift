@@ -62,6 +62,7 @@ public struct UnbindCommandResult: Equatable, Sendable {
   }
 }
 
+//: @use-case:lifecycle.bindings.unbind_releases_a_registration
 /// `runUnbindCommand`: remove a slug's marker wherever it is and append ONE
 /// `binding_released` event, so the slug can be bound again and its row can
 /// leave the matrix.
@@ -203,3 +204,5 @@ public enum UnbindCommand {
     }
   }
 }
+
+//: @use-case:end lifecycle.bindings.unbind_releases_a_registration

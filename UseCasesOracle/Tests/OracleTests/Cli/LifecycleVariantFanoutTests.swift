@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 
+//: @use-case:lifecycle.signals.variant_fanout#blackbox
 /// The black-box oracle for lifecycle/signals.yml, row `variant_fanout`.
 struct LifecycleVariantFanoutTests {
   /// The family's matrix, with the verifier command spliced in.
@@ -93,7 +94,7 @@ struct LifecycleVariantFanoutTests {
   // golden_loop. One spawn per declared variant, one record each, keyed
   // family::variant, so a reader can see which shape was proved.
   @Test
-  func `each variant gets its own ledger record keyed family and variant`()
+  func `each variant gets its own ledger record keyed family and variant (variant: spawn)`()
     async throws
   {
     let workspace = try await Self.makeFamily()
@@ -106,7 +107,8 @@ struct LifecycleVariantFanoutTests {
 
   // golden_family_verified_only_when_all_pass.
   @Test
-  func `the family is VERIFIED_LOCAL only when every variant passes`() async throws {
+  func `the family is VERIFIED_LOCAL only when every variant passes (variant: verdict)`(
+  ) async throws {
     let workspace = try await Self.makeFamily()
     _ = try await Self.verify(workspace)
     let scanned = try await SignalsWorkspace.scan(workspace)
@@ -116,7 +118,7 @@ struct LifecycleVariantFanoutTests {
   // bad_failing_variant_is_named. A partial failure must be reported as one,
   // and the failing shape named rather than left to be hunted.
   @Test
-  func `a failing variant keeps the family out of green, is named, and fails`()
+  func `a failing variant keeps the family out of green, is named, and fails (variant: names)`()
     async throws
   {
     let workspace = try await Self.makeFamily(failing: "other")
@@ -157,7 +159,7 @@ struct LifecycleVariantFanoutTests {
   // edge_dry_run_previews_each_variant, both ways: one entry per variant, and a
   // token-less family previewing as blocked rather than as a run.
   @Test
-  func `a dry run previews one entry per variant, and blocked with no token`()
+  func `a dry run previews one entry per variant, and blocked with no token (variant: dry)`()
     async throws
   {
     let fanned = try await Self.verify(Self.makeFamily(), extra: ["--dry-run"])
@@ -174,3 +176,5 @@ struct LifecycleVariantFanoutTests {
     #expect(allBlocked)
   }
 }
+
+//: @use-case:end lifecycle.signals.variant_fanout#blackbox

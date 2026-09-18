@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 
+//: @use-case:planning.cards.showcase_selection#blackbox
 /// The black-box oracle for planning/cards.yml, row `showcase_selection`.
 struct PlanningShowcaseSelectionTests {
   // golden_cli. A short showcase must prioritise the critical golden path
@@ -79,6 +80,9 @@ struct PlanningShowcaseSelectionTests {
   }
 }
 
+//: @use-case:end planning.cards.showcase_selection#blackbox
+
+//: @use-case:planning.cards.walkthrough_coverage#blackbox
 /// The black-box oracle for planning/cards.yml, row `walkthrough_coverage`.
 struct PlanningWalkthroughTests {
   // golden_cli. A walkthrough is a deeper cut than a showcase: it must reach
@@ -158,6 +162,9 @@ struct PlanningWalkthroughTests {
   }
 }
 
+//: @use-case:end planning.cards.walkthrough_coverage#blackbox
+
+//: @use-case:planning.cards.prepared_not_performed#blackbox
 /// The black-box oracle for planning/cards.yml, row `prepared_not_performed`.
 struct PlanningPreparedNotPerformedTests {
   // golden_guard. A freshly generated plan always reports itself as prepared,
@@ -222,6 +229,9 @@ struct PlanningPreparedNotPerformedTests {
   }
 }
 
+//: @use-case:end planning.cards.prepared_not_performed#blackbox
+
+//: @use-case:planning.cards.audience_timebox_fit#blackbox
 /// The black-box oracle for planning/cards.yml, row `audience_timebox_fit`.
 struct PlanningAudienceTimeboxTests {
   // golden_adjust. The plan is generated to fit the caller's stated audience
@@ -284,6 +294,9 @@ struct PlanningAudienceTimeboxTests {
   }
 }
 
+//: @use-case:end planning.cards.audience_timebox_fit#blackbox
+
+//: @use-case:planning.cards.partial_matrix_warning#blackbox
 /// The black-box oracle for planning/cards.yml, row `partial_matrix_warning`.
 struct PlanningPartialMatrixTests {
   // golden_strict. Non-strict planning over a partial matrix requires
@@ -354,3 +367,5 @@ struct PlanningPartialMatrixTests {
     #expect(counts["aggregates_total"]?.intValue == 0)
   }
 }
+
+//: @use-case:end planning.cards.partial_matrix_warning#blackbox

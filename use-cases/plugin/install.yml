@@ -78,15 +78,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/blackbox/plugin-install-claude.test.ts
-            - -t
-            - plugin.install.claude_from_github
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - PluginInstallClaudeTests
           inputs:
-            - tests/blackbox/plugin-install-claude.test.ts
+            - UseCasesOracle/Tests/OracleTests/Plugin/PluginInstallClaudeTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -175,13 +174,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/plugin/session-path.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - SessionPathTests
           inputs:
-            - tests/plugin/session-path.test.ts
+            - UseCasesOracle/Tests/OracleTests/Plugin/SessionPathTests.swift
             - bin/use-cases
             - hooks/session-start
       requirements:
@@ -257,13 +257,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/plugin/host-manifests.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - HostManifestsTests
           inputs:
-            - tests/plugin/host-manifests.test.ts
+            - UseCasesOracle/Tests/OracleTests/Plugin/HostManifestsTests.swift
             - .claude-plugin/plugin.json
             - hooks/hooks.json
             - hooks/session-start
@@ -339,13 +340,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/plugin/host-manifests.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - HostManifestsTests
           inputs:
-            - tests/plugin/host-manifests.test.ts
+            - UseCasesOracle/Tests/OracleTests/Plugin/HostManifestsTests.swift
             - .codex-plugin/plugin.json
             - .codex-plugin/mcp.json
       requirements:
@@ -420,13 +422,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/plugin/opencode-plugin.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - OpencodePluginTests
           inputs:
-            - tests/plugin/opencode-plugin.test.ts
+            - UseCasesOracle/Tests/OracleTests/Plugin/OpencodePluginTests.swift
             - opencode/plugin.js
             - package.json
       requirements:

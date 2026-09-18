@@ -2,13 +2,7 @@ schema_version: 1
 feature:
   id: signing.tier
   name: The opt-in signed proof tier
-  summary: >-
-    The keyless loop is the daily path; signing is the upgrade taken only when a
-    release or an audit needs a cryptographic gate. These rows cover the five
-    commands that tier is made of — keygen, prove, validate-ledger, recover and
-    approve-run — none of which the agent runs on the owner's behalf. They had no
-    rows at all until now, which made the most trust-sensitive surface in the
-    tool the least described.
+  summary: The keyless loop is the daily path; signing is the upgrade taken only when a release or an audit needs a cryptographic gate. These rows cover the five commands that tier is made of — keygen, prove, validate-ledger, recover and approve-run — none of which the agent runs on the owner's behalf. They had no rows at all until now, which made the most trust-sensitive surface in the tool the least described.
 use_cases:
   - id: signing.tier.keygen_keeps_the_private_key_out_of_the_tree
     title: keygen mints a keypair and refuses to put the private half in the repo
@@ -26,10 +20,7 @@ use_cases:
       - kind: file
         path: packages/core/test/markers/keygen.test.ts
     actor: user
-    intent: >-
-      Give the owner an ed25519 keypair for the signed tier while making it hard
-      to commit the private half by accident, because a signing key in the tree
-      is the one mistake this tier cannot survive.
+    intent: Give the owner an ed25519 keypair for the signed tier while making it hard to commit the private half by accident, because a signing key in the tree is the one mistake this tier cannot survive.
     preconditions:
       - The owner has decided they need the signed tier.
     trigger: The owner runs `use-cases keygen`.
@@ -85,15 +76,15 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/cli/keygen.test.ts
-            - packages/core/test/markers/keygen.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesCore
+            - --filter
+            - SigningKeyGenerationTests
           inputs:
-            - tests/cli/keygen.test.ts
-            - packages/core/test/markers/keygen.test.ts
+            - UseCasesCore/Tests/UseCasesCoreTests/Markers/SigningKeyGenerationTests.swift
+            - UseCasesCore/Sources/UseCasesCore/Markers/SigningKeyGeneration.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -101,7 +92,6 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
-
   - id: signing.tier.prove_never_signs_what_it_cannot_recompute
     title: prove mints a signed proof only from a verification result it can re-derive
     lifecycle: active
@@ -120,10 +110,7 @@ use_cases:
       - kind: file
         path: packages/core/test/markers/proveAuthority.test.ts
     actor: script
-    intent: >-
-      Mint FRESH proofs in trusted CI from results a real verifier produced, and
-      refuse every path that would let a signature stand for something the tool
-      cannot currently recompute.
+    intent: Mint FRESH proofs in trusted CI from results a real verifier produced, and refuse every path that would let a signature stand for something the tool cannot currently recompute.
     preconditions:
       - A results file written by `verify --out` exists.
       - A signing key is available through a CI secret.
@@ -204,15 +191,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - packages/core/test/markers/proveConsumes.test.ts
-            - packages/core/test/markers/proveAuthority.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesCore
+            - --filter
+            - VerifyProveTests
           inputs:
-            - packages/core/test/markers/proveConsumes.test.ts
-            - packages/core/test/markers/proveAuthority.test.ts
+            - UseCasesCore/Tests/UseCasesCoreTests/Markers/Commands/VerifyProveTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -220,7 +206,6 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
-
   - id: signing.tier.validate_ledger_holds_the_append_only_line
     title: validate-ledger proves the ledger was only ever appended to
     lifecycle: active
@@ -237,10 +222,7 @@ use_cases:
       - kind: file
         path: scripts/use-cases-precommit.sh
     actor: script
-    intent: >-
-      Give the pre-commit hook and CI one command that says whether the proof
-      ledger is intact — append-only against a base ref, hash-chained, schema
-      valid, and signed by a key the caller trusts.
+    intent: Give the pre-commit hook and CI one command that says whether the proof ledger is intact — append-only against a base ref, hash-chained, schema valid, and signed by a key the caller trusts.
     preconditions:
       - A proof ledger exists.
     trigger: The pre-commit hook or CI runs `use-cases validate-ledger`.
@@ -287,13 +269,17 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - packages/core/test/markers/ledgerChainValidate.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesCore
+            - --filter
+            - EvidenceLedgerTests
+            - --filter
+            - LedgerChainRulesTests
           inputs:
-            - packages/core/test/markers/ledgerChainValidate.test.ts
+            - UseCasesCore/Tests/UseCasesCoreTests/Markers/EvidenceLedgerTests.swift
+            - UseCasesCore/Tests/UseCasesCoreTests/Markers/Commands/LedgerChainRulesTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -301,7 +287,6 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
-
   - id: signing.tier.recover_never_fakes_green
     title: recover drives a drifted row back to green, or fails honestly
     lifecycle: active
@@ -318,10 +303,7 @@ use_cases:
       - kind: file
         path: packages/cli/test/commands/recoverVariants.test.ts
     actor: agent
-    intent: >-
-      Give one command that takes a STALE_LOCAL or UNPROVEN row back to green
-      without hand-assembling the fix, and that exits nonzero rather than
-      reporting a green it did not achieve.
+    intent: Give one command that takes a STALE_LOCAL or UNPROVEN row back to green without hand-assembling the fix, and that exits nonzero rather than reporting a green it did not achieve.
     preconditions:
       - A bound row has drifted or was never verified.
     trigger: An agent runs `use-cases recover --row <id>`.
@@ -375,15 +357,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/cli/recover.test.ts
-            - packages/cli/test/commands/recoverVariants.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesCLI
+            - --filter
+            - MarkerCommandsGoldenCorpusTests
           inputs:
-            - tests/cli/recover.test.ts
-            - packages/cli/test/commands/recoverVariants.test.ts
+            - UseCasesCLI/Tests/UseCasesCLITests/Entry/MarkerCommandsGoldenCorpusTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -391,7 +372,6 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
-
   - id: signing.tier.approve_run_keeps_the_key_out_of_agent_scope
     title: approve-run signs an approval out-of-band, or fails closed
     lifecycle: active
@@ -409,10 +389,7 @@ use_cases:
       - kind: file
         path: packages/cli/test/commands/approveRun.test.ts
     actor: user
-    intent: >-
-      Let a person sign a plugin-minted approval request in their own shell with
-      a key the agent cannot reach, so the one thing an agent must never be able
-      to manufacture stays manufactured by a human.
+    intent: Let a person sign a plugin-minted approval request in their own shell with a key the agent cannot reach, so the one thing an agent must never be able to manufacture stays manufactured by a human.
     preconditions:
       - The plugin has minted an ApprovalRequest JSON file.
       - The owner holds an ed25519 key outside the agent's scope, or a platform authenticator.
@@ -481,13 +458,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - packages/cli/test/commands/approveRun.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesCLI
+            - --filter
+            - ShowcaseCommandsGoldenCorpusTests
           inputs:
-            - packages/cli/test/commands/approveRun.test.ts
+            - UseCasesCLI/Tests/UseCasesCLITests/Entry/ShowcaseCommandsGoldenCorpusTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
