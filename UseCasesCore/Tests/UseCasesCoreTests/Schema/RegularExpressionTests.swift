@@ -32,21 +32,36 @@ struct RegularExpressionTests {
   func `repeated calls with a schema pattern are served from the cache, not recompiled`() {
     let pattern = "^[a-z0-9_-]+$"
     let text = "checkout-success"
+    // Deliberately not a schema `pattern` value or one of YamlParser's own
+    // fixed patterns, so `matches` always falls to the uncached recompile
+    // path — this is the "recompiled every call" side of the comparison.
+    let uncachedPattern = "^this-pattern-is-never-precompiled-by-any-schema$"
+    let uncachedText = "irrelevant"
+    let iterations = 20000
 
-    // One cold call pays for any lazy first-touch cost the cache itself has;
-    // it is excluded from the timed run below.
+    // One cold call each pays for any lazy first-touch cost the cache itself
+    // has; excluded from the timed runs below.
     _ = RegularExpression.matches(text, pattern)
+    _ = RegularExpression.matches(uncachedText, uncachedPattern)
 
-    let started = ContinuousClock.now
-    for _ in 0 ..< 200_000 {
-      #expect(RegularExpression.matches(text, pattern))
+    let cachedStarted = ContinuousClock.now
+    for _ in 0 ..< iterations {
+      _ = RegularExpression.matches(text, pattern)
     }
-    let elapsed = ContinuousClock.now - started
+    let cachedElapsed = ContinuousClock.now - cachedStarted
 
-    // Measured on this machine, 200,000 calls: 3.44s recompiling the pattern
-    // from scratch on every call, 0.37s served from the cache — a clean 9x
-    // gap. One second sits comfortably between the two, so it fails if the
-    // cache goes missing while leaving wide room for slower CI hardware.
-    #expect(elapsed < .seconds(1))
+    let uncachedStarted = ContinuousClock.now
+    for _ in 0 ..< iterations {
+      _ = RegularExpression.matches(uncachedText, uncachedPattern)
+    }
+    let uncachedElapsed = ContinuousClock.now - uncachedStarted
+
+    // Measured on a quiet machine at 200,000 calls each: 3.44s recompiling
+    // from scratch every call, 0.37s served from the cache — a 9x gap.
+    // Comparing the two back to back, in the SAME run, rather than against
+    // an absolute ceiling, is what survives a busy CI box: contention slows
+    // both loops by roughly the same factor, so the ratio holds even when
+    // neither absolute number does. 3x is a third of the measured gap.
+    #expect(cachedElapsed * 3 < uncachedElapsed)
   }
 }
