@@ -21,7 +21,7 @@ struct EmbeddedSchemasTests {
   func `an embedded schema is the exact bytes of its file on disk`(fileName: String) throws {
     let embedded = try #require(EmbeddedSchemas.byFileName[fileName])
 
-    try #expect(embedded == fileOnDisk(fileName))
+    #expect(try embedded == fileOnDisk(fileName))
   }
 
   @Test
