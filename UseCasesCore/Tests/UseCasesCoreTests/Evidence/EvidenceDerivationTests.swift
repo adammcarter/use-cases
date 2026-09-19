@@ -215,9 +215,15 @@ struct DurableWriteTests {
     ))
   }
 
-  /// `fsync` on a pipe fails with EINVAL on macOS: a real failure, no mock.
+  /// `fsync` on a pipe is a real failure, no mock — but which errno it fails
+  /// with is kernel-dependent: EINVAL on this machine, ENOTSUP observed on
+  /// GitHub's macOS runner (both already forgiven inside the temp directory,
+  /// per `isBestEffortTemporarySyncFailure`'s own list). Probed rather than
+  /// hardcoded, so the test pins the real behavior wherever it runs instead
+  /// of asserting one platform's number everywhere.
   @Test
-  func `a pipe's EINVAL is forgiven inside the temporary directory and raised outside it`() throws {
+  func `a pipe's fsync failure is forgiven inside the temporary directory and raised outside it`(
+  ) throws {
     var descriptors: [Int32] = [0, 0]
     #expect(pipe(&descriptors) == 0)
     defer {
@@ -235,7 +241,18 @@ struct DurableWriteTests {
     #expect(throws: Never.self) {
       try DurableWrite.synchronizeBestEffortForTemporary(descriptor: descriptors[1], path: inside)
     }
-    #expect(throws: FileAccessError(errorNumber: EINVAL, operation: "fsync", path: nil)) {
+
+    // A second, direct fsync on the same pipe observes the real errno this
+    // kernel actually raises, so the assertion below pins that instead of
+    // a hardcoded platform-specific value.
+    #expect(fsync(descriptors[1]) != 0)
+    let observedErrorNumber = errno
+
+    #expect(throws: FileAccessError(
+      errorNumber: observedErrorNumber,
+      operation: "fsync",
+      path: nil,
+    )) {
       try DurableWrite.synchronizeBestEffortForTemporary(
         descriptor: descriptors[1],
         path: "/usr/x.jsonl",
