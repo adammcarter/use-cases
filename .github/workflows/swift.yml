@@ -49,6 +49,13 @@ jobs:
         with:
           node-version: "22"
 
+      # macos-15's DEFAULT Xcode is 16.4 (Swift 6.1); the image also carries
+      # 26.0.1-26.3 (Swift 6.2), the line this repository is written and
+      # verified against everywhere else (ADR 0007 decision 6). Select it
+      # explicitly rather than take whatever the image defaults to next.
+      - name: select Xcode 26.3 (Swift 6.2)
+        run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
+
       # ADR 0007 decision 6 pins the toolchain; print what the runner has, so a
       # failure is readable from the log without a rerun.
       - name: toolchain

@@ -1,4 +1,4 @@
-// swift-tools-version: 6.1
+// swift-tools-version: 6.2
 import PackageDescription
 
 // The black-box oracle (ADR 0007 decision 2), in Swift.
