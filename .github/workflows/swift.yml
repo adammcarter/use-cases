@@ -1,0 +1,155 @@
+name: swift
+
+# The Swift gate (ADR 0007, rows 10b and 10d).
+#
+# ci.yml gated the TypeScript with `pnpm -s test`. Row 10b landed this workflow
+# first so the deletion never left the repository ungated; row 10d then deleted
+# the TypeScript and removed ci.yml whole. This is now the only build-and-test
+# gate: use-cases.yml proves and signs the matrix, release.yml publishes.
+#
+# macOS, and Apple Silicon specifically. UseCasesOracle links nothing and drives
+# the real binaries as processes, and its bootstrap suites only run on
+# darwin/arm64 — the only platform a release publishes — so on any other runner
+# they would SKIP and this job would be green having proved nothing about
+# release.distribution.*. The runner's architecture is therefore asserted below
+# rather than assumed from the label.
+#
+# macos-15 is GitHub's Apple Silicon image and the label .github/workflows/release.yml
+# publishes from; one label for both means this gate runs on the machine the
+# release is built on.
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  swift:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node is pinned rather than taken from the image, and it is the ONE
+      # remaining JavaScript dependency: the oracle's OpencodePluginTests runs
+      # `opencode/plugin.js`, which is JavaScript an OpenCode host executes, so
+      # proving what it registers means running it. Nothing is installed and
+      # nothing is built — there are no dependencies left to install.
+      #
+      # The `corepack pnpm install` / `pnpm -s build` prelude that stood here is
+      # GONE with row 10d: every row verifier now runs `swift test`, and the
+      # four rows that could not leave vitest were retired or given Swift
+      # carriers (`diagnostics.contracts.missing_build_hint`,
+      # `plugin.bundle.runs_from_clean_clone` and
+      # `plugin.runtime.pre_swift_versions_run_the_committed_bundle` retired;
+      # `skills.assets.demo_gates` moved onto SkillsAssetsDemoGatesTests, which
+      # reads the live `skills/` bodies).
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # ADR 0007 decision 6 pins the toolchain; print what the runner has, so a
+      # failure is readable from the log without a rerun.
+      - name: toolchain
+        run: |
+          swift --version
+          xcodebuild -version
+          uname -m
+
+      # A runner that is not Apple Silicon skips every bootstrap suite and
+      # passes. That is the same silent green as a --filter that matches
+      # nothing, so it is refused outright.
+      - name: the runner is Apple Silicon
+        run: |
+          set -euo pipefail
+          machine="$(uname -m)"
+          if [ "$machine" != "arm64" ]; then
+            echo "the Swift gate must run on Apple Silicon; this runner is $machine." >&2
+            echo "Every bootstrap suite would skip and this job would pass having" >&2
+            echo "proved nothing about release.distribution.*." >&2
+            exit 1
+          fi
+
+      - name: build the three products
+        run: |
+          set -euo pipefail
+          for package in UseCasesCore UseCasesCLI UseCasesMCP; do
+            swift build --package-path "$package"
+          done
+
+      - name: test UseCasesCore, UseCasesCLI and UseCasesMCP
+        run: |
+          set -euo pipefail
+          for package in UseCasesCore UseCasesCLI UseCasesMCP; do
+            swift test --package-path "$package"
+          done
+
+      # The oracle depends on nothing and builds nothing: it drives the binaries
+      # the steps above produced. They are named explicitly through UC_BIN and
+      # UC_MCP_BIN — the seam the TypeScript oracle used — and checked for the
+      # executable bit first, because a harness that cannot find the binary it
+      # was pointed at must fail rather than fall back to another one.
+      - name: test UseCasesOracle against the built binaries
+        run: |
+          set -euo pipefail
+          UC_BIN="$(swift build --package-path UseCasesCLI --show-bin-path)/use-cases"
+          UC_MCP_BIN="$(swift build --package-path UseCasesMCP --show-bin-path)/use-cases-mcp"
+          export UC_BIN UC_MCP_BIN
+          echo "UC_BIN=$UC_BIN"
+          echo "UC_MCP_BIN=$UC_MCP_BIN"
+          test -x "$UC_BIN"
+          test -x "$UC_MCP_BIN"
+          swift test --package-path UseCasesOracle
+
+      # Neither tool ships in the runner image. The versions are printed because
+      # a formatter's defaults move between releases, and a lint gate that
+      # changed its mind should say so in the log.
+      - name: install the lint tools
+        run: |
+          set -euo pipefail
+          brew install swiftformat swiftlint
+          swiftformat --version
+          swiftlint version
+
+      # Both gates also assert they READ something: a package missing from
+      # .swiftlint.yml's `included:` lints zero files and reports zero
+      # violations, which is a pass that proves nothing (measured in row 10a).
+      - name: swiftformat --lint
+        run: |
+          set -euo pipefail
+          output="$(swiftformat --lint . 2>&1)" || { echo "$output"; exit 1; }
+          echo "$output"
+          echo "$output" | grep -Eq '[0-9]+/[1-9][0-9]* files' || {
+            echo "swiftformat read no files; the lint gate proved nothing." >&2
+            exit 1
+          }
+
+      - name: swiftlint --strict
+        run: |
+          set -euo pipefail
+          output="$(swiftlint lint --strict 2>&1)" || { echo "$output"; exit 1; }
+          echo "$output" | tail -n 5
+          echo "$output" | grep -Eq 'in [1-9][0-9]* files' || {
+            echo "swiftlint read no files; the lint gate proved nothing." >&2
+            exit 1
+          }
+
+      # The matrix gates itself with its own product: the Swift binary this job
+      # just built runs every bound row's verifier and then the integrity gate.
+      # Not `bin/use-cases`, which resolves a DOWNLOADED release — the build
+      # under test.
+      #
+      # `--policy-mode feature` is passed EXPLICITLY, the way use-cases.yml passes
+      # it, rather than left to the default. It is the same bar the default
+      # resolves to today (measured: both exit 0 here, while
+      # `--policy-mode release` exits 1), but the mode is the thing that decides
+      # the bar, so it is written down. Release mode requires every required row
+      # to be FRESH, which means SIGNED proofs; minting those is use-cases.yml's
+      # prove job, with the CI signing key this workflow deliberately never sees.
+      - name: the matrix gates itself with its own binary
+        run: |
+          set -euo pipefail
+          use_cases="$(swift build --package-path UseCasesCLI --show-bin-path)/use-cases"
+          "$use_cases" verify --repo . --all
+          "$use_cases" scan --repo . --gate --policy-mode feature

@@ -13,7 +13,7 @@
     "showcase_runs_dir": { "$ref": "#/$defs/relative_path" },
     "component_id": { "$ref": "common.schema.json#/$defs/id" },
     "default_workflow_mode": {
-      "enum": ["continuous", "backfill", "showcase_only", "audit_only", "migration", "custom"]
+      "enum": ["continuous", "backfill", "showcase_only", "audit_only", "custom"]
     },
     "verifiers": { "$ref": "#/$defs/verifiers_config" },
     "release_gate": { "$ref": "#/$defs/release_gate" },

@@ -21,9 +21,9 @@ function readBootstrap(root) {
   try {
     const text = readFileSync(path, "utf8").trimEnd();
     const body = text.includes(BOOTSTRAP_MARKER) ? text : `${BOOTSTRAP_MARKER}\n${text}\n</EXTREMELY_IMPORTANT>`;
-    return `${body}\n\nThe uc command for this plugin is ${join(root, "bin/uc")}; it is first on PATH in shells OpenCode runs.`;
+    return `${body}\n\nThe use-cases command for this plugin is ${join(root, "bin/use-cases")}; it is first on PATH in shells OpenCode runs.`;
   } catch {
-    return `${BOOTSTRAP_MARKER}\nThe use-cases bootstrap could not be read at ${path}. The uc command is ${join(root, "bin/uc")}.\n</EXTREMELY_IMPORTANT>`;
+    return `${BOOTSTRAP_MARKER}\nThe use-cases bootstrap could not be read at ${path}. The use-cases command is ${join(root, "bin/use-cases")}.\n</EXTREMELY_IMPORTANT>`;
   }
 }
 
@@ -56,7 +56,7 @@ export function definePlugin(root = defaultRoot) {
     const bootstrap = readBootstrap(root);
 
     await ctx.mcp.transform((editor) => {
-      editor.set("use-cases", { type: "local", command: ["node", join(root, "dist/uc-mcp.js")], cwd: root, enabled: true });
+      editor.set("use-cases", { type: "local", command: ["bash", join(root, "bin/use-cases-mcp")], cwd: root, enabled: true });
     });
 
     const skills = readSkills(root);

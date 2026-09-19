@@ -15,10 +15,10 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 bootstrap_content=$(cat "${PLUGIN_ROOT}/bootstrap/use-cases.md" 2>&1 || echo "Error reading use-cases bootstrap")
-# Every host's agent is told where uc lives; only Claude can also put it on PATH.
+# Every host's agent is told where use-cases lives; only Claude can also put it on PATH.
 bootstrap_content="${bootstrap_content}
 
-The uc command for this plugin is ${PLUGIN_ROOT}/bin/uc. If \`uc\` is not on PATH, run it by that path."
+The use-cases command for this plugin is ${PLUGIN_ROOT}/bin/use-cases. If \`use-cases\` is not on PATH, run it by that path."
 
 # Single C-level pass per replacement; far faster than a char loop.
 escape_for_json() {
@@ -34,13 +34,13 @@ escape_for_json() {
 session_context=$(escape_for_json "$bootstrap_content")
 
 # Claude Code sources $CLAUDE_ENV_FILE before every shell command. Putting the
-# plugin's bin/ first on PATH makes `uc` a plain command in the session with
+# plugin's bin/ first on PATH makes `use-cases` a plain command in the session with
 # nothing installed globally. Other hosts leave the variable unset; a file that
 # cannot be written is reported, never fatal — the bootstrap below still ships.
 #: @use-case:plugin.install.uc_on_path_in_session#hook
 if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
   if ! printf 'export PATH="%s/bin:$PATH"\n' "${PLUGIN_ROOT}" >> "${CLAUDE_ENV_FILE}" 2>/dev/null; then
-    echo "use-cases: could not write PATH export to CLAUDE_ENV_FILE (${CLAUDE_ENV_FILE}); run uc as ${PLUGIN_ROOT}/bin/uc" >&2
+    echo "use-cases: could not write PATH export to CLAUDE_ENV_FILE (${CLAUDE_ENV_FILE}); run use-cases as ${PLUGIN_ROOT}/bin/use-cases" >&2
   fi
 fi
 #: @use-case:end plugin.install.uc_on_path_in_session#hook

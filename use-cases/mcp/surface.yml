@@ -25,12 +25,29 @@ use_cases:
       - The CLI command exists and returns a structured envelope.
     trigger: An agent calls the MCP tool equivalent of a CLI command.
     scenarios:
-      - id: mcp.surface.cli_contract_transport.parity
+      - id: mcp.surface.cli_contract_transport.golden_parity
         kind: steps
         steps:
           - Run a CLI command.
           - Run the equivalent MCP tool.
           - Compare semantic result fields rather than transport details.
+        observable_outcomes:
+          - MCP output preserves command semantics.
+          - The same command reached two ways gives the same answer.
+      - id: mcp.surface.cli_contract_transport.bad_logic_is_never_reimplemented_in_the_wrapper
+        kind: steps
+        steps:
+          - Look for product decisions taken inside the MCP layer rather than forwarded.
+          - Compare a result's semantics with the CLI's for the same input.
+        observable_outcomes:
+          - Core product logic remains in the CLI and core layer, so the two surfaces cannot drift apart.
+      - id: mcp.surface.cli_contract_transport.edge_transport_details_may_differ
+        kind: steps
+        steps:
+          - Compare the transport envelopes of the two surfaces.
+          - Confirm only the semantic fields are held equal.
+        observable_outcomes:
+          - Transport details are allowed to differ; the semantic result is what parity means.
     observable_outcomes:
       - MCP output preserves command semantics.
       - Core product logic remains in the CLI/core layer.
@@ -45,6 +62,20 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - McpSurfaceTransportTests
+          inputs:
+            - UseCasesOracle/Tests/OracleTests/Mcp/McpSurfaceTests.swift
+            - UseCasesOracle/Tests/OracleTests/Harness/McpSession.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -73,12 +104,35 @@ use_cases:
       - MCP server is running in read-only or write-enabled mode.
     trigger: An agent calls a mutating MCP tool.
     scenarios:
-      - id: mcp.surface.write_gating.block
+      - id: mcp.surface.write_gating.golden_explicit_write
+        kind: steps
+        steps:
+          - Enable writes explicitly.
+          - Call a mutating MCP tool inside the configured workspace root.
+        observable_outcomes:
+          - A write-enabled session can mutate workspace records inside its configured roots.
+      - id: mcp.surface.write_gating.bad_read_only_session_cannot_mutate
         kind: steps
         steps:
           - Call a mutating MCP tool without write permission.
-          - Confirm the tool returns a structured refusal.
-          - Enable writes explicitly and repeat only inside the workspace root.
+          - Read the response and then the workspace records.
+        observable_outcomes:
+          - Read-only MCP sessions cannot mutate workspace records.
+          - The tool returns a structured refusal rather than failing opaquely.
+      - id: mcp.surface.write_gating.bad_mutation_outside_the_configured_root
+        kind: steps
+        steps:
+          - With writes enabled, call a mutating tool targeting a path outside the workspace root.
+          - Read what happens.
+        observable_outcomes:
+          - Mutations are constrained to configured roots, so enabling writes is not a blanket permission.
+      - id: mcp.surface.write_gating.edge_refusal_is_structured
+        kind: steps
+        steps:
+          - Read the shape of the refusal a read-only session receives.
+          - Confirm an agent can act on it.
+        observable_outcomes:
+          - The refusal is a structured result an agent can read, not an opaque transport error.
     observable_outcomes:
       - Read-only MCP sessions cannot mutate workspace records.
       - Mutations are constrained to configured roots.
@@ -93,6 +147,20 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - McpSurfaceWriteGatingTests
+          inputs:
+            - UseCasesOracle/Tests/OracleTests/Mcp/McpSurfaceTests.swift
+            - UseCasesOracle/Tests/OracleTests/Harness/McpSession.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -123,12 +191,28 @@ use_cases:
       - A showcase run has finished and user approval may be needed.
     trigger: An agent calls the MCP approval request tool.
     scenarios:
-      - id: mcp.surface.approval_request_only.boundary
+      - id: mcp.surface.approval_request_only.golden_boundary
         kind: steps
         steps:
-          - Call the approval request MCP tool.
-          - Confirm the tool returns a trusted CLI-mediated approval command.
-          - Confirm no user approval event is appended by MCP.
+          - Call the approval request MCP tool after a finished run.
+          - Read what it returns.
+        observable_outcomes:
+          - The tool returns a trusted CLI-mediated approval command.
+          - The user-facing trusted path remains explicit.
+      - id: mcp.surface.approval_request_only.bad_mcp_cannot_write_user_approval
+        kind: steps
+        steps:
+          - Attempt to record user approval through MCP directly.
+          - Read whether it is accepted.
+        observable_outcomes:
+          - MCP cannot approve or reject on behalf of the user.
+      - id: mcp.surface.approval_request_only.edge_no_event_is_appended_by_the_request
+        kind: steps
+        steps:
+          - Call the approval request tool, then read the showcase ledger.
+          - Confirm nothing was appended.
+        observable_outcomes:
+          - Requesting approval appends no user approval event; asking and answering stay separate acts.
     observable_outcomes:
       - MCP cannot approve or reject on behalf of the user.
       - The user-facing trusted path remains explicit.
@@ -143,6 +227,20 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - McpSurfaceApprovalTests
+          inputs:
+            - UseCasesOracle/Tests/OracleTests/Mcp/McpSurfaceTests.swift
+            - UseCasesOracle/Tests/OracleTests/Harness/McpSession.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -173,12 +271,27 @@ use_cases:
       - A domain command detects invalid matrix, partial evidence, or missing preconditions.
     trigger: An MCP caller invokes a command that has domain-level diagnostics.
     scenarios:
-      - id: mcp.surface.domain_results_not_transport_failures.envelope
+      - id: mcp.surface.domain_results_not_transport_failures.golden_envelope
         kind: steps
         steps:
           - Call an MCP tool against damaged or incomplete input.
-          - Confirm transport remains successful when the tool can report diagnostics.
           - Inspect the structured command envelope for domain outcome and diagnostics.
+        observable_outcomes:
+          - Agents receive actionable diagnostics instead of opaque transport failure.
+      - id: mcp.surface.domain_results_not_transport_failures.bad_never_an_opaque_transport_failure
+        kind: steps
+        steps:
+          - Call a tool whose domain command detects an invalid matrix or missing precondition.
+          - Read whether the transport itself failed.
+        observable_outcomes:
+          - Transport remains successful whenever the tool can report diagnostics, so a domain problem is never disguised as a broken connection.
+      - id: mcp.surface.domain_results_not_transport_failures.edge_partial_evidence_is_reported_not_refused
+        kind: steps
+        steps:
+          - Call a tool against partial evidence rather than damaged input.
+          - Read the diagnostics.
+        observable_outcomes:
+          - Integrity gaps and warnings come back as structured command results alongside whatever could be computed.
     observable_outcomes:
       - Agents receive actionable diagnostics instead of opaque transport failure.
     host_applicability:
@@ -192,6 +305,20 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - McpSurfaceDomainResultsTests
+          inputs:
+            - UseCasesOracle/Tests/OracleTests/Mcp/McpSurfaceTests.swift
+            - UseCasesOracle/Tests/OracleTests/Harness/McpSession.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -220,12 +347,29 @@ use_cases:
       - The MCP server is registered and its tools are listed by the host.
     trigger: An agent inspects an MCP tool's input schema before calling it.
     scenarios:
-      - id: mcp.surface.declared_tool_schemas.declared
+      - id: mcp.surface.declared_tool_schemas.golden_declared
         kind: steps
         steps:
           - List the MCP tools and read a high-value tool's input schema.
           - Confirm named parameters with descriptions are present.
           - Call the tool and confirm the CLI-parity result is unchanged.
+        observable_outcomes:
+          - High-value tool input schemas declare their real named parameters with descriptions.
+          - CLI-parity forwarding behaviour is unchanged by declaring them.
+      - id: mcp.surface.declared_tool_schemas.bad_an_open_passthrough_is_not_a_schema
+        kind: steps
+        steps:
+          - Read a tool schema that declares only an open passthrough object.
+          - Confirm an agent cannot discover the parameters from it.
+        observable_outcomes:
+          - A schema that declares only an open passthrough forces an agent to reverse-engineer parameters from the CLI or the tests, which is what this row exists to stop.
+      - id: mcp.surface.declared_tool_schemas.edge_repo_stays_required_for_workspace_scoped_tools
+        kind: steps
+        steps:
+          - Read the input schema of a workspace-scoped tool.
+          - Confirm repo is still required.
+        observable_outcomes:
+          - repo stays required for workspace-scoped tools, so declaring parameters never loosens what a tool needs.
     observable_outcomes:
       - High-value tool input schemas declare their real named parameters with descriptions rather than only an open passthrough.
       - repo stays required for workspace-scoped tools, and CLI-parity forwarding behaviour is unchanged.
@@ -241,13 +385,15 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/conformance/mcp/tool-input-schemas.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - McpSurfaceToolSchemasTests
           inputs:
-            - tests/conformance/mcp/tool-input-schemas.test.ts
+            - UseCasesOracle/Tests/OracleTests/Mcp/McpSurfaceTests.swift
+            - UseCasesOracle/Tests/OracleTests/Harness/McpSession.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:

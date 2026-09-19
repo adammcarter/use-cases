@@ -10,7 +10,11 @@ use_cases:
     value_tier: core
     journey_role: golden
     usage_frequency: common
-    tags: [capsule, showcase, live-demo, command]
+    tags:
+      - capsule
+      - showcase
+      - live-demo
+      - command
     source_refs:
       - kind: file
         path: packages/core/src/capsules/runCapsule.ts
@@ -24,13 +28,29 @@ use_cases:
       - The capsule permits command execution.
     trigger: Agent reaches a final release or feature gate that needs a live, repeatable demo.
     scenarios:
-      - id: capsule.live_runner.scripted.cli
+      - id: capsule.live_runner.scripted.golden_cli
         kind: steps
         steps:
           - Run capsule run with --execute-commands and a stable idempotency key.
           - Confirm the runner starts a showcase run from the capsule plan.
-          - Confirm command stdout, stderr, exit code, and verdict are recorded.
-          - Confirm the run finishes only when all command-backed items pass and no runtime observations remain pending.
+          - Read the recorded command stdout, stderr, exit code and verdict.
+        observable_outcomes:
+          - The showcase ledger contains run_started, action_recorded, observation_recorded, verdict_recorded and run_finished events.
+          - The run status is completed and passed.
+      - id: capsule.live_runner.scripted.bad_pending_observations_block_the_finish
+        kind: steps
+        steps:
+          - Leave a runtime observation pending, then attempt to finish the run.
+          - Read what happens.
+        observable_outcomes:
+          - The run finishes only when all command-backed items pass and no runtime observations remain pending.
+      - id: capsule.live_runner.scripted.edge_no_user_approval_unless_the_row_requires_it
+        kind: steps
+        steps:
+          - Finish a passing command-backed run for a row that does not require user approval.
+          - Read the approval state.
+        observable_outcomes:
+          - User approval is not recorded unless the selected row requires it, so a scripted run never manufactures sign-off.
     observable_outcomes:
       - A showcase JSONL ledger contains run_started, action_recorded, observation_recorded, verdict_recorded, and run_finished events.
       - The run status is completed and passed without recording user approval unless the selected row requires it.
@@ -44,6 +64,24 @@ use_cases:
       - host_surface: opencode.cli
         supported: true
     verification_policy:
-      mode: none
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - CapsuleRunnerTests
+          inputs:
+            - UseCasesOracle/Tests/OracleTests/Cli/CapsuleRunnerTests.swift
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
     approval_policy:
       mode: none

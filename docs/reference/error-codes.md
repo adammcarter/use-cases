@@ -1,6 +1,7 @@
 <!-- GENERATED FILE — do not edit by hand.
-     Regenerate with `node packages/core/scripts/generate-error-codes.mjs`
-     (source of truth: packages/core/src/errors/registry.ts). -->
+     Rendered by ErrorCodesDocument.render() from
+     UseCasesCore/Sources/UseCasesCore/Errors/PublicErrorRegistry.swift;
+     PublicErrorRegistryTests fails the suite when this file drifts. -->
 
 # Error Codes
 
@@ -9,7 +10,7 @@ code below is a versioned contract: a code is only removed or repurposed in a
 **major** release; new codes ship additively in a **minor**. Diagnostics carry
 the code in their `code` field.
 
-There are **68** codes across **9** surfaces.
+There are **66** codes across **8** surfaces.
 
 ## Marker grammar
 
@@ -89,13 +90,6 @@ There are **68** codes across **9** surfaces.
 | `UCM_WORKSPACE_COMPONENT_UNKNOWN` | error | Unknown component '...'; does not match the declared component. |
 | `UCM_WORKSPACE_CONFIG_INVALID` | error | Invalid use-cases.yml. |
 | `UCM_WORKSPACE_CONFIG_PARSE` | error | Unable to parse use-cases.yml. |
-
-## Migration
-
-| Code | Severity | Message |
-|---|---|---|
-| `UCM_MIGRATION_UNSAFE_OUTPUT_PATH` | error | Migration output path must stay inside the data root. |
-| `UCM_MIGRATION_UNSAFE_SOURCE_PATH` | error | Migration source path must stay inside the repository. |
 
 ## Showcase lifecycle
 

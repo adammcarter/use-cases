@@ -13,6 +13,7 @@ use_cases:
     tags:
       - matrix
       - acceptance
+      - no-edge-path
     source_refs:
       - kind: file
         path: packages/core/src/useCases/loadUseCaseMatrix.ts
@@ -22,17 +23,45 @@ use_cases:
       - Use cases are stored under use-cases.
     trigger: Agent plans or verifies work.
     scenarios:
-      - id: matrix.core.validate.cli
+      - id: matrix.core.validate.golden_cli
         kind: steps
         steps:
-          - Run matrix validate.
+          - Run matrix validate against a clean workspace.
+          - Read the reported integrity.
+        observable_outcomes:
+          - The matrix reports clean integrity.
+      - id: matrix.core.validate.bad_a_damaged_matrix_is_never_clean
+        kind: steps
+        steps:
+          - Damage a use-case file, then run matrix validate.
+          - Read the integrity state and diagnostics.
+        observable_outcomes:
+          - A damaged matrix never reports clean integrity, and the diagnostics name what is wrong.
     observable_outcomes:
       - The matrix reports clean integrity.
     host_applicability:
       - host_surface: codex.cli
         supported: true
     verification_policy:
-      mode: none
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - MatrixCoreValidateTests
+          inputs:
+            - UseCasesOracle/Tests/OracleTests/Cli/MatrixCoreTests.swift
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
     approval_policy:
       mode: none
   - id: matrix.core.mutate
@@ -58,21 +87,43 @@ use_cases:
       - The target YAML file stays under use-cases.
     trigger: Agent or user adds, updates, or retires an acceptance row.
     scenarios:
-      - id: matrix.core.mutate.upsert
+      - id: matrix.core.mutate.golden_upsert
         kind: steps
         steps:
           - Run matrix upsert with a target use-cases YAML file and one use_case object.
           - Validate that the matrix remains complete after the write.
-      - id: matrix.core.mutate.remove
+        observable_outcomes:
+          - Mutation returns a matrix.upsert envelope with before and after hashes.
+          - The matrix remains structurally clean after accepted writes.
+      - id: matrix.core.mutate.golden_remove
         kind: steps
         steps:
-          - Run matrix remove with a use-case id and reason.
-          - Confirm the row is marked lifecycle removed rather than physically deleted.
-      - id: matrix.core.mutate.safety
+          - Run matrix remove with a use-case id and a reason.
+          - Read the row afterwards.
+        observable_outcomes:
+          - Removal preserves accidental history as a lifecycle transition rather than deleting the row.
+      - id: matrix.core.mutate.bad_path_escape_or_damaged_matrix
         kind: steps
         steps:
-          - Try a path escape, damaged matrix, or stale expected hash.
-          - Confirm the mutation is blocked and no unsafe write is committed.
+          - Try a path escape, then the same write against a damaged matrix.
+          - Read both results and the files.
+        observable_outcomes:
+          - The mutation is blocked and no unsafe write is committed.
+      - id: matrix.core.mutate.bad_stale_expected_hash
+        kind: steps
+        steps:
+          - Run a mutation carrying an expected hash that no longer matches the file.
+          - Read what happens.
+        observable_outcomes:
+          - A stale expected hash blocks the write, so a mutation cannot land on a matrix that moved underneath it.
+      - id: matrix.core.mutate.edge_upsert_lands_on_an_existing_row
+        kind: steps
+        steps:
+          - Run matrix upsert for a row id that already exists.
+          - Compare the before and after hashes and the row count.
+        observable_outcomes:
+          - An upsert on an existing id updates it in place rather than adding a duplicate.
+          - The before and after hashes differ while the row count does not.
     observable_outcomes:
       - Mutation commands return matrix.upsert or matrix.remove envelopes with before and after hashes.
       - The matrix remains structurally clean after accepted writes.
@@ -87,6 +138,24 @@ use_cases:
       - host_surface: opencode.cli
         supported: true
     verification_policy:
-      mode: none
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - MatrixCoreMutateTests
+          inputs:
+            - UseCasesOracle/Tests/OracleTests/Cli/MatrixCoreTests.swift
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
     approval_policy:
       mode: none

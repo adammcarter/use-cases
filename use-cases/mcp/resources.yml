@@ -1,0 +1,244 @@
+schema_version: 1
+feature:
+  id: mcp.resources
+  name: MCP resources and prompts
+  summary: The MCP server exposes eight read-only workspace-state resources and four guided-workflow prompts alongside its tools. Neither had a row until now, which left a third of the MCP surface undescribed.
+use_cases:
+  - id: mcp.resources.workspace_state_is_readable_and_read_only
+    title: Workspace state is readable over MCP, and reading never writes
+    lifecycle: active
+    value_tier: core
+    journey_role: golden
+    usage_frequency: common
+    tags:
+      - mcp
+      - resources
+      - read-only
+    source_refs:
+      - kind: file
+        path: packages/mcp/src/resources.ts
+      - kind: file
+        path: tests/conformance/mcp/p15-mcp-resources-prompts.test.ts
+    actor: agent
+    intent: Let an agent read matrix, freshness, bindings, ledger, evidence and config state as MCP resources rather than shelling out, while guaranteeing a read can never change the workspace.
+    preconditions:
+      - The MCP server is registered and a repo is configured or passed.
+    trigger: An agent lists or reads a use-cases:// resource.
+    scenarios:
+      - id: mcp.resources.workspace_state_is_readable_and_read_only.golden_list_and_read
+        kind: steps
+        steps:
+          - Initialize the server and read the advertised capabilities.
+          - List the resources and read use-cases://matrix.
+        observable_outcomes:
+          - Initialize advertises resources and prompts capabilities alongside tools.
+          - The listing returns the expected workspace-state URIs with their metadata, and a read returns valid structured content.
+      - id: mcp.resources.workspace_state_is_readable_and_read_only.bad_traversal_repo_path
+        kind: steps
+        steps:
+          - Read a resource with a repo path that traverses out of the workspace.
+          - Read the response.
+        observable_outcomes:
+          - A traversal repo path is rejected.
+      - id: mcp.resources.workspace_state_is_readable_and_read_only.bad_no_repo_configured
+        kind: steps
+        steps:
+          - Read a repo-scoped resource with no repo passed and none configured.
+          - Read the response.
+        observable_outcomes:
+          - A repo-scoped read requires a repo, and says so rather than guessing one.
+      - id: mcp.resources.workspace_state_is_readable_and_read_only.bad_unknown_resource
+        kind: steps
+        steps:
+          - Read a use-cases:// URI that does not exist.
+          - Read the error.
+        observable_outcomes:
+          - An unknown resource returns a not-found error rather than an empty success.
+      - id: mcp.resources.workspace_state_is_readable_and_read_only.edge_configured_default_repo
+        kind: steps
+        steps:
+          - Configure a default repo, then read a resource without passing one.
+          - Read which workspace answered.
+        observable_outcomes:
+          - The read falls back to the configured default repo.
+      - id: mcp.resources.workspace_state_is_readable_and_read_only.edge_no_read_mutates_state
+        kind: steps
+        steps:
+          - Read every repo-scoped resource in turn.
+          - Compare the workspace before and after.
+        observable_outcomes:
+          - No repo-scoped resource read mutates workspace state, so reading is safe in any session.
+    observable_outcomes:
+      - Matrix, freshness, bindings, ledger, evidence and config state are readable as MCP resources.
+      - A traversal path, a missing repo, or an unknown URI is refused rather than answered.
+      - No repo-scoped read mutates workspace state.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+      - host_surface: claude.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - McpResourcesWorkspaceStateTests
+          inputs:
+            - UseCasesOracle/Tests/OracleTests/Mcp/McpResourcesTests.swift
+            - UseCasesOracle/Tests/OracleTests/Harness/McpSession.swift
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none
+  - id: mcp.resources.schemas_are_readable_without_a_repo
+    title: The public schema index is readable without any workspace
+    lifecycle: active
+    value_tier: supporting
+    journey_role: edge
+    usage_frequency: occasional
+    tags:
+      - mcp
+      - schema
+      - contract
+      - no-bad-path
+    source_refs:
+      - kind: file
+        path: packages/mcp/src/resources.ts
+      - kind: file
+        path: tests/conformance/mcp/p15-mcp-resources-prompts.test.ts
+    actor: agent
+    intent: Let an integrator read the published schema contract over MCP before they have a workspace at all, because the contract is what they integrate against and it does not belong to any one repo.
+    preconditions:
+      - The MCP server is running.
+    trigger: An agent reads use-cases://schemas or use-cases://schemas/{name}.
+    scenarios:
+      - id: mcp.resources.schemas_are_readable_without_a_repo.golden_named_schema
+        kind: steps
+        steps:
+          - Read use-cases://schemas/{name} with no repo configured or passed.
+          - Read the returned schema.
+        observable_outcomes:
+          - The requested public schema is returned without needing a repo.
+      - id: mcp.resources.schemas_are_readable_without_a_repo.edge_index_lists_ids
+        kind: steps
+        steps:
+          - Read the use-cases://schemas index.
+          - Read the listed ids.
+        observable_outcomes:
+          - The index lists the available schema ids, so a caller can discover what to read.
+    observable_outcomes:
+      - The published schema contract is readable over MCP with no workspace at all.
+      - The index lists the available schema ids so a caller can discover what to read.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+      - host_surface: claude.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - McpResourcesSchemasTests
+          inputs:
+            - UseCasesOracle/Tests/OracleTests/Mcp/McpResourcesTests.swift
+            - UseCasesOracle/Tests/OracleTests/Harness/McpSession.swift
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none
+  - id: mcp.resources.prompts_guide_without_widening_the_surface
+    title: Guided prompts are offered, and never offer prove
+    lifecycle: active
+    value_tier: core
+    journey_role: golden
+    usage_frequency: occasional
+    tags:
+      - mcp
+      - prompts
+      - trust-boundary
+    source_refs:
+      - kind: file
+        path: packages/mcp/src/prompts.ts
+      - kind: file
+        path: tests/conformance/mcp/p15-mcp-resources-prompts.test.ts
+    actor: agent
+    intent: Offer four grounded workflows — adopt a repo, bind a row, recover a suspect row, review a release — without the prompt surface becoming a way to reach the signing tier that is deliberately absent from the tools.
+    preconditions:
+      - The MCP server is registered.
+    trigger: An agent lists the prompts or gets one.
+    scenarios:
+      - id: mcp.resources.prompts_guide_without_widening_the_surface.golden_list_and_get
+        kind: steps
+        steps:
+          - List the prompts.
+          - Get one with arguments and read the returned message.
+        observable_outcomes:
+          - The expected guided-workflow prompt names are listed.
+          - A get returns a grounded message and honours the arguments it was given.
+      - id: mcp.resources.prompts_guide_without_widening_the_surface.bad_prove_is_never_exposed
+        kind: steps
+        steps:
+          - Read every prompt body for a route to the signing tier.
+          - Confirm proofs stay CI-mediated.
+        observable_outcomes:
+          - Prompts never expose prove on the MCP surface and keep proofs CI-mediated.
+          - A surface deliberately absent from the tools cannot be reached through the prompts instead.
+      - id: mcp.resources.prompts_guide_without_widening_the_surface.edge_unknown_prompt
+        kind: steps
+        steps:
+          - Get a prompt name that does not exist.
+          - Read the response.
+        observable_outcomes:
+          - An unknown prompt returns an error rather than an empty message.
+    observable_outcomes:
+      - Four grounded workflow prompts are listed, and a get honours its arguments.
+      - Prompts never expose prove, so a surface deliberately absent from the tools cannot be reached through them.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+      - host_surface: claude.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - McpResourcesPromptsTests
+          inputs:
+            - UseCasesOracle/Tests/OracleTests/Mcp/McpResourcesTests.swift
+            - UseCasesOracle/Tests/OracleTests/Harness/McpSession.swift
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none

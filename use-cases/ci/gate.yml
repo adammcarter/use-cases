@@ -1,0 +1,96 @@
+schema_version: 1
+feature:
+  id: ci.gate
+  name: CI gate
+  summary: Every push and pull request builds, tests and lints the Swift product on macOS and holds it to its own use-case matrix, so no change lands ungated.
+use_cases:
+  - id: ci.gate.swift_packages_are_built_tested_and_gated
+    title: Every push builds, tests, lints and gates the Swift packages
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    tags:
+      - ci
+      - gate
+      - swift
+    source_refs:
+      - kind: file
+        path: .github/workflows/swift.yml
+    actor: maintainer
+    intent: Keep the Swift product gated on every push and pull request — built, tested against the binaries just built, linted, and held to its own use-case matrix — so deleting the TypeScript can never leave the repository ungated.
+    preconditions:
+      - The Swift gate is present at .github/workflows/swift.yml.
+      - Apple Silicon is the only platform a release publishes, and the oracle's bootstrap suites run there only.
+    trigger: Anyone pushes a commit or opens a pull request.
+    scenarios:
+      - id: ci.gate.swift_packages_are_built_tested_and_gated.golden_every_package_is_built_and_tested
+        kind: steps
+        steps:
+          - Read .github/workflows/swift.yml.
+          - Confirm it fires on push and on pull_request, runs on a macOS runner, and builds and tests UseCasesCore, UseCasesCLI, UseCasesMCP and UseCasesOracle.
+        observable_outcomes:
+          - Every Swift package is built and tested on every push and pull request.
+          - The gate runs on macOS, which is where the oracle can drive the real binaries.
+      - id: ci.gate.swift_packages_are_built_tested_and_gated.golden_the_oracle_drives_the_binaries_just_built
+        kind: steps
+        steps:
+          - Read the step that tests UseCasesOracle.
+          - Confirm it names the freshly built executables through UC_BIN and UC_MCP_BIN and checks both are executable before running the suite.
+        observable_outcomes:
+          - The black-box suite proves the binaries this job built, not a stale cache and not a fallback.
+      - id: ci.gate.swift_packages_are_built_tested_and_gated.golden_the_matrix_gates_itself_with_its_own_binary
+        kind: steps
+        steps:
+          - Read the last step of the job.
+          - Confirm it runs verify --repo . --all and scan --repo . --gate using the Swift binary built in this job.
+        observable_outcomes:
+          - Every bound row's verifier runs in CI and the release gate blocks the build when a required row is below the bar.
+          - "The product gates itself: the binary under test is the one that reads the matrix."
+      - id: ci.gate.swift_packages_are_built_tested_and_gated.edge_a_runner_that_is_not_apple_silicon_fails_the_job
+        kind: steps
+        steps:
+          - Read the architecture check and the two lint steps.
+          - Confirm the job fails on a runner that is not arm64, and that each lint gate fails unless it reports having read at least one file.
+        observable_outcomes:
+          - A runner where every bootstrap suite would skip fails loudly instead of passing.
+          - A lint gate that read nothing fails instead of reporting zero violations.
+      - id: ci.gate.swift_packages_are_built_tested_and_gated.bad_the_existing_gates_are_left_alone
+        kind: steps
+        steps:
+          - Read .github/workflows/ci.yml, use-cases.yml and release.yml.
+          - Confirm the Swift gate is its own workflow, that ci.yml still builds and tests the TypeScript, and that the Swift gate publishes nothing.
+        observable_outcomes:
+          - Adding the Swift gate changes nothing about the gates that already run, and the deletion row can remove ci.yml whole.
+          - "No release is ever cut by the gate: it attaches no assets and writes no checksums."
+    observable_outcomes:
+      - Every push and pull request builds and tests all four Swift packages on macOS.
+      - The oracle runs against the binaries built in the same job.
+      - swiftformat --lint and swiftlint --strict both gate, and both prove they read files.
+      - The repository's own matrix gates the build through the Swift binary itself.
+    host_applicability:
+      - host_surface: claude.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - CiWorkflowTests
+          inputs:
+            - UseCasesOracle/Tests/OracleTests/Plugin/CiWorkflowTests.swift
+            - .github/workflows/swift.yml
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none

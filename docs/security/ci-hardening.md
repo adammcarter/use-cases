@@ -65,7 +65,7 @@ Detected via `GITHUB_ACTIONS`. Fields are read from the standard runner env:
 | `event` | `GITHUB_EVENT_NAME` |
 | `protected_ref` | unknowable from the runner env → `null` (override to set) |
 
-No configuration is needed: running `uc prove …` inside a GitHub Actions job
+No configuration is needed: running `use-cases prove …` inside a GitHub Actions job
 yields `type: "ci"`, `provider: "github-actions"`.
 
 ### Other CI providers (auto-detected)
@@ -86,14 +86,14 @@ For a CI provider that is not auto-detected, or to attest a value the runner
 cannot expose (e.g. `protected_ref` on GitHub), pass a JSON authority record:
 
 ```sh
-uc prove --all --trusted-ci \
+use-cases prove --all --trusted-ci \
   --verification-results "$UCM_VERIFICATION_RESULTS" \
   --signing-key-env UCM_CI_SIGNING_KEY --key-id ci-key-1 \
   --authority-file authority.json
 ```
 
 `--verification-results` is required — it is the unsigned results ledger written
-earlier by `uc verify --out "$UCM_VERIFICATION_RESULTS"`.
+earlier by `use-cases verify --out "$UCM_VERIFICATION_RESULTS"`.
 
 ```json
 {

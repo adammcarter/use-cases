@@ -2,13 +2,7 @@ schema_version: 1
 feature:
   id: lifecycle.signals
   name: Honest signals in the daily loop
-  summary: >-
-    The signals an agent reads during the keyless loop must mean what they say:
-    verifying one row must not destroy another's evidence, a green light must not
-    appear while nothing is proven, an impact headline must not claim nothing is
-    affected, and every error must hand back the command that actually fixes it.
-    These behaviours exist because agents using the tool in the field acted on
-    signals that were technically true and practically misleading.
+  summary: "The signals an agent reads during the keyless loop must mean what they say: verifying one row must not destroy another's evidence, a green light must not appear while nothing is proven, an impact headline must not claim nothing is affected, and every error must hand back the command that actually fixes it. These behaviours exist because agents using the tool in the field acted on signals that were technically true and practically misleading."
 use_cases:
   - id: lifecycle.signals.verify_preserves_other_rows
     title: Verifying one row never destroys another row's evidence
@@ -26,24 +20,45 @@ use_cases:
       - kind: file
         path: packages/core/test/markers/verify.test.ts
     actor: agent
-    intent: >-
-      Re-verify a single changed behaviour without losing the evidence for every
-      other behaviour, so the incremental loop the docs recommend is safe to use.
+    intent: Re-verify a single changed behaviour without losing the evidence for every other behaviour, so the incremental loop the docs recommend is safe to use.
     preconditions:
       - Several rows are bound and have passing local verification results.
-    trigger: An agent runs `uc verify --row <id>` after changing one behaviour.
+    trigger: An agent runs `use-cases verify --row <id>` after changing one behaviour.
     scenarios:
-      - id: lifecycle.signals.verify_preserves_other_rows.single_row
+      - id: lifecycle.signals.verify_preserves_other_rows.golden_single_row
         kind: steps
         steps:
           - Verify every bound row, so the results ledger holds a record for each.
           - Verify only ONE row against the same ledger.
           - Scan and read each row's local status.
-      - id: lifecycle.signals.verify_preserves_other_rows.no_targets
+        observable_outcomes:
+          - Rows the run did not target keep their local evidence and stay VERIFIED_LOCAL.
+          - The targeted row is re-verified and reads VERIFIED_LOCAL on the same ledger.
+      - id: lifecycle.signals.verify_preserves_other_rows.golden_replaces_prior_record
+        kind: steps
+        steps:
+          - Verify one bound row twice in succession against the same ledger.
+          - Read the ledger and count the records carrying that row id.
+        observable_outcomes:
+          - A re-verified row's prior record is replaced, never duplicated.
+          - The ledger holds exactly one record per row id after the second run.
+      - id: lifecycle.signals.verify_preserves_other_rows.bad_retained_evidence_is_rechecked
+        kind: steps
+        steps:
+          - Verify every bound row so each has a passing record.
+          - Change the code inside ANOTHER row's bound span without re-verifying it.
+          - Verify one unrelated row, then scan and read the changed row's local status.
+        observable_outcomes:
+          - Retained evidence is still re-checked against the current code, so a row whose code changed is demoted to STALE_LOCAL rather than left falsely green.
+          - Preserving a record is never the same as trusting it.
+      - id: lifecycle.signals.verify_preserves_other_rows.edge_no_targets
         kind: steps
         steps:
           - Verify a row that is UNBOUND, so the run targets nothing at all.
           - Confirm the ledger is untouched rather than emptied.
+        observable_outcomes:
+          - A run that targets no rows writes nothing away.
+          - Every pre-existing record survives a run that matched nothing.
     observable_outcomes:
       - Rows the run did not target keep their local evidence and stay VERIFIED_LOCAL.
       - A re-verified row's prior record is replaced, never duplicated.
@@ -59,13 +74,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - packages/core/test/markers/verify.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - LifecycleVerifyPreservesTests
           inputs:
-            - packages/core/test/markers/verify.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/LifecycleVerifyPreservesTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -73,7 +89,6 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
-
   - id: lifecycle.signals.acceptance_claim_is_honest
     title: Scan states whether acceptance can honestly be claimed
     lifecycle: active
@@ -90,23 +105,40 @@ use_cases:
       - kind: file
         path: packages/core/test/markers/freshness-local.test.ts
     actor: agent
-    intent: >-
-      Give an agent a single field it can quote that says whether acceptance is
-      actually supported, so a green policy flag is never mistaken for proof.
+    intent: Give an agent a single field it can quote that says whether acceptance is actually supported, so a green policy flag is never mistaken for proof.
     preconditions:
       - A matrix exists with at least one row.
-    trigger: An agent runs `uc scan` and looks for a signal to report against.
+    trigger: An agent runs `use-cases scan` and looks for a signal to report against.
     scenarios:
-      - id: lifecycle.signals.acceptance_claim_is_honest.nothing_proven
-        kind: steps
-        steps:
-          - Scan a matrix where no row has been verified.
-          - Read the acceptance claim rather than the policy guard.
-      - id: lifecycle.signals.acceptance_claim_is_honest.all_proven
+      - id: lifecycle.signals.acceptance_claim_is_honest.golden_all_proven
         kind: steps
         steps:
           - Verify every row locally.
           - Scan and read the acceptance claim.
+        observable_outcomes:
+          - With every row proven by either tier, acceptance is claimable and names how many behaviours back it.
+      - id: lifecycle.signals.acceptance_claim_is_honest.bad_nothing_proven
+        kind: steps
+        steps:
+          - Scan a matrix where no row has been verified.
+          - Read the acceptance claim rather than the policy guard.
+        observable_outcomes:
+          - With nothing proven, acceptance is reported NOT_SUPPORTED and is not claimable, even though the policy guard is green because nothing is blocking.
+          - A green guard is never quotable as acceptance.
+      - id: lifecycle.signals.acceptance_claim_is_honest.bad_unbound_row_blocks_the_claim
+        kind: steps
+        steps:
+          - Verify every BOUND row, leaving one row unbound.
+          - Scan and read whether acceptance is claimable.
+        observable_outcomes:
+          - An UNBOUND row is never counted as proven, so a matrix with unbound rows cannot claim acceptance.
+      - id: lifecycle.signals.acceptance_claim_is_honest.edge_local_axis_counted_alongside_signed
+        kind: steps
+        steps:
+          - Verify some rows locally and leave others unverified, with no signed proofs anywhere.
+          - Scan and read the summary counts on both axes.
+        observable_outcomes:
+          - The summary counts the local axis (verified / stale / unverified) alongside the signed axis, so a green keyless matrix does not read as a failing one.
     observable_outcomes:
       - With nothing proven, acceptance is reported NOT_SUPPORTED and is not claimable, even though the policy guard is green because nothing is blocking.
       - With every row proven by either tier, acceptance is claimable and names how many behaviours back it.
@@ -122,13 +154,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - packages/core/test/markers/freshness-local.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - LifecycleAcceptanceClaimTests
           inputs:
-            - packages/core/test/markers/freshness-local.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/LifecycleVerifyPreservesTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -136,7 +169,6 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
-
   - id: lifecycle.signals.impact_leads_with_the_union
     title: Impact never claims nothing is affected while a bound file was touched
     lifecycle: active
@@ -152,18 +184,33 @@ use_cases:
       - kind: file
         path: tests/cli/impact.test.ts
     actor: agent
-    intent: >-
-      Make the impact headline conservative, so an agent that reads it and stops
-      does not skip re-verifying the rows its change may have broken.
+    intent: Make the impact headline conservative, so an agent that reads it and stops does not skip re-verifying the rows its change may have broken.
     preconditions:
       - A row is bound and its file is under version control.
-    trigger: An agent runs `uc impact` after editing code.
+    trigger: An agent runs `use-cases impact` after editing code.
     scenarios:
-      - id: lifecycle.signals.impact_leads_with_the_union.touched_not_hit
+      - id: lifecycle.signals.impact_leads_with_the_union.golden_touched_not_hit
         kind: steps
         steps:
           - Edit a bound file BELOW the bound span, so the span is not hit.
           - Run impact and read the headline, not the detail.
+        observable_outcomes:
+          - The headline counts span-hit and file-touched rows together and tells the reader to re-verify them.
+      - id: lifecycle.signals.impact_leads_with_the_union.bad_never_reports_nothing_impacted
+        kind: steps
+        steps:
+          - Touch a bound file in a way that hits no span at all.
+          - Read the headline an agent would stop at.
+        observable_outcomes:
+          - It never reports that nothing is impacted while a bound file was touched.
+          - An agent that reads only the headline is not told it is safe to skip re-verifying.
+      - id: lifecycle.signals.impact_leads_with_the_union.edge_touched_row_carries_the_same_command
+        kind: steps
+        steps:
+          - Produce one span-hit row and one file-touched row in the same run.
+          - Compare the remediation each one is given.
+        observable_outcomes:
+          - A touched row carries the same runnable verify command as a span-hit row, because being conservative costs one re-verify while being wrong ships a regression.
     observable_outcomes:
       - The headline counts span-hit and file-touched rows together and tells the reader to re-verify them.
       - It never reports that nothing is impacted while a bound file was touched.
@@ -178,13 +225,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/cli/impact.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - LifecycleImpactUnionTests
           inputs:
-            - tests/cli/impact.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/LifecycleImpactAndGitTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -192,7 +240,6 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
-
   - id: lifecycle.signals.errors_hand_back_the_cure
     title: Errors name the cause and the command that fixes it
     lifecycle: active
@@ -209,19 +256,45 @@ use_cases:
       - kind: file
         path: tests/cli/actionable-output.test.ts
     actor: agent
-    intent: >-
-      Turn a broken registry from a dead end into a recoverable state, by naming
-      the likely cause (a rename) and the sequence that actually restores it.
+    intent: Turn a broken registry from a dead end into a recoverable state, by naming the likely cause (a rename) and the sequence that actually restores it.
     preconditions:
       - A row is bound, then renamed in both the matrix and the source marker.
-    trigger: An agent renames a bound behaviour and runs `uc scan`.
+    trigger: An agent renames a bound behaviour and runs `use-cases scan`.
     scenarios:
-      - id: lifecycle.signals.errors_hand_back_the_cure.rename
+      - id: lifecycle.signals.errors_hand_back_the_cure.golden_rename
         kind: steps
         steps:
           - Bind a row, then rename it in the matrix and in the source marker.
           - Scan, and read the integrity errors in the human output.
           - Follow the remediation exactly as written.
+        observable_outcomes:
+          - "Both halves of a rename name it: the orphaned registration says what it was renamed to, and the new marker says what it was renamed from."
+          - "The remediation is truthful about the append-only registry: it says to remove the stale registration before re-registering, because bind validates the registry first and would otherwise fail closed."
+          - Following the remediation exactly leaves the matrix with zero integrity errors.
+      - id: lifecycle.signals.errors_hand_back_the_cure.bad_ambiguous_candidates_are_not_blamed
+        kind: steps
+        steps:
+          - Create a situation where two orphaned registrations are equally plausible as the rename source.
+          - Scan and read whether a rename is asserted.
+        observable_outcomes:
+          - A rename is only asserted when one candidate is clearly the best; an ambiguous case is not blamed on a rename.
+          - A guess is withheld rather than offered as a fact.
+      - id: lifecycle.signals.errors_hand_back_the_cure.bad_unrelated_marker_is_not_blamed
+        kind: steps
+        steps:
+          - Add a marker for a genuinely new row while an unrelated orphaned registration exists.
+          - Scan and read the diagnostics for each.
+        observable_outcomes:
+          - An unrelated orphaned registration is not blamed on a rename.
+          - A new behaviour is not reported as a renamed one.
+      - id: lifecycle.signals.errors_hand_back_the_cure.edge_errors_reach_the_human_output
+        kind: steps
+        steps:
+          - Produce an integrity error and run scan WITHOUT --json.
+          - Read what a person sees in the terminal.
+        observable_outcomes:
+          - Integrity errors are shown in the human output, not only in JSON.
+          - An agent reading the default output is not left thinking the matrix is clean.
     observable_outcomes:
       - Integrity errors are shown in the human output, not only in JSON.
       - "Both halves of a rename name it: the orphaned registration says what it was renamed to, and the new marker says what it was renamed from."
@@ -238,15 +311,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/cli/actionable-output.test.ts
-            - packages/core/test/markers/renameHint.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - LifecycleErrorsCureTests
           inputs:
-            - tests/cli/actionable-output.test.ts
-            - packages/core/test/markers/renameHint.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/LifecycleErrorsCureTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -254,7 +326,6 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
-
   - id: lifecycle.signals.verify_can_be_previewed
     title: Verify can be previewed before paying for it
     lifecycle: active
@@ -268,18 +339,34 @@ use_cases:
       - kind: file
         path: packages/core/src/markers/cli/verify.ts
     actor: agent
-    intent: >-
-      Let an agent see which verifiers a run would execute before running them, so
-      an expensive acceptance build is a decision rather than a surprise.
+    intent: Let an agent see which verifiers a run would execute before running them, so an expensive acceptance build is a decision rather than a surprise.
     preconditions:
       - At least one row is bound and declares a verifier.
-    trigger: An agent wants to know the cost of `uc verify` before running it.
+    trigger: An agent wants to know the cost of `use-cases verify` before running it.
     scenarios:
-      - id: lifecycle.signals.verify_can_be_previewed.dry_run
+      - id: lifecycle.signals.verify_can_be_previewed.golden_dry_run
         kind: steps
         steps:
           - Run verify with --dry-run against the bound rows.
-          - Inspect the reported plan, then check nothing was executed or written.
+          - Inspect the reported plan.
+        observable_outcomes:
+          - The plan names each targeted row and the exact verifier command that would run.
+      - id: lifecycle.signals.verify_can_be_previewed.bad_unresolvable_verifier_is_blocked
+        kind: steps
+        steps:
+          - Dry-run a row whose verifier cannot be resolved.
+          - Read how that row is reported.
+        observable_outcomes:
+          - A row with no runnable verifier is reported as blocked rather than silently skipped.
+          - A plan that quietly omits a row would under-report the cost it was asked for.
+      - id: lifecycle.signals.verify_can_be_previewed.edge_nothing_is_executed_or_written
+        kind: steps
+        steps:
+          - Dry-run against bound rows, then check the results ledger and the process table.
+          - Confirm no verifier was spawned and no record was minted.
+        observable_outcomes:
+          - Nothing is executed, no results ledger is written, and no verification record is minted.
+          - A plan is never evidence.
     observable_outcomes:
       - The plan names each targeted row and the exact verifier command that would run.
       - A row with no runnable verifier is reported as blocked rather than silently skipped.
@@ -294,13 +381,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - packages/core/test/markers/verify.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - LifecycleVerifyPreviewTests
           inputs:
-            - packages/core/test/markers/verify.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/LifecycleVerifyPreviewTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -308,7 +396,6 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
-
   - id: lifecycle.signals.bind_names_the_next_step
     title: Binding a row says the row is not yet proven
     lifecycle: active
@@ -318,24 +405,33 @@ use_cases:
     tags:
       - bind
       - onboarding
+      - no-bad-path
     source_refs:
       - kind: file
         path: packages/core/src/markers/cli/bind.ts
       - kind: file
         path: tests/cli/actionable-output.test.ts
     actor: agent
-    intent: >-
-      Stop rows being bound and then abandoned, by ending a successful bind with
-      the command that actually proves the behaviour.
+    intent: Stop rows being bound and then abandoned, by ending a successful bind with the command that actually proves the behaviour.
     preconditions:
       - A row exists in the matrix and a marker can be placed in its code.
     trigger: An agent binds a behaviour to code.
     scenarios:
-      - id: lifecycle.signals.bind_names_the_next_step.after_bind
+      - id: lifecycle.signals.bind_names_the_next_step.golden_after_bind
         kind: steps
         steps:
           - Bind a row to its code.
-          - Read the command the tool hands back.
+          - Read the command the tool hands back, in both the human and JSON output.
+        observable_outcomes:
+          - A successful bind reports the verify command for that row, in both the human and JSON output.
+      - id: lifecycle.signals.bind_names_the_next_step.edge_bind_alone_is_not_proof
+        kind: steps
+        steps:
+          - Bind a row and then scan WITHOUT verifying it.
+          - Read the row's local status and signed status.
+        observable_outcomes:
+          - Binding alone never moves a row to a proven state.
+          - A freshly bound row reads UNVERIFIED_LOCAL, not verified.
     observable_outcomes:
       - A successful bind reports the verify command for that row, in both the human and JSON output.
       - Binding alone never moves a row to a proven state.
@@ -349,13 +445,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - tests/cli/actionable-output.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - LifecycleBindNextStepTests
           inputs:
-            - tests/cli/actionable-output.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/LifecycleVerifyPreviewTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -363,7 +460,6 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
-
   - id: lifecycle.signals.transient_output_stays_out_of_git
     title: The tool's own transient output never dirties the working tree
     lifecycle: active
@@ -373,24 +469,41 @@ use_cases:
     tags:
       - init
       - adoption
+      - no-bad-path
     source_refs:
       - kind: file
         path: packages/core/src/init/scaffold.ts
       - kind: file
         path: packages/core/test/init/scaffold-gitignore.test.ts
     actor: adopter
-    intent: >-
-      Keep showcase runs and the local verification ledger out of git, so the tool
-      does not break the adopter's own clean-working-tree gates.
+    intent: Keep showcase runs and the local verification ledger out of git, so the tool does not break the adopter's own clean-working-tree gates.
     preconditions:
       - A repository that does not yet use the tool.
-    trigger: An adopter runs `uc init`.
+    trigger: An adopter runs `use-cases init`.
     scenarios:
-      - id: lifecycle.signals.transient_output_stays_out_of_git.fresh
+      - id: lifecycle.signals.transient_output_stays_out_of_git.golden_fresh_repo
         kind: steps
         steps:
-          - Run init in a repo with no .gitignore, then in one that already has entries.
-          - Run init twice, to confirm it does not accumulate duplicates.
+          - Run init in a repo that has no .gitignore.
+          - Read the .gitignore it creates.
+        observable_outcomes:
+          - Transient showcase runs and the local verification ledger are gitignored after init.
+      - id: lifecycle.signals.transient_output_stays_out_of_git.edge_existing_gitignore_is_appended_to
+        kind: steps
+        steps:
+          - Run init in a repo whose .gitignore already has entries.
+          - Compare the file before and after.
+        observable_outcomes:
+          - An existing .gitignore is appended to, never rewritten or reordered.
+          - The adopter's own entries keep their order and their content.
+      - id: lifecycle.signals.transient_output_stays_out_of_git.edge_rerun_does_not_duplicate
+        kind: steps
+        steps:
+          - Run init twice in the same repo.
+          - Run init in a repo where the adopter already wrote one of the entries by hand.
+          - Count the occurrences of each entry.
+        observable_outcomes:
+          - Re-running init does not duplicate an entry, and an entry the adopter wrote themselves is left alone.
     observable_outcomes:
       - Transient showcase runs and the local verification ledger are gitignored after init.
       - An existing .gitignore is appended to, never rewritten or reordered.
@@ -405,13 +518,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - packages/core/test/init/scaffold-gitignore.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - LifecycleTransientOutputTests
           inputs:
-            - packages/core/test/init/scaffold-gitignore.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/LifecycleImpactAndGitTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -419,7 +533,6 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
-
   - id: lifecycle.signals.nested_workspace_is_not_scanned
     title: A nested workspace's markers are never read as the parent's
     lifecycle: active
@@ -436,36 +549,62 @@ use_cases:
       - kind: file
         path: packages/core/test/markers/skipBuildDirs.test.ts
     actor: agent
-    intent: >-
-      Scan a repository that contains a nested workspace — a shipped example, a
-      test fixture, a vendored sample app — without the nested workspace's own
-      `@use-case:` markers being charged against the parent's matrix and failing
-      the integrity gate.
+    intent: Scan a repository that contains a nested workspace — a shipped example, a test fixture, a vendored sample app — without the nested workspace's own `@use-case:` markers being charged against the parent's matrix and failing the integrity gate.
     preconditions:
       - A repository whose subtree contains a directory carrying its own use-cases.yml.
-    trigger: An agent or CI runs `uc scan` from the parent repository root.
+    trigger: An agent or CI runs `use-cases scan` from the parent repository root.
     scenarios:
-      - id: lifecycle.signals.nested_workspace_is_not_scanned.fixture
+      - id: lifecycle.signals.nested_workspace_is_not_scanned.golden_nested_fixture_is_skipped
         kind: steps
         steps:
           - Place a nested workspace config plus a marked source file under a test-fixture path.
           - Scan from the parent root and read which files were collected.
-      - id: lifecycle.signals.nested_workspace_is_not_scanned.any_name
+        observable_outcomes:
+          - A directory carrying its own use-cases.yml or use-cases.yaml is not walked by the parent's scan.
+      - id: lifecycle.signals.nested_workspace_is_not_scanned.bad_no_parent_diagnostics_for_nested_markers
+        kind: steps
+        steps:
+          - Give the nested workspace markers whose rows exist only in ITS matrix.
+          - Scan from the parent root and read the diagnostics.
+        observable_outcomes:
+          - The parent scan no longer emits UNREGISTERED_BINDING or ROW_NOT_FOUND for markers that belong to a nested workspace.
+          - A nested workspace can never fail the parent's integrity gate.
+      - id: lifecycle.signals.nested_workspace_is_not_scanned.edge_any_directory_name
         kind: steps
         steps:
           - Repeat with the nested workspace under a directory with no blessed name, such as vendor/demo-app.
           - Confirm it is skipped because of its config, not its name.
-      - id: lifecycle.signals.nested_workspace_is_not_scanned.root_config
+        observable_outcomes:
+          - The rule keys on the workspace config file, so a newly added nested workspace needs no hardcoded skip entry.
+      - id: lifecycle.signals.nested_workspace_is_not_scanned.edge_root_config_does_not_skip_the_repo
         kind: steps
         steps:
           - Scan a repository whose OWN product root carries a use-cases.yml.
           - Confirm the root's config does not skip the entire repository.
+        observable_outcomes:
+          - The check applies to child directories only; the product root's own config still scans the whole repository.
+      - id: lifecycle.signals.nested_workspace_is_not_scanned.edge_nested_workspace_still_scans_itself
+        kind: steps
+        steps:
+          - Run scan with --repo pointed at the nested workspace directory itself.
+          - Read whether its own markers are collected.
+        observable_outcomes:
+          - A nested workspace's own scan --repo <dir> is unaffected, because its config sits at its product root rather than below it.
+      - id: lifecycle.signals.nested_workspace_is_not_scanned.edge_build_and_worktree_copies_are_skipped
+        kind: steps
+        steps:
+          - Copy a marked source file into a build output directory and into a worktree copy of the repo.
+          - Scan from the parent root and read whether a duplicate binding slug is reported.
+        observable_outcomes:
+          - A marker copied into a build directory or a repo copy is not scanned, so a copy never collides with the original.
+          - No DUPLICATE_BINDING_SLUG is raised for a file the build produced.
     observable_outcomes:
       - A directory carrying its own use-cases.yml or use-cases.yaml is not walked by the parent's scan.
       - The rule keys on the workspace config file, so a newly added nested workspace needs no hardcoded skip entry.
       - The check applies to child directories only; the product root's own config still scans the whole repository.
       - The parent scan no longer emits UNREGISTERED_BINDING or ROW_NOT_FOUND for markers that belong to a nested workspace.
       - A nested workspace's own `scan --repo <dir>` is unaffected, because its config sits at its product root rather than below it.
+      - A marker copied into a build directory or a repo copy is not scanned, so a copy never collides with the original.
     host_applicability:
       - host_surface: codex.cli
         supported: true
@@ -476,13 +615,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - packages/core/test/markers/skipBuildDirs.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - LifecycleNestedWorkspaceTests
           inputs:
-            - packages/core/test/markers/skipBuildDirs.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/LifecycleNestedWorkspaceTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -490,7 +630,6 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
-
   - id: lifecycle.signals.variant_fanout
     title: One family verifier proves every declared input variant
     lifecycle: active
@@ -507,21 +646,54 @@ use_cases:
       - kind: file
         path: packages/core/test/markers/verifyVariants.test.ts
     actor: agent
-    intent: >-
-      Declare the input shapes of one behaviour (0/1/many, negative, boundary) as
-      variants of a single use-case, prove them all with one `uc verify` invocation,
-      and see exactly which shape fails without re-running anything.
+    intent: Declare the input shapes of one behaviour (0/1/many, negative, boundary) as variants of a single use-case, prove them all with one `use-cases verify` invocation, and see exactly which shape fails without re-running anything.
     preconditions:
       - A use-case declares a non-empty variants list and its family is bound.
       - The family's verifier command carries a {variant} token.
-    trigger: An agent runs `uc verify --row <family>` (or `--all`).
+    trigger: An agent runs `use-cases verify --row <family>` (or `--all`).
     scenarios:
-      - id: lifecycle.signals.variant_fanout.loop
+      - id: lifecycle.signals.variant_fanout.golden_loop
         kind: steps
         steps:
           - Bind the family once (the code slug IS the family).
           - Verify the family; one spawn per declared variant runs the shared verifier.
-          - Scan and read the family's per-variant local-status breakdown.
+          - Read the ledger records the run wrote.
+        observable_outcomes:
+          - Each variant gets its own ledger record (row_id family::key) with its own hashes.
+          - One spawn happens per declared variant, not one for the family.
+      - id: lifecycle.signals.variant_fanout.golden_family_verified_only_when_all_pass
+        kind: steps
+        steps:
+          - Verify a family whose every variant passes, and scan.
+          - Read the family's local status and its per-variant breakdown.
+        observable_outcomes:
+          - The family is VERIFIED_LOCAL only when EVERY variant currently passes.
+      - id: lifecycle.signals.variant_fanout.bad_failing_variant_is_named
+        kind: steps
+        steps:
+          - Make one variant fail while the others pass.
+          - Verify the family, then scan and read the family's local reason.
+        observable_outcomes:
+          - A failing variant is named in the family's local_reason and breakdown.
+          - The family does not read VERIFIED_LOCAL while any variant fails.
+          - The exit code reflects each variant's own verdict, so a partial failure is not reported as success.
+      - id: lifecycle.signals.variant_fanout.bad_missing_variant_token_is_a_spec_error
+        kind: steps
+        steps:
+          - Declare a family whose verifier command carries no {variant} token.
+          - Verify it and read what is reported.
+        observable_outcomes:
+          - A family command without {variant} is a surfaced spec error, never a false pass.
+          - Exactly ONE spec error is surfaced, not one per variant.
+          - Nothing is spawned for a family the tool cannot fan out.
+      - id: lifecycle.signals.variant_fanout.edge_dry_run_previews_each_variant
+        kind: steps
+        steps:
+          - Dry-run a variant family, then dry-run a family whose command lacks the token.
+          - Read the plan entries and confirm nothing was spawned.
+        observable_outcomes:
+          - Dry-run plans one entry per variant and spawns nothing.
+          - A token-less family previews as blocked rather than as a run.
     observable_outcomes:
       - Each variant gets its own ledger record (row_id family::key) with its own hashes.
       - The family is VERIFIED_LOCAL only when EVERY variant currently passes.
@@ -537,15 +709,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - packages/core/test/markers/verifyVariants.test.ts
-            - -t
-            - '{variant}'
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - "LifecycleVariantFanoutTests.*variant: {variant}"
           inputs:
-            - packages/core/test/markers/verifyVariants.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/LifecycleVariantFanoutTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -562,7 +733,6 @@ use_cases:
         title: A failing variant is named in the family breakdown
       - key: dry
         title: Dry-run previews the per-variant plan without spawning
-
   - id: lifecycle.signals.local_results_are_attested
     title: A verification result must prove a run wrote it
     lifecycle: active
@@ -581,27 +751,52 @@ use_cases:
       - kind: file
         path: packages/core/test/markers/verifyAttestsRuns.test.ts
     actor: agent
-    intent: >-
-      Stop the keyless tier rewarding the forgeable path. Matching hashes are
-      computable by anything that can read the repo, so they never separated a
-      run from a text edit; only the tool that spawned the verifier holds the
-      machine-local key that attests a record.
+    intent: Stop the keyless tier rewarding the forgeable path. Matching hashes are computable by anything that can read the repo, so they never separated a run from a text edit; only the tool that spawned the verifier holds the machine-local key that attests a record.
     preconditions:
       - A bound row exists and its verifier can be resolved.
-    trigger: An agent runs `uc verify`, then `uc scan` reads the results ledger.
+    trigger: An agent runs `use-cases verify`, then `use-cases scan` reads the results ledger.
     scenarios:
-      - id: lifecycle.signals.local_results_are_attested.real_run
+      - id: lifecycle.signals.local_results_are_attested.golden_real_run
         kind: steps
         steps:
-          - Run `uc verify` for a bound row so the verifier is actually spawned.
-          - Scan and read the row's local status.
-      - id: lifecycle.signals.local_results_are_attested.typed_line
+          - Run use-cases verify for a bound row so the verifier is actually spawned.
+          - Read the emitted record, then scan and read the row's local status.
+        observable_outcomes:
+          - A record use-cases verify wrote carries a run attestation and reads VERIFIED_LOCAL.
+          - Every record the tool emits carries an attestation, not only the passing ones.
+      - id: lifecycle.signals.local_results_are_attested.bad_typed_line
         kind: steps
         steps:
           - Hand-write a results line whose hashes all match the current code.
           - Scan and read the row's local status and the acceptance claim.
+        observable_outcomes:
+          - A hand-written record with byte-perfect hashes reads UNATTESTED_LOCAL and is never counted as proven.
+          - Matching hashes alone never move the claim, because anything that can read the repo can compute them.
+      - id: lifecycle.signals.local_results_are_attested.bad_edited_record
+        kind: steps
+        steps:
+          - Take a genuine attested record of a FAILED run and edit its status to pass.
+          - Scan and read whether the row is proven.
+        observable_outcomes:
+          - Editing any field of an attested record, including flipping a failure to a pass, invalidates its attestation.
+          - A laundered failure proves nothing.
+      - id: lifecycle.signals.local_results_are_attested.edge_ledger_from_another_machine
+        kind: steps
+        steps:
+          - Copy in a results ledger attested with a different machine's key.
+          - Scan and read the row's local status.
+        observable_outcomes:
+          - A results ledger written on another machine reads unattested here, because someone else's run is not your evidence.
+      - id: lifecycle.signals.local_results_are_attested.edge_scan_never_mints_a_key
+        kind: steps
+        steps:
+          - Remove the machine-local run key and run scan on a repo with no key present.
+          - Check whether a key file appeared.
+        observable_outcomes:
+          - "Scan never mints a key: a read-only command cannot attest anything."
+          - A read-only command leaves no new key on disk.
     observable_outcomes:
-      - A record `uc verify` wrote carries a run attestation and reads VERIFIED_LOCAL.
+      - A record `use-cases verify` wrote carries a run attestation and reads VERIFIED_LOCAL.
       - A hand-written record with byte-perfect hashes reads UNATTESTED_LOCAL and is never counted as proven.
       - Editing any field of an attested record — including flipping a failure to a pass — invalidates its attestation.
       - A results ledger written on another machine reads unattested here, because someone else's run is not your evidence.
@@ -616,13 +811,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - packages/core/test/markers/verifyAttestsRuns.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - LifecycleAttestationTests
           inputs:
-            - packages/core/test/markers/verifyAttestsRuns.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/LifecycleAttestationTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -630,7 +826,6 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
-
   - id: lifecycle.signals.performed_runs_count
     title: A run the tool drove counts, and a self-reported one does not
     lifecycle: active
@@ -649,25 +844,70 @@ use_cases:
       - kind: file
         path: packages/core/test/evidence/performedRuns.test.ts
     actor: agent
-    intent: >-
-      Let the acceptance claim read the ledger of behaviour actually driven,
-      without letting it read prose. Before this the claim ignored
-      `evidence/by-id/**` entirely, so genuinely driving a behaviour moved no
-      number while a typed line did.
+    intent: Let the acceptance claim read the ledger of behaviour actually driven, without letting it read prose. Before this the claim ignored `evidence/by-id/**` entirely, so genuinely driving a behaviour moved no number while a typed line did.
     preconditions:
       - A bound row exists in the matrix.
-    trigger: An agent runs `uc evidence record --perform -- <cmd>` and then `uc scan`.
+    trigger: An agent runs `use-cases evidence record --perform -- <cmd>` and then `use-cases scan`.
     scenarios:
-      - id: lifecycle.signals.performed_runs_count.driven
+      - id: lifecycle.signals.performed_runs_count.golden_driven
         kind: steps
         steps:
-          - Drive the behaviour with `uc evidence record --perform -- <cmd>`.
+          - Drive the behaviour with use-cases evidence record --perform -- <cmd>.
           - Scan and read the acceptance claim.
-      - id: lifecycle.signals.performed_runs_count.reported
+        observable_outcomes:
+          - A tool-executed passing run proves its row, and the claim counts it under performed_run.
+      - id: lifecycle.signals.performed_runs_count.bad_self_reported
         kind: steps
         steps:
-          - Record a self-reported observation with no `--perform`.
+          - Record a self-reported observation with no --perform.
           - Scan and read the acceptance claim.
+        observable_outcomes:
+          - A self-reported record proves nothing, whatever it says.
+          - Confidence in the summary text moves no number.
+      - id: lifecycle.signals.performed_runs_count.bad_observed_command_is_not_a_run
+        kind: steps
+        steps:
+          - Record a claim that names a full command line the tool merely watched, rather than executed.
+          - Scan and read whether it counts.
+        observable_outcomes:
+          - A record naming a command it merely observed is not a run the tool executed and does not count.
+          - A structured claim with no argv does not count either.
+      - id: lifecycle.signals.performed_runs_count.bad_failing_run_proves_nothing
+        kind: steps
+        steps:
+          - Drive a behaviour with --perform where the command exits nonzero.
+          - Scan and read whether the row is proven.
+        observable_outcomes:
+          - A failing run does not prove the behaviour holds.
+      - id: lifecycle.signals.performed_runs_count.bad_voided_record_does_not_count
+        kind: steps
+        steps:
+          - Drive a behaviour, then void the resulting evidence record.
+          - Scan and read whether it still counts.
+        observable_outcomes:
+          - A voided record does not count.
+      - id: lifecycle.signals.performed_runs_count.edge_row_edited_after_the_run
+        kind: steps
+        steps:
+          - Drive a behaviour, then edit the row it proved.
+          - Scan and read whether the run still counts.
+        observable_outcomes:
+          - Editing the row invalidates the run that proved the old one, so this tier decays like every other.
+          - A run recorded against a row that has since left the matrix does not count.
+      - id: lifecycle.signals.performed_runs_count.edge_unbound_row_cannot_be_driven_into_proof
+        kind: steps
+        steps:
+          - Drive a command and name an UNBOUND row as its target.
+          - Scan and read whether the row is proven.
+        observable_outcomes:
+          - An unbound row cannot be proven by driving something and naming it.
+      - id: lifecycle.signals.performed_runs_count.edge_same_row_driven_twice
+        kind: steps
+        steps:
+          - Drive the same row twice with --perform.
+          - Read how many performed runs the claim reports for it.
+        observable_outcomes:
+          - One row driven twice is reported once, so repetition never inflates the claim.
     observable_outcomes:
       - A tool-executed passing run proves its row, and the claim counts it under performed_run.
       - A self-reported record proves nothing, whatever it says.
@@ -675,6 +915,8 @@ use_cases:
       - A failing run does not prove the behaviour holds.
       - Editing the row invalidates the run that proved the old one, so this tier decays like every other.
       - An unbound row cannot be proven by driving something and naming it.
+      - A voided record does not count.
+      - One row driven twice is reported once, so repetition never inflates the claim.
     host_applicability:
       - host_surface: codex.cli
         supported: true
@@ -685,13 +927,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - packages/core/test/evidence/performedRuns.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - LifecyclePerformedRunsTests
           inputs:
-            - packages/core/test/evidence/performedRuns.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/LifecyclePerformedRunsTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -699,7 +942,6 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
-
   - id: lifecycle.signals.run_class_is_derived
     title: The ledger records what ran, not what the row called it
     lifecycle: active
@@ -718,24 +960,50 @@ use_cases:
       - kind: file
         path: packages/core/test/markers/runClass.test.ts
     actor: agent
-    intent: >-
-      Stop the ledger repeating a row's own claim about how strong its evidence
-      is. A named test runner is a unit suite by definition, and a row declaring
-      `live_demo` over one is overclaiming in a way the tool can prove.
+    intent: Stop the ledger repeating a row's own claim about how strong its evidence is. A named test runner is a unit suite by definition, and a row declaring `live_demo` over one is overclaiming in a way the tool can prove.
     preconditions:
       - A bound row declares a verifier.
-    trigger: An agent runs `uc verify` for a row whose verifier resolves.
+    trigger: An agent runs `use-cases verify` for a row whose verifier resolves.
     scenarios:
-      - id: lifecycle.signals.run_class_is_derived.suite
+      - id: lifecycle.signals.run_class_is_derived.golden_suite_preset
         kind: steps
         steps:
           - Verify a row whose verifier expands from a named test-runner preset.
           - Read the emitted record's run class.
-      - id: lifecycle.signals.run_class_is_derived.overclaim
+        observable_outcomes:
+          - A test-runner preset records run_class suite.
+          - Verify never mints a journey, because spawning a process is not a demonstration.
+      - id: lifecycle.signals.run_class_is_derived.golden_arbitrary_script_is_a_command
         kind: steps
         steps:
-          - "Declare `evidence_kind: live_demo` over a test-runner preset."
+          - Verify a row whose verifier is an arbitrary script rather than a known runner.
+          - Read the emitted record's run class.
+        observable_outcomes:
+          - Anything that is not a test-runner preset records run_class command, never suite.
+      - id: lifecycle.signals.run_class_is_derived.bad_overclaimed_live_demo
+        kind: steps
+        steps:
+          - Declare evidence_kind live_demo over a test-runner preset.
           - Verify the row and read what verify reports back.
+        observable_outcomes:
+          - A test-runner preset declaring live_demo is recorded as overclaimed and its row id is named back to the author.
+          - The overclaiming rows are named in the verify output, so the author sees which YAML to fix.
+      - id: lifecycle.signals.run_class_is_derived.edge_declared_evidence_kind_is_preserved
+        kind: steps
+        steps:
+          - Verify an overclaiming row and read the evidence_kind stored in the record.
+          - Compare it with what the row declared.
+        observable_outcomes:
+          - "The declared evidence_kind is preserved verbatim: the ledger corrects nobody's YAML."
+          - Overclaim is recorded as a flag beside the claim, not as a silent rewrite of it.
+      - id: lifecycle.signals.run_class_is_derived.edge_script_live_demo_is_left_alone
+        kind: steps
+        steps:
+          - Declare live_demo over a make target or an arbitrary script.
+          - Verify the row and read whether it is flagged.
+        observable_outcomes:
+          - A make target or an arbitrary script declaring live_demo is left alone, because the tool cannot prove that wrong.
+          - An honest row is never flagged.
     observable_outcomes:
       - A test-runner preset records run_class suite; anything else records command.
       - Verify never mints a journey, because spawning a process is not a demonstration.
@@ -752,13 +1020,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - packages/core/test/markers/runClass.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - LifecycleRunClassTests
           inputs:
-            - packages/core/test/markers/runClass.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/LifecycleRunClassTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:

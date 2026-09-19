@@ -1,0 +1,163 @@
+name: release
+
+# ADR 0007 decision 3: the Swift executables are distributed from GitHub
+# Releases. They are not committed to the repo and not built on install — this
+# workflow is the only thing that produces them, and bin/use-cases-bootstrap is
+# the only thing that consumes them. The two must agree on three things: the
+# asset name, the platform list and the tag. tests/plugin/release-workflow.test.ts
+# holds them to that, because nothing else would notice them drifting apart.
+#
+# It deliberately does NOT run on a push to a branch. ADR 0007 decision 9 says
+# no releases happen during the rewrite, so publishing takes either a v<semver>
+# tag or a deliberate workflow_dispatch — never a merge.
+#
+# Apple Silicon is the only published platform from 0.8.0 (owner decision,
+# 2026-09-17): the toolchain warns the other architecture is deprecated for the
+# deployment target, so its asset was retired rather than shipped stale. The
+# per-platform loop below stays a loop so adding a platform back is one list.
+#
+# ci.yml and use-cases.yml are untouched: this is a separate pipeline that adds
+# no step to the gates that already run on every push.
+
+on:
+  push:
+    # Tags only. No `branches:` key, by design — see above.
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish (default: the version in .claude-plugin/plugin.json)."
+        required: false
+      draft:
+        description: "Publish as a draft release (default true for a hand-dispatched run)."
+        required: false
+        default: "true"
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    # macOS only: ADR 0007 decision 6, and lipo/codesign are Apple tools.
+    runs-on: macos-15
+    permissions:
+      # Needed to create the release and attach its assets.
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      # ADR 0007 decision 6 pins the toolchain; print what the runner actually
+      # has so a release's provenance is readable from its log.
+      - name: toolchain
+        run: |
+          swift --version
+          xcodebuild -version
+
+      # The version comes from the tag when there is one, and from the plugin
+      # manifest when the run was dispatched by hand. Inputs are passed through
+      # env, never interpolated into the script body.
+      - name: resolve the version and tag
+        id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          version="${INPUT_VERSION:-}"
+          if [ -z "$version" ]; then
+            case "${GITHUB_REF:-}" in
+              refs/tags/v*) version="${GITHUB_REF_NAME#v}" ;;
+              *) version="$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' .claude-plugin/plugin.json | head -n 1)" ;;
+            esac
+          fi
+          if [ -z "$version" ]; then
+            echo "could not resolve a version to publish" >&2
+            exit 1
+          fi
+          echo "version=$version" >>"$GITHUB_OUTPUT"
+          echo "tag=v$version" >>"$GITHUB_OUTPUT"
+          echo "publishing version $version as tag v$version"
+
+      # One thin build per package, for the one published platform. There is
+      # nothing to slice, so nothing does: building universal and then slicing
+      # back down would be a round trip whose only contribution is a way to get
+      # it wrong. lipo is used below to CHECK the product, never to cut it.
+      - name: build both executables in release configuration
+        run: |
+          set -euo pipefail
+          for package in UseCasesCLI UseCasesMCP; do
+            swift build --package-path "$package" -c release --arch arm64
+          done
+
+      # One archive per published platform, each carrying both executables so a
+      # single download serves the CLI and the MCP server. `lipo -info` stays as
+      # the check that the product really is thin and really is this
+      # architecture — a universal product must not slip out under a
+      # per-platform asset name.
+      - name: archive for each published platform and write SHA256SUMS
+        id: assets
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          cli_bin="$(swift build --package-path UseCasesCLI -c release --arch arm64 --show-bin-path)"
+          mcp_bin="$(swift build --package-path UseCasesMCP -c release --arch arm64 --show-bin-path)"
+          out="$RUNNER_TEMP/release"
+          mkdir -p "$out"
+          for platform in macos-arm64; do
+            arch="${platform#macos-}"
+            stage="$RUNNER_TEMP/stage/$platform"
+            rm -rf "$stage"
+            mkdir -p "$stage"
+            cp "$cli_bin/use-cases" "$stage/use-cases"
+            cp "$mcp_bin/use-cases-mcp" "$stage/use-cases-mcp"
+            chmod +x "$stage/use-cases" "$stage/use-cases-mcp"
+            for binary in "$stage/use-cases" "$stage/use-cases-mcp"; do
+              lipo -info "$binary"
+              lipo -info "$binary" | grep -q "Non-fat file.*architecture: $arch"
+            done
+            tar -czf "$out/use-cases-${VERSION}-${platform}.tar.gz" -C "$stage" use-cases use-cases-mcp
+          done
+          cd "$out"
+          shasum -a 256 use-cases-*.tar.gz >SHA256SUMS
+          cat SHA256SUMS
+          echo "dir=$out" >>"$GITHUB_OUTPUT"
+
+      - name: archives are readable and complete
+        env:
+          ASSET_DIR: ${{ steps.assets.outputs.dir }}
+        run: |
+          set -euo pipefail
+          cd "$ASSET_DIR"
+          for archive in use-cases-*.tar.gz; do
+            tar -tzf "$archive" | sort | tr '\n' ' '
+            echo "<- $archive"
+          done
+          shasum -a 256 -c SHA256SUMS
+
+      # gh, first-party and already on the runner, with the workflow's own
+      # token — the same pattern as the use-cases workflow's ledger push.
+      - name: attach the archives and the checksums to the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.version.outputs.tag }}
+          ASSET_DIR: ${{ steps.assets.outputs.dir }}
+          DRAFT: ${{ inputs.draft }}
+        run: |
+          set -euo pipefail
+          assets=("$ASSET_DIR"/use-cases-*.tar.gz "$ASSET_DIR/SHA256SUMS")
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "${assets[@]}" --clobber
+          else
+            draft_args=()
+            # A hand-dispatched run defaults to a draft so nothing is published
+            # by accident while decision 9 stands.
+            if [ "${DRAFT:-}" = "true" ]; then draft_args=(--draft); fi
+            gh release create "$TAG" "${assets[@]}" \
+              --title "$TAG" \
+              --generate-notes \
+              "${draft_args[@]}"
+          fi
+          gh release view "$TAG" --json assets --jq '.assets[].name'

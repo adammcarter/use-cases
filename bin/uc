@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-# `uc` for a session: runs the committed bundle. The session-start hook puts this
-# directory on PATH, so skills and agents call `uc …` with nothing installed.
-#: @use-case:plugin.install.uc_on_path_in_session#bin
-here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-exec node "$here/../dist/uc.js" "$@"
-#: @use-case:end plugin.install.uc_on_path_in_session#bin

@@ -2,9 +2,7 @@ schema_version: 1
 feature:
   id: lifecycle.bindings
   name: Ending and re-pointing a binding
-  summary: >-
-    A binding can be moved to the right declaration or released outright, so a
-    marker on the wrong code and a row leaving the matrix are both recoverable.
+  summary: A binding can be moved to the right declaration or released outright, so a marker on the wrong code and a row leaving the matrix are both recoverable.
 use_cases:
   - id: lifecycle.bindings.rebind_repoints_a_binding
     title: A binding on the wrong declaration can be moved to the right one
@@ -22,27 +20,59 @@ use_cases:
       - kind: file
         path: packages/core/test/markers/rebind.test.ts
     actor: agent
-    intent: >-
-      Make a wrongly-placed binding correctable. A marker on a declaration that
-      cannot fail when the claim does reads as proven from every angle the tool
-      reports on, so finding one and being unable to move it is the worst state a
-      matrix can hold.
+    intent: Make a wrongly-placed binding correctable. A marker on a declaration that cannot fail when the claim does reads as proven from every angle the tool reports on, so finding one and being unable to move it is the worst state a matrix can hold.
     preconditions:
       - A row is bound to a code span.
       - A better declaration for that row exists, in this file or another.
     trigger: A review finds a binding pointing at the wrong declaration.
     scenarios:
-      - id: lifecycle.bindings.rebind_repoints_a_binding.same_file
+      - id: lifecycle.bindings.rebind_repoints_a_binding.golden_same_file
         kind: steps
         steps:
           - Bind a row to a declaration that cannot fail when its claim does.
-          - Run `uc rebind` naming the declaration that actually implements the behaviour.
-          - Scan the workspace.
-      - id: lifecycle.bindings.rebind_repoints_a_binding.across_files
+          - Run use-cases rebind naming the declaration that actually implements the behaviour.
+          - Scan the workspace and read the registry events.
+        observable_outcomes:
+          - The marker moves and the registration moves with it, appended as a release followed by a re-registration.
+          - The ledger is only ever appended to; no existing line is rewritten.
+      - id: lifecycle.bindings.rebind_repoints_a_binding.golden_across_files
         kind: steps
         steps:
-          - Run `uc rebind` naming a file other than the one holding the marker.
+          - Run use-cases rebind naming a file other than the one holding the marker.
           - Confirm the old file has no marker left and the new one has exactly one.
+        observable_outcomes:
+          - A binding moves between files in one step, leaving no marker behind in the old one.
+      - id: lifecycle.bindings.rebind_repoints_a_binding.bad_unresolvable_target
+        kind: steps
+        steps:
+          - Run use-cases rebind naming a target that cannot resolve to a span.
+          - Read the source file and the registry afterwards.
+        observable_outcomes:
+          - A target that cannot resolve to a span leaves both the source and the ledger untouched.
+          - A rebind that cannot succeed changes nothing rather than half-moving a binding.
+      - id: lifecycle.bindings.rebind_repoints_a_binding.bad_unbound_row_is_refused
+        kind: steps
+        steps:
+          - Run use-cases rebind for a row that was never bound.
+          - Read the refusal and the command it names.
+        observable_outcomes:
+          - Rebinding a row that has no binding is refused and points at bind instead.
+          - The refusal names the command that would actually work.
+      - id: lifecycle.bindings.rebind_repoints_a_binding.edge_verified_local_does_not_survive_the_move
+        kind: steps
+        steps:
+          - Verify a bound row to VERIFIED_LOCAL, then rebind it.
+          - Scan, re-verify, and scan again.
+        observable_outcomes:
+          - The row reads STALE_LOCAL after the move and returns to VERIFIED_LOCAL only after re-verifying.
+          - A moved binding never inherits the proof of the one it replaced.
+      - id: lifecycle.bindings.rebind_repoints_a_binding.edge_suffixed_binding_moves_alone
+        kind: steps
+        steps:
+          - Bind one row twice with different suffixes, then rebind only one of them.
+          - Read where each marker sits afterwards.
+        observable_outcomes:
+          - A row with two suffixed bindings moves only the one named, leaving the other where it was.
     observable_outcomes:
       - The marker moves and the registration moves with it, appended as a release followed by a re-registration.
       - The ledger is only ever appended to; no existing line is rewritten.
@@ -60,13 +90,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - packages/core/test/markers/rebind.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - LifecycleRebindTests
           inputs:
-            - packages/core/test/markers/rebind.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/LifecycleBindingsTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -74,7 +105,6 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
-
   - id: lifecycle.bindings.unbind_releases_a_registration
     title: A binding can be released, freeing its slug and its row
     lifecycle: active
@@ -90,25 +120,56 @@ use_cases:
       - kind: file
         path: packages/core/test/markers/rebind.test.ts
     actor: agent
-    intent: >-
-      Give a binding an exit. Removing a marker by hand never released its
-      registration, so a retired behaviour stayed registered forever and its slug
-      could never be bound again.
+    intent: Give a binding an exit. Removing a marker by hand never released its registration, so a retired behaviour stayed registered forever and its slug could never be bound again.
     preconditions:
       - A slug is registered in the binding registry.
     trigger: A behaviour is retired, or its binding has to be released before rebinding.
     scenarios:
-      - id: lifecycle.bindings.unbind_releases_a_registration.clean
+      - id: lifecycle.bindings.unbind_releases_a_registration.golden_clean
         kind: steps
         steps:
           - Bind a row to code.
-          - Run `uc unbind` for that row.
+          - Run use-cases unbind for that row.
           - Bind the same row again to a different declaration.
-      - id: lifecycle.bindings.unbind_releases_a_registration.already_stripped
+        observable_outcomes:
+          - The marker is removed from the source and the registration is released.
+          - The same slug can be bound again afterwards, with no DUPLICATE_REGISTRATION.
+      - id: lifecycle.bindings.unbind_releases_a_registration.bad_unregistered_slug_is_refused
+        kind: steps
+        steps:
+          - Run use-cases unbind for a slug that is not registered.
+          - Read the refusal, then read the registry.
+        observable_outcomes:
+          - Releasing a slug that is not registered is refused, and writes nothing.
+      - id: lifecycle.bindings.unbind_releases_a_registration.edge_already_stripped_by_hand
         kind: steps
         steps:
           - Remove the markers from the source by hand.
-          - Run `uc unbind` for that row.
+          - Run use-cases unbind for that row.
+        observable_outcomes:
+          - A registration whose markers were already removed by hand is still releasable.
+          - Hand-editing the source never strands a registration with no supported way out.
+      - id: lifecycle.bindings.unbind_releases_a_registration.edge_dry_run_touches_nothing
+        kind: steps
+        steps:
+          - Run use-cases unbind with --dry-run.
+          - Read the reported release, then check the source and the registry.
+        observable_outcomes:
+          - A dry-run reports the release it would make without touching source or registry.
+      - id: lifecycle.bindings.unbind_releases_a_registration.edge_leaves_nothing_claiming_verified
+        kind: steps
+        steps:
+          - Verify a bound row, then unbind it.
+          - Scan and read whether anything still reports the row as proven.
+        observable_outcomes:
+          - Unbinding leaves nothing behind claiming the row is verified.
+      - id: lifecycle.bindings.unbind_releases_a_registration.edge_one_suffixed_binding_of_two
+        kind: steps
+        steps:
+          - Bind one row twice with different suffixes, then release only one.
+          - Read which registrations survive.
+        observable_outcomes:
+          - Releasing one suffixed binding leaves the other registered.
     observable_outcomes:
       - The marker is removed from the source and the registration is released.
       - The same slug can be bound again afterwards, with no DUPLICATE_REGISTRATION.
@@ -126,13 +187,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - packages/core/test/markers/rebind.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - LifecycleUnbindTests
           inputs:
-            - packages/core/test/markers/rebind.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/LifecycleBindingsTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -140,7 +202,6 @@ use_cases:
           minimum_count: 1
     approval_policy:
       mode: none
-
   - id: lifecycle.bindings.retired_row_can_leave_the_matrix
     title: A retired row can leave the matrix without stranding the workspace
     lifecycle: active
@@ -156,29 +217,39 @@ use_cases:
       - kind: file
         path: packages/core/test/markers/bindingRegistry.test.ts
     actor: agent
-    intent: >-
-      Stop a deleted or renamed row from failing the whole workspace forever. Its
-      registration used to be judged line by line, so a row that left the matrix
-      left REGISTRY_ROW_MISSING behind with no supported way back.
+    intent: Stop a deleted or renamed row from failing the whole workspace forever. Its registration used to be judged line by line, so a row that left the matrix left REGISTRY_ROW_MISSING behind with no supported way back.
     preconditions:
       - A row is bound and registered.
     trigger: The behaviour is retired or the row id is renamed.
     scenarios:
-      - id: lifecycle.bindings.retired_row_can_leave_the_matrix.retire
+      - id: lifecycle.bindings.retired_row_can_leave_the_matrix.golden_retire
         kind: steps
         steps:
-          - Release the binding with `uc unbind`.
+          - Release the binding with use-cases unbind.
           - Delete the row from the matrix.
           - Scan the workspace.
-      - id: lifecycle.bindings.retired_row_can_leave_the_matrix.still_bound
+        observable_outcomes:
+          - A released binding whose row has left the matrix scans clean.
+          - A retired behaviour leaves no permanent integrity error behind it.
+      - id: lifecycle.bindings.retired_row_can_leave_the_matrix.bad_still_bound_row_missing
         kind: steps
         steps:
           - Delete a row from the matrix while its binding is still registered.
-          - Scan the workspace.
+          - Scan the workspace and read the diagnostic and its remediation.
+        observable_outcomes:
+          - A row still bound but missing from the matrix is still reported as REGISTRY_ROW_MISSING.
+          - The remediation names use-cases unbind rather than editing the ledger by hand.
+      - id: lifecycle.bindings.retired_row_can_leave_the_matrix.edge_released_slug_with_no_marker
+        kind: steps
+        steps:
+          - Release a binding and remove its marker, leaving the row in place.
+          - Scan and read whether the slug is reported missing.
+        observable_outcomes:
+          - A released slug with no marker left is not reported as missing, because a release is not an absence.
     observable_outcomes:
       - A released binding whose row has left the matrix scans clean.
       - A row still bound but missing from the matrix is still reported as REGISTRY_ROW_MISSING.
-      - The remediation names `uc unbind` rather than editing the ledger by hand.
+      - The remediation names `use-cases unbind` rather than editing the ledger by hand.
     host_applicability:
       - host_surface: codex.cli
         supported: true
@@ -191,15 +262,14 @@ use_cases:
           kind: script
           evidence_kind: test_result
           command:
-            - pnpm
-            - -s
-            - vitest
-            - run
-            - packages/core/test/markers/bindingRegistry.test.ts
-            - tests/cli/actionable-output.test.ts
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - LifecycleRetiredRowTests
           inputs:
-            - packages/core/test/markers/bindingRegistry.test.ts
-            - tests/cli/actionable-output.test.ts
+            - UseCasesOracle/Tests/OracleTests/Cli/LifecycleBindingsTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:

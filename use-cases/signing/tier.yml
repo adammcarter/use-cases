@@ -1,0 +1,475 @@
+schema_version: 1
+feature:
+  id: signing.tier
+  name: The opt-in signed proof tier
+  summary: The keyless loop is the daily path; signing is the upgrade taken only when a release or an audit needs a cryptographic gate. These rows cover the five commands that tier is made of — keygen, prove, validate-ledger, recover and approve-run — none of which the agent runs on the owner's behalf. They had no rows at all until now, which made the most trust-sensitive surface in the tool the least described.
+use_cases:
+  - id: signing.tier.keygen_keeps_the_private_key_out_of_the_tree
+    title: keygen mints a keypair and refuses to put the private half in the repo
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: rare
+    tags:
+      - signing
+      - keys
+      - custody
+    source_refs:
+      - kind: file
+        path: tests/cli/keygen.test.ts
+      - kind: file
+        path: packages/core/test/markers/keygen.test.ts
+    actor: user
+    intent: Give the owner an ed25519 keypair for the signed tier while making it hard to commit the private half by accident, because a signing key in the tree is the one mistake this tier cannot survive.
+    preconditions:
+      - The owner has decided they need the signed tier.
+    trigger: The owner runs `use-cases keygen`.
+    scenarios:
+      - id: signing.tier.keygen_keeps_the_private_key_out_of_the_tree.golden_inline
+        kind: steps
+        steps:
+          - Run keygen with --json and no --out.
+          - Read the printed keypair and the warning beside it.
+        observable_outcomes:
+          - An ed25519 keypair is printed inline with a CI-only warning.
+          - The private key is PKCS8 and the public key SPKI, both of which node:crypto accepts.
+      - id: signing.tier.keygen_keeps_the_private_key_out_of_the_tree.golden_out_writes_to_disk
+        kind: steps
+        steps:
+          - Run keygen with --out pointing outside the repository.
+          - Read the returned file paths.
+        observable_outcomes:
+          - The keypair is written to disk and the file paths are returned.
+      - id: signing.tier.keygen_keeps_the_private_key_out_of_the_tree.bad_out_inside_the_repo
+        kind: steps
+        steps:
+          - Run keygen with --out pointing inside --repo.
+          - Read the refusal.
+        observable_outcomes:
+          - Writing inside the repository is refused, so the private key cannot land in the tree.
+      - id: signing.tier.keygen_keeps_the_private_key_out_of_the_tree.edge_ci_snippet
+        kind: steps
+        steps:
+          - Run keygen with --ci github.
+          - Read the emitted snippet.
+        observable_outcomes:
+          - A release-workflow snippet is emitted that uses id-token OIDC and carries no token.
+      - id: signing.tier.keygen_keeps_the_private_key_out_of_the_tree.edge_each_call_is_fresh
+        kind: steps
+        steps:
+          - Run keygen twice and compare the two keypairs.
+          - Sign and verify a round trip with one of them.
+        observable_outcomes:
+          - Each call yields a fresh, distinct keypair.
+          - A sign and verify round trip through the proof signature path passes.
+    observable_outcomes:
+      - An ed25519 keypair is produced, inline or to a directory outside the repository.
+      - Writing the private key inside the repo is refused, so it cannot be committed by accident.
+      - Each call yields a fresh keypair that signs and verifies through the proof path.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - swift
+            - test
+            - --package-path
+            - UseCasesCore
+            - --filter
+            - SigningKeyGenerationTests
+          inputs:
+            - UseCasesCore/Tests/UseCasesCoreTests/Markers/SigningKeyGenerationTests.swift
+            - UseCasesCore/Sources/UseCasesCore/Markers/SigningKeyGeneration.swift
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none
+  - id: signing.tier.prove_never_signs_what_it_cannot_recompute
+    title: prove mints a signed proof only from a verification result it can re-derive
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: rare
+    tags:
+      - signing
+      - prove
+      - trust-boundary
+    source_refs:
+      - kind: file
+        path: packages/core/src/markers/cli/prove.ts
+      - kind: file
+        path: packages/core/test/markers/proveConsumes.test.ts
+      - kind: file
+        path: packages/core/test/markers/proveAuthority.test.ts
+    actor: script
+    intent: Mint FRESH proofs in trusted CI from results a real verifier produced, and refuse every path that would let a signature stand for something the tool cannot currently recompute.
+    preconditions:
+      - A results file written by `verify --out` exists.
+      - A signing key is available through a CI secret.
+    trigger: Trusted CI runs `use-cases prove --verification-results <path>`.
+    scenarios:
+      - id: signing.tier.prove_never_signs_what_it_cannot_recompute.golden_signs_bound_passing_rows
+        kind: steps
+        steps:
+          - Run prove over a results file covering several bound rows.
+          - Read which rows were signed and in what order.
+        observable_outcomes:
+          - Every bound passing row is signed, in sorted order, and UNBOUND rows are skipped.
+          - A signed proof embeds the SAME verification_context_hash the result carries.
+      - id: signing.tier.prove_never_signs_what_it_cannot_recompute.bad_no_matching_result
+        kind: steps
+        steps:
+          - Target a row that has no matching result in the results file.
+          - Read the exit code and which proofs were still appended.
+        observable_outcomes:
+          - A targeted row with no matching result fails with a nonzero exit, while passing rows are still appended.
+      - id: signing.tier.prove_never_signs_what_it_cannot_recompute.bad_blocked_result
+        kind: steps
+        steps:
+          - Supply a blocked result for a bound row.
+          - Read whether a proof is minted.
+        observable_outcomes:
+          - A blocked result mints no proof and fails, because blocked is not passed.
+      - id: signing.tier.prove_never_signs_what_it_cannot_recompute.bad_hashes_no_longer_match
+        kind: steps
+        steps:
+          - Change the code after the result was written, then run prove.
+          - Read what happens.
+        observable_outcomes:
+          - Prove recomputes the hashes and refuses a result whose hashes do not match the current code.
+          - A signature can never outlive the state it was taken over.
+      - id: signing.tier.prove_never_signs_what_it_cannot_recompute.bad_unsafe_seam_without_the_env_var
+        kind: steps
+        steps:
+          - Run prove with --unsafe-assume-verification-result and no UCM_ALLOW_UNSAFE_VERIFICATION.
+          - Read the result, then repeat with the variable set.
+        observable_outcomes:
+          - The unsafe seam is rejected without the environment variable, minting no proof and exiting nonzero.
+          - It is honoured only when the variable is explicitly set, so the dangerous path cannot be taken by accident.
+      - id: signing.tier.prove_never_signs_what_it_cannot_recompute.bad_tampered_authority
+        kind: steps
+        steps:
+          - Alter the embedded authority block after signing.
+          - Verify the event.
+        observable_outcomes:
+          - Tampering with the embedded authority breaks the signature.
+      - id: signing.tier.prove_never_signs_what_it_cannot_recompute.edge_already_fresh_is_skipped
+        kind: steps
+        steps:
+          - Run prove twice over the same results without --refresh, then once with it.
+          - Compare what is minted each time.
+        observable_outcomes:
+          - An already-FRESH row is skipped unless --refresh is given.
+      - id: signing.tier.prove_never_signs_what_it_cannot_recompute.edge_authority_is_verbatim
+        kind: steps
+        steps:
+          - Supply an explicit authority record and mint a proof.
+          - Read the embedded block and re-validate freshness.
+        observable_outcomes:
+          - A supplied authority is embedded verbatim and the signed event still verifies.
+          - A freshly-proved event carries a schema-valid authority block, and provenance does not affect freshness.
+    observable_outcomes:
+      - Every bound passing row is signed, and its proof embeds the same verification context hash the result carried.
+      - A result whose hashes no longer match the current code is refused, so a signature cannot outlive the state it was taken over.
+      - The unsafe assume-verification seam is rejected unless its environment variable is explicitly set.
+      - Tampering with an embedded authority block breaks the signature.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - swift
+            - test
+            - --package-path
+            - UseCasesCore
+            - --filter
+            - VerifyProveTests
+          inputs:
+            - UseCasesCore/Tests/UseCasesCoreTests/Markers/Commands/VerifyProveTests.swift
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none
+  - id: signing.tier.validate_ledger_holds_the_append_only_line
+    title: validate-ledger proves the ledger was only ever appended to
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    tags:
+      - signing
+      - ledger
+      - integrity
+    source_refs:
+      - kind: file
+        path: packages/core/test/markers/ledgerChainValidate.test.ts
+      - kind: file
+        path: scripts/use-cases-precommit.sh
+    actor: script
+    intent: Give the pre-commit hook and CI one command that says whether the proof ledger is intact — append-only against a base ref, hash-chained, schema valid, and signed by a key the caller trusts.
+    preconditions:
+      - A proof ledger exists.
+    trigger: The pre-commit hook or CI runs `use-cases validate-ledger`.
+    scenarios:
+      - id: signing.tier.validate_ledger_holds_the_append_only_line.golden_clean_ledger
+        kind: steps
+        steps:
+          - Run validate-ledger against an intact ledger with the trusted public key.
+          - Read the reported integrity.
+        observable_outcomes:
+          - "An intact ledger validates: append-only, chained, schema valid and correctly signed."
+      - id: signing.tier.validate_ledger_holds_the_append_only_line.bad_edited_line
+        kind: steps
+        steps:
+          - Edit an existing line rather than appending, then validate against the base ref.
+          - Read the diagnostic.
+        observable_outcomes:
+          - Editing an existing line is a violation, named as such rather than tolerated.
+      - id: signing.tier.validate_ledger_holds_the_append_only_line.bad_broken_chain
+        kind: steps
+        steps:
+          - Break the hash chain by removing or reordering a record.
+          - Validate and read the diagnostic.
+        observable_outcomes:
+          - A broken chain, a duplicate index or an index gap each fail with a diagnostic naming the record.
+      - id: signing.tier.validate_ledger_holds_the_append_only_line.edge_no_public_key
+        kind: steps
+        steps:
+          - Validate a ledger carrying proofs with no --public-key or --keyring.
+          - Read how the proofs are reported.
+        observable_outcomes:
+          - Without a trusted key the proofs read UNPROVEN rather than being accepted unverified.
+    observable_outcomes:
+      - An intact ledger validates as append-only, hash-chained, schema valid and correctly signed.
+      - An edited line, a broken chain, a duplicate index or an index gap each fail with a diagnostic naming the record.
+      - Without a trusted public key, proofs read UNPROVEN rather than being accepted unverified.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - swift
+            - test
+            - --package-path
+            - UseCasesCore
+            - --filter
+            - EvidenceLedgerTests
+            - --filter
+            - LedgerChainRulesTests
+          inputs:
+            - UseCasesCore/Tests/UseCasesCoreTests/Markers/EvidenceLedgerTests.swift
+            - UseCasesCore/Tests/UseCasesCoreTests/Markers/Commands/LedgerChainRulesTests.swift
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none
+  - id: signing.tier.recover_never_fakes_green
+    title: recover drives a drifted row back to green, or fails honestly
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    tags:
+      - recover
+      - signing
+      - trust
+    source_refs:
+      - kind: file
+        path: tests/cli/recover.test.ts
+      - kind: file
+        path: packages/cli/test/commands/recoverVariants.test.ts
+    actor: agent
+    intent: Give one command that takes a STALE_LOCAL or UNPROVEN row back to green without hand-assembling the fix, and that exits nonzero rather than reporting a green it did not achieve.
+    preconditions:
+      - A bound row has drifted or was never verified.
+    trigger: An agent runs `use-cases recover --row <id>`.
+    scenarios:
+      - id: signing.tier.recover_never_fakes_green.golden_stale_to_verified_local
+        kind: steps
+        steps:
+          - Take a row to STALE_LOCAL, then run recover --row with no key.
+          - Read the row's local status and the exit code.
+        observable_outcomes:
+          - The row returns to VERIFIED_LOCAL and the command exits 0, with no key and no CI.
+      - id: signing.tier.recover_never_fakes_green.golden_signing_key_env_reaches_fresh
+        kind: steps
+        steps:
+          - Run recover with --signing-key-env and --public-key.
+          - Read the row's signed status.
+        observable_outcomes:
+          - Recover re-proves the row to FRESH as well as re-verifying it.
+      - id: signing.tier.recover_never_fakes_green.bad_signing_key_without_public_key
+        kind: steps
+        steps:
+          - Run recover with --signing-key-env but no --public-key.
+          - Read what is reported.
+        observable_outcomes:
+          - Without a public key to verify against, recover does not report a green it cannot check.
+      - id: signing.tier.recover_never_fakes_green.bad_failing_verifier
+        kind: steps
+        steps:
+          - Run recover on a row whose verifier genuinely fails.
+          - Read the exit code and the diagnostic.
+        observable_outcomes:
+          - A genuinely failing verifier exits nonzero with a diagnostic naming the row, and never fakes green.
+      - id: signing.tier.recover_never_fakes_green.edge_variant_family
+        kind: steps
+        steps:
+          - Recover a mixed matrix containing a variant family.
+          - Read how the family target resolves.
+        observable_outcomes:
+          - A family target resolves at family level rather than needing each variant named.
+    observable_outcomes:
+      - A drifted row returns to VERIFIED_LOCAL in one command, with no key and no CI.
+      - With a signing key and a public key, recover also re-proves the row to FRESH.
+      - A genuinely failing verifier exits nonzero with a diagnostic and never reports a green it did not achieve.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - swift
+            - test
+            - --package-path
+            - UseCasesCLI
+            - --filter
+            - MarkerCommandsGoldenCorpusTests
+          inputs:
+            - UseCasesCLI/Tests/UseCasesCLITests/Entry/MarkerCommandsGoldenCorpusTests.swift
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none
+  - id: signing.tier.approve_run_keeps_the_key_out_of_agent_scope
+    title: approve-run signs an approval out-of-band, or fails closed
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: rare
+    tags:
+      - approval
+      - signing
+      - custody
+      - trust-boundary
+    source_refs:
+      - kind: file
+        path: packages/cli/src/commands/approveRun.ts
+      - kind: file
+        path: packages/cli/test/commands/approveRun.test.ts
+    actor: user
+    intent: Let a person sign a plugin-minted approval request in their own shell with a key the agent cannot reach, so the one thing an agent must never be able to manufacture stays manufactured by a human.
+    preconditions:
+      - The plugin has minted an ApprovalRequest JSON file.
+      - The owner holds an ed25519 key outside the agent's scope, or a platform authenticator.
+    trigger: The owner runs `use-cases approve-run --request <file>` in their own shell.
+    scenarios:
+      - id: signing.tier.approve_run_keeps_the_key_out_of_agent_scope.golden_key_file
+        kind: steps
+        steps:
+          - Run approve-run with a 0600 user-owned key file outside the agent's scope.
+          - Verify the minted token against the keyring the plugin checks.
+        observable_outcomes:
+          - The token signs and the plugin verifies it against the keyring.
+      - id: signing.tier.approve_run_keeps_the_key_out_of_agent_scope.golden_key_env
+        kind: steps
+        steps:
+          - Run approve-run with the key supplied through --key-env instead of a file.
+          - Verify the token.
+        observable_outcomes:
+          - A key from an environment variable signs a verifiable token, for a shell that keeps no key file.
+      - id: signing.tier.approve_run_keeps_the_key_out_of_agent_scope.golden_webauthn
+        kind: steps
+        steps:
+          - Run approve-run with a WebAuthn assertion from the operator's platform authenticator.
+          - Verify the resulting token.
+        observable_outcomes:
+          - A WebAuthn assertion builds a verifiable token with no private key held anywhere.
+      - id: signing.tier.approve_run_keeps_the_key_out_of_agent_scope.bad_no_key_at_all
+        kind: steps
+        steps:
+          - Run approve-run with neither --key-file nor --key-env nor an assertion.
+          - Read the result.
+        observable_outcomes:
+          - With no key it fails closed and mints no token.
+      - id: signing.tier.approve_run_keeps_the_key_out_of_agent_scope.bad_unreadable_key_file
+        kind: steps
+        steps:
+          - Point --key-file at a file that cannot be read.
+          - Read the result.
+        observable_outcomes:
+          - An unreadable key file fails closed rather than falling back to any weaker path.
+      - id: signing.tier.approve_run_keeps_the_key_out_of_agent_scope.bad_malformed_request
+        kind: steps
+        steps:
+          - Run approve-run against a missing or malformed request file.
+          - Read the error.
+        observable_outcomes:
+          - A missing or malformed request fails cleanly, naming what was wrong.
+      - id: signing.tier.approve_run_keeps_the_key_out_of_agent_scope.edge_out_writes_the_token
+        kind: steps
+        steps:
+          - Run approve-run with --out.
+          - Read the file.
+        observable_outcomes:
+          - The token is written to the named file instead of printed inline.
+    observable_outcomes:
+      - A person signs an approval in their own shell with a key or authenticator the agent cannot reach.
+      - With no key, an unreadable key, or a malformed request, it fails closed and mints no token.
+      - The minted token verifies against the keyring the plugin checks.
+    host_applicability:
+      - host_surface: codex.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - swift
+            - test
+            - --package-path
+            - UseCasesCLI
+            - --filter
+            - ShowcaseCommandsGoldenCorpusTests
+          inputs:
+            - UseCasesCLI/Tests/UseCasesCLITests/Entry/ShowcaseCommandsGoldenCorpusTests.swift
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none

@@ -1,10 +1,41 @@
 #!/usr/bin/env bash
 # use-cases: say which bound rows this push touches and where they stand.
-# Advisory only — pushing red is legitimate; LAND gates with `uc scan --gate`.
+# Advisory only — pushing red is legitimate; LAND gates with `use-cases scan --gate`.
+set -u
 root="$(git rev-parse --show-toplevel)"
-uc="node $root/dist/uc.js"
+
+# use-cases: which binary drives the checks below.
+#
+# The committed Node bundle these hooks used to run went with
+# ADR 0007 row 10d, so this repository drives its own product: the Swift CLI it
+# builds. Resolution order, most explicit first:
+#
+#   $USE_CASES                      an override, the same name the scaffolded
+#                                   hook uses
+#   UseCasesCLI/.build/…/use-cases  this checkout's own debug build
+#   command -v use-cases            an installed plugin on PATH
+#
+# Nothing found is a WARNING and exit 0, not a block: a fresh clone has not
+# built anything yet, and `.github/workflows/swift.yml` is the gate that cannot
+# be skipped.
+resolve_use_cases() {
+    if [ -n "${USE_CASES:-}" ]; then
+        printf '%s' "$USE_CASES"
+        return 0
+    fi
+    local built="$root/UseCasesCLI/.build/out/Products/Debug/use-cases"
+    if [ -x "$built" ]; then
+        printf '%s' "$built"
+        return 0
+    fi
+    command -v use-cases 2>/dev/null || true
+}
+
 if [ -f "$root/use-cases.yml" ]; then
-    $uc impact --repo "$root" 2>/dev/null || true
-    $uc scan --repo "$root" 2>/dev/null | tail -n 20 || true
+    uc="$(resolve_use_cases)"
+    if [ -n "$uc" ]; then
+        "$uc" impact --repo "$root" 2>/dev/null || true
+        "$uc" scan --repo "$root" 2>/dev/null | tail -n 20 || true
+    fi
 fi
 exit 0

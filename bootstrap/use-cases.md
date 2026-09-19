@@ -10,9 +10,9 @@ Why this exists:
 
 - Feature planning or behavior inventory work.
 - Implementation progress where use cases, variants, edge cases, or evidence should stay current.
-- The keyless daily loop: bind a behavior to code, verify it, and confirm `local_status: VERIFIED_LOCAL` (`uc bind` → `uc verify` → `uc scan`) — no keys, no CI. Recover a drifted row with `uc recover`.
-- Acceptance/evidence gathering, live demo/sign-off, or pre-merge proof. Signing to `FRESH` (`uc keygen` + `uc prove` in trusted CI) is the opt-in release/audit upgrade.
-- Matrix migration/backfill from TEST-MATRIX-style lists.
+- The keyless daily loop: bind a behavior to code, verify it, and confirm `local_status: VERIFIED_LOCAL` (`use-cases bind` → `use-cases verify` → `use-cases scan`) — no keys, no CI. Recover a drifted row with `use-cases recover`.
+- Acceptance/evidence gathering, live demo/sign-off, or pre-merge proof. Signing to `FRESH` (`use-cases keygen` + `use-cases prove` in trusted CI) is the opt-in release/audit upgrade.
+- Matrix backfill onto an existing codebase.
 
 ## When not to apply
 
@@ -35,15 +35,15 @@ Why this exists:
 
 | Situation | Do |
 |---|---|
-| Keyless daily loop | `uc bind …` → `uc verify --all` → `uc scan --json` (expect `local_status: VERIFIED_LOCAL`) |
-| Drifted row | `uc recover --row <id>` (or `--all`) → back to `VERIFIED_LOCAL` |
-| Release gate | `uc scan --policy-mode release --gate --json` (signed `FRESH`; keys via `uc keygen`, minted by `uc prove` in trusted CI) |
-| Behavior inventory | `uc matrix validate --json` / `uc matrix list --json` |
-| Evidence health | `uc matrix status --json` / `uc evidence status --json` |
-| Showcase plan | `uc plan showcase --json` |
-| Walkthrough plan | `uc plan walkthrough --json` |
-| Live run | `uc showcase start --json` then record/status/finish commands |
-| Skill health | `uc doctor skills --json` |
+| Keyless daily loop | `use-cases bind …` → `use-cases verify --all` → `use-cases scan --json` (expect `local_status: VERIFIED_LOCAL`) |
+| Drifted row | `use-cases recover --row <id>` (or `--all`) → back to `VERIFIED_LOCAL` |
+| Release gate | `use-cases scan --policy-mode release --gate --json` (signed `FRESH`; keys via `use-cases keygen`, minted by `use-cases prove` in trusted CI) |
+| Behavior inventory | `use-cases matrix validate --json` / `use-cases matrix list --json` |
+| Evidence health | `use-cases matrix status --json` / `use-cases evidence status --json` |
+| Showcase plan | `use-cases plan showcase --json` |
+| Walkthrough plan | `use-cases plan walkthrough --json` |
+| Live run | `use-cases showcase start --json` then record/status/finish commands |
+| Skill health | `use-cases doctor skills --json` |
 
 ## Never claim
 

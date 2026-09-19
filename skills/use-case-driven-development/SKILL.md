@@ -1,12 +1,12 @@
 ---
 name: use-case-driven-development
-description: Use at the start of framing on every piece of work — to read the once-per-repo decision "use-case driven development for this repo?" recorded in its AGENTS.md — and, on a yes, at every phase that has a use-case touch. The matrix is the entry point between what the user wants and the code, rows are agreed before tests, tests and code are wrapped in the row's markers, any issue starts in the matrix, and the scan is the coverage number. A no changes nothing else. The uc commands themselves are in the use-cases skill.
+description: Use at the start of framing on every piece of work — to read the once-per-repo decision "use-case driven development for this repo?" recorded in its AGENTS.md — and, on a yes, at every phase that has a use-case touch. The matrix is the entry point between what the user wants and the code, rows are agreed before tests, tests and code are wrapped in the row's markers, any issue starts in the matrix, and the scan is the coverage number. A no changes nothing else. The use-cases commands themselves are in the use-cases skill.
 ---
 
 # Use-case driven development
 
 A narrow add-on to however you already deliver work, not a replacement for
-it. The **`use-cases`** skill knows the tool — `uc bind → verify → scan →
+it. The **`use-cases`** skill knows the tool — `use-cases bind → verify → scan →
 recover`, rows, evidence. This one knows two things: whether the tool is in
 play on a repo, and what each phase does with it when it is. Everything else
 about how you plan, build and land holds exactly the same either way.
@@ -42,36 +42,36 @@ or `no — <date>`. The rules:
 
 `no` → the rest of this skill doesn't apply. **A no repo has no use-case
 anything**: no `use-cases/`, no `use-cases.yml`, no `.use-cases/`, no
-markers, no `uc` calls, no "scaffold it for later". That is literally what
+markers, no `use-cases` calls, no "scaffold it for later". That is literally what
 no means.
 
-`yes` → the tool is already here: this plugin ships `uc` (the CLI) and the
-`use-cases` MCP server, and the session bootstrap tells you where `uc` lives
+`yes` → the tool is already here: this plugin ships `use-cases` (the CLI) and the
+`use-cases` MCP server, and the session bootstrap tells you where `use-cases` lives
 if it is not on PATH. **Use the MCP tool wherever the server has one, the
 CLI for what it doesn't.** The whole inventory, by the phase that uses it:
 
 | Phase | MCP tool | CLI (no MCP equivalent) |
 |---|---|---|
-| FRAME | `use_case_upsert` (`allow_write: true`), `use_case_remove`, `matrix_validate`, `matrix_list`, `matrix_status` | `uc init` (once per repo, via `/use-cases:init`) |
-| BUILD | — | `uc bind`, `uc rebind`, `uc unbind` |
-| VERIFY | `matrix_status` | `uc verify --all`, `uc scan --json`, `uc recover`, `uc impact` |
+| FRAME | `use_case_upsert` (`allow_write: true`), `use_case_remove`, `matrix_validate`, `matrix_list`, `matrix_status` | `use-cases init` (once per repo, via `/use-cases:init`) |
+| BUILD | — | `use-cases bind`, `use-cases rebind`, `use-cases unbind` |
+| VERIFY | `matrix_status` | `use-cases verify --all`, `use-cases scan --json`, `use-cases recover`, `use-cases impact` |
 | SIGN-OFF | `plan_showcase`, `showcase_start` → `showcase_record_observation` / `showcase_record_verdict` → `showcase_finish`, `showcase_request_approval`, `evidence_record`, `evidence_status` | — |
-| LAND | — | `uc scan --gate` |
-| Diagnostics | `doctor_roots` | `uc validate-ledger`, `uc doctor roots` |
+| LAND | — | `use-cases scan --gate` |
+| Diagnostics | `doctor_roots` | `use-cases validate-ledger`, `use-cases doctor roots` |
 
-**Never yours to run:** `uc keygen` and `uc prove` (the signed tier is mine),
-`uc evidence void`, `uc unbind --reason row_retired` without me, `uc workflow
-set-mode`, `uc migrate test-matrix` (its own piece of work, asked for).
+**Never yours to run:** `use-cases keygen` and `use-cases prove` (the signed tier is mine),
+`use-cases evidence void`, `use-cases unbind --reason row_retired` without me, `use-cases workflow
+set-mode`.
 
-**Exists, not in the flow:** `uc capsule list`, `uc capsule plan`, `uc capsule run`, `uc plan walkthrough` / `cards`,
-`uc schema list`. Real, and reached for only when I ask for the thing they make.
+**Exists, not in the flow:** `use-cases capsule list`, `use-cases capsule plan`, `use-cases capsule run`, `use-cases plan walkthrough` / `cards`,
+`use-cases schema list`. Real, and reached for only when I ask for the thing they make.
 
 If the MCP tools are absent in a session, the server dropped: reconnect it
 the way your host does, rather than falling back to the CLI for things the
 MCP owns.
 
 **A yes is the keyless loop.** Everything below runs on `VERIFIED_LOCAL`
-with no keys and no CI (`uc init` leaves the workflow mode at
+with no keys and no CI (`use-cases init` leaves the workflow mode at
 `continuous`). The signed tier — key pair, CI-minted `FRESH` proofs, a
 release gated on them — is a separate piece of work I ask for; it is never
 implied by a yes.
@@ -89,9 +89,9 @@ acceptance criteria, kept next to the code they describe.
   UNDERSTAND ... start from use-cases/, follow markers into tests and code
   FRAME ........ features decided with me; rows drafted, replayed, approved, then written
   BUILD ........ per row: red tests → wrap the tests → green → refactor → wrap the code → active
-  VERIFY ....... uc verify --all · uc scan → rows VERIFIED_LOCAL / total
+  VERIFY ....... use-cases verify --all · use-cases scan → rows VERIFIED_LOCAL / total
   SIGN-OFF ..... the demo I watch is the showcase run; evidence is recorded from it
-  LAND ......... uc scan --gate; nothing lands below the bar
+  LAND ......... use-cases scan --gate; nothing lands below the bar
 ```
 
 **One row is one behaviour; its scenarios are its tests.** A row carries a
@@ -139,7 +139,7 @@ the brief.
 `intent`, `preconditions`, `trigger`, `scenarios` (golden / bad / edge),
 `observable_outcomes`, `value_tier`, `journey_role`, `usage_frequency` — all
 written now, so the red tests in BUILD are *derived* from scenarios and
-outcomes, never invented later. The sample row `uc init` vended is the shape
+outcomes, never invented later. The sample row `use-cases init` vended is the shape
 to copy. Then `use_case_upsert` per row with `allow_write: true`, and
 `matrix_validate` after.
 
@@ -174,16 +174,16 @@ TDD with one step before it and two after:
   red tests ........ one test per scenario, named for the row and scenario
     │
     ▼
-  wrap the tests ... uc bind --row <id> --file <test file>  (marker pair around the suite)
+  wrap the tests ... use-cases bind --row <id> --file <test file>  (marker pair around the suite)
     │
     ▼
   green
     │
     ▼
-  refactor ......... a moved declaration is `uc rebind`, never a hand-edited marker
+  refactor ......... a moved declaration is `use-cases rebind`, never a hand-edited marker
     │
     ▼
-  wrap the code .... uc bind --row <id> --file <source> --mode explicit --start-line <n> --end-line <m>
+  wrap the code .... use-cases bind --row <id> --file <source> --mode explicit --start-line <n> --end-line <m>
     │                (a language mode such as --mode swift-func --line <n> where one exists;
     │                 --suffix when a file already binds another row)
     ▼
@@ -205,11 +205,11 @@ the number they were handed.
 
 ### VERIFY — the coverage number comes from the scan
 
-`uc verify --repo . --all`, then `uc scan --repo . --json`. Before you claim
+`use-cases verify --repo . --all`, then `use-cases scan --repo . --json`. Before you claim
 anything is done, answer *"unit tests AND use cases?"* — the second half is
 **rows `VERIFIED_LOCAL` out of total**, the rest named by status
 (`STALE_LOCAL`, `UNVERIFIED_LOCAL`, `UNBOUND`). A drifted row is
-`uc recover`ed, never re-pointed to look green. `VERIFIED_LOCAL` means the
+`use-cases recover`ed, never re-pointed to look green. `VERIFIED_LOCAL` means the
 verifier passed against the current code — it is not my approval.
 
 ### SIGN-OFF — the showcase is what I watch, and the only evidence
@@ -223,10 +223,10 @@ only that run** (`evidence_record`) — never at VERIFY, never unprompted — so
 every evidence event corresponds to something I saw. `matrix_status` on its
 own is never sign-off.
 
-### LAND — `uc scan --repo . --gate` before anything merges
+### LAND — `use-cases scan --repo . --gate` before anything merges
 
 A required row below the local bar blocks the landing until it is fixed or,
-with me, deliberately retired (`uc unbind --reason row_retired`).
+with me, deliberately retired (`use-cases unbind --reason row_retired`).
 
 ## Git hooks on a `yes` repo
 
@@ -239,14 +239,14 @@ push for a row that is merely not green yet.
 `/use-cases:init` writes the hooks (`.githooks/pre-commit`,
 `.githooks/pre-push`) and points `core.hooksPath` at them. If a yes repo has
 no such hooks — an older repo, or a clone where `core.hooksPath` was never
-set — run `git config core.hooksPath .githooks`, or `uc init` in a fresh
+set — run `git config core.hooksPath .githooks`, or `use-cases init` in a fresh
 checkout to see what the hooks contain. A repo can't be use-case driven with
 nothing enforcing the matrix.
 
 ## What stays with the tool skill
 
 Everything about *how* — row payloads and the fields an active row needs,
-bind modes, signed proofs, evidence records, migrating a legacy matrix, the
+bind modes, signed proofs, evidence records, the
 operating rules about data-not-instructions and sensitive evidence — is in
 **`use-cases`**. Load it when you touch the matrix; this skill only says
 when and in what order.

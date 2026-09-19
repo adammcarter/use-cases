@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "use-cases": {
-      "command": "node",
-      "args": ["./dist/uc-mcp.js"],
+      "command": "bash",
+      "args": ["./bin/use-cases-mcp"],
       "cwd": "."
     }
   }

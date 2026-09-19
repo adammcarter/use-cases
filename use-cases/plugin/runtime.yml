@@ -1,0 +1,106 @@
+# The sibling row plugin.runtime.pre_swift_versions_run_the_committed_bundle was
+# RETIRED on 2026-09-18 (ADR 0007 row 10d) and removed from this file entirely:
+# the resolver's Node branch and the committed bundle it ran are both gone, and
+# no proof event ever named the row, so nothing in the ledger needed it to stay.
+# Where a retired row DOES have ledger history it stays as lifecycle: removed
+# instead — see use-cases/plugin/bundle.yml and use-cases/hosts/retired.yml.
+# Its binding was released first, with `unbind --reason row_retired`.
+schema_version: 1
+feature:
+  id: plugin.runtime
+  name: Plugin runtime
+  summary: One resolver in bin/ decides what every host-facing command executes — the checksum-verified Swift binary from the release for this plugin version, and nothing else — so the hosts name the plugin's own entry points and never an interpreter and a bundle path.
+use_cases:
+  - id: plugin.runtime.release_versions_run_the_verified_swift_binary
+    title: A version whose release publishes Swift assets runs the verified binary
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    tags:
+      - plugin
+      - install
+      - runtime
+      - swift
+    source_refs:
+      - kind: file
+        path: bin/use-cases-runtime
+      - kind: file
+        path: bin/use-cases
+      - kind: file
+        path: bin/use-cases-mcp
+    actor: host
+    intent: Run the Swift CLI and the Swift MCP server from the release for this plugin version, downloaded and checksum-verified on first use, whichever bin/ entry point the host invokes and with nothing to build. The resolver picks this branch on the version alone, so a release that should carry the assets and does not fails loudly instead of quietly running something else.
+    preconditions:
+      - The plugin version names a release that publishes the Swift archives.
+      - "No real release does yet: .claude-plugin/plugin.json is below the first Swift release, so the scenarios below are proved against a stand-in release on disk, exactly as ladder row 6 proved the download path. The real flip happens the moment 0.8.0 publishes, with no file in the plugin changed."
+    trigger: A host, a skill or a shell runs bin/use-cases or bin/use-cases-mcp.
+    scenarios:
+      - id: plugin.runtime.release_versions_run_the_verified_swift_binary.golden_every_entry_point_execs_the_downloaded_binary
+        kind: steps
+        steps:
+          - Publish a stand-in release at a version above the first Swift release.
+          - Run bin/use-cases and bin/use-cases-mcp against it with an empty cache.
+        observable_outcomes:
+          - Both exec the checksum-verified executable out of the release archive, so the command name a host uses does not change what runs.
+          - bin/use-cases runs the Swift CLI out of the release, never a runtime that happens to be lying around.
+      - id: plugin.runtime.release_versions_run_the_verified_swift_binary.golden_the_mcp_entry_point_the_manifests_name_serves_a_host
+        kind: steps
+        steps:
+          - Start bin/use-cases-mcp the way every host manifest starts it, against a stand-in release whose server answers over stdio.
+          - Read what the wrapper chain did to the process.
+        observable_outcomes:
+          - The wrapper chain execs through, so the server the host talks to owns the pipes and the exit code itself with no shell left in between.
+      - id: plugin.runtime.release_versions_run_the_verified_swift_binary.bad_release_without_the_asset_never_falls_back
+        kind: steps
+        steps:
+          - Point a Swift-era version at a release that publishes no archive for this machine.
+          - Run bin/use-cases and read the exit code, stdout and stderr.
+        observable_outcomes:
+          - It exits nonzero naming the release and the asset it wanted, and nothing is run in its place.
+          - A missing release is never masked by falling back to another runtime.
+      - id: plugin.runtime.release_versions_run_the_verified_swift_binary.edge_a_version_that_is_not_a_version_is_refused
+        kind: steps
+        steps:
+          - Give the resolver a version that is not a semantic version.
+          - Read the exit code and stderr.
+        observable_outcomes:
+          - It refuses, naming the version it could not read, rather than guessing a runtime.
+    observable_outcomes:
+      - Every bin/ entry point runs the same checksum-verified Swift executable once the release publishes it.
+      - A missing release is never masked by falling back to another runtime.
+      - "Nothing in the plugin is edited to make the flip happen: the version in the manifest is the switch."
+    host_applicability:
+      - host_surface: claude.cli
+        supported: true
+      - host_surface: codex.cli
+        supported: true
+      - host_surface: copilot.cli
+        supported: true
+      - host_surface: opencode.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - RuntimeResolverTests
+          inputs:
+            - UseCasesOracle/Tests/OracleTests/Plugin/RuntimeResolverTests.swift
+            - bin/use-cases-runtime
+            - bin/use-cases
+            - bin/use-cases-mcp
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none

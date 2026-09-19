@@ -70,10 +70,10 @@ use_cases:
       - kind: file
         path: schemas/v1/workflow-mode.schema.json
     actor: agent
-    intent: Support backfill, showcase-only, audit-only, and migration workflows without weakening integrity gates.
+    intent: Support backfill, showcase-only, and audit-only workflows without weakening integrity gates.
     preconditions:
       - The user prefers a lifecycle other than continuous upkeep.
-    trigger: User asks to backfill, audit, migrate, or demo work outside the recommended default loop.
+    trigger: User asks to backfill, audit, or demo work outside the recommended default loop.
     scenarios:
       - id: lifecycle.loop.workflow_modes.alternates
         kind: steps
@@ -108,7 +108,7 @@ use_cases:
       - agent-boundary
     source_refs:
       - kind: file
-        path: .agents/skills/use-cases/SKILL.md
+        path: skills/use-cases/SKILL.md
       - kind: file
         path: docs/activation.md
     actor: agent
@@ -198,7 +198,7 @@ use_cases:
       - scope-control
     source_refs:
       - kind: file
-        path: .agents/skills/use-cases/SKILL.md
+        path: skills/use-cases/SKILL.md
       - kind: file
         path: docs/activation.md
     actor: agent

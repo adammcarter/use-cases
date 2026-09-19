@@ -6,13 +6,13 @@ is an opt-in upgrade you reach for only at release/audit time.
 
 If you are installing the agent-facing material, the canonical sources are the
 skill (`skills/use-cases/SKILL.md`), the install-time bootstrap
-(`bootstrap/use-cases.md`), and the MCP playbooks (`uc/adopt-repo`,
-`uc/bind-row`, `uc/recover-suspect-row`, `uc/release-review`).
+(`bootstrap/use-cases.md`), and the MCP playbooks (`use-cases/adopt-repo`,
+`use-cases/bind-row`, `use-cases/recover-suspect-row`, `use-cases/release-review`).
 
 ## The keyless daily loop
 
 ```text
-  uc bind ...              uc verify --all           uc scan
+  use-cases bind ...              use-cases verify --all           use-cases scan
   bind a behaviour   ->     run its verifier    ->     local_status: VERIFIED_LOCAL ✓
   to code (a span)         (writes the UNSIGNED         (no keys, no CI)
                             results ledger by default)
@@ -20,17 +20,17 @@ skill (`skills/use-cases/SKILL.md`), the install-time bootstrap
 
 ```sh
 # 1. Bind a row to the code that implements it (explicit line span).
-uc bind --repo <repo> --row <row-id> --file <path> \
+use-cases bind --repo <repo> --row <row-id> --file <path> \
   --mode explicit --start-line <n> --end-line <m>
 #   (--mode explicit REQUIRES both --start-line and --end-line.
 #    For a Swift function body use --mode swift-func --line <n>.)
 
 # 2. Run the verifier. With NO --out, the UNSIGNED results ledger is written to
 #    <data-root>/.use-cases/verification-results.jsonl — the path scan reads.
-uc verify --repo <repo> --all          # or --row <row-id>
+use-cases verify --repo <repo> --all          # or --row <row-id>
 
 # 3. Scan. scan auto-discovers that ledger and derives the keyless signal.
-uc scan --repo <repo> --json           # row reports local_status: VERIFIED_LOCAL
+use-cases scan --repo <repo> --json           # row reports local_status: VERIFIED_LOCAL
 ```
 
 `VERIFIED_LOCAL` is the everyday green light: **code + test currently agree,
@@ -63,7 +63,7 @@ When a row is `STALE_LOCAL` / `UNVERIFIED_LOCAL` / `SUSPECT` / `UNPROVEN`, use t
 one-command path rather than re-assembling verify-then-scan by hand:
 
 ```sh
-uc recover --repo <repo> --row <row-id>     # (or --all) -> back to VERIFIED_LOCAL
+use-cases recover --repo <repo> --row <row-id>     # (or --all) -> back to VERIFIED_LOCAL
 ```
 
 `recover` re-runs the verifier, writes the unsigned ledger, re-scans, and reports
@@ -76,25 +76,25 @@ wrong declaration — or the code it named moved somewhere else — move the bin
 first, then recover:
 
 ```sh
-uc rebind --repo <repo> --row <row-id> --file <file> --mode swift-func --line <n>
-uc recover --repo <repo> --row <row-id>
+use-cases rebind --repo <repo> --row <row-id> --file <file> --mode swift-func --line <n>
+use-cases recover --repo <repo> --row <row-id>
 ```
 
 Count the line numbers as the file will read once the OLD marker is gone. To end a
 binding instead of moving it (a retired behaviour, or a row leaving the matrix),
-use `uc unbind --row <row-id> --reason <why>`.
+use `use-cases unbind --row <row-id> --reason <why>`.
 
-## Running `uc` from a dispatched worker
+## Running `use-cases` from a dispatched worker
 
-`uc` needs its own directory **and** `node` on `PATH`. A sandboxed agent dispatch
+`use-cases` needs its own directory **and** `node` on `PATH`. A sandboxed agent dispatch
 typically runs with `PATH=/usr/bin:/bin:/usr/sbin:/sbin`, which has neither, so the
-worker fails with a bare `command not found: uc` — the shell's message, before
-`uc` runs at all, so there is nothing the tool can say to explain itself.
+worker fails with a bare `command not found: use-cases` — the shell's message, before
+`use-cases` runs at all, so there is nothing the tool can say to explain itself.
 
 Keep acceptance verification with the orchestrator. It owns the evidence and the
-final claim anyway, and a worker that cannot run `uc` cannot produce either. If a
-worker genuinely must run `uc`, pass through the directories holding `uc` and
-`node` explicitly (`command -v uc`, `command -v node`) rather than discovering the
+final claim anyway, and a worker that cannot run `use-cases` cannot produce either. If a
+worker genuinely must run `use-cases`, pass through the directories holding `use-cases` and
+`node` explicitly (`command -v use-cases`, `command -v node`) rather than discovering the
 gap a whole dispatch later.
 
 ## When to prove (the opt-in upgrade)
@@ -104,26 +104,26 @@ Reach for keys only when you need a cryptographically-signed release/audit gate 
 
 ```sh
 # One-time: generate a keypair OUTSIDE the repo. The private key is a CI secret.
-uc keygen --out <dir-outside-repo> --ci github
+use-cases keygen --out <dir-outside-repo> --ci github
 
 # Re-prove a row to signed FRESH (recover can drive this; --public-key lets it
 # read the fresh proof back):
-uc recover --repo <repo> --row <row-id> \
+use-cases recover --repo <repo> --row <row-id> \
   --signing-key-env UCM_CI_SIGNING_KEY --public-key <path>
 ```
 
-`uc prove` (which mints signed proofs) runs **only in trusted CI** and is
+`use-cases prove` (which mints signed proofs) runs **only in trusted CI** and is
 intentionally absent from the MCP tool surface. Do not attempt to sign from an
 ordinary agent session.
 
 ## Gating a release
 
-`uc scan --gate` turns a below-bar required row into a non-zero exit (for CI).
+`use-cases scan --gate` turns a below-bar required row into a non-zero exit (for CI).
 Without `--gate`, `scan` always exits 0.
 
 ```sh
-uc scan --repo <repo> --gate                        # dev bar: >= VERIFIED_LOCAL
-uc scan --repo <repo> --policy-mode release --gate  # release bar: FRESH
+use-cases scan --repo <repo> --gate                        # dev bar: >= VERIFIED_LOCAL
+use-cases scan --repo <repo> --policy-mode release --gate  # release bar: FRESH
 ```
 
 ## Partial adoption, idempotence, and not nagging

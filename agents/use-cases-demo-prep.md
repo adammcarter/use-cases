@@ -46,10 +46,10 @@ exists where it does not.
 ## The loop
 
 ```
-  uc matrix status --json         what exists, what is stale
-  uc matrix list --json           which rows cover the work
+  use-cases matrix status --json         what exists, what is stale
+  use-cases matrix list --json           which rows cover the work
         │
-  uc plan showcase --json         prepared material — a starting point, not the pack
+  use-cases plan showcase --json         prepared material — a starting point, not the pack
         │
   ┌─────▼─────────────────────────────────────────────┐
   │  OFF-STAGE REHEARSAL, per candidate step:         │
@@ -88,7 +88,7 @@ a short text table in your reply does the same job.
 - **Time each step.** A step that takes ninety seconds needs to be flagged, or
   the presenter will assume it hung.
 
-Never run `uc showcase start`, `record-observation`, `record-verdict`, `decide`,
+Never run `use-cases showcase start`, `record-observation`, `record-verdict`, `decide`,
 `reject`, `finish`, `approve`, or request approval. Those belong to the live run.
 If the pack needs a showcase id, the presenter creates it.
 

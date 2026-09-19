@@ -1,11 +1,10 @@
 .claude/
 .remember/
 .DS_Store
-coverage/
+# node_modules is not produced by anything here any more (ADR 0007 row 10d
+# deleted the JavaScript toolchain); the entry stays so a stray `npm install`
+# against the OpenCode host manifest cannot be committed.
 node_modules/
-packages/*/dist/
-packages/*/.copy-schemas.lock/
-packages/*/*.tsbuildinfo
 # Transient per-run verification results (verify -> prove handoff in CI/local).
 # Only the signed evidence ledger is durable; this snapshot is never committed.
 .use-cases/verification-results.jsonl
@@ -15,3 +14,13 @@ packages/*/*.tsbuildinfo
 .DS_Store
 **/.DS_Store
 .cowork-receipts/
+
+# Swift / Xcode build state (ADR 0007)
+.build/
+DerivedData/
+xcuserdata/
+*.xcuserdatad
+.swiftpm/
+
+# Coverage profiles written by instrumented debug binaries
+default.profraw

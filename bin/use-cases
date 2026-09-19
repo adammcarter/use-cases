@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# `use-cases` — the CLI. The session-start hook puts this directory on PATH, so
+# skills and agents call `use-cases …` with nothing installed. What it executes
+# is bin/use-cases-runtime's decision: the verified Swift binary from the release
+# for this plugin version, or the committed bundle while no release carries one.
+#: @use-case:plugin.install.uc_on_path_in_session#bin
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec "$here/use-cases-runtime" use-cases "$@"
+#: @use-case:end plugin.install.uc_on_path_in_session#bin

@@ -10,23 +10,63 @@ use_cases:
     value_tier: core
     journey_role: golden
     usage_frequency: common
-    tags: [evidence, ledger]
+    tags:
+      - evidence
+      - ledger
     source_refs:
       - kind: file
         path: packages/core/src/evidence/appendEvidenceEvent.ts
     actor: agent
     intent: Persist proof without creating summary state.
-    preconditions: [A target use case resolves.]
+    preconditions:
+      - A target use case resolves.
     trigger: Agent records test, demo, or observation proof.
     scenarios:
-      - id: evidence.core.record.cli
+      - id: evidence.core.record.golden_cli
         kind: steps
-        steps: [Run evidence record.]
-    observable_outcomes: [A JSONL event is appended under evidence.]
+        steps:
+          - Run evidence record against a use case that resolves.
+          - Read the evidence directory.
+        observable_outcomes:
+          - A JSONL event is appended under evidence.
+      - id: evidence.core.record.bad_an_unresolvable_use_case_is_refused
+        kind: steps
+        steps:
+          - Run evidence record naming a use case that does not resolve.
+          - Read the result and the evidence directory.
+        observable_outcomes:
+          - Evidence naming a use case that does not resolve is refused, and nothing is appended.
+      - id: evidence.core.record.edge_no_summary_state_is_created
+        kind: steps
+        steps:
+          - Record evidence, then look for a summary or index file beside the ledger.
+          - Confirm only the append-only history exists.
+        observable_outcomes:
+          - Proof is persisted without creating summary state, so the events remain the only source of truth.
+    observable_outcomes:
+      - A JSONL event is appended under evidence.
     host_applicability:
       - host_surface: codex.cli
         supported: true
     verification_policy:
-      mode: none
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - EvidenceCoreTests
+          inputs:
+            - UseCasesOracle/Tests/OracleTests/Cli/EvidenceCoreTests.swift
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
     approval_policy:
       mode: none

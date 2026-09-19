@@ -1,0 +1,374 @@
+schema_version: 1
+feature:
+  id: release.distribution
+  name: Release distribution
+  summary: The Swift executables are published as a checksummed archive per supported platform on a GitHub release — Apple Silicon only at 0.8.0 — and a bin/ bootstrap resolves the machine’s platform, downloads the matching archive, verifies its SHA256, caches it under the user cache directory and execs it.
+use_cases:
+  - id: release.distribution.release_publishes_checksummed_assets
+    title: A release publishes a checksummed archive for every supported platform
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: rare
+    tags:
+      - release
+      - distribution
+      - workflow
+    source_refs:
+      - kind: file
+        path: .github/workflows/release.yml
+      - kind: file
+        path: bin/use-cases-bootstrap
+    actor: maintainer
+    intent: Cut a release whose assets a bootstrap on any supported Mac can find by name and verify by checksum, without the repo carrying a binary and without anything being built on the user’s machine.
+    preconditions:
+      - The release workflow is present at .github/workflows/release.yml.
+      - The version scheme is a v-prefixed semver tag, as every existing tag is.
+      - Apple Silicon is the only published platform at 0.8.0 (owner decision, 2026-09-17).
+    trigger: A maintainer pushes a v<major>.<minor>.<patch> tag, or dispatches the release workflow by hand.
+    scenarios:
+      - id: release.distribution.release_publishes_checksummed_assets.golden_workflow_builds_archives_and_sums
+        kind: steps
+        steps:
+          - Read .github/workflows/release.yml.
+          - Confirm it runs on macOS, builds both Swift executables in release configuration for arm64, archives them per supported platform, writes SHA256SUMS over every archive and attaches all of them to the GitHub release.
+        observable_outcomes:
+          - A release carries one archive per supported platform plus a SHA256SUMS file covering every archive.
+          - Each archive carries both executables, so one download serves the CLI and the MCP server.
+          - Nothing is built on the user’s machine and no binary is committed to the repo.
+      - id: release.distribution.release_publishes_checksummed_assets.golden_naming_scheme_matches_the_bootstrap
+        kind: steps
+        steps:
+          - Read the asset name the workflow writes and the asset name bin/use-cases-bootstrap asks for.
+          - Confirm both are use-cases-<version>-<os>-<arch>.tar.gz over the same platform list, and that both resolve the release by the same v<version> tag.
+        observable_outcomes:
+          - The publisher and the downloader cannot drift apart on the asset name, the platform list or the tag.
+      - id: release.distribution.release_publishes_checksummed_assets.edge_apple_silicon_is_the_only_published_platform
+        kind: steps
+        steps:
+          - Read the platform list in .github/workflows/release.yml and in bin/use-cases-bootstrap.
+          - Confirm both are exactly macos-arm64, and that no x86_64 asset is built, sliced or attached.
+        observable_outcomes:
+          - "0.8.0 publishes Apple Silicon only: the owner retired the x86_64 asset after the toolchain began warning that the architecture is deprecated for the deployment target."
+          - Adding a platform back means changing one list in each file, and this scenario fails until both agree again.
+      - id: release.distribution.release_publishes_checksummed_assets.bad_never_fires_on_a_branch_push
+        kind: steps
+        steps:
+          - "Read the workflow's on: block."
+          - Confirm push is filtered to tags only, with no branches key, and that the only other trigger is workflow_dispatch.
+        observable_outcomes:
+          - A push to a branch never publishes a release, so the no-releases-during-the-work decision cannot be broken by accident.
+      - id: release.distribution.release_publishes_checksummed_assets.edge_existing_ci_is_untouched
+        kind: steps
+        steps:
+          - Read .github/workflows/ci.yml and .github/workflows/use-cases.yml.
+          - Confirm the release workflow is a separate file that adds no step to either, and that ci.yml still builds and tests the TypeScript on every push.
+        observable_outcomes:
+          - Adding the release pipeline changes nothing about the gates that already run on every push.
+    observable_outcomes:
+      - A release carries one archive per supported platform plus a SHA256SUMS file covering every archive.
+      - The publisher and the downloader agree on the asset name, the platform list and the tag.
+      - Apple Silicon is the only published platform at 0.8.0, in both files.
+      - A push to a branch never publishes a release.
+    host_applicability:
+      - host_surface: claude.cli
+        supported: true
+      - host_surface: codex.cli
+        supported: true
+      - host_surface: copilot.cli
+        supported: true
+      - host_surface: opencode.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - ReleaseWorkflowTests
+          inputs:
+            - UseCasesOracle/Tests/OracleTests/Plugin/ReleaseWorkflowTests.swift
+            - .github/workflows/release.yml
+            - bin/use-cases-bootstrap
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none
+  - id: release.distribution.first_run_downloads_and_verifies
+    title: The first run downloads the machine's binary, verifies its checksum and caches it
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    tags:
+      - release
+      - distribution
+      - bootstrap
+    source_refs:
+      - kind: file
+        path: bin/use-cases-bootstrap
+      - kind: file
+        path: bin/use-cases
+      - kind: file
+        path: bin/use-cases-mcp
+    actor: agent
+    intent: Run use-cases on a machine that has never run it before, with nothing installed and nothing built, and have the binary that arrives be provably the published one.
+    preconditions:
+      - The plugin is installed and its bin/ directory is on PATH or reachable by path.
+      - A release for the plugin’s version carries the archive for this machine’s platform and a SHA256SUMS file.
+    trigger: An agent or a user runs bin/use-cases (or bin/use-cases-mcp) for the first time on the machine.
+    scenarios:
+      - id: release.distribution.first_run_downloads_and_verifies.golden_downloads_verifies_caches_and_execs
+        kind: steps
+        steps:
+          - With an empty cache, run bin/use-cases with some arguments against a release that carries the archive and its sums.
+          - Read the exit code, the output and the cache directory.
+        observable_outcomes:
+          - The archive for this machine's platform is downloaded, its SHA256 matches the published sums, the executable is cached and then exec'd.
+          - The arguments reach the executable unchanged and its exit code is the bootstrap's exit code.
+      - id: release.distribution.first_run_downloads_and_verifies.bad_checksum_mismatch_is_refused
+        kind: steps
+        steps:
+          - Publish an archive whose bytes do not match the SHA256SUMS line for it.
+          - Run bin/use-cases with an empty cache and read the exit code, stderr and the cache directory.
+        observable_outcomes:
+          - The bootstrap exits non-zero, names the asset and both the expected and the actual SHA256, and never execs the binary.
+          - Nothing is left in the cache, so the next run cannot pick up an unverified binary.
+      - id: release.distribution.first_run_downloads_and_verifies.edge_cache_lives_under_the_user_cache_directory
+        kind: steps
+        steps:
+          - Run bin/use-cases on a fresh HOME with no cache override.
+          - Confirm where the executable was cached.
+        observable_outcomes:
+          - The cache is per-user state under the user cache directory, keyed by version and platform, and never inside the repository or the plugin checkout.
+      - id: release.distribution.first_run_downloads_and_verifies.edge_a_forced_platform_the_release_does_not_publish_is_refused
+        kind: steps
+        steps:
+          - Set USE_CASES_PLATFORM to a platform the release does not publish and run bin/use-cases with an empty cache.
+          - Read the exit code, stderr and the cache directory.
+        observable_outcomes:
+          - The forced platform decides the asset name and the cache key, so the override is what a second platform would be tested through.
+          - A forced platform the release does not publish is refused at the checksums, which do not list it — never exec’d as the wrong slice, and never cached.
+    observable_outcomes:
+      - A first run downloads the matching archive, verifies its SHA256 against the published sums, caches the executable and execs it.
+      - A binary whose checksum does not match is never exec'd and never cached.
+      - The cache is per-user state, not repository content.
+      - A forced platform decides the asset and the cache key, and one the release does not publish is refused at the checksums.
+    host_applicability:
+      - host_surface: claude.cli
+        supported: true
+      - host_surface: codex.cli
+        supported: true
+      - host_surface: copilot.cli
+        supported: true
+      - host_surface: opencode.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - BootstrapFirstRunTests
+          inputs:
+            - UseCasesOracle/Tests/OracleTests/Plugin/BootstrapFirstRunTests.swift
+            - UseCasesOracle/Tests/OracleTests/Harness/ReleaseStandIn.swift
+            - bin/use-cases-bootstrap
+            - bin/use-cases
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none
+  - id: release.distribution.cached_binary_runs_without_network
+    title: A cached binary runs without touching the network
+    lifecycle: active
+    value_tier: critical
+    journey_role: golden
+    usage_frequency: common
+    tags:
+      - release
+      - distribution
+      - bootstrap
+      - cache
+    source_refs:
+      - kind: file
+        path: bin/use-cases-bootstrap
+    actor: agent
+    intent: Run use-cases hundreds of times in a session at the cost of a local exec, with no download and no dependence on the network after the first run.
+    preconditions:
+      - A previous run cached the executable for this version and platform.
+    trigger: An agent runs bin/use-cases again on a machine whose cache already holds the executable.
+    scenarios:
+      - id: release.distribution.cached_binary_runs_without_network.golden_second_run_uses_the_cache
+        kind: steps
+        steps:
+          - Run bin/use-cases once against a working release so the executable is cached.
+          - Point the release base URL at a host that refuses connections and run it again.
+          - Read the exit code, the output and the cache directory.
+        observable_outcomes:
+          - The second run succeeds with the same output, having made no request at all.
+          - No new file appears in the cache, so nothing was re-downloaded.
+      - id: release.distribution.cached_binary_runs_without_network.bad_unexecutable_cache_entry_is_refetched
+        kind: steps
+        steps:
+          - Cache the executable, then remove its execute permission.
+          - Run bin/use-cases again against a working release.
+        observable_outcomes:
+          - A cache entry that cannot be exec'd is treated as absent and refetched with its checksum verified, rather than exec'd and failing.
+      - id: release.distribution.cached_binary_runs_without_network.edge_cache_is_checked_before_any_url_is_read
+        kind: steps
+        steps:
+          - Cache the executable, then delete the release archive and its SHA256SUMS, leaving the base URL pointing at the now-empty release.
+          - Run bin/use-cases again and read the exit code and the output.
+        observable_outcomes:
+          - The run succeeds, so the cache hit short-circuited the whole download path — the fetch of SHA256SUMS included.
+    observable_outcomes:
+      - After the first run the bootstrap costs a local exec and needs no network.
+      - A cache entry that cannot be exec'd is refetched and verified rather than trusted.
+      - The cache is checked before anything is fetched, the sums file included.
+    host_applicability:
+      - host_surface: claude.cli
+        supported: true
+      - host_surface: codex.cli
+        supported: true
+      - host_surface: copilot.cli
+        supported: true
+      - host_surface: opencode.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - BootstrapCacheTests
+          inputs:
+            - UseCasesOracle/Tests/OracleTests/Plugin/BootstrapCacheTests.swift
+            - UseCasesOracle/Tests/OracleTests/Harness/ReleaseStandIn.swift
+            - bin/use-cases-bootstrap
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none
+  - id: release.distribution.failed_download_says_what_to_do
+    title: A download that cannot be completed says what went wrong and what to do
+    lifecycle: active
+    value_tier: core
+    journey_role: failure
+    usage_frequency: occasional
+    tags:
+      - release
+      - distribution
+      - bootstrap
+      - diagnostics
+    source_refs:
+      - kind: file
+        path: bin/use-cases-bootstrap
+    actor: agent
+    intent: Read one line and know whether the network is down, the release is missing an asset or the machine is unsupported, instead of a curl exit code or a silent fallback to whatever binary happens to be around.
+    preconditions:
+      - The cache does not already hold the executable for this version and platform.
+    trigger: An agent runs bin/use-cases on a machine with no cached binary and the download cannot be completed.
+    scenarios:
+      - id: release.distribution.failed_download_says_what_to_do.golden_missing_asset_names_the_release_and_the_url
+        kind: steps
+        steps:
+          - Point the bootstrap at a release that has a SHA256SUMS file but not the archive for this platform.
+          - Read the exit code and stderr.
+        observable_outcomes:
+          - The bootstrap exits non-zero, names the asset it wanted, the release it looked in and the URL it tried, and says the release does not carry it.
+          - "It offers no alternative runtime, because there is none: the message is the whole answer."
+      - id: release.distribution.failed_download_says_what_to_do.bad_unreachable_host_is_reported_as_a_download_failure
+        kind: steps
+        steps:
+          - Point the release base URL at an address that refuses connections and run bin/use-cases with an empty cache.
+          - Read the exit code and stderr.
+        observable_outcomes:
+          - The bootstrap exits non-zero and says it could not reach the release, naming the URL, rather than reporting a checksum or a missing asset.
+          - No partially downloaded file is left in the cache.
+      - id: release.distribution.failed_download_says_what_to_do.bad_missing_sums_file_is_its_own_message
+        kind: steps
+        steps:
+          - Point the bootstrap at a release that carries the archive but no SHA256SUMS file.
+          - Read the exit code and stderr.
+        observable_outcomes:
+          - The bootstrap exits non-zero and says the release published no checksums, and refuses the archive rather than running an unverified binary.
+      - id: release.distribution.failed_download_says_what_to_do.bad_sums_file_does_not_list_the_asset
+        kind: steps
+        steps:
+          - Point the bootstrap at a release whose SHA256SUMS lists some other asset but not this platform’s archive.
+          - Read the exit code and stderr.
+        observable_outcomes:
+          - The bootstrap exits non-zero and says the published checksums do not list the asset, rather than downloading it and having nothing to compare against.
+      - id: release.distribution.failed_download_says_what_to_do.edge_unsupported_platform_is_refused_before_any_download
+        kind: steps
+        steps:
+          - Run the bootstrap on an Intel Mac, and again on a machine that is not a Mac at all.
+          - Read the exit code and stderr for each.
+        observable_outcomes:
+          - Each names the operating system and architecture it found and the platform that is published, and refuses before any request is made.
+          - An Intel Mac is told plainly that no binary is published for it rather than being handed an Apple Silicon one.
+    observable_outcomes:
+      - Each failure mode — unreachable, asset missing, no checksums, unsupported machine — has its own message naming the URL or the platform.
+      - No failure path ever execs an unverified binary or leaves one in the cache.
+      - Every failure exits non-zero.
+    host_applicability:
+      - host_surface: claude.cli
+        supported: true
+      - host_surface: codex.cli
+        supported: true
+      - host_surface: copilot.cli
+        supported: true
+      - host_surface: opencode.cli
+        supported: true
+    verification_policy:
+      mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - BootstrapFailuresTests
+          inputs:
+            - UseCasesOracle/Tests/OracleTests/Plugin/BootstrapFailuresTests.swift
+            - UseCasesOracle/Tests/OracleTests/Harness/ReleaseStandIn.swift
+            - bin/use-cases-bootstrap
+      requirements:
+        - evidence_kind: test_result
+          required_verifiers:
+            - script
+          minimum_count: 1
+    approval_policy:
+      mode: none

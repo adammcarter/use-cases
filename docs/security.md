@@ -1,7 +1,6 @@
 # Security And Trust
 
-Generated plans, migration output, capsules, and host projections are prepared
-material only. They are not proof.
+Generated plans, capsules, and host projections are prepared material only. They are not proof.
 
 ## Threat model — what holds on its own, and what needs setup
 
@@ -38,9 +37,9 @@ approval token**, not a caller-asserted flag or a terminal prompt:
    head, evidence/CI digests, a short-lived single-use nonce). An agent/host can
    request it (e.g. the MCP `showcase_request_approval` tool) but cannot sign it.
 2. The human signs it out-of-band in their own shell with a key held **outside**
-   the workspace: `uc approve-run --request <req> --key-file <pem> --key-id <id>
+   the workspace: `use-cases approve-run --request <req> --key-file <pem> --key-id <id>
    --out approval-token.json`.
-3. `uc showcase approve --approval-token approval-token.json (--keyring <path> |
+3. `use-cases showcase approve --approval-token approval-token.json (--keyring <path> |
    --public-key <path>)` **verifies** the signature, the live-run binding, the
    nonce (single-use), the expiry, and the key's keyring-bound assurance tier —
    trust is **computed**, never asserted. A verified token is by definition a user

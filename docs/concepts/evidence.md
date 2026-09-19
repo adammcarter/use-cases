@@ -7,7 +7,7 @@ right is essential to understanding what "FRESH" does and does not mean.
 |---|---|---|
 | What it is | An **observation** — a record that something was seen or done | A **signed trust gate** — cryptographic certification |
 | Authority | None on its own | ed25519 signature from trusted CI |
-| Recorded by | `uc evidence record` (agents, scripts, humans) | `uc prove` in CI only |
+| Recorded by | `use-cases evidence record` (agents, scripts, humans) | `use-cases prove` in CI only |
 | Makes a row FRESH? | **No** | **Yes** |
 | Mutable? | Append-only; corrected via `evidence void` | Append-only, hash-chained, fail-closed |
 
@@ -20,14 +20,14 @@ it does not certify anything.
 
 ```bash
 # Append an observation (kind + result are free-form context):
-uc evidence record --repo . --use-case billing.core.apply_discount \
+use-cases evidence record --repo . --use-case billing.core.apply_discount \
   --kind test_result --result pass --json
 
 # Replay the append-only evidence history:
-uc evidence status --repo . --json
+use-cases evidence status --repo . --json
 
 # Correct an earlier event without deleting history:
-uc evidence void --repo . --evidence <id> --expected-head <event> \
+use-cases evidence void --repo . --evidence <id> --expected-head <event> \
   --reason "superseded" --json
 ```
 
@@ -44,14 +44,14 @@ mechanics are in [proofs & the ledger](./proofs-and-ledger.md).
 
 ## What the acceptance claim counts
 
-`uc scan` reports an `acceptance_claim`, and it counts a row proven at exactly
+`use-cases scan` reports an `acceptance_claim`, and it counts a row proven at exactly
 three tiers — never on the strength of prose:
 
 | Tier | What it means | How you get one |
 |---|---|---|
-| `signed_proof` | trusted CI signed that the current code still backs the row | `uc prove` in CI |
-| `local_run` | `uc verify` **spawned this row's verifier here** and it passed | `uc verify` |
-| `performed_run` | **`uc` drove a command against the product** and it passed | `uc evidence record --perform -- <cmd>` |
+| `signed_proof` | trusted CI signed that the current code still backs the row | `use-cases prove` in CI |
+| `local_run` | `use-cases verify` **spawned this row's verifier here** and it passed | `use-cases verify` |
+| `performed_run` | **`use-cases` drove a command against the product** and it passed | `use-cases evidence record --perform -- <cmd>` |
 
 `by_evidence` breaks the count down by tier and `basis` says it in words, because
 a bare "285 of 297 verified" cannot distinguish 285 demonstrations from 285 unit
@@ -60,12 +60,12 @@ filters. Each row is counted once, at its strongest tier.
 ### A local run must prove a run wrote it
 
 The unsigned results ledger (`.use-cases/verification-results.jsonl`) is a plain
-text file, and it is **transient per-machine output** — `uc init` gitignores it
+text file, and it is **transient per-machine output** — `use-cases init` gitignores it
 for that reason. `scan` used to accept any line in it whose hashes matched the
 current code, but those hashes are computable by anything that can read the repo,
 so they never separated a run from a text edit.
 
-Every record `uc verify` writes now carries a **run attestation**: an HMAC over
+Every record `use-cases verify` writes now carries a **run attestation**: an HMAC over
 the record's own content, keyed by a secret at `~/.use-cases/run-key`
 (override with `UC_RUN_KEY_FILE`) that is minted on first use and never lives in
 the repo. A record without a valid one reads `UNATTESTED_LOCAL` and is never
@@ -79,10 +79,10 @@ from "any line in a tracked file is proof".
 Consequences worth knowing:
 
 - **A results ledger committed by a teammate reads unattested on your machine.**
-  Their run is not your evidence. Run `uc verify` and it is yours.
+  Their run is not your evidence. Run `use-cases verify` and it is yours.
 - **A ledger written before this version has no attestation**, so those rows read
   `UNATTESTED_LOCAL` after upgrading, and `scan --gate` in feature mode will
-  fail on a required one. `uc verify --all` restores them in one command. Signed
+  fail on a required one. `use-cases verify --all` restores them in one command. Signed
   proofs are unaffected: a `FRESH` row stays `FRESH`.
 
 ### A spawned verifier is not a demonstration
@@ -117,8 +117,8 @@ A row with lots of recorded evidence but no current signed proof is still
 **UNPROVEN** or **SUSPECT** — never FRESH. That is by design: evidence informs;
 proof certifies.
 
-> Related but distinct: **showcase runs** (`uc showcase …`) and **capsules**
-> (`uc capsule …`) record live demonstrations through their own ledger. Like
+> Related but distinct: **showcase runs** (`use-cases showcase …`) and **capsules**
+> (`use-cases capsule …`) record live demonstrations through their own ledger. Like
 > evidence, a static observation or a demo run is a *prompt for* a real
 > observation — it is not proof and does not by itself create a passing verdict.
 

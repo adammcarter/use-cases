@@ -25,12 +25,28 @@ use_cases:
       - A common smoke or golden path deserves a persisted runbook.
     trigger: Agent or user wants a repeatable demonstration without reselecting rows manually.
     scenarios:
-      - id: capsule.demos.persisted_smoke_runbook.plan
+      - id: capsule.demos.persisted_smoke_runbook.golden_plan
         kind: steps
         steps:
           - Validate a capsule file.
           - Generate a capsule plan.
-          - Confirm referenced use-case and scenario IDs resolve.
+          - Confirm referenced use-case and scenario ids resolve.
+        observable_outcomes:
+          - The capsule is reusable prepared material whose references resolve.
+      - id: capsule.demos.persisted_smoke_runbook.bad_a_capsule_is_not_proof
+        kind: steps
+        steps:
+          - Validate and plan a capsule, then stop.
+          - Read whether anything treats it as proven.
+        observable_outcomes:
+          - It is not proof until a run records performed events.
+      - id: capsule.demos.persisted_smoke_runbook.edge_the_same_capsule_serves_repeated_demos
+        kind: steps
+        steps:
+          - Plan the same capsule twice without reselecting rows.
+          - Compare the two plans.
+        observable_outcomes:
+          - A persisted capsule gives a repeatable demonstration without reselecting rows by hand each time.
     observable_outcomes:
       - The capsule is reusable prepared material.
       - It is not proof until a run records performed events.
@@ -39,8 +55,21 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - CapsulePersistedRunbookTests
+          inputs:
+            - UseCasesOracle/Tests/OracleTests/Cli/CapsuleDemosTests.swift
       requirements:
-        - evidence_kind: command_result
+        - evidence_kind: test_result
           required_verifiers:
             - script
           minimum_count: 1
@@ -56,6 +85,7 @@ use_cases:
       - capsules
       - adhoc
       - release
+      - no-bad-path
     source_refs:
       - kind: file
         path: docs/showcase.md
@@ -67,12 +97,21 @@ use_cases:
       - The demo is specific to a release, PR, or changed scope.
     trigger: Agent prepares a one-off live run.
     scenarios:
-      - id: capsule.demos.adhoc_release_demo.start
+      - id: capsule.demos.adhoc_release_demo.golden_start
         kind: steps
         steps:
-          - Select ad hoc use-case IDs.
+          - Select ad hoc use-case ids.
           - Start a showcase run from that selection.
-          - Record the normalized plan in run_started.
+          - Read the normalized plan recorded in run_started.
+        observable_outcomes:
+          - A one-off run records its normalized plan in run_started, so the selection is auditable afterwards.
+      - id: capsule.demos.adhoc_release_demo.edge_no_capsule_file_is_left_behind
+        kind: steps
+        steps:
+          - Run a one-off release demo.
+          - Look for a persisted capsule file afterwards.
+        observable_outcomes:
+          - One-off demos are supported without accumulating unnecessary capsule files.
     observable_outcomes:
       - One-off demos are supported without accumulating unnecessary capsule files.
     host_applicability:
@@ -80,10 +119,23 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - CapsuleAdhocDemoTests
+          inputs:
+            - UseCasesOracle/Tests/OracleTests/Cli/CapsuleDemosTests.swift
       requirements:
-        - evidence_kind: agent_observation
+        - evidence_kind: test_result
           required_verifiers:
-            - agent
+            - script
           minimum_count: 1
     approval_policy:
       mode: ask
@@ -108,12 +160,34 @@ use_cases:
       - A capsule contains command steps.
     trigger: Agent runs a capsule with command execution enabled.
     scenarios:
-      - id: capsule.demos.runner_command_safety.command
+      - id: capsule.demos.runner_command_safety.golden_command
         kind: steps
         steps:
-          - Require command execution permission at the capsule and caller level.
-          - Resolve working directory inside the repo.
-          - Execute without a shell and record bounded output.
+          - Grant command execution permission at both the capsule and the caller level.
+          - Run the capsule and read how each command was executed.
+        observable_outcomes:
+          - Commands execute without a shell, from a working directory inside the repo, with bounded output recorded.
+      - id: capsule.demos.runner_command_safety.bad_unsafe_commands_do_not_run_by_default
+        kind: steps
+        steps:
+          - Run a capsule containing command steps without granting execution permission.
+          - Read what happens.
+        observable_outcomes:
+          - Unsafe commands do not run by default; permission is required at the capsule AND the caller level.
+      - id: capsule.demos.runner_command_safety.bad_working_directory_outside_the_repo
+        kind: steps
+        steps:
+          - Point a command step's working directory outside the repository.
+          - Run the capsule.
+        observable_outcomes:
+          - The working directory is resolved inside the repo, so a capsule cannot reach out of the workspace.
+      - id: capsule.demos.runner_command_safety.edge_output_is_bounded_and_local_state_does_not_leak
+        kind: steps
+        steps:
+          - Run a command producing very large output.
+          - Read what is recorded as the observation and verdict.
+        observable_outcomes:
+          - Command results are recorded as observations and verdicts with bounded output, without leaking uncontrolled local state.
     observable_outcomes:
       - Unsafe commands do not run by default.
       - Command results are recorded as observations and verdicts without leaking uncontrolled local state.
@@ -122,6 +196,19 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - CapsuleCommandSafetyTests
+          inputs:
+            - UseCasesOracle/Tests/OracleTests/Cli/CapsuleCommandSafetyTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -150,12 +237,27 @@ use_cases:
       - A capsule references use-case or scenario IDs.
     trigger: Agent validates or plans a capsule after matrix changes.
     scenarios:
-      - id: capsule.demos.stale_reference_warning.validate
+      - id: capsule.demos.stale_reference_warning.golden_validate
         kind: steps
         steps:
           - Validate a capsule after related rows changed.
-          - Detect missing or stale row references.
-          - Report diagnostics before running the capsule.
+          - Read the diagnostics.
+        observable_outcomes:
+          - Diagnostics are reported before the capsule is run.
+      - id: capsule.demos.stale_reference_warning.bad_missing_row_reference
+        kind: steps
+        steps:
+          - Remove a row a capsule references, then validate the capsule.
+          - Read what is reported.
+        observable_outcomes:
+          - A capsule pointing at a missing or removed row is reported rather than run.
+      - id: capsule.demos.stale_reference_warning.edge_semantically_changed_row
+        kind: steps
+        steps:
+          - Change a referenced row's meaning without removing it, then validate.
+          - Read whether the drift is detected.
+        observable_outcomes:
+          - Persisted runbooks do not silently drift away from the matrix when a row changes underneath them.
     observable_outcomes:
       - Persisted runbooks do not silently drift away from the matrix.
     host_applicability:
@@ -163,6 +265,19 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - CapsuleStaleReferenceTests
+          inputs:
+            - UseCasesOracle/Tests/OracleTests/Cli/CapsuleCommandSafetyTests.swift
       requirements:
         - evidence_kind: test_result
           required_verifiers:
@@ -179,6 +294,7 @@ use_cases:
     tags:
       - capsules
       - proof-boundary
+      - no-edge-path
     source_refs:
       - kind: file
         path: docs/showcase.md
@@ -190,12 +306,21 @@ use_cases:
       - A capsule exists or a capsule plan has been generated.
     trigger: Agent summarizes proof, readiness, or release state.
     scenarios:
-      - id: capsule.demos.runbook_not_proof.guard
+      - id: capsule.demos.runbook_not_proof.golden_guard
         kind: steps
         steps:
-          - Inspect a capsule or capsule plan.
-          - Confirm it is prepared material.
-          - Require showcase run events before claiming proof.
+          - Inspect a capsule or a generated capsule plan.
+          - Read how it describes itself.
+        observable_outcomes:
+          - It is reported as prepared material.
+      - id: capsule.demos.runbook_not_proof.bad_a_capsule_never_becomes_evidence
+        kind: steps
+        steps:
+          - Summarise proof, readiness or release state with only a capsule present.
+          - Read whether the capsule counts.
+        observable_outcomes:
+          - Capsule files are not confused with performed demonstrations.
+          - Showcase run events are required before proof is claimed.
     observable_outcomes:
       - Capsule files are not confused with performed demonstrations.
     host_applicability:
@@ -203,10 +328,23 @@ use_cases:
         supported: true
     verification_policy:
       mode: requirements
+      verifiers:
+        script:
+          kind: script
+          evidence_kind: test_result
+          command:
+            - swift
+            - test
+            - --package-path
+            - UseCasesOracle
+            - --filter
+            - CapsuleRunbookNotProofTests
+          inputs:
+            - UseCasesOracle/Tests/OracleTests/Cli/CapsuleDemosTests.swift
       requirements:
-        - evidence_kind: agent_observation
+        - evidence_kind: test_result
           required_verifiers:
-            - agent
+            - script
           minimum_count: 1
     approval_policy:
       mode: none

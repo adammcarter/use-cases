@@ -20,16 +20,16 @@ Three commands, zero setup — no ed25519 keys, no CI:
 
 ```sh
 # 1. Bind a behaviour row to the code that implements it (explicit line span).
-uc bind --repo <repo> --row <row-id> --file <path> \
+use-cases bind --repo <repo> --row <row-id> --file <path> \
   --mode explicit --start-line <n> --end-line <m>
 
 # 2. Run the row's verifier. With no --out this writes the UNSIGNED results
 #    ledger to <data-root>/.use-cases/verification-results.jsonl by default.
-uc verify --repo <repo> --all        # or --row <row-id>
+use-cases verify --repo <repo> --all        # or --row <row-id>
 
 # 3. Scan freshness. scan auto-discovers that ledger — the row reports
 #    local_status: VERIFIED_LOCAL. No keys, no CI.
-uc scan --repo <repo> --json
+use-cases scan --repo <repo> --json
 ```
 
 That `VERIFIED_LOCAL` is the everyday green light: **code + test currently agree,
@@ -60,7 +60,7 @@ When a row goes `STALE_LOCAL` / `UNVERIFIED_LOCAL` / `SUSPECT` / `UNPROVEN`, don
 hand-assemble the fix — `recover` re-verifies and reports the new state:
 
 ```sh
-uc recover --repo <repo> --row <row-id>      # (or --all) -> back to VERIFIED_LOCAL
+use-cases recover --repo <repo> --row <row-id>      # (or --all) -> back to VERIFIED_LOCAL
 ```
 
 `recover` **never fakes green**: if the verifier genuinely fails it exits non-zero
@@ -74,16 +74,16 @@ the wrong declaration — or the behaviour is retired — write the binding agai
 
 ```sh
 # Move it (marker + registration together, same file or another one).
-uc rebind --repo <repo> --row <row-id> --file <path> --mode swift-func --line <n>
+use-cases rebind --repo <repo> --row <row-id> --file <path> --mode swift-func --line <n>
 
 # End it (retired behaviour; also step 1 of a rename).
-uc unbind --repo <repo> --row <row-id> --reason row_retired
+use-cases unbind --repo <repo> --row <row-id> --reason row_retired
 ```
 
 Count `--line` / `--start-line`/`--end-line` as the file will read once the OLD
 marker is gone. A moved binding does **not** inherit the old one's proof: the row
-reads `STALE_LOCAL` until `uc verify --row <row-id>` runs again. Renaming a row is
-`uc unbind` the old id, then `uc bind --register-existing` the new one — never a
+reads `STALE_LOCAL` until `use-cases verify --row <row-id>` runs again. Renaming a row is
+`use-cases unbind` the old id, then `use-cases bind --register-existing` the new one — never a
 hand-edit of `bindings.jsonl`.
 
 ## Opt-in: signing for release / audit (FRESH)
@@ -93,10 +93,10 @@ the upgrade, not the daily path:
 
 ```sh
 # One-time, keys live OUTSIDE the repo; the private key is a CI secret.
-uc keygen --out <dir-outside-repo> --ci github
+use-cases keygen --out <dir-outside-repo> --ci github
 
 # Re-prove a row to signed FRESH (recover can drive this too):
-uc recover --repo <repo> --row <row-id> \
+use-cases recover --repo <repo> --row <row-id> \
   --signing-key-env UCM_CI_SIGNING_KEY --public-key <path>
 ```
 
@@ -105,12 +105,12 @@ intentionally absent from the MCP tool surface. Everyday agent work stays keyles
 
 ## Gating a release
 
-`uc scan --gate` exits non-zero when a required row is below the bar (release =>
+`use-cases scan --gate` exits non-zero when a required row is below the bar (release =>
 `FRESH`, otherwise >= `VERIFIED_LOCAL`). Without `--gate`, `scan` always exits 0.
 
 ```sh
-uc scan --repo <repo> --policy-mode release --gate    # CI release gate
-uc scan --repo <repo> --gate                          # dev bar: VERIFIED_LOCAL
+use-cases scan --repo <repo> --policy-mode release --gate    # CI release gate
+use-cases scan --repo <repo> --gate                          # dev bar: VERIFIED_LOCAL
 ```
 
 ## Prefer This Skill
@@ -124,9 +124,6 @@ uc scan --repo <repo> --gate                          # dev bar: VERIFIED_LOCAL
 
 ## Defer To
 
-- `migration` when bringing an existing hand-rolled acceptance doc (markdown
-  table, checklist, CSV, spreadsheet export, TEST-MATRIX, or QA sheet) INTO the
-  matrix.
 - `showcase` when the user asks for a live demo, sign-off flow, or user-visible
   acceptance run.
 - `walkthrough` when the user asks for a broad explanation, caveats, or evidence
@@ -153,27 +150,27 @@ uc scan --repo <repo> --gate                          # dev bar: VERIFIED_LOCAL
 
 ## Authoring & inventory commands
 
-- Scaffold a workspace: `uc init --repo <repo>` (a `use-cases.yml` config +
+- Scaffold a workspace: `use-cases init --repo <repo>` (a `use-cases.yml` config +
   a `use-cases/` tree with one example row).
 - Add or update a use case:
-  `uc matrix upsert --file <feature.yml> --use-case-json '{...}'` — `--file` is
+  `use-cases matrix upsert --file <feature.yml> --use-case-json '{...}'` — `--file` is
   the feature file the row lands in; `--use-case-json` is the payload (or
   `--use-case-file <payload.json>`). Minimal planned row:
 
   ```sh
-  uc matrix upsert --file use-cases/my-feature.yml \
+  use-cases matrix upsert --file use-cases/my-feature.yml \
     --use-case-json '{"id":"my-feature.does-x","title":"Does X","lifecycle":"planned","value_tier":"core","journey_role":"golden","usage_frequency":"common"}'
   ```
 
   A `lifecycle: active` row must also carry `actor`, `intent`, `preconditions`,
   `trigger`, `scenarios`, `observable_outcomes`, `host_applicability`,
-  `verification_policy`, and `approval_policy`. Run `uc matrix validate --json`
+  `verification_policy`, and `approval_policy`. Run `use-cases matrix validate --json`
   after upserting.
-- Validate inventory: `uc matrix validate --json`
-- List or filter rows: `uc matrix list --json`
-- Inspect matrix plus evidence health: `uc matrix status --json`
-- Record safe evidence: `uc evidence record --json`
-- Void mistaken evidence by appending history: `uc evidence void --json`
+- Validate inventory: `use-cases matrix validate --json`
+- List or filter rows: `use-cases matrix list --json`
+- Inspect matrix plus evidence health: `use-cases matrix status --json`
+- Record safe evidence: `use-cases evidence record --json`
+- Void mistaken evidence by appending history: `use-cases evidence void --json`
 
 Stop and surface concrete diagnostics when validation is incomplete, YAML is
 damaged, a verifier genuinely fails, evidence may leak sensitive data, or the user
