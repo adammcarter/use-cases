@@ -173,6 +173,14 @@ jobs:
           use_cases="$(swift build --package-path UseCasesCLI --show-bin-path)/use-cases"
           test -x "$use_cases"
           echo "USE_CASES=$use_cases" >> "$GITHUB_ENV"
+      # Every mcp.* row's verifier drives the COMPILED use-cases-mcp binary
+      # through the Oracle over stdio (UseCasesOracle/Tests/.../McpSession.swift,
+      # UC_MCP_BIN unset -> it looks for UseCasesMCP/.build/{debug,release}/
+      # use-cases-mcp -- OracleLayout.builtBinary). Nothing else in this job
+      # built it, so every mcp.* row failed with a missing-binary error until
+      # this step existed.
+      - name: build the MCP server
+        run: swift build --package-path UseCasesMCP
       # Phase 1 -- VERIFY: run each bound row's resolved verifier(s) and write an
       # UNSIGNED results ledger (one JSONL line per row). This step runs arbitrary
       # repo test commands, so for key hygiene the verifier subprocesses MUST NOT
