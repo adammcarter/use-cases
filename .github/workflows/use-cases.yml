@@ -54,6 +54,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      # macos-15's DEFAULT Xcode is 16.4 (Swift 6.1); the image also carries
+      # 26.0.1-26.3 (Swift 6.2), the line this repository is written and
+      # verified against everywhere else (ADR 0007 decision 6).
+      - name: select Xcode 26.3 (Swift 6.2)
+        run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
       # The CLI is built from source. This repository IS the product, so the
       # authority gate has to run the build under test -- never `bin/use-cases`,
       # which resolves a published release, and never a binary from anywhere
@@ -86,6 +91,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      # macos-15's DEFAULT Xcode is 16.4 (Swift 6.1); the image also carries
+      # 26.0.1-26.3 (Swift 6.2), the line this repository is written and
+      # verified against everywhere else (ADR 0007 decision 6).
+      - name: select Xcode 26.3 (Swift 6.2)
+        run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
       # The CLI is built from source. This repository IS the product, so the
       # authority gate has to run the build under test -- never `bin/use-cases`,
       # which resolves a published release, and never a binary from anywhere
@@ -147,6 +157,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+      # macos-15's DEFAULT Xcode is 16.4 (Swift 6.1); the image also carries
+      # 26.0.1-26.3 (Swift 6.2), the line this repository is written and
+      # verified against everywhere else (ADR 0007 decision 6).
+      - name: select Xcode 26.3 (Swift 6.2)
+        run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
       # The CLI is built from source. This repository IS the product, so the
       # authority gate has to run the build under test -- never `bin/use-cases`,
       # which resolves a published release, and never a binary from anywhere
