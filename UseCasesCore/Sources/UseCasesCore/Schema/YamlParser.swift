@@ -9,15 +9,54 @@ import Yams
 /// schema — `yes` is a string, `017` is seventeen — and NOT by YAML 1.1 rules,
 /// which is what the underlying library would otherwise apply.
 public enum YamlParser {
+  // MARK: - Patterns
+
+  //
+  // Every pattern this parser tests is fixed at compile time, never built
+  // from runtime data. `resolve(_:)` below checks a plain scalar against
+  // most of these in sequence before falling through to a plain string, so
+  // for a matrix of any size this is the majority of the work `scan` and
+  // `validate-ledger` do — every id, title, intent and outcome string in
+  // every row runs this gauntlet once. `RegularExpression` precompiles the
+  // whole list once, alongside the schemas' own `pattern` keyword values,
+  // rather than recompiling a pattern on every scalar it is tested against.
+  private static let mergeKeyPattern = "(?m)^[ \\t]*<<[ \\t]*:"
+  private static let customTagPattern = "(^|[\\s,\\[{])![A-Za-z]"
+  private static let nullPattern = "^(?:~|[Nn]ull|NULL)?$"
+  private static let boolPattern = "^(?:[Tt]rue|TRUE|[Ff]alse|FALSE)$"
+  private static let octalPattern = "^0o[0-7]+$"
+  private static let intPattern = "^[-+]?[0-9]+$"
+  private static let hexPattern = "^0x[0-9a-fA-F]+$"
+  private static let specialFloatPattern = "^(?:[-+]?\\.(?:inf|Inf|INF)|\\.nan|\\.NaN|\\.NAN)$"
+  private static let exponentFloatPattern =
+    "^[-+]?(?:\\.[0-9]+|[0-9]+(?:\\.[0-9]*)?)[eE][-+]?[0-9]+$"
+  private static let decimalFloatPattern = "^[-+]?(?:\\.[0-9]+|[0-9]+\\.[0-9]*)$"
+
+  /// Every pattern above, in one place `RegularExpression` reads to warm its
+  /// cache — the single source for each string, so the cache can never drift
+  /// from what a call site actually tests.
+  static let allPatterns: [String] = [
+    mergeKeyPattern,
+    customTagPattern,
+    nullPattern,
+    boolPattern,
+    octalPattern,
+    intPattern,
+    hexPattern,
+    specialFloatPattern,
+    exponentFloatPattern,
+    decimalFloatPattern,
+  ]
+
   /// Parse `source`, refusing merge keys and custom tags outright.
   public static func parseToJSON(
     source: String,
     sourcePath: String,
   ) -> ParsedYamlResult {
-    if RegularExpression.matches(source, "(?m)^[ \\t]*<<[ \\t]*:") {
+    if RegularExpression.matches(source, mergeKeyPattern) {
       return refusal("yaml.merge_key_rejected", "YAML merge keys are not supported.", sourcePath)
     }
-    if RegularExpression.matches(source, "(^|[\\s,\\[{])![A-Za-z]") {
+    if RegularExpression.matches(source, customTagPattern) {
       return refusal("yaml.custom_tag_rejected", "Custom YAML tags are not supported.", sourcePath)
     }
 
@@ -133,38 +172,35 @@ public enum YamlParser {
       return .string(scalar.string)
     }
     let text = scalar.string
-    if RegularExpression.matches(text, "^(?:~|[Nn]ull|NULL)?$") {
+    if RegularExpression.matches(text, nullPattern) {
       return .null
     }
-    if RegularExpression.matches(text, "^(?:[Tt]rue|TRUE|[Ff]alse|FALSE)$") {
+    if RegularExpression.matches(text, boolPattern) {
       return .bool(text.lowercased().hasPrefix("t"))
     }
-    if RegularExpression.matches(text, "^0o[0-7]+$"),
+    if RegularExpression.matches(text, octalPattern),
        let value = UInt64(text.dropFirst(2), radix: 8)
     {
       return .number(Double(value))
     }
-    if RegularExpression.matches(text, "^[-+]?[0-9]+$"), let value = Double(text) {
+    if RegularExpression.matches(text, intPattern), let value = Double(text) {
       return .number(value)
     }
-    if RegularExpression.matches(text, "^0x[0-9a-fA-F]+$"),
+    if RegularExpression.matches(text, hexPattern),
        let value = UInt64(text.dropFirst(2), radix: 16)
     {
       return .number(Double(value))
     }
-    if RegularExpression.matches(text, "^(?:[-+]?\\.(?:inf|Inf|INF)|\\.nan|\\.NaN|\\.NAN)$") {
+    if RegularExpression.matches(text, specialFloatPattern) {
       if text.lowercased().hasSuffix("nan") {
         return .number(.nan)
       }
       return .number(text.hasPrefix("-") ? -.infinity : .infinity)
     }
-    if RegularExpression.matches(
-      text,
-      "^[-+]?(?:\\.[0-9]+|[0-9]+(?:\\.[0-9]*)?)[eE][-+]?[0-9]+$",
-    ), let value = Double(text) {
+    if RegularExpression.matches(text, exponentFloatPattern), let value = Double(text) {
       return .number(value)
     }
-    if RegularExpression.matches(text, "^[-+]?(?:\\.[0-9]+|[0-9]+\\.[0-9]*)$"),
+    if RegularExpression.matches(text, decimalFloatPattern),
        let value = Double(text)
     {
       return .number(value)
