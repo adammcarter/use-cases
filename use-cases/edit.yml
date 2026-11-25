@@ -31,10 +31,17 @@ use_cases:
       - id: never-invalid
         when: [A save would leave the workspace INVALID.]
         then: [It is refused and nothing is written.]
+      - id: concurrent
+        given: [Two saves run at the same moment.]
+        when: [Both write the same file.]
+        then: ["Each save that succeeds is in the file; the other is refused and told to run it again."]
     validation:
       - id: acceptance
         type: { kind: acceptance }
-        covers: [own-lines, placement, never-invalid]
+        covers: [own-lines, placement, never-invalid, concurrent]
+      - id: swift-tests
+        type: { kind: unit }
+        covers: [concurrent]
   - id: remove
     title: Remove one use case and keep its evidence
     description: Promised in chapter 16 (CLI surface) §14.

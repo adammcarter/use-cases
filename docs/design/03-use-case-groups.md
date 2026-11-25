@@ -460,7 +460,7 @@ They do not select individual validation routes in v1.
 Group = WHICH use cases belong together
 ```
 
-Groups select use cases for status views and gates (chapter 16), for example `use-cases status --group smoke --gate`: does anything in `smoke` block?
+Groups select use cases for status views and gates (chapter 16), for example `use-cases status --group smoke --gate`: does anything in `smoke` block? A `--group` that names no group is refused (exit 2, "no group 'NAME'"), never read as an empty group.
 
 Groups never choose commands. What runs is set by the run commands in `use-cases-bridge.yml` (`14 — Run commands`); groups only filter which use cases are reported or gated.
 

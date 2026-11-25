@@ -56,7 +56,10 @@ use_cases:
         given: [A failed use case outside a group.]
         when: [status --gate --group runs.]
         then: [Only the group's members decide.]
+      - id: unknown-group
+        when: ["--group names no group."]
+        then: ["It is refused with exit 2 and \"no group 'NAME'\"."]
     validation:
       - id: acceptance
         type: { kind: acceptance }
-        covers: [members-only]
+        covers: [members-only, unknown-group]

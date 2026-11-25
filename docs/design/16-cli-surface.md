@@ -209,7 +209,7 @@ The "why" is chapter 15's explanation for the route: the run that decided it, th
 
 ## 10. The gate
 
-`use-cases status --gate` answers "does anything block?", for a whole workspace or one group (`--gate --group release`). It exits 1 when something blocks.
+`use-cases status --gate` answers "does anything block?", for a whole workspace or one group (`--gate --group release`). It exits 1 when something blocks. A `--group` that names no group is refused with exit 2 and "no group 'NAME'".
 
 | Use case status | Default | `--strict` |
 |---|---|---|
@@ -367,6 +367,8 @@ no file for the group yet                 → a new file, at the path the struct
 ```
 
 A use case needs a group: an id with no group, or straight under a scope's namespace, is refused. A file already at the structured path that holds another group is refused, never taken over.
+
+**Saves never lose a change.** When two saves run at once, each one that reports success is in the file, and the other is refused with "changed since it was read; run it again".
 
 **Nothing invalid is ever written.** Before anything is written, the whole workspace is loaded as it would be after the change (chapter 09). A change that would leave it INVALID is refused with exit 2 and writes nothing: a missing field, an unknown one, a validation covering a scenario that does not exist, or removing a use case a group names by id.
 
