@@ -25,6 +25,10 @@ use_cases:
       - id: swift-tests
         type: { kind: unit }
         covers: [prefix]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: ba4f696e509294757ee236ed4eaad6a6875ef2d0e185dfe5eea2887e40b7c9f1
   - id: attachments
     title: Evidence files are kept with a verdict
     description: Promised in chapter 12 (Results storage) §16; §17.
@@ -44,3 +48,7 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [kept, same-name, damaged]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "9bb21666d71f4c113bac65be40f03e3c2aada84399f599ff8d614fa978b10c81"

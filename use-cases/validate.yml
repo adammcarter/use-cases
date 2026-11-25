@@ -22,6 +22,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [valid-summary, runs-no-test, warnings-never-fail]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: dced64e09d7c0f22e9abdd62789a6aaf41ede457cb2e44b6f64086aa1f122e64
   - id: refuses-unsafe-yaml
     title: Refuses YAML that readers could take differently
     description: Promised in chapter 09 (Workspace loading) §14 YAML model; chapter 02 (Use-case schema) scenarios; ADR 017.
@@ -47,6 +51,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [ambiguous-scalars, duplicate-keys, unsafe-yaml, unquoted-note, ordinary-yaml]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: ba678b63e914c7514d17713cba8f2bdcf24fd0fedbf916e56518c84c55b34fc5
   - id: draft-or-ready
     title: A use case is READY, DRAFT or INVALID by its fields
     description: Promised in chapter 02 (Use-case schema) Authored state; chapter 07 (Verification state model).
@@ -73,6 +81,10 @@ use_cases:
       - id: swift-tests
         type: { kind: unit }
         covers: [missing-field-is-draft]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "1e9c19be58ba65981807d854ab7a50629dd9b18dca5ab5f44c30827d607a7c33"
   - id: refuses-broken-structure
     title: Refuses ids and coverage that do not add up
     description: Promised in chapter 05 (Identity and id grammar) Segment rules; chapter 02 (Use-case schema) INVALID; chapter 06 (Validation model) Coverage, Where running lives.
@@ -92,6 +104,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [duplicate-ids, unknown-scenario, no-tool-in-use-case]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: a599c83a167196899e9c4bee3124bb3846c80d8c5236302315ecbd5cfcc4fd93
   - id: workspace-layout-rules
     title: Refuses a workspace layout that could be read two ways
     description: Promised in chapter 04 (Workspace structure) The workspace root, Path spelling, Symlinks; chapter 09 (Workspace loading) §11.1, §12, §19.
@@ -114,6 +130,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [root-says-root, spelling-matches-disk, no-symlinks, stray-files]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: a279d9c480170b39a62e6bb322960c715c47d9075273c1ba58e8f32a023bc900
   - id: discovery-exclusions
     title: Skips exactly the folders the workspace excludes
     description: Promised in chapter 04 (Workspace structure) Discovery exclusions; ADR 012.
@@ -144,3 +164,7 @@ use_cases:
       - id: swift-tests
         type: { kind: unit }
         covers: [not-a-scope]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: c6b90fb99f5629c3580b48b1b416f0379e531d3a4f6bc26bf24353c55026252e

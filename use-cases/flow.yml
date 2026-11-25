@@ -14,6 +14,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [end-to-end]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "105834df16d7f7a307a5227414526acae2878b64c5085ed6567e3ad3ef7f5d58"
   - id: step-checks
     title: Each step of the agent flow has a check
     description: Promised in chapter 22 (UCDD skill) §4; chapter 21 (Agent workflows) §3, §6.
@@ -40,6 +44,10 @@ use_cases:
             - "Check: The agent records the sign-off itself, and show reads approved."
             - "Do: Ask for a change to a critical use case."
             - "Check: The agent still asks you, permission or not."
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: c1404fa919c8498d14b1faf67ea7e81fa68b817ab07744befa6d52d880eaff95
   - id: setup
     title: Setup asks before it changes anything
     description: Promised in chapter 22 (UCDD skill) §3; ADR 034; ADR 039.
@@ -61,3 +69,7 @@ use_cases:
           steps:
             - "In a fresh repository with use-cases on the PATH, run the setup skill and answer no to every question: nothing is written."
             - "Run it again with use-cases off the PATH: it says so, offers the release download, and installs nothing until told yes."
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: b4ea34e7f1dfff2af6d74f7cd236932122dbd895e3b830a0c5f4409075cf709b

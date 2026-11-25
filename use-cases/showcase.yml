@@ -19,6 +19,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [kept, blocks, stale]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: de1f4ada21c0a410b81c3fd7f43657363e3235b325c2efb10c5c1ad6053aef95
   - id: performed
     title: A showcase is planned, performed and thrown away
     description: Promised in chapter 23 (Showcases) §1, §4.
@@ -38,3 +42,7 @@ use_cases:
             - "Check: The showcase performed that use case's try-it steps, and the verdict it kept shows in use-cases show with its message and evidence."
             - "Do: When the showcase ends, run git status again."
             - "Check: Nothing it set up is left in the project, and only the kept verdict remains in the results store."
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "43d8302f17e3705475f1c26073525b49e56a782ec68aba5cb2f1092f6a29bcdf"

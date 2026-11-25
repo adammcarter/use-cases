@@ -16,6 +16,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [unsealed, tampered]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: fcaaeec5971bd4707205462487b1ee2325259fb43b8be40f6249883f5210e9e6
   - id: run-ids
     title: Run ids only go up and follow time
     description: Promised in chapter 12 (Results storage) §8, §9, §25, §32; ADR 016.
@@ -41,6 +45,10 @@ use_cases:
       - id: swift-tests
         type: { kind: unit }
         covers: [short-ids]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: f09b5ac5a7c2fb8240cd9304425485e8dc21637b98825612292e9fdba921f18a
   - id: prune
     title: Prune removes old runs and changes no answer
     description: Promised in chapter 16 (CLI surface) §20; chapter 12 (Results storage) §30, §31.
@@ -67,3 +75,7 @@ use_cases:
       - id: swift-tests
         type: { kind: unit }
         covers: [persons-call]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: a3e4b1434abfcec34a80cb4676b43341f9204c9531545bc49e98d879e3f4d20f

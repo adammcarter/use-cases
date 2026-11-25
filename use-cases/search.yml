@@ -22,6 +22,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [ranked, typos, phrases-and-minus, stable]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: f40b1dc8ed331deb3ae4e5463cd6f03278c8aee4214562aabed54a9094430fb5
   - id: like
     title: Find use cases like a draft
     description: Promised in chapter 16 (CLI surface) §15.
@@ -41,6 +45,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [like, out-of-scope, not-both]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: ca51cb845b72194050d6382540f84fd5333573a6937d425432dac1cdb27d54ab
   - id: filters
     title: Narrow a search by prefix, group, tier, state and field
     description: Promised in chapter 16 (CLI surface) §15.
@@ -60,6 +68,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [filters, fields, full]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "932f3a2f48e252584c803cb01e8340c083e921dec070f6e5c32829d58e64c860"
   - id: pages
     title: Search results come in pages that never skip or repeat
     description: Promised in chapter 16 (CLI surface) §15.
@@ -76,3 +88,7 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [pages, changed]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "14a6d2eb53a219f68415dc23c4734ba20a5fedc35edda157a841f9196aab33ef"

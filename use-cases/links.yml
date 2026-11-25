@@ -24,6 +24,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [pair-links-region, broken-pairs-invalid, malformed-id, nesting]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "51724726714fec26157a34dd240195bb364ac3471f3406af7cdd7e4263d4b82a"
   - id: manual-bindings
     title: A manual binding links a file or lines without markers
     description: Promised in chapter 08 (Links) Manual binding object, Manual binding validity, Excluded content, Binding ID uniqueness.
@@ -47,6 +51,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [binding-links, missing-file, excluded-target, claimed-twice]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: ebf36861dc1ceeb7200227a7b20e9fc60b58ce78af3dbd84696cf551b74015c6
   - id: list-links
     title: Lists the code each use case is tied to
     description: Promised in chapter 16 (CLI surface) §13.
@@ -66,6 +74,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [by-prefix, ordered, whole-file-range]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: b3fdd664ccca0bfbffeb7bbbe279c02cca987518ffc29c7d448c076239c2c45e
   - id: moved-code
     title: Warns when marked code has moved away
     description: Promised in chapter 08 (Links) The linked region.
@@ -84,6 +96,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [empty-region, renamed-test]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "85bfa9a208ec148f64a101dedc5c9ef59d33e5e5aced22ff4016a06abba79f04"
   - id: scan-robustness
     title: The marker scan reads every file the same way on every system
     description: Promised in chapter 08 (Links) Text encoding; chapter 09 (Workspace loading) §20.3.
@@ -106,3 +122,7 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [line-endings, not-utf8, unreadable, special-files]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "6109458f827d0a0bfc953df6c690c8d18cd198b72cd913f1074d58902c5ea064"

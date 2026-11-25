@@ -31,6 +31,10 @@ use_cases:
       - id: swift-tests
         type: { kind: unit }
         covers: [person-only]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "2f4622d5cfab4a59a2be7b23146ff7900f5649f842dd193b0899e32be845634e"
   - id: server-lifetime
     title: The MCP server stops cleanly with its host
     description: Promised in chapter 20 (MCP tools) §2.
@@ -50,3 +54,7 @@ use_cases:
       - id: swift-tests
         type: { kind: unit }
         covers: [host-gone, cancelled-call, workspace]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "80d0ac5c753ad2ed788be7ac2a6a2dc75ab4bc42afa3e1643f55f6b5b5e306a2"

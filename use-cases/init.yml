@@ -22,6 +22,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [empty-folder, never-overwrites, minimal, inside-workspace]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: c2130afbef34d9ea8627d6a1576a242f49cd736a4737cdcda455358722016f0e
   - id: choices
     title: init asks a person, and flags answer in advance
     description: Promised in chapter 17 (Init) §1, §4, §8.
@@ -48,6 +52,10 @@ use_cases:
       - id: swift-tests
         type: { kind: unit }
         covers: [existing-workspace, no-terminal]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "20389fb4755647423108679ec8d77473c3a8e8823efaa87c186ab246ecb480f7"
   - id: no-test-command
     title: init never writes a test command
     description: Promised in chapter 17 (Init) §4, §5.
@@ -61,6 +69,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [template]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: eb04e99683cec2c5a82c42c025f16d5a4fdb6a3e194d74b07ef66fce6822da19
   - id: gitignore
     title: init keeps verdicts out of version control
     description: Promised in chapter 17 (Init) §6.
@@ -83,3 +95,7 @@ use_cases:
       - id: swift-tests
         type: { kind: unit }
         covers: [no-git]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "678a3eb11fe92e0b05bbe63c24bf7216084ba9d29038e267c17656062d05b02f"

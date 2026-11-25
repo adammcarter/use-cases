@@ -22,6 +22,10 @@ use_cases:
       - id: swift-tests
         type: { kind: unit }
         covers: [one-guide]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "8d5792fd5c047853bbd7fed6e4db365a2e33e4bac8db685a8ad39959f88f2aa4"
   - id: held-true
     title: Every command the guides and skills name is real
     description: Promised in ADR 030; ADR 034; ADR 039; chapter 19 (CI) §7; chapter 22 (UCDD skill) §3.
@@ -44,3 +48,7 @@ use_cases:
       - id: swift-tests
         type: { kind: unit }
         covers: [guides, skills, recipes, plugin-version]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "9d10c9d1bd077a5e6dd1676ef8d0678334497977b23554a905e462dbd501514e"

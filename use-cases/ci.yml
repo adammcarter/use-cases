@@ -20,6 +20,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [clean-checkout, fresh, shards]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "2eecae27f72b2b53410b44d11fe09e645af1c7e39305cd9dc2dc2dae0f93c0c2"
   - id: install
     title: CI installs a pinned, checked release
     description: Promised in chapter 19 (CI) §2; ADR 039.
@@ -41,3 +45,7 @@ use_cases:
           steps:
             - "Download a release tarball and its .sha256 file for this platform, change one byte of the tarball, and check it: the check fails."
             - "Unpack an unchanged tarball into one folder, link its program onto the PATH, and run use-cases --version and use-cases docs: both work."
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "90e9929a77e4091c9928e34c558f5f198e7a8f0412a571494fbb7e365957f74b"

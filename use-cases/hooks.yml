@@ -25,6 +25,10 @@ use_cases:
       - id: swift-tests
         type: { kind: unit }
         covers: [list]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "07c87c65e8575c29dd7b759df90da8a25e038360685189ee4f9b276178072ace"
   - id: never-overwrites
     title: Hooks never overwrite what is already there
     description: Promised in chapter 18 (Hooks) §4.
@@ -47,6 +51,10 @@ use_cases:
       - id: swift-tests
         type: { kind: unit }
         covers: [other-hook]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: ccef4ab6f3a577d1894ce5b0b5c2908d189ef194e400a11e28cca78c368cf0c4
   - id: stops
     title: The hooks stop a bad commit or push
     description: Promised in chapter 18 (Hooks) §2, §3.
@@ -66,3 +74,7 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [commit, push, finds-tool]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "2a325bf5ac8ecdd9155dbe39b1342b120a13e5feb7ed397e2a272ea677d89df7"

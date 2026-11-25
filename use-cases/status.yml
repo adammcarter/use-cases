@@ -31,6 +31,10 @@ use_cases:
       - id: swift-tests
         type: { kind: unit }
         covers: [json, store-line]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: c32f24032031381ca7f756bcbe017b9041287f10403c7bc37d4ed7e99d8ae3a5
   - id: detail
     title: One use case in detail says why
     description: Promised in chapter 16 (CLI surface) §9; chapter 15 (Impact and explanations) §4, §5.
@@ -58,6 +62,10 @@ use_cases:
       - id: swift-tests
         type: { kind: unit }
         covers: [stale-why, stale-keeps-last-result, missing-links]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "24cc48300e417a61e01636e8aed3a1e867ffa78f513ae37286bd9aa1276aca2b"
   - id: judging
     title: A use case's status is the worst of its gating routes
     description: Promised in chapter 07 (Verification state model) How the core judges, Overall READY status; ADR 019.
@@ -84,6 +92,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [worst-of-routes, non-gating, skipped-test, not-run]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: adf5d9fb7539e8b7df299d8977b907c1a0da22cc0a4d4cea0bd0e71e36880fb2
   - id: staleness
     title: A verdict goes stale when what it proved changes
     description: Promised in chapter 11 (Fingerprints and freshness) §21, §24, §31, §32; chapter 15 (Impact and explanations) §9.
@@ -109,6 +121,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [linked-code, unlinked-code, promise, move, route-changed]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "2044bb32224b12096a5e7354b91829669868f6d8943513dc15870b69fbb642b6"
   - id: restored
     title: Restoring what was proven brings its verdict back
     description: Promised in chapter 11 (Fingerprints and freshness) §53.
@@ -123,6 +139,10 @@ use_cases:
       - id: swift-tests
         type: { kind: unit }
         covers: [restored]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "0ace8e8f55b3bd4ce8a8c808598c7672e8755c125e8fe210da7ab0df08dcf307"
   - id: resources
     title: A route's declared resources are part of what it proved
     description: Promised in chapter 06 (Validation model) Resources; chapter 11 (Fingerprints and freshness) §41-§43.
@@ -143,6 +163,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [resources, missing, globs]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: ab8d2f7d6bbec84f4acc8b014f7022ba0f8a7e2cea55af29d245033a79f1a47c
   - id: line-endings
     title: Checkouts that differ only in line endings agree
     description: Promised in chapter 11 (Fingerprints and freshness) §12; chapter 04 (Workspace structure) Freshness policy.
@@ -156,3 +180,7 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [lf-crlf]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "0826cc8a813e64861e43012dd640a6568db8e927f7cb72489757523e5d4efef4"

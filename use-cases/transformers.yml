@@ -16,6 +16,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [status-rules, languages]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: bb8edf49bd5f285777d32b9475b14bb7e845f15caae5f552d7f9edb068bd34ce
   - id: swift
     title: Swift Testing results reach their links
     description: Promised in chapter 10 (Bridge settings and transformer contract) §13; the transformer guides for swift-testing and swift-test.
@@ -38,6 +42,10 @@ use_cases:
       - id: swift-tests
         type: { kind: unit }
         covers: [xctest]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "0de1387233bc9a3aa3b31f718707ae830a2ed0131b20aba2b96c189b2e6561dd"
   - id: exit-code
     title: A script's exit code proves one file
     description: Promised in the exit-code transformer guide.
@@ -54,3 +62,7 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [exit-code, needs-run]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "945c65a4cb47d4ff1ecfe107136896ec05415375bd23578fac1ed22ab6e078b9"

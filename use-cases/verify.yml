@@ -23,6 +23,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [one-command, failing-test-is-verdict, only, merge]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: d61e9cece51243462a1956484996b58cf7816ec237965097959fc5f6c3695a8d
   - id: start-finish
     title: Your own test step between --start and --finish
     description: Promised in chapter 13 (Verify flow) §5, §6, §7; ADR 006.
@@ -45,6 +49,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [own-step, finish-without-start, only-at-start, bridge-changed]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: fc8d1fa7a9ca855d905ba2e803556431675774d2226ac91b04c50bcccf4f6d1a
   - id: guard
     title: Code changed during a run gives no verdict
     description: Promised in chapter 13 (Verify flow) §8.
@@ -64,6 +72,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [changed-during, unlinked-edit, route-added]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: ccefeefebf5e960a4a858c82e31c77a8a25bf9b9b2cb9fb827a6956503c56276
   - id: run-errors
     title: Run errors are said, and never become passes
     description: Promised in chapter 13 (Verify flow) §10; chapter 14 (Run commands) §11, §12, §13; chapter 16 (CLI surface) §6.
@@ -86,6 +98,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [build-break, signal-timeout, no-report, broken-transformer]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "05f150a52e1ee42269f7676a0ea727e7593f4ab9ed4eceedf90f1c39d46e37f5"
   - id: reports-owned-by-run
     title: Each run owns its reports and never reads an older one
     description: Promised in ADR 020; chapter 12 (Results storage) §15.
@@ -106,6 +122,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [own-reports, never-earlier, sealed-bytes]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: a042dfbe5f08d54c3203fd7cedd8342dcc8f821c9731235957ea14c20ea6aa4a
   - id: commands
     title: Test commands run directly, in the real project
     description: Promised in chapter 14 (Run commands) §8, §9, §10; chapter 13 (Verify flow) §3; ADR 005.
@@ -129,6 +149,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [real-project, working-dir, report-placeholder, no-input]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "0d32fccae7700302a3685a9f62bdb61b491856c47cc1cddf691fbd7b9c2ced72"
   - id: no-surprises
     title: A run does exactly what it is told, once
     description: Promised in chapter 14 (Run commands) §6, §15; chapter 13 (Verify flow) §14; chapter 15 (Impact and explanations) §12; chapter 10 (Bridge settings and transformer contract) §10.
@@ -163,6 +187,10 @@ use_cases:
             - "Set up: Make the command pass, and run use-cases verify --run until every route it reaches is verified."
             - "Do: Run use-cases verify --run again."
             - "Check: The command runs again (the scratch file grows), though everything was already verified."
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: cc21cc29135dd6b118c47884173e63005def6ae4dcfcf42bdb95fea9bafabef8
   - id: open-runs
     title: Open runs are named, locked and can be aborted
     description: Promised in chapter 13 (Verify flow) §6, §15, §16.
@@ -189,6 +217,10 @@ use_cases:
       - id: swift-tests
         type: { kind: unit }
         covers: [abort]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "2f015f6257150b7749bac6b08e51ef9647471b9a5ac4b7895b0fbf4bfcc4bb75"
   - id: unlinked-tests
     title: Tests no use case claims are reported
     description: Promised in chapter 15 (Impact and explanations) §6; chapter 07 (Verification state model) How the core judges.
@@ -202,3 +234,7 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [unlinked]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: ced8d36c2959e09518dd8d6c6dbf92b78ad2c05750f14e782d0454bfa41cd495

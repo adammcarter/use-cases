@@ -26,6 +26,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [blocks, warns, invalid, drafts]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "4318551f0920d26e1a59e98d760a0740b41263e4130d62dc13e1f9710ae7753e"
   - id: strict
     title: The strict gate blocks everything not proven
     description: Promised in chapter 16 (CLI surface) §10.
@@ -46,6 +50,10 @@ use_cases:
       - id: swift-tests
         type: { kind: unit }
         covers: [no-state-filter]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: a38c05e3869e18b0e1806ee35beb705ac657a4d68741c4303f821fddf47427ef
   - id: groups
     title: A group is gated on its members only
     description: Promised in chapter 03 (Use-case groups) Whole-use-case selection only; chapter 16 (CLI surface) §10.
@@ -63,3 +71,7 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [members-only, unknown-group]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "7820452c6e4a7ee6b7d81dcbe60563f016061d976d4086ec409bf7a8a6a25e4e"

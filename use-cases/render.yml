@@ -29,3 +29,7 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [intent, brief, proposal, refused, results, applied-as-signed]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "01c0de8ffe76f61a0cd19cd0ca21dbeb70134d6e217b6bf02cab18ec95f37d42"

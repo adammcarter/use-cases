@@ -23,6 +23,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [recorded, changed, save-never-approves, all-and-batch]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: d6b8d68e254774e6159f3aeaa2041d3b8b43dbd0818592dd243e7e4979cc50ef
   - id: gate
     title: With sign-off required, the gate holds unapproved promises by tier
     description: Promised in chapter 16 (CLI surface) §9, §10 Sign-off.
@@ -47,3 +51,7 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [by-tier, "off", root-only, why]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: e23256e8a76e2026b19be1d5f8d98b7cca93dda96089b07c1cccec744b743bcd

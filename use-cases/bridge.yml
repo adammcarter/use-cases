@@ -22,6 +22,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [names, transformer-ref, root-only, warnings]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "35c6a78d24a78bd307fcf223c32c4dc4d8ec9d411bfc1c821f3cebb4d390cf22"
   - id: no-settings
     title: The core works with no bridge settings at all
     description: Promised in chapter 01 (Core foundation) The three rings; chapter 10 (Bridge settings and transformer contract) §2, §4; chapter 13 (Verify flow) §13; chapter 19 (CI) §2; ADR 000.
@@ -43,6 +47,10 @@ use_cases:
       - id: swift-tests
         type: { kind: unit }
         covers: [verify-with-nothing-to-run]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "545d7084abcb4dab4c34eec8361f787e3131cbc22bfac828bcb95d058b187d37"
   - id: links-transformers
     title: A links program adds links and is trusted for nothing else
     description: Promised in chapter 10 (Bridge settings and transformer contract) §11, §14.
@@ -60,6 +68,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [test-names, any-language]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "4f5585df175f1a6c8a20fe70d96a4e44e0fc60e30528c9f44fe36baf08b88833"
   - id: monorepo
     title: One workspace proves several services
     description: Promised in chapter 04 (Workspace structure) Scope, Scope prefix; chapter 10 (Bridge settings and transformer contract) §7; chapter 11 (Fingerprints and freshness) §31.
@@ -79,3 +91,7 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [nested-scopes, every-service, locality]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "7d4f58d5bd7bb1773b117f83ca51fbff5ed74cbb02a62049bda172424d520e66"

@@ -16,6 +16,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [round-trip, unknown]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "50f85f5a7925907ea2973f007c95302060b9fa3d2f9f82a898f2ced13bfdf14d"
   - id: save
     title: Save one use case without touching anything else
     description: Promised in chapter 16 (CLI surface) §14; ADR 028.
@@ -42,6 +46,10 @@ use_cases:
       - id: swift-tests
         type: { kind: unit }
         covers: [concurrent]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: c3aa8fbc8851433924c632b3e46bbc3036291e8ff307c7b987e0d81021c3a5f3
   - id: remove
     title: Remove one use case and keep its evidence
     description: Promised in chapter 16 (CLI surface) §14.
@@ -64,6 +72,10 @@ use_cases:
       - id: swift-tests
         type: { kind: unit }
         covers: [markers-warned]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "4c4d80c18c518b48d086206869009d7a703b6ccc59756378ad4bb5001b4ab50b"
   - id: batch
     title: A batch of changes is applied all or nothing
     description: Promised in chapter 16 (CLI surface) §14; ADR 031.
@@ -84,6 +96,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [all-or-nothing, fixed-order, shared-files]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "13d77f612b502068f10acfa2a3790f1b2556678aa4c7c4e39293102fd56fdf9b"
   - id: dry-run
     title: A dry run shows exactly what the real run would do
     description: Promised in chapter 16 (CLI surface) §17.
@@ -103,6 +119,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [matches, only-writers, wording]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: b25b85eb90e75ff58c8b2da8e01171c391eaf33e39db9419f1a1ad8e3e13c18e
   - id: comments-kept
     title: Comments a change would drop are never dropped silently
     description: Promised in chapter 16 (CLI surface) §14.
@@ -116,3 +136,7 @@ use_cases:
       - id: swift-tests
         type: { kind: unit }
         covers: [warned]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: e4bc58889490fab8aa95593b3bc57568724a91aec9622e15d74ba91e646dc6f4

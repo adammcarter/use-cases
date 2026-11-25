@@ -19,6 +19,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [selectors, exclude-wins, rename]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "00056b68bd653d0e74a33f65ea767ab04654c1bfd2301c489a88a5cf4948b1ae"
   - id: file-rules
     title: The groups file is checked like the use cases
     description: Promised in chapter 03 (Use-case groups) Diagnostics.
@@ -38,3 +42,7 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [invalid, warns, selects-nothing]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "3edf955c05e8769e98a41d51b43e66b3520ac928fd42ef503697ec5534063ded"

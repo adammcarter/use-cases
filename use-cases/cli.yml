@@ -22,6 +22,10 @@ use_cases:
       - id: swift-tests
         type: { kind: unit }
         covers: [command-help]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "5c0a836bf382e97accad39794355101b495b74e290884b7b98fe79fa7354deb8"
   - id: finds-the-workspace
     title: Finds the workspace from any folder below it
     description: Promised in chapter 16 (CLI surface) §3.
@@ -46,6 +50,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [from-below, no-root, nested-root, child-scope-named]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: aa1320b7edc3f022d4445ad38ce14021dcb22aaa14d5f5e2b087d8bf82679e0f
   - id: json-contract
     title: Gives scripts exactly one JSON document
     description: Promised in chapter 16 (CLI surface) §5.
@@ -63,6 +71,10 @@ use_cases:
       - id: acceptance
         type: { kind: acceptance }
         covers: [one-document, error-kinds]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: c03cb3a6c8745fad1f1292e593ce7b20dc1c38de8521250a0c3c57e85352c67e
   - id: exit-codes
     title: Exit codes mean the same for every command
     description: Promised in chapter 16 (CLI surface) §6.
@@ -85,6 +97,10 @@ use_cases:
       - id: swift-tests
         type: { kind: unit }
         covers: [invalid-is-2, cancelled-is-130]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: e4f35caeb6fc6a467ca9164c8ec85300438f22e23b06913358323f4466820301
   - id: people-first-output
     title: Output for people leads with the worst and ends with one hint
     description: Promised in chapter 16 (CLI surface) §4, §18, §19.
@@ -107,3 +123,7 @@ use_cases:
       - id: swift-tests
         type: { kind: unit }
         covers: [no-colour-in-pipes]
+    approved:
+      by: Adam Carter
+      "on": "2026-11-25"
+      behaviour: "5f52b0196d0927f66f039cc788a621472b9c36b3ecfe6f09cc62bb678a94bdb1"
