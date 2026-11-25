@@ -170,7 +170,7 @@ So running the same tests with `--run`, or with `--start`, your own command writ
 
 `--run` reads only reports its own commands wrote into its own run. A validation without a run command has no command to run, so it is a run error under `--run`.
 
-`--only <validation-id>` restricts the selection (chapter 14). Routes whose links receive no result from the selected sources get no verdict, as always.
+`--only <validation-id>` restricts the selection (chapter 14). Routes whose links receive no result from the selected sources get no verdict, as always. A run that selects only some of the validations says so on those routes: "its test didn't run (this run read only <ids>)".
 
 ## 8. The guard: code changed during the run
 

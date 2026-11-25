@@ -49,7 +49,7 @@ def edit(workspace, rel, old, new):
 
 def didnt_run(run):
     return {(d["use_case"], d["route"]) for d in run["diagnostics"]
-            if isinstance(d, dict) and d.get("problem") == "its test didn't run"}
+            if isinstance(d, dict) and str(d.get("problem")).startswith("its test didn't run")}
 
 
 @pytest.fixture
@@ -109,6 +109,8 @@ def test_a_use_case_proved_in_two_languages_merges_both_runs(validated):
 def test_running_one_service_never_verifies_the_other_half(ws):
     run = uc(ws, "verify", "--run", "--only", "pricing-tests")
     assert (CROSS, "checkout-totals") in didnt_run(run)
+    assert {d["problem"] for d in run["diagnostics"] if isinstance(d, dict)} == {
+        "its test didn't run (this run read only pricing-tests)"}
     now = status(ws)
     assert now[CROSS]["status"] != "verified"
     assert routes(now[CROSS])["pricing-quotes"] == "verified"

@@ -52,7 +52,28 @@ extension FinishPoint {
       ),
       guardian: guardian,
       links: resolved.links,
+      didntRun: didntRun(
+        stamp: stamp,
+        of: resolved.workspace,
+      ),
     )
+  }
+
+  /// What a route whose links got no result is told: plainly, or with the validations a partial
+  /// run read when it selected fewer than the bridge settings hold (chapter 13 §7 step 5).
+  private func didntRun(
+    stamp: StartStamp,
+    of workspace: LoadedWorkspace,
+  ) -> String {
+    let known = workspace.bridge?.validations.count ?? 0
+
+    guard stamp.selected.count < known else {
+      return Self.didntRun
+    }
+
+    let read = stamp.selected.map(\.text).joined(separator: ", ")
+
+    return "\(Self.didntRun) (this run read only \(read))"
   }
 
   private static func validationLinkKeys(of links: LinkResolution) -> [RouteKey: [String]] {

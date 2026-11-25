@@ -118,7 +118,7 @@ def status(ws):
 
 
 def didnt_run(run):
-    return {d["use_case"] for d in run["diagnostics"] if isinstance(d, dict) and d.get("problem") == "its test didn't run"}
+    return {d["use_case"] for d in run["diagnostics"] if isinstance(d, dict) and str(d.get("problem")).startswith("its test didn't run")}
 
 
 def node_tests(ws, started, *extra):

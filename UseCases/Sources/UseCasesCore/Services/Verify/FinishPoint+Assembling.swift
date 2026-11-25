@@ -8,6 +8,7 @@ extension FinishPoint {
     outcomes: [RouteKey: RouteOutcome],
     guardian: Guardian,
     links: LinkResolution,
+    didntRun: String,
   ) -> Judged {
     var results: [StoredResult] = []
     var diagnostics = links.warningLines.map { line in
@@ -44,7 +45,7 @@ extension FinishPoint {
       case let .didntRun(missing):
         diagnostics.append(
           explanation(
-            Self.didntRun,
+            didntRun,
             of: key,
             at: fingerprint,
             links: missing,

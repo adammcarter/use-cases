@@ -65,6 +65,7 @@ A route that received no verdict in its latest run has a manifest diagnostic (ch
 | Diagnostic | Meaning | What to do |
 |---|---|---|
 | its test didn't run | a validation link received no result | check the run command covers that test |
+| its test didn't run (this run read only …) | the run read only some validations; this route's tests were not among them | run again with that validation selected, or without `--only` |
 | code changed during the run | the route's inputs changed between the start point and the finish point; the diagnostic names the files | run again |
 | not linked: no validation links and no procedure | the route has nothing a test report can reach | add markers or bindings, or verify with `use-cases record` |
 

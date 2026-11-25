@@ -79,6 +79,7 @@ The "why" column names the run that decided each route, or what went wrong in it
 | `run 01a20580 via record` | recorded by hand |
 | `no verdict yet` | nothing has run for it in this checkout |
 | `its test didn't run` | the run had no result for its marked test |
+| `its test didn't run (this run read only …)` | the run read only some validations (`--only`); this route's tests were not among them, so run again with that validation selected, or without `--only` |
 | `not linked: no validation links and no procedure` | nothing can prove it but `use-cases record` |
 | `changed since run … (last result: …)` | proven once, changed since; the result is what that run gave |
 | `code changed during the run` | the code changed between `--start` and `--finish` |

@@ -81,6 +81,38 @@ struct VerifyFinisherJudgingOrderTests {
   }
 
   @Test
+  func `a partial run says what it read on a route whose test it did not read`() async throws {
+    let two = try VerifyFixture(bridge: Self.twoValidations)
+    let started = try two.start(only: ["unit-tests"])
+
+    try two.writeReport(of: started)
+
+    let runner = try MockTransformerRunner(answers: [.success(VerifyFixture.response([:]))])
+    let verified = try await two.finisher(runner: runner).finish(
+      VerifyFinishRequest(runIdentifier: nil),
+      in: two.resolved(),
+      reloading: FixtureReloading(two),
+    )
+
+    #expect(
+      diagnostics(of: verified, route: "unit-tests")
+        == ["its test didn't run (this run read only unit-tests)"],
+    )
+  }
+
+  @Test
+  func `a run that selects every validation keeps the plain reason`() async throws {
+    let started = try fixture.start(only: ["unit-tests"])
+
+    let verified = try await finish(
+      started,
+      answering: [:],
+    )
+
+    #expect(diagnostics(of: verified, route: "unit-tests") == ["its test didn't run"])
+  }
+
+  @Test
   func `a route with a verdict and changed code loses the verdict to the guard`() async throws {
     let started = try fixture.start()
 
