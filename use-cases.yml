@@ -1,0 +1,44 @@
+schema_version: 1
+root: true
+
+discovery:
+  exclude:
+    # build output and tool caches, at any depth
+    - "**/.build/**"
+    - "**/.swiftpm/**"
+    - "**/__pycache__/**"
+    - "**/.pytest_cache/**"
+    - "**/node_modules/**"
+    # agent and session state on this machine
+    - ".claude/**"
+    - ".remember/**"
+    # the design documents and their worked examples
+    - "docs/**"
+    # the language fixtures and the acceptance suite's sample workspaces: each holds a workspace of its own
+    - "fixtures/**"
+    - "UseCases/Acceptance/fixtures/**"
+    - "UseCases/Acceptance/sample-swift-project/**"
+    # the guides bundled with the tool: they show markers as examples
+    - "UseCases/Sources/UseCasesCore/Resources/Guides/**"
+    # acceptance helpers that hold marker text as test data
+    - "UseCases/Acceptance/test_conformance.py"
+    - "UseCases/Acceptance/test_helpers.py"
+    # Swift tests that hold deliberately broken marker text as test data
+    - "UseCases/Tests/UseCasesCoreTests/Models/Init/InitTemplatesTests.swift"
+    - "UseCases/Tests/UseCasesCoreTests/Services/Markers/MarkerPairingMessageTests.swift"
+    - "UseCases/Tests/UseCasesCLITests/Commands/Init/InitCommandRefusalTests.swift"
+    - "UseCases/Tests/UseCasesCLITests/Commands/Links/LinksCommandTests.swift"
+    - "UseCases/Tests/UseCasesCLITests/Commands/Record/RecordCommandInteractiveTests.swift"
+    - "UseCases/Tests/UseCasesCLITests/Commands/Record/RecordCommandTests.swift"
+    - "UseCases/Tests/UseCasesCLITests/Commands/Status/StatusCommandRefusalTests.swift"
+    - "UseCases/Tests/UseCasesCLITests/Commands/Validate/ValidateCommandTests.swift"
+    - "UseCases/Tests/UseCasesCLITests/Commands/Workspace/LinkedWorkspaceLoaderBridgeTests.swift"
+    - "UseCases/Tests/UseCasesCLITests/Commands/Workspace/LinkedWorkspaceLoaderGroupsTests.swift"
+    - "UseCases/Tests/UseCasesCLITests/Commands/Workspace/LinkedWorkspaceLoaderTests.swift"
+    - "UseCases/Tests/UseCasesCoreTests/Models/Text/StringASCIIBytesTests.swift"
+    - "UseCases/Tests/UseCasesCoreTests/Services/Links/CodeScannerTests.swift"
+    - "UseCases/Tests/UseCasesCoreTests/Services/Links/LinkResolverMarkersTests.swift"
+    - "UseCases/Tests/UseCasesCoreTests/Services/Links/LinkResolverTests.swift"
+    - "UseCases/Tests/UseCasesCoreTests/Services/Markers/MarkerScannerMalformedTests.swift"
+    - "UseCases/Tests/UseCasesCoreTests/Services/Markers/MarkerScannerPairingTests.swift"
+    - "UseCases/Tests/UseCasesCoreTests/Services/Markers/SentinelFinderTests.swift"

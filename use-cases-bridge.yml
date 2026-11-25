@@ -1,0 +1,32 @@
+schema_version: 1
+
+# How use-cases verify --run proves this repository's own use cases.
+validations:
+  # Swift Testing: about 4,400 tests. The event stream is the report; the console goes to the run's
+  # outputs as usual. A filtered run: add --filter <suite> before the stream flags.
+  - id: swift-tests
+    working_dir: UseCases
+    report: swift-tests.jsonl
+    run: [swift, test, --experimental-event-stream-output, "{report}", --experimental-event-stream-version, "0"]
+    transformer: swift-testing
+    timeout_seconds: 2400
+
+  # The acceptance suite, run against the binaries this checkout builds. pytest writes JUnit XML
+  # with file and line (xunit1); lines count from 0.
+  - id: acceptance
+    report: acceptance.xml
+    run:
+      - sh
+      - -c
+      - |
+        swift build --package-path UseCases || exit 1
+        bin="$(swift build --package-path UseCases --show-bin-path)" || exit 1
+        USE_CASES_UNDER_TEST="$bin/use-cases" USE_CASES_TRANSFORMERS_UNDER_TEST="$bin/use-cases-transformers" \
+          uv run --python 3.12 --with pyyaml --with pytest --with 'jsonschema[format]' \
+          pytest UseCases/Acceptance -q -p no:cacheprovider \
+          -o junit_family=xunit1 --junitxml="$1"
+      - sh
+      - "{report}"
+    transformer: junit
+    settings: { find: file-line, line_base: 0 }
+    timeout_seconds: 2400
