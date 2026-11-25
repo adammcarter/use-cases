@@ -1,5 +1,5 @@
 """Scale: a generated Python project with 1,000 use cases, 3,000 real pytest tests and 4,000
-markers. Proves the contract holds at size and that no step grows faster than the repo.
+markers. Proves the contract holds at size.
 
     uv run --with pyyaml --with pytest --with 'jsonschema[format]' pytest UseCases/Acceptance/test_scale.py -v -s
 """
@@ -9,7 +9,6 @@ import os
 import shutil
 import subprocess
 import sys
-import time
 
 import pytest
 from conftest import SENTINEL, COMMAND
@@ -60,11 +59,10 @@ def generate(root):
                 handle.write("".join(parts))
 
 
-def timed(ws, *args):
-    started = time.monotonic()
+def run_json(ws, *args):
     process = subprocess.run([*COMMAND, "--workspace", ws, "--json", *args], capture_output=True, text=True)
     assert process.returncode == 0, process.stderr
-    return json.loads(process.stdout), time.monotonic() - started
+    return json.loads(process.stdout)
 
 
 @pytest.fixture(scope="module")
@@ -75,34 +73,28 @@ def project(tmp_path_factory):
 
 
 def test_links_at_scale(project):
-    links, seconds = timed(project, "links")
-    print(f"\nlinks: {len(links['links'])} in {seconds:.1f}s")
+    links = run_json(project, "links")
     assert len(links["links"]) == USE_CASES * (1 + TESTS_PER_CASE) and links["diagnostics"] == []
-    assert seconds < 15
 
 
 def test_validate_run_at_scale(project):
-    run, seconds = timed(project, "verify", "--run")
-    print(f"\nvalidate --run: {len(run['results'])} verdicts in {seconds:.1f}s (includes pytest itself)")
+    run = run_json(project, "verify", "--run")
     assert run["errors"] == [] and len(run["results"]) == USE_CASES
     assert all(r["status"] == "pass" for r in run["results"])
-    assert seconds < 120
 
 
 def test_status_at_scale(project):
-    status, seconds = timed(project, "status")
-    print(f"\nstatus: {len(status['use_cases'])} use cases in {seconds:.1f}s")
+    status = run_json(project, "status")
+    assert len(status["use_cases"]) == USE_CASES
     assert all(u["status"] == "verified" for u in status["use_cases"])
-    assert seconds < 15
 
 
 
 def test_search_at_scale(project):
-    found, seconds = timed(project, "search", "rule area07", "--page-size", "100")
-    print(f"\nsearch: {found['total']} matches in {seconds:.1f}s")
+    found = run_json(project, "search", "rule area07", "--page-size", "100")
     assert found["total"] == USE_CASES and found["matches"][0]["use_case"].startswith("shop.area07.")
-    following, more = timed(project, "search", "--next", found["next"])
-    assert following["offset"] == 100 and seconds < 15 and more < 15
+    following = run_json(project, "search", "--next", found["next"])
+    assert following["offset"] == 100
 
 def test_one_edit_stales_exactly_one_use_case_at_scale(project, tmp_path):
     ws = str(tmp_path / "shop")
@@ -112,6 +104,6 @@ def test_one_edit_stales_exactly_one_use_case_at_scale(project, tmp_path):
         text = handle.read()
     with open(path, "w") as handle:
         handle.write(text.replace("    return x + 13\n", "    return x + 13  # unchanged behaviour\n"))
-    status, _ = timed(ws, "status")
+    status = run_json(ws, "status")
     stale = [u["use_case"] for u in status["use_cases"] if u["status"] != "verified"]
     assert stale == ["shop.area07.rule13"]

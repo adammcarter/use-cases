@@ -6,6 +6,7 @@ Two real verify runs over the Python fixture's own tests: the second says everyt
 
 import json
 import os
+import re
 import shutil
 import subprocess
 
@@ -191,3 +192,37 @@ def test_an_invalid_workspace_is_refused_and_nothing_is_removed(twice):
     assert message
     assert runs(ws) == [older, newer]
 # @use-case:end store.prune#acceptance.refused
+
+
+# @use-case:store.prune#acceptance.refused
+@pytest.mark.parametrize("target", ["results.jsonl", "run.json", "completion.json"])
+def test_a_store_that_cannot_be_read_safely_is_refused_and_nothing_is_removed(twice, target):
+    ws, older, newer = twice
+    path = os.path.join(ws, ".use-cases", "runs", newer, target)
+    with open(path) as handle:
+        text = handle.read()
+    damaged = {"results.jsonl": text.replace('"pass"', '"fail"'), "run.json": text.replace("\n", " \n", 1),
+               "completion.json": re.sub(r'"result_count": \d+', '"result_count": 0', text)}[target]
+    assert damaged != text
+    with open(path, "w") as handle:
+        handle.write(damaged)
+
+    message = uc(ws, "prune", expect_exit=2)
+
+    assert "is corrupt" in message
+    assert runs(ws) == [older, newer]
+    with open(path) as handle:
+        assert handle.read() == damaged
+# @use-case:end store.prune#acceptance.refused
+
+
+# @use-case:store.prune#acceptance.dry-run
+def test_a_dry_run_with_nothing_superseded_says_nothing_to_prune(ws):
+    only = uc(ws, "verify", "--run")["run_id"]
+
+    preview = uc(ws, "prune", "--dry-run")
+
+    assert preview["dry_run"] is True and preview["removed"] == []
+    assert human(ws, "prune", "--dry-run") == ["nothing to prune"]
+    assert runs(ws) == [only]
+# @use-case:end store.prune#acceptance.dry-run

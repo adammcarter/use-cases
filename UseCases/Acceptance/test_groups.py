@@ -123,6 +123,7 @@ def test_renaming_a_group_changes_no_verdict(ws):
 def test_an_unknown_group_is_refused(ws):
     groups(ws, "  release: { include: { prefixes: [app.login] } }\n")
     assert "no group 'nope'" in uc(ws, "status", "--group", "nope", expect_exit=2)
+    assert "no group 'nope'" in uc(ws, "status", "--gate", "--group", "nope", expect_exit=2)
 # @use-case:end gate.groups#acceptance.unknown-group
 
 

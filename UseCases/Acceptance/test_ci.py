@@ -48,6 +48,41 @@ def test_the_recipe_from_a_clean_checkout(tmp_path):
 # @use-case:end ci.recipe#acceptance.clean-checkout
 
 
+# @use-case:ci.recipe#acceptance.fresh
+def test_a_route_proven_only_by_hand_is_unverified_in_a_fresh_checkout(tmp_path):
+    hand = """prefix: ui
+use_cases:
+  - id: look
+    title: Look
+    value_tier: core
+    intent: It looks right.
+    scenarios:
+      - id: looks
+        when: [Someone looks.]
+        then: [It looks right.]
+    validation:
+      - id: by-hand
+        type: { kind: acceptance }
+        covers: [looks]
+        procedure:
+          steps: [Look at it.]
+"""
+    original = tmp_path / "original"
+    (original / "use-cases").mkdir(parents=True)
+    (original / "use-cases.yml").write_text("schema_version: 1\nroot: true\nprefix: app\n")
+    (original / "use-cases" / "look.yml").write_text(hand)
+    call_core(str(original), "record", "app.ui.look", "by-hand", "pass")
+    assert call_core(str(original), "status", "app.ui.look")["use_cases"][0]["status"] == "verified"  # on the machine that proved it
+
+    job = tmp_path / "job"
+    shutil.copytree(original, job, ignore=shutil.ignore_patterns(".use-cases"))  # a CI checkout carries no results
+    status = call_core(str(job), "status", "app.ui.look")["use_cases"][0]
+
+    assert status["status"] == "unverified" and [r["status"] for r in status["routes"]] == ["unverified"]
+    assert "stale" not in call_core(str(job), "status", "--gate")["summary"]["by_status"]
+# @use-case:end ci.recipe#acceptance.fresh
+
+
 # @use-case:verify.run#acceptance.failing-test-is-verdict
 def test_a_failing_test_fails_the_gate_not_verify(tmp_path):
     needs("node")

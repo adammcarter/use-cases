@@ -486,3 +486,54 @@ def test_an_empty_manual_range_is_valid_and_warns(tmp_path):
     ws = workspace(tmp_path, {"use-cases/success.yml": linked([("a", where)]), "src/a.txt": "abcd\n"})
     assert len(warnings_about(ws, "empty range")) == 1
 # @use-case:end links.manual-bindings#acceptance.excluded-target
+
+
+# ------------------------------------------------------------------ a route's own definition (chapter 11 §26-29)
+
+TWO_ROUTES = """prefix: shop
+use_cases:
+  - id: rule
+    title: Rule
+    value_tier: core
+    intent: The rule holds.
+    scenarios:
+      - id: one
+        when: [One happens.]
+        then: [One holds.]
+      - id: two
+        when: [Two happens.]
+        then: [Two holds.]
+    validation:
+      - id: first
+        type: { kind: acceptance }
+        covers: [one]
+        procedure:
+          steps: [Check one.]
+      - id: second
+        type: { kind: acceptance }
+        covers: [one, two]
+        procedure:
+          steps: [Check two.]
+"""
+
+
+def routes_of(ws):
+    return {r["route"]: r["status"] for r in call_core(ws, "status", "example.shop.rule")["use_cases"][0]["routes"]}
+
+
+# @use-case:status.staleness#acceptance.route-changed
+@pytest.mark.parametrize("old, new", [
+    ("        covers: [one]\n", "        covers: [one, two]\n"),
+    ("          steps: [Check one.]\n", "          steps: [Check one, then again.]\n"),
+    ("        type: { kind: acceptance }\n        covers: [one]\n", "        type: { kind: integration }\n        covers: [one]\n"),
+    ("        covers: [one]\n", "        covers: [one]\n        gates_verification: false\n"),
+], ids=["covers", "procedure", "type", "gating"])
+def test_changing_one_route_stales_that_route_and_not_the_others(tmp_path, old, new):
+    ws = workspace(tmp_path, {"use-cases/rule.yml": TWO_ROUTES})
+    for route in ("first", "second"):
+        call_core(ws, "record", "example.shop.rule", route, "pass")
+    assert routes_of(ws) == {"first": "verified", "second": "verified"}
+    assert TWO_ROUTES.count(old) == 1
+    (tmp_path / "ws" / "use-cases" / "rule.yml").write_text(TWO_ROUTES.replace(old, new))
+    assert routes_of(ws) == {"first": "stale", "second": "verified"}
+# @use-case:end status.staleness#acceptance.route-changed
