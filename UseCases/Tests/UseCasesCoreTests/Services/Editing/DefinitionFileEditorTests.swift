@@ -46,6 +46,7 @@ struct DefinitionFileEditorTests {
     edited.change.text
   }
 
+  // @use-case:edit.comments-kept#swift-tests.warned
   @Test
   func `a replaced use case drops the comments inside it and lists each, keeping those around it`(
   ) throws {
@@ -71,6 +72,8 @@ struct DefinitionFileEditorTests {
     ])
   }
 
+  // @use-case:end edit.comments-kept#swift-tests.warned
+
   @Test
   func `a removed use case takes its comment above it, and says so`() throws {
     let edited = try editor.edit(
@@ -85,6 +88,7 @@ struct DefinitionFileEditorTests {
     #expect(edited.droppedComments[1].contains(":6: the comment # why"))
   }
 
+  // @use-case:edit.comments-kept#swift-tests.warned
   @Test
   func `the last use case of a file takes the file with it, and every comment in it is listed`(
   ) throws {
@@ -109,6 +113,8 @@ struct DefinitionFileEditorTests {
     #expect(last.droppedComments.count == 1)
     #expect(last.droppedComments[0].contains("# only"))
   }
+
+  // @use-case:end edit.comments-kept#swift-tests.warned
 
   @Test
   func `a use case is added after the last one in the file's own indentation`() throws {

@@ -93,6 +93,7 @@ struct WorkspaceLoaderIdentityTests {
     #expect(problems.last?.hasPrefix("use-cases/b.yml: ") == true)
   }
 
+  // @use-case:validate.discovery-exclusions#swift-tests.not-a-scope
   @Test
   func `a child scope that is not a scope says how to exclude it, the root's own file does not`()
     throws
@@ -118,6 +119,8 @@ struct WorkspaceLoaderIdentityTests {
 
     #expect(root.allSatisfy { problem in !problem.contains("discovery.exclude") })
   }
+
+  // @use-case:end validate.discovery-exclusions#swift-tests.not-a-scope
 
   @Test
   func `files below a scope that could not be read are still checked`() throws {

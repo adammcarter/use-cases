@@ -45,6 +45,7 @@ struct StatusCommandDetailTests {
     #expect(output[3].hasSuffix("run \(run.prefix(11)) via record"))
   }
 
+  // @use-case:status.detail#swift-tests.stale-why
   @Test
   func `a stale use case says what it changed since`() async throws {
     try await workspace.recordEveryState()
@@ -56,6 +57,8 @@ struct StatusCommandDetailTests {
     #expect(text.contains(" (last result: pass)"))
     #expect(text.hasSuffix("→ use-cases verify --start\n"))
   }
+
+  // @use-case:end status.detail#swift-tests.stale-why
 
   @Test
   func `a route nobody has run has no verdict yet`() async {
@@ -114,12 +117,15 @@ struct StatusCommandDetailTests {
       .contains("→"))
   }
 
+  // @use-case:status.detail#swift-tests.missing-links
   @Test
   func `missing links are warnings of the use case in its detail`() async {
     let text = await workspace.run(["status", "shop.cart.add"]).standardOutput
 
     #expect(text.contains("warning: no implementation links"))
   }
+
+  // @use-case:end status.detail#swift-tests.missing-links
 
   @Test
   func `a route with a procedure and no links is not warned about`() async {
@@ -128,6 +134,7 @@ struct StatusCommandDetailTests {
     #expect(!text.contains("only `use-cases record` can verify it"))
   }
 
+  // @use-case:status.detail#swift-tests.missing-links
   @Test
   func `a route with neither links nor a procedure is`() async throws {
     try workspace.folder.write(
@@ -142,6 +149,8 @@ struct StatusCommandDetailTests {
     #expect(text.contains("warning: route unit has no validation links and no procedure"))
     #expect(text.contains("only `use-cases record` can verify it"))
   }
+
+  // @use-case:end status.detail#swift-tests.missing-links
 
   // MARK: - Sign-off
 

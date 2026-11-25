@@ -41,6 +41,7 @@ struct EditConcurrencyTests {
     }
   }
 
+  // @use-case:edit.save#swift-tests.concurrent
   @Test
   func `a save of a file someone changed since it was read is refused and keeps their change`()
     async throws
@@ -66,6 +67,8 @@ struct EditConcurrencyTests {
     #expect(try read("use-cases/pay.yml").hasSuffix("# someone else's change\n"))
     #expect(try !read("use-cases/pay.yml").contains("title: Mine"))
   }
+
+  // @use-case:end edit.save#swift-tests.concurrent
 
   @Test
   func `a use case added to a file someone changed since it was read is refused`() async throws {
@@ -184,6 +187,7 @@ struct EditConcurrencyTests {
         .path))
   }
 
+  // @use-case:edit.save#swift-tests.concurrent
   @Test
   func `two saves to one file at once never lose a change`() async throws {
     let folder = workspace.folder.url
@@ -206,6 +210,8 @@ struct EditConcurrencyTests {
       }
     }
   }
+
+  // @use-case:end edit.save#swift-tests.concurrent
 
   private static func run(
     _ arguments: [String],

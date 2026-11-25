@@ -89,6 +89,7 @@ struct DocsCommandTests {
     #expect(result.outputLines.suffix(2) == ["", "→ use-cases docs getting-started"])
   }
 
+  // @use-case:docs.guides#swift-tests.one-guide
   @Test
   func `a guide's name shows the guide as written`() async throws {
     let result = await run(["docs", "quirks"])
@@ -101,6 +102,8 @@ struct DocsCommandTests {
     #expect(result.standardOutput == published)
     #expect(!result.standardOutput.contains("→"))
   }
+
+  // @use-case:end docs.guides#swift-tests.one-guide
 
   @Test(arguments: ["stale", "stlae"])
   func `words find sections, best first, with a hint to read the best guide`(word: String)

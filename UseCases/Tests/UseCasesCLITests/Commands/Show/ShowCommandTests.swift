@@ -83,6 +83,7 @@ struct ShowCommandTests {
     #expect(before == after)
   }
 
+  // @use-case:validate.draft-or-ready#swift-tests.missing-field-is-draft
   @Test
   func `a draft says what it lacks`() async throws {
     let document = try await workspace.run(["--json", "show", "shop.cart.share"]).document()
@@ -91,6 +92,8 @@ struct ShowCommandTests {
     #expect(document["missing"] == .array([.string("value_tier")]))
     #expect(document["definition"]?["value_tier"] == nil)
   }
+
+  // @use-case:end validate.draft-or-ready#swift-tests.missing-field-is-draft
 
   @Test
   func `a use case that is not there is a usage error that says so`() async {

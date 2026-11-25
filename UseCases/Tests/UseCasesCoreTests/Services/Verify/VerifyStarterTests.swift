@@ -129,6 +129,7 @@ struct VerifyStarterTests {
     #expect(started.notes[0].contains("--finish --run-id \(run)"))
   }
 
+  // @use-case:bridge.no-settings#swift-tests.verify-with-nothing-to-run
   @Test
   func `no bridge settings or no validations start nothing and write nothing`() throws {
     for bridge in [nil, "schema_version: 1\nvalidations: []\n"] {
@@ -142,6 +143,8 @@ struct VerifyStarterTests {
       #expect(bare.runs().isEmpty)
     }
   }
+
+  // @use-case:end bridge.no-settings#swift-tests.verify-with-nothing-to-run
 
   @Test
   func `a workspace whose fingerprints cannot be known is refused`() throws {

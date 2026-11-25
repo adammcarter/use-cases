@@ -48,6 +48,7 @@ struct HooksCommandTests {
 
   // MARK: - Listing
 
+  // @use-case:hooks.opt-in#swift-tests.list
   @Test
   func `listing says what each hook is and runs, and offers to add the missing ones`() async {
     let result = await run(["hooks"])
@@ -63,6 +64,9 @@ struct HooksCommandTests {
     )
   }
 
+  // @use-case:end hooks.opt-in#swift-tests.list
+
+  // @use-case:hooks.opt-in#swift-tests.list
   @Test
   func `listing writes nothing`() async throws {
     let before = try place.snapshot()
@@ -71,6 +75,8 @@ struct HooksCommandTests {
 
     #expect(try place.snapshot() == before)
   }
+
+  // @use-case:end hooks.opt-in#swift-tests.list
 
   @Test
   func `the hint offers only the hooks that are not installed, and quiet leaves it out`() async {
@@ -153,6 +159,7 @@ struct HooksCommandTests {
 
   // MARK: - Never overwrites
 
+  // @use-case:hooks.never-overwrites#swift-tests.other-hook
   @Test
   func `another hook is left alone, the line to add is given, and the exit is 1`() async throws {
     try place.folder.write(".git/hooks/pre-commit", "#!/bin/sh\necho mine\n")
@@ -167,6 +174,8 @@ struct HooksCommandTests {
       .contains("use-cases --workspace \".\" validate --quiet") == true)
     #expect(try String(contentsOf: hook("pre-commit"), encoding: .utf8) == "#!/bin/sh\necho mine\n")
   }
+
+  // @use-case:end hooks.never-overwrites#swift-tests.other-hook
 
   @Test
   func `removing another hook is left alone with exit 1`() async throws {

@@ -21,6 +21,7 @@ struct McpCommandWorkspaceTests {
     return (result, server)
   }
 
+  // @use-case:mcp.server-lifetime#swift-tests.workspace
   @Test(arguments: [
     (["mcp", "--workspace", "/missing"], "/missing"),
     (["--workspace", "/missing", "mcp"], "/missing"),
@@ -40,6 +41,8 @@ struct McpCommandWorkspaceTests {
     )
     #expect(await server.requests.isEmpty)
   }
+
+  // @use-case:end mcp.server-lifetime#swift-tests.workspace
 
   @Test
   func `a workspace that is a folder is served`() async {

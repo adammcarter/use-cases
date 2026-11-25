@@ -119,6 +119,7 @@ struct VerifyCommandRunTests {
     #expect(workspace.runs().isEmpty)
   }
 
+  // @use-case:bridge.no-settings#swift-tests.verify-with-nothing-to-run
   @Test
   func `with no validation set up it says so, and writes nothing`() async throws {
     let none = try VerifyWorkspace(bridge: nil)
@@ -131,4 +132,5 @@ struct VerifyCommandRunTests {
     #expect(document["step"] == .string("run"))
     #expect(none.runs().isEmpty)
   }
+  // @use-case:end bridge.no-settings#swift-tests.verify-with-nothing-to-run
 }

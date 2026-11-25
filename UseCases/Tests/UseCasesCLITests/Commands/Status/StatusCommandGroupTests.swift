@@ -155,6 +155,7 @@ struct StatusCommandGroupTests {
     #expect(cart.exitCode == 1)
   }
 
+  // @use-case:gate.strict#swift-tests.no-state-filter
   @Test
   func `the gate cannot be narrowed by a state or a target, though a group is allowed`(
   ) async {
@@ -171,6 +172,8 @@ struct StatusCommandGroupTests {
     #expect(withState.exitCode == 2)
     #expect(withTarget.exitCode == 2)
   }
+
+  // @use-case:end gate.strict#swift-tests.no-state-filter
 
   @Test
   func `a group name is matched exactly`() async {

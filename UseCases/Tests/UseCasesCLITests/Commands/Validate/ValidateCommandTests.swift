@@ -162,6 +162,7 @@ struct ValidateCommandTests {
     #expect(warnings.count >= 2)
   }
 
+  // @use-case:cli.exit-codes#swift-tests.invalid-is-2
   @Test(arguments: [
     ["validate"],
     ["status"],
@@ -183,6 +184,8 @@ struct ValidateCommandTests {
     #expect(result.standardError.contains("use-case-groups.yml: 'groups' is a required property"))
     #expect(!workspace.hasStore)
   }
+
+  // @use-case:end cli.exit-codes#swift-tests.invalid-is-2
 
   @Test
   func `a groups problem and a marker problem are raised together`() async throws {

@@ -45,6 +45,7 @@ struct InitCommandTests {
     #expect(try place.read(".gitignore") == ".use-cases/\n")
   }
 
+  // @use-case:init.gitignore#swift-tests.no-git
   @Test
   func `without version control it says so in a note before the next step`() async {
     let result = await place.run(["init", "--no-input"])
@@ -53,6 +54,8 @@ struct InitCommandTests {
     #expect(result.outputLines[4].hasPrefix("note: no version control found here"))
     #expect(result.outputLines.last == "→ use-cases status")
   }
+
+  // @use-case:end init.gitignore#swift-tests.no-git
 
   @Test
   func `quiet leaves out the hint`() async {

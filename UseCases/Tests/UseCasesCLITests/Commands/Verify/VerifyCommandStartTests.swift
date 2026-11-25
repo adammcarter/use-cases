@@ -74,6 +74,7 @@ struct VerifyCommandStartTests {
     #expect(!result.standardOutput.contains("→"))
   }
 
+  // @use-case:store.prune#swift-tests.persons-call
   @Test
   func `a second start says what else is open, and closes nothing`() async throws {
     let first = try await workspace.start()
@@ -89,6 +90,8 @@ struct VerifyCommandStartTests {
     #expect(note.contains(firstRun))
     #expect(workspace.runs().count == 2)
   }
+
+  // @use-case:end store.prune#swift-tests.persons-call
 
   @Test
   func `only starts only those validations`() async throws {
@@ -112,6 +115,7 @@ struct VerifyCommandStartTests {
     #expect(bare.runs().isEmpty)
   }
 
+  // @use-case:cli.exit-codes#swift-tests.invalid-is-2
   @Test
   func `an invalid workspace is refused before anything is written`() async throws {
     try workspace.folder.write("use-cases/broken.yml", "use_cases: [oops\n")
@@ -122,4 +126,5 @@ struct VerifyCommandStartTests {
     #expect(try result.document()["error"]?["kind"] == .string("invalid"))
     #expect(workspace.runs().isEmpty)
   }
+  // @use-case:end cli.exit-codes#swift-tests.invalid-is-2
 }

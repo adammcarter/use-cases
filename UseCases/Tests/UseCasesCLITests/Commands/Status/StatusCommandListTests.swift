@@ -236,6 +236,7 @@ struct StatusCommandListTests {
     #expect(await !(workspace.run(["status"])).standardOutput.contains("marked region is empty"))
   }
 
+  // @use-case:status.detail#swift-tests.missing-links
   @Test
   func `missing links are told in the detail and in json, and not in the list`() async {
     await workspace.record("shop.cart.add", "pass")
@@ -246,6 +247,8 @@ struct StatusCommandListTests {
     #expect(await workspace.run(["--json", "status"]).standardOutput
       .contains("no implementation links"))
   }
+
+  // @use-case:end status.detail#swift-tests.missing-links
 
   @Test
   func `a run that never finished is a warning under the list, in short`() async throws {
@@ -264,6 +267,7 @@ struct StatusCommandListTests {
     #expect(scripted.contains("run \(second) never finished"))
   }
 
+  // @use-case:store.run-ids#swift-tests.short-ids
   @Test
   func `a run that shares its first digits with another run is listed by the shortest prefix`()
     async throws
@@ -276,6 +280,8 @@ struct StatusCommandListTests {
 
     #expect(output[0].hasSuffix("check failed (run \(run.prefix(11)) via record)"))
   }
+
+  // @use-case:end store.run-ids#swift-tests.short-ids
 
   // MARK: - Where verdicts come from
 

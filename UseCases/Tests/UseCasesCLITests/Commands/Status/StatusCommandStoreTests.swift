@@ -15,12 +15,16 @@ struct StatusCommandStoreTests {
     }
   }
 
+  // @use-case:status.list#swift-tests.store-line
   @Test
   func `a store with no run has no line and no store in json`() async throws {
     #expect(await storeLines(["status"]).isEmpty)
     #expect(try await workspace.run(["status", "--json"]).document()["store"] == nil)
   }
 
+  // @use-case:end status.list#swift-tests.store-line
+
+  // @use-case:status.list#swift-tests.store-line
   @Test
   func `the line counts the runs and their size, and names no prune when none is superseded`(
   ) async throws {
@@ -39,6 +43,9 @@ struct StatusCommandStoreTests {
     #expect(store?["superseded"] == .integer(0))
   }
 
+  // @use-case:end status.list#swift-tests.store-line
+
+  // @use-case:status.list#swift-tests.store-line
   @Test
   func `superseded runs are counted, and prune is the hint when nothing else wants it`(
   ) async throws {
@@ -54,6 +61,8 @@ struct StatusCommandStoreTests {
     #expect(store?["superseded"] == .integer(1))
   }
 
+  // @use-case:end status.list#swift-tests.store-line
+
   @Test
   func `a use case that needs a look keeps the hint`() async {
     await workspace.recordEverythingPassing()
@@ -65,10 +74,12 @@ struct StatusCommandStoreTests {
     #expect(output.dropLast().last?.hasSuffix(" · 1 superseded") == true)
   }
 
+  // @use-case:status.list#swift-tests.store-line
   @Test(arguments: [["status", "shop.pay.card"], ["status", "--gate"]])
   func `the detail view and the gate have no store line`(arguments: [String]) async {
     await workspace.recordEverythingPassing()
 
     #expect(await storeLines(arguments).isEmpty)
   }
+  // @use-case:end status.list#swift-tests.store-line
 }

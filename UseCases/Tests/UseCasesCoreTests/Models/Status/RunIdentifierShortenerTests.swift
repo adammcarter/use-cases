@@ -11,6 +11,7 @@ struct RunIdentifierShortenerTests {
     #expect(RunIdentifierShortener(runs: [Self.first]).shortened(Self.first) == "0192f0c4")
   }
 
+  // @use-case:store.run-ids#swift-tests.short-ids
   @Test
   func `each of several close runs shows the shortest prefix no other run shares`() {
     let shortener = RunIdentifierShortener(runs: [Self.third, Self.first, Self.second])
@@ -19,6 +20,8 @@ struct RunIdentifierShortenerTests {
     #expect(shortener.shortened(Self.second) == "0192f0c4e5b27c3e")
     #expect(shortener.shortened(Self.third) == "0192f0c4e5b27c3f")
   }
+
+  // @use-case:end store.run-ids#swift-tests.short-ids
 
   @Test
   func `the same run listed twice is still one run`() {

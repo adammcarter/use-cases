@@ -45,6 +45,7 @@ struct GuidesHeldTrueTests {
     }
   }
 
+  // @use-case:docs.held-true#swift-tests.guides
   @Test
   func `every command, flag and file a bundled guide names exists`() async throws {
     let guides = try BundledGuideLoader().guides()
@@ -58,6 +59,8 @@ struct GuidesHeldTrueTests {
     )
   }
 
+  // @use-case:end docs.held-true#swift-tests.guides
+
   @Test
   func `the guides name commands and flags for the check to hold true`() throws {
     let text = try BundledGuideLoader().guides().map(\.text).joined(separator: "\n")
@@ -65,6 +68,7 @@ struct GuidesHeldTrueTests {
     #expect(GuideCheck.flagNames(in: text).isSuperset(of: ["--like", "--run", "--start", "--next"]))
   }
 
+  // @use-case:docs.held-true#swift-tests.skills
   @Test
   func `the setup skill writes the AGENTS.md block of chapter 22 exactly`() throws {
     let docs = try DocsFolder.url()
@@ -85,6 +89,9 @@ struct GuidesHeldTrueTests {
     #expect(String(shipped.output.0) == String(designed.output.0))
   }
 
+  // @use-case:end docs.held-true#swift-tests.skills
+
+  // @use-case:docs.held-true#swift-tests.skills
   @Test
   func `the plugin ships its four skills, and every command, flag and file they name exists`()
     async throws
@@ -98,4 +105,5 @@ struct GuidesHeldTrueTests {
 
     try await hold(skills)
   }
+  // @use-case:end docs.held-true#swift-tests.skills
 }

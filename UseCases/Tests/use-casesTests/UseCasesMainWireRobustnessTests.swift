@@ -140,6 +140,7 @@ struct UseCasesMainWireRobustnessTests {
     #expect(await host.exitCode() == 0)
   }
 
+  // @use-case:mcp.server-lifetime#swift-tests.cancelled-call
   @Test
   func `a verify run whose lifeline ends stops its test and seals its run`() async throws {
     // The test holds the write end of the run's lifeline itself, as the run's input, and so can
@@ -180,6 +181,8 @@ struct UseCasesMainWireRobustnessTests {
     hold.release()
     #expect(await verifier.exitedNormally())
   }
+
+  // @use-case:end mcp.server-lifetime#swift-tests.cancelled-call
 
   @Test
   func `a server killed outright stops the test of the verify run it started`() async throws {
@@ -223,6 +226,7 @@ struct UseCasesMainWireRobustnessTests {
     #expect(await !host.exitedNormally())
   }
 
+  // @use-case:mcp.server-lifetime#swift-tests.cancelled-call
   @Test
   func `a call cancelled by the host stops a test that ignores the first signal, and seals its run`(
   ) async throws {
@@ -272,6 +276,9 @@ struct UseCasesMainWireRobustnessTests {
     #expect(await host.exitCode() == 0)
   }
 
+  // @use-case:end mcp.server-lifetime#swift-tests.cancelled-call
+
+  // @use-case:mcp.server-lifetime#swift-tests.host-gone
   @Test
   func `closing the input stops the call running, and the server ends once its run is sealed`(
   ) async throws {
@@ -314,6 +321,9 @@ struct UseCasesMainWireRobustnessTests {
     #expect(await host.exitCode() == 0)
   }
 
+  // @use-case:end mcp.server-lifetime#swift-tests.host-gone
+
+  // @use-case:mcp.server-lifetime#swift-tests.host-gone
   @Test
   func `a host that has gone away does not kill the server with a signal, which ends by itself`(
   ) async throws {
@@ -340,6 +350,8 @@ struct UseCasesMainWireRobustnessTests {
     #expect(await host.exitedNormally())
     #expect(await host.exitCode() == 0)
   }
+
+  // @use-case:end mcp.server-lifetime#swift-tests.host-gone
 
   @Test
   func `a workspace that is no folder is refused before the server starts`(

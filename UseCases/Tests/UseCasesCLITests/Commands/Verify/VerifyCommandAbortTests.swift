@@ -12,6 +12,7 @@ struct VerifyCommandAbortTests {
     workspace = try VerifyWorkspace()
   }
 
+  // @use-case:verify.open-runs#swift-tests.abort
   @Test
   func `the abort document is exactly the run it closed`() async throws {
     let started = try await workspace.start()
@@ -30,6 +31,8 @@ struct VerifyCommandAbortTests {
     )
     #expect(try PublishedSchema(path: Self.schemaPath).failures(of: result.document()) == [])
   }
+
+  // @use-case:end verify.open-runs#swift-tests.abort
 
   @Test
   func `an abort in words says the run it closed`() async throws {
@@ -63,6 +66,7 @@ struct VerifyCommandAbortTests {
     #expect(try result.document()["error"]?["kind"] == .string("refused"))
   }
 
+  // @use-case:verify.open-runs#swift-tests.abort
   @Test
   func `several open runs must be named, and the named one is closed`() async throws {
     let first = try await workspace.start()
@@ -84,6 +88,8 @@ struct VerifyCommandAbortTests {
     #expect(try named.document()["run_id"] == .string(run))
     #expect(first["run_id"] != .string(run))
   }
+
+  // @use-case:end verify.open-runs#swift-tests.abort
 
   // MARK: - An abort needs the store, not the model (chapter 13 §6)
 

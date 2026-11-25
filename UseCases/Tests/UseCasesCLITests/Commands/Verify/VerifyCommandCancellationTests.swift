@@ -44,6 +44,7 @@ struct VerifyCommandCancellationTests {
     )
   }
 
+  // @use-case:cli.exit-codes#swift-tests.cancelled-is-130
   @Test
   func `a cancelled run is told as the sealed run, with cancelled true, and exits 130`()
     async throws
@@ -64,6 +65,8 @@ struct VerifyCommandCancellationTests {
 
     #expect(note.contains("sources not processed: unit-tests"))
   }
+
+  // @use-case:end cli.exit-codes#swift-tests.cancelled-is-130
 
   @Test
   func `a cancelled run sealed as interrupted is no evidence`() async throws {
@@ -108,6 +111,7 @@ struct VerifyCommandCancellationTests {
     #expect(workspace.runs().isEmpty)
   }
 
+  // @use-case:cli.exit-codes#swift-tests.cancelled-is-130
   @Test(arguments: [["validate"], ["links"], ["status"]])
   func `a read-only command that is cancelled prints the cancelled document`(
     arguments: [String],
@@ -123,6 +127,8 @@ struct VerifyCommandCancellationTests {
     #expect(document["error"]?["kind"] == .string("cancelled"))
     #expect(result.standardError == "use-cases \(arguments[0]): cancelled\n")
   }
+
+  // @use-case:end cli.exit-codes#swift-tests.cancelled-is-130
 
   @Test
   func `a record cancelled before it began stores nothing`() async throws {

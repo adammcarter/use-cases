@@ -43,6 +43,7 @@ struct InitCommandRefusalTests {
     #expect(try place.snapshot() == ["use-cases.yml": "schema_version: 1\nprefix: svc\n"])
   }
 
+  // @use-case:validate.discovery-exclusions#swift-tests.not-a-scope
   @Test
   func `a use-cases file below the folder that is no scope refuses init with the way out`()
     async throws
@@ -58,6 +59,8 @@ struct InitCommandRefusalTests {
     #expect(try place.snapshot() == before)
   }
 
+  // @use-case:end validate.discovery-exclusions#swift-tests.not-a-scope
+
   @Test(arguments: ["Shop", "shop_", "shop..app", "-shop"])
   func `a prefix off the grammar is a usage error and writes nothing`(prefix: String) async throws {
     let result = await place.run(["--json", "init", "--prefix=\(prefix)"])
@@ -68,6 +71,7 @@ struct InitCommandRefusalTests {
     #expect(try place.snapshot().isEmpty)
   }
 
+  // @use-case:init.choices#swift-tests.existing-workspace
   @Test
   func `a different prefix is refused and never dropped`() async throws {
     try place.folder.write("use-cases.yml", "schema_version: 1\nroot: true\nprefix: shop\n")
@@ -81,6 +85,8 @@ struct InitCommandRefusalTests {
       atPath: place.url.appendingPathComponent("use-cases-bridge.yml").path,
     ))
   }
+
+  // @use-case:end init.choices#swift-tests.existing-workspace
 
   @Test
   func `an INVALID workspace is refused as invalid and nothing is added to it`() async throws {
@@ -168,6 +174,7 @@ struct InitCommandRefusalTests {
     #expect(try place.snapshot().isEmpty)
   }
 
+  // @use-case:init.choices#swift-tests.no-terminal
   @Test(arguments: [["init", "--no-input"], ["--json", "init"]])
   func `at a terminal no-input and json never ask`(arguments: [String]) async {
     let prompter = MockPrompter()
@@ -181,4 +188,5 @@ struct InitCommandRefusalTests {
     #expect(result.exitCode == 0)
     #expect(await prompter.transcript.isEmpty)
   }
+  // @use-case:end init.choices#swift-tests.no-terminal
 }

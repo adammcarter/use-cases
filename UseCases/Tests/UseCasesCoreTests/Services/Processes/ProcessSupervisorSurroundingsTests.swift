@@ -116,6 +116,7 @@ struct ProcessSupervisorSurroundingsTests {
     #expect(request.arguments.contains("{report}"))
   }
 
+  // @use-case:verify.no-surprises#swift-tests.no-shell
   @Test
   func `a shell variable in an argument is not expanded and a brace group is run by the shell`(
   ) async throws {
@@ -136,6 +137,8 @@ struct ProcessSupervisorSurroundingsTests {
 
     #expect(run.console.text == "${HOME}|{ }|a || { b; }|")
   }
+
+  // @use-case:end verify.no-surprises#swift-tests.no-shell
 
   @Test
   func `a brace group inside a shell script the command names runs as written`() async throws {

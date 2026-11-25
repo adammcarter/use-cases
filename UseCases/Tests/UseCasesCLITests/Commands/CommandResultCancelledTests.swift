@@ -2,6 +2,7 @@ import Testing
 @testable import UseCasesCLI
 
 struct CommandResultCancelledTests {
+  // @use-case:cli.exit-codes#swift-tests.cancelled-is-130
   @Test
   func `a cancelled request is exit 130 with one line on stderr and nothing on stdout`() {
     let result = CommandResult.cancelled(
@@ -13,6 +14,8 @@ struct CommandResultCancelledTests {
     #expect(result.standardOutput.isEmpty)
     #expect(result.standardError == "use-cases status: cancelled\n")
   }
+
+  // @use-case:end cli.exit-codes#swift-tests.cancelled-is-130
 
   @Test
   func `under json it is also the one document, an error of kind cancelled`() throws {

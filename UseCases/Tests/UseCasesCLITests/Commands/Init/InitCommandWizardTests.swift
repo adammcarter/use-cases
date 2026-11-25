@@ -132,6 +132,7 @@ struct InitCommandWizardTests {
     #expect(transcript.isEmpty)
   }
 
+  // @use-case:init.choices#swift-tests.existing-workspace
   @Test
   func `an existing workspace is asked only about hooks`() async {
     _ = await place.run(["init", "--minimal", "--prefix", "shop"])
@@ -142,6 +143,8 @@ struct InitCommandWizardTests {
     #expect(transcript == [Self.hooksQuestion])
     #expect(FileManager.default.fileExists(atPath: hook("pre-push").path))
   }
+
+  // @use-case:end init.choices#swift-tests.existing-workspace
 
   @Test
   func `hooks are asked about only inside a git repository`() async {
@@ -189,6 +192,7 @@ struct InitCommandWizardTests {
 
   // MARK: - Refusals and the end of the input
 
+  // @use-case:init.choices#swift-tests.no-terminal
   @Test
   func `every refusal comes before the first question`() async throws {
     _ = await place.run(["init", "--minimal"])
@@ -219,6 +223,8 @@ struct InitCommandWizardTests {
     #expect(badPrefixTranscript.isEmpty)
     #expect(try place.snapshot() == before)
   }
+
+  // @use-case:end init.choices#swift-tests.no-terminal
 
   @Test
   func `git that cannot be run is a refusal before the first question when hooks are named`()

@@ -4,6 +4,7 @@ import Testing
 struct SwiftTestTransformerTests {
   private typealias Stream = SwiftTestingStream
 
+  // @use-case:transformers.swift#swift-tests.xctest
   @Test
   func `XCTest results come from the console and are placed by their declaration`() throws {
     let valid = RequestLink.validation(
@@ -34,6 +35,9 @@ struct SwiftTestTransformerTests {
       .diagnostics == ["no events.jsonl in the report: Swift Testing results unavailable"])
   }
 
+  // @use-case:end transformers.swift#swift-tests.xctest
+
+  // @use-case:transformers.swift#swift-tests.xctest
   @Test
   func `both frameworks in one report are read`() throws {
     let workspace = try ResultsWorkspace()
@@ -83,6 +87,8 @@ struct SwiftTestTransformerTests {
     #expect(response.status(of: modern) == .fail)
     #expect(response.diagnostics.isEmpty)
   }
+
+  // @use-case:end transformers.swift#swift-tests.xctest
 
   @Test
   func `each missing half of the report is named`() throws {

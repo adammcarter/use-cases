@@ -65,6 +65,7 @@ struct RemoveCommandTests {
     #expect(try FileManager.default.contentsOfDirectory(atPath: runs.path) == before)
   }
 
+  // @use-case:edit.remove#swift-tests.markers-warned
   @Test
   func `the markers that still name the use case are warned about`() async throws {
     try workspace.folder.write(
@@ -86,6 +87,8 @@ struct RemoveCommandTests {
       .object(["path": .string("use-cases/pay.yml"), "action": .string("replace")]),
     ]))
   }
+
+  // @use-case:end edit.remove#swift-tests.markers-warned
 
   @Test(arguments: ["shop.pay.nope", "shop.pay", "wallet"])
   func `a use case that is not there is a usage error that says so`(identifier: String) async {

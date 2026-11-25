@@ -78,6 +78,7 @@ struct HookPlannerTests {
     #expect(try await states(plan()) == [.installed, .absent])
   }
 
+  // @use-case:hooks.opt-in#swift-tests.list
   @Test(arguments: [
     "#!/bin/sh\necho mine\n",
     "",
@@ -91,6 +92,8 @@ struct HookPlannerTests {
     #expect(plan.notes.isEmpty)
     #expect(!plan.needsAttention)
   }
+
+  // @use-case:end hooks.opt-in#swift-tests.list
 
   @Test
   func `a hook that is a folder or a link is another hook`() async throws {
@@ -107,6 +110,7 @@ struct HookPlannerTests {
     #expect(try await states(plan()) == [.other, .other])
   }
 
+  // @use-case:hooks.opt-in#swift-tests.list
   @Test
   func `a hook manager owns every hook, and listing says so without a note`() async throws {
     try tree.write(".git/hooks/pre-commit", script(.commit))
@@ -118,6 +122,8 @@ struct HookPlannerTests {
     #expect(plan.notes.isEmpty)
     #expect(!plan.needsAttention)
   }
+
+  // @use-case:end hooks.opt-in#swift-tests.list
 
   // MARK: - Adding
 

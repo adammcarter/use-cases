@@ -15,6 +15,7 @@ struct PluginManifestTests {
     return try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
   }
 
+  // @use-case:docs.held-true#swift-tests.plugin-version
   @Test
   func `the plugin manifest carries the version the program reports`() throws {
     let manifest = try json(".claude-plugin/plugin.json")
@@ -23,6 +24,9 @@ struct PluginManifestTests {
     #expect(manifest["version"] as? String == ProductVersion.current.release)
   }
 
+  // @use-case:end docs.held-true#swift-tests.plugin-version
+
+  // @use-case:docs.held-true#swift-tests.plugin-version
   @Test
   func `the plugin starts the program through its launcher with the mcp command`() throws {
     let servers = try #require(json(".mcp.json")["mcpServers"] as? [String: Any])
@@ -32,4 +36,5 @@ struct PluginManifestTests {
     #expect(server["args"] as? [String] == ["mcp"])
     #expect(try FileManager.default.isExecutableFile(atPath: plugin("bin/use-cases").path))
   }
+  // @use-case:end docs.held-true#swift-tests.plugin-version
 }

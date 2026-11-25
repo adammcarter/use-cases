@@ -130,12 +130,15 @@ struct RecordCommandTests {
     #expect(fingerprint(before) != fingerprint(after))
   }
 
+  // @use-case:record.by-hand#swift-tests.prefix
   @Test
   func `the start of one use case id names it`() async {
     let result = await run(["record", "shop.pay.c", "unit-tests", "pass", "--quiet"])
 
     #expect(lines(result) == ["recorded: shop.pay.card / unit-tests → pass"])
   }
+
+  // @use-case:end record.by-hand#swift-tests.prefix
 
   @Test
   func `an id that is also the start of others is that use case alone`() async {
@@ -144,6 +147,7 @@ struct RecordCommandTests {
     #expect(lines(result) == ["recorded: shop.pay / unit-tests → pass"])
   }
 
+  // @use-case:record.by-hand#swift-tests.prefix
   @Test
   func `the start of several ids is a usage refusal that lists them`() async throws {
     let result = await run(["--json", "record", "shop.pay.", "unit-tests", "pass"])
@@ -153,6 +157,8 @@ struct RecordCommandTests {
     #expect(result.standardError.contains("shop.pay.card, shop.pay.wallet"))
     #expect(!workspace.hasStore)
   }
+
+  // @use-case:end record.by-hand#swift-tests.prefix
 
   // MARK: - Refusals
 

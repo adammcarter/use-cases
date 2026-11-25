@@ -47,6 +47,7 @@ struct CiRecipeCommandTests {
     #expect(counts.filter { $0 >= 3 }.count >= 3)
   }
 
+  // @use-case:docs.held-true#swift-tests.recipes
   @Test
   func `every command line in the recipes is read by the real command line`() throws {
     var gaps: [String] = []
@@ -75,4 +76,5 @@ struct CiRecipeCommandTests {
       }
     }
   }
+  // @use-case:end docs.held-true#swift-tests.recipes
 }

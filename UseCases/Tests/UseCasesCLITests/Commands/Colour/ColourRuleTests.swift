@@ -11,6 +11,7 @@ struct ColourRuleTests {
     }
   }
 
+  // @use-case:cli.people-first-output#swift-tests.no-colour-in-pipes
   @Test(arguments: [
     (true, [String: String](), true),
     (false, [:], false),
@@ -33,7 +34,10 @@ struct ColourRuleTests {
     #expect(rule.allowsColour == allowed)
   }
 
+  // @use-case:end cli.people-first-output#swift-tests.no-colour-in-pipes
+
   // Lists, not sets: a set's order changes from run to run, and so would each case's name.
+  // @use-case:cli.people-first-output#swift-tests.no-colour-in-pipes
   @Test(arguments: [
     ([1] as [Int32], true),
     ([0, 1, 2], true),
@@ -52,6 +56,8 @@ struct ColourRuleTests {
 
     #expect(rule.allowsColour == allowed)
   }
+
+  // @use-case:end cli.people-first-output#swift-tests.no-colour-in-pipes
 
   @Test
   func `no colour with NO_COLOR set, even at a terminal`() {

@@ -245,6 +245,7 @@ struct TransformerRunnerTests {
     }
   }
 
+  // @use-case:verify.no-surprises#swift-tests.transformer-time
   /// The stopping itself, of the whole group, is the supervisor's, proven on real processes by
   /// `ProcessSupervisorTimeoutTests`.
   @Test
@@ -267,6 +268,8 @@ struct TransformerRunnerTests {
 
     #expect(await supervisor.requests.map(\.timeout) == [.seconds(7)])
   }
+
+  // @use-case:end verify.no-surprises#swift-tests.transformer-time
 
   @Test
   func `the time a transformer has is 120 seconds unless a test says otherwise`() {

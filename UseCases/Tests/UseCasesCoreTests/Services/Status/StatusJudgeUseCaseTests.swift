@@ -89,6 +89,7 @@ struct StatusJudgeUseCaseTests {
     #expect(status.useCases.map(\.status) == [.unverified, .unverified, .draft])
   }
 
+  // @use-case:validate.draft-or-ready#swift-tests.missing-field-is-draft
   @Test
   func `a draft says what it lacks and has no routes`() throws {
     let fixture = try StatusFixture(definitions: FreshnessSamples.multipleUseCases())
@@ -101,6 +102,8 @@ struct StatusJudgeUseCaseTests {
     #expect(draft.routes.isEmpty)
     #expect(draft.decidingRoute == nil)
   }
+
+  // @use-case:end validate.draft-or-ready#swift-tests.missing-field-is-draft
 
   @Test
   func `a READY use case lacks nothing`() throws {

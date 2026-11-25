@@ -174,6 +174,7 @@ struct RenderCommandTests {
 
   // MARK: - Headers
 
+  // @use-case:cli.people-first-output#swift-tests.no-colour-in-pipes
   @Test
   func `headers are bold only where the colour rule allows, never in a document`() async throws {
     try workspace.folder.write("proposal.yml", Self.proposal)
@@ -201,6 +202,8 @@ struct RenderCommandTests {
     #expect(documentText.hasPrefix("PROPOSAL · Wallet and refunds"))
     #expect(!plain.standardOutput.contains("\u{1B}"))
   }
+
+  // @use-case:end cli.people-first-output#swift-tests.no-colour-in-pipes
 
   // MARK: - Results, after the proposal is applied
 

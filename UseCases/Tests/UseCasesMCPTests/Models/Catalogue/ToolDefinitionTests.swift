@@ -19,11 +19,14 @@ struct ToolDefinitionTests {
     #expect(ToolDefinition.all.map(\.name) == Self.names)
   }
 
+  // @use-case:mcp.tools#swift-tests.person-only
   @Test(arguments: ["init", "hooks", "mcp", "version", "record_interactive"])
   func `a command a person sets up or needs a terminal for is not a tool`(command: String) {
     #expect(!ToolDefinition.all.map(\.name).contains("use_cases_\(command)"))
     #expect(!ToolDefinition.all.map(\.command).contains(command))
   }
+
+  // @use-case:end mcp.tools#swift-tests.person-only
 
   @Test(arguments: ToolDefinition.all)
   func `every tool is named for what it acts on, titled and described`(

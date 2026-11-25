@@ -51,6 +51,7 @@ struct StatusDocumentSchemaTests {
     #expect(useCases(document).count == 7)
   }
 
+  // @use-case:status.list#swift-tests.json
   @Test
   func `the document says every use case's state, status, approval and tier`() async throws {
     let document = try await workspace.run(["--json", "status"]).document()
@@ -72,6 +73,8 @@ struct StatusDocumentSchemaTests {
     #expect(share["routes"] == .array([]))
     #expect(share["value_tier"] == nil)
   }
+
+  // @use-case:end status.list#swift-tests.json
 
   @Test
   func `a route says whether it gates, is linked, its status and a note with whole run ids`(

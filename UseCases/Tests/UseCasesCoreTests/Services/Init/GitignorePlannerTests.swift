@@ -83,6 +83,7 @@ struct GitignorePlannerTests {
     #expect(try planned().outcome == .added)
   }
 
+  // @use-case:init.gitignore#swift-tests.no-git
   @Test
   func `no version control writes nothing and says to exclude the store`() throws {
     let plan = try planned()
@@ -92,6 +93,8 @@ struct GitignorePlannerTests {
     #expect(plan.notes.count == 1)
     #expect(plan.notes.first?.contains(".use-cases/") == true)
   }
+
+  // @use-case:end init.gitignore#swift-tests.no-git
 
   @Test
   func `a workspace in a subfolder of a git repository is told so, naming git`() throws {

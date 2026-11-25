@@ -181,6 +181,7 @@ struct CommandLineRunnerTests {
     #expect(result.standardError.contains("/w/shop"))
   }
 
+  // @use-case:cli.version-and-help#swift-tests.command-help
   @Test(arguments: [
     ["validate", "--help"],
     ["validate", "-h"],
@@ -194,6 +195,8 @@ struct CommandLineRunnerTests {
     #expect(result.standardOutput.contains("Runs no test"))
     #expect(result.standardError.isEmpty)
   }
+
+  // @use-case:end cli.version-and-help#swift-tests.command-help
 
   @Test(arguments: [["--help"], ["-h"], ["--json", "--help"], ["-h", "--json"]])
   func `an explicit request for help prints plain help, with json or without`(
@@ -227,6 +230,7 @@ struct CommandLineRunnerTests {
     #expect(result.standardOutput.contains("validate"))
   }
 
+  // @use-case:cli.version-and-help#swift-tests.command-help
   @Test(arguments: [
     ["links", "--help"],
     ["links", "-h"],
@@ -240,6 +244,8 @@ struct CommandLineRunnerTests {
     #expect(result.standardOutput.contains("Which code each use case is tied to"))
     #expect(result.standardError.isEmpty)
   }
+
+  // @use-case:end cli.version-and-help#swift-tests.command-help
 
   @Test
   func `the command list names links`() async {

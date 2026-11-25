@@ -43,6 +43,7 @@ struct RouteExplanationTests {
     )
   }
 
+  // @use-case:status.detail#swift-tests.stale-keeps-last-result
   @Test
   func `a stale route a run gave no verdict says why, then what it changed since`() {
     let explanation = RouteExplanation.withheldSinceChange(
@@ -63,6 +64,8 @@ struct RouteExplanationTests {
         + " · changed since run 0192f0c4e5a17c3e9b04d2f61a8c3b57 (last result: fail)",
     )
   }
+
+  // @use-case:end status.detail#swift-tests.stale-keeps-last-result
 
   @Test
   func `a lone run keeps its first 8 digits among runs that differ earlier`() {

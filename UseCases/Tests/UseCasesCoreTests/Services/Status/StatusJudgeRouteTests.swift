@@ -113,6 +113,7 @@ struct StatusJudgeRouteTests {
     ])
   }
 
+  // @use-case:status.restored#swift-tests.restored
   @Test
   func `restoring the old wording makes the old verdict apply again`() throws {
     try fixture.record("manual")
@@ -130,6 +131,8 @@ struct StatusJudgeRouteTests {
 
     #expect(try fixture.useCase().status == .verified)
   }
+
+  // @use-case:end status.restored#swift-tests.restored
 
   @Test
   func `a changed link makes the route stale`() throws {

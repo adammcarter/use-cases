@@ -84,6 +84,7 @@ struct StoreHistoryRouteJudgementTests {
     #expect(judgement(of: history).status == .verified)
   }
 
+  // @use-case:status.restored#swift-tests.restored
   @Test
   func `an older pass is verified again once the old fingerprint is restored`() {
     let history = StoreHistory(
@@ -99,6 +100,8 @@ struct StoreHistoryRouteJudgementTests {
     #expect(answer.status == .verified)
     #expect(answer.explanation == .decided(run: StoreFixture.identifier(1), via: ["record"]))
   }
+
+  // @use-case:end status.restored#swift-tests.restored
 
   @Test
   func `results for other fingerprints only make a route stale, naming the newest run`() {
@@ -162,6 +165,7 @@ struct StoreHistoryRouteJudgementTests {
     )
   }
 
+  // @use-case:status.detail#swift-tests.stale-keeps-last-result
   @Test(arguments: [Verdict.pass, Verdict.fail])
   func `a stale route a run gave no verdict says why, and what it last proved`(
     last: Verdict,
@@ -191,6 +195,8 @@ struct StoreHistoryRouteJudgementTests {
       ),
     )
   }
+
+  // @use-case:end status.detail#swift-tests.stale-keeps-last-result
 
   @Test
   func `a diagnostic never shows for a route a result already decides`() {

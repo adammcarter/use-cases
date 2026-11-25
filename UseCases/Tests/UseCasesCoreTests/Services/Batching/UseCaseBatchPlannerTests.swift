@@ -142,6 +142,7 @@ struct UseCaseBatchPlannerTests {
     #expect(change.warnings == ["tests/a.py:9-11 is still marked for app.solo.only"])
   }
 
+  // @use-case:edit.comments-kept#swift-tests.warned
   @Test
   func `a comment inside a rewritten use case is dropped and listed, never silently`() throws {
     try fixture.workspace.write(
@@ -154,6 +155,8 @@ struct UseCaseBatchPlannerTests {
     #expect(change.warnings.count == 1)
     #expect(change.warnings.first?.contains("# about the title") == true)
   }
+
+  // @use-case:end edit.comments-kept#swift-tests.warned
 
   @Test
   func `markers that still name removed use cases are listed together, by file and place`()
