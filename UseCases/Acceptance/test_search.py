@@ -49,6 +49,7 @@ def found(ws, *args):
 # ------------------------------------------------------------------ the query
 
 
+# @use-case:search.words#acceptance.ranked
 def test_words_rank_a_title_above_a_scenario_and_say_why(ws):
     result = search(ws, "double tap")
     assert [m["use_case"] for m in result["matches"]] == ["app.feed.post.like", "app.feed.media.zoom", "app.feed.post.unlike"]
@@ -57,25 +58,32 @@ def test_words_rank_a_title_above_a_scenario_and_say_why(ws):
     assert top["value_tier"] == "critical" and top["file"] == "use-cases/feed/post.yml" and 0 < top["score"] <= 1
     scores = [m["score"] for m in result["matches"]]
     assert scores == sorted(scores, reverse=True) and result["total"] == len(result["matches"])
+# @use-case:end search.words#acceptance.ranked
 
 
+# @use-case:search.words#acceptance.typos
 def test_typos_are_forgiven_unless_exact(ws):
     assert "app.feed.media.zoom" in found(ws, "phtoo")
     assert found(ws, "phtoo", "--exact") == []
     assert "app.feed.post.like" in found(ws, "lik")  # the start of a word
+# @use-case:end search.words#acceptance.typos
 
 
+# @use-case:search.words#acceptance.phrases-and-minus
 def test_a_phrase_must_appear_as_written(ws):
     assert found(ws, '"double tap"') == ["app.feed.post.like", "app.feed.media.zoom"]
     assert "app.feed.post.unlike" in found(ws, '"double taps"')  # double-taps: punctuation is not a word
     assert found(ws, '"tap double"') == []
     assert found(ws, 'double "pinches a photo"') == ["app.feed.media.zoom"]  # beside other words, a phrase is still required
+# @use-case:end search.words#acceptance.phrases-and-minus
 
 
+# @use-case:search.words#acceptance.phrases-and-minus
 def test_a_minus_word_leaves_use_cases_out(ws):
     assert "app.feed.media.zoom" in found(ws, "double")
     assert "app.feed.media.zoom" not in found(ws, "--", "double -zoom")
     assert "app.feed.media.zoom" not in found(ws, "--", 'double -"to zoom"')
+# @use-case:end search.words#acceptance.phrases-and-minus
 
 
 @pytest.mark.parametrize("query, message", [("-zoom", "at least one word"), ('"unclosed', "unclosed")])
@@ -83,28 +91,35 @@ def test_a_query_with_nothing_to_look_for_is_refused(ws, query, message):
     assert message in search(ws, "--", query, expect_exit=2)
 
 
+# @use-case:search.like#acceptance.not-both
 def test_search_needs_words_or_like_never_both(ws, tmp_path):
     assert "needs words" in search(ws, expect_exit=2)
     draft = tmp_path / "draft.yml"
     draft.write_text("title: Tap twice\n")
     assert "not both" in search(ws, "tap", "--like", str(draft), expect_exit=2)
+# @use-case:end search.like#acceptance.not-both
 
 
+# @use-case:search.words#acceptance.stable
 def test_the_same_search_gives_the_same_answer(ws):
     assert search(ws, "the user") == search(ws, "the user")
     tied = [m for m in search(ws, "photo post")["matches"]]
     for a, b in zip(tied, tied[1:]):
         assert (-a["score"], a["use_case"]) <= (-b["score"], b["use_case"])  # best first, ties by id
+# @use-case:end search.words#acceptance.stable
 
 
+# @use-case:search.words#acceptance.stable
 def test_nothing_found_is_not_an_error(ws):
     assert search(ws, "spaceship") == {"output_version": 1, "command": "search", "total": 0, "offset": 0, "page_size": 20,
                                        "matches": [], "next": None}
+# @use-case:end search.words#acceptance.stable
 
 
 # ------------------------------------------------------------------ --like
 
 
+# @use-case:search.like#acceptance.like
 def test_like_finds_use_cases_like_a_draft_and_never_itself(ws, tmp_path):
     draft = tmp_path / "draft.yml"
     draft.write_text("id: app.feed.post.like\ntitle: Tap a photo twice to like it\nscenarios:\n"
@@ -114,36 +129,44 @@ def test_like_finds_use_cases_like_a_draft_and_never_itself(ws, tmp_path):
     process = subprocess.run([*COMMAND, "--workspace", str(ws), "--json", "search", "--like", "-"],
                              input=json.dumps({"title": "Zoom into a photo"}), capture_output=True, text=True, encoding="utf-8")
     assert json.loads(process.stdout)["matches"][0]["use_case"] == "app.feed.media.zoom"
+# @use-case:end search.like#acceptance.like
 
 
+# @use-case:search.like#acceptance.like
 def test_like_needs_some_words(ws, tmp_path):
     draft = tmp_path / "draft.yml"
     draft.write_text("id: app.x.y\n")
     assert "needs a use case with some text" in search(ws, "--like", str(draft), expect_exit=2)
+# @use-case:end search.like#acceptance.like
 
 
 # ------------------------------------------------------------------ --in: which fields
 
 
+# @use-case:search.filters#acceptance.fields
 def test_in_limits_the_fields_searched(ws):
     assert found(ws, "zoom", "--in", "out_of_scope") == ["app.feed.media.zoom"]
     assert found(ws, "twice", "--in", "title") == []
     assert found(ws, "twice", "--in", "scenarios") == ["app.feed.post.like"]
     assert found(ws, "manual", "--in", "validation")  # route ids and procedure steps
     assert "--in takes" in search(ws, "x", "--in", "tags", expect_exit=2)
+# @use-case:end search.filters#acceptance.fields
 
 
+# @use-case:search.like#acceptance.out-of-scope
 def test_an_out_of_scope_match_is_always_labelled(ws):
     zoom = next(m for m in search(ws, "double tap")["matches"] if m["use_case"] == "app.feed.media.zoom")
     assert {"field": "out_of_scope", "text": "Double tap to zoom"} in zoom["why"]
     process = subprocess.run([*COMMAND, "--workspace", str(ws), "search", "zoom"], capture_output=True,
                              text=True, encoding="utf-8")
     assert "also out of scope" in process.stdout
+# @use-case:end search.like#acceptance.out-of-scope
 
 
 # ------------------------------------------------------------------ filters: AND across flags, OR inside one
 
 
+# @use-case:search.filters#acceptance.filters
 def test_filters_keep_only_what_they_name(ws):
     assert found(ws, "the", "--under", "app.feed.post") == ["app.feed.post.like", "app.feed.post.unlike"]
     assert found(ws, "the", "--group", "social") == ["app.feed.post.like", "app.feed.post.unlike"]
@@ -152,8 +175,10 @@ def test_filters_keep_only_what_they_name(ws):
     assert found(ws, "theme", "--state", "draft") == ["app.settings.theme"]
     assert found(ws, "theme", "--state", "verified") == []
     assert found(ws, "the", "--under", "app.feed", "--tier", "core") == ["app.feed.media.zoom", "app.feed.post.unlike"]
+# @use-case:end search.filters#acceptance.filters
 
 
+# @use-case:search.filters#acceptance.filters
 @pytest.mark.parametrize("args, message", [
     (["--under", "app.nope"], "no use case or id prefix"),
     (["--group", "nope"], "no group"),
@@ -162,17 +187,21 @@ def test_filters_keep_only_what_they_name(ws):
 ])
 def test_an_unknown_filter_value_is_refused(ws, args, message):
     assert message in search(ws, "tap", *args, expect_exit=2)
+# @use-case:end search.filters#acceptance.filters
 
 
+# @use-case:search.filters#acceptance.full
 def test_full_carries_exactly_what_show_returns(ws):
     match = search(ws, "zoom", "--full")["matches"][0]
     assert match["definition"] == call_core(str(ws), "show", match["use_case"])["definition"]
     assert "definition" not in search(ws, "zoom")["matches"][0]
+# @use-case:end search.filters#acceptance.full
 
 
 # ------------------------------------------------------------------ pages
 
 
+# @use-case:search.pages#acceptance.pages
 def test_pages_cover_every_match_once_in_order(ws):
     everything = search(ws, "the", "--page-size", "100")["matches"]
     pages, page = [], search(ws, "the", "--page-size", "1")
@@ -183,27 +212,34 @@ def test_pages_cover_every_match_once_in_order(ws):
             break
         page = search(ws, "--next", page["next"])
     assert pages == everything and len(pages) > 2
+# @use-case:end search.pages#acceptance.pages
 
 
+# @use-case:search.pages#acceptance.pages
 def test_next_carries_the_whole_search(ws):
     first = search(ws, "the", "--tier", "core", "--in", "scenarios", "--page-size", "1")
     second = search(ws, "--next", first["next"])
     assert second["matches"] and all(m["value_tier"] == "core" for m in second["matches"])
     assert "--next continues a search" in search(ws, "--next", first["next"], "--tier", "critical", expect_exit=2)
     assert "--next continues a search" in search(ws, "the", "--next", first["next"], expect_exit=2)
+# @use-case:end search.pages#acceptance.pages
 
 
+# @use-case:search.pages#acceptance.changed
 def test_a_page_from_use_cases_that_changed_is_refused(ws):
     first = search(ws, "the", "--page-size", "1")
     path = ws / "use-cases" / "feed" / "media.yml"
     path.write_text(path.read_text().replace("Zoom a photo", "Zoom into a photo"))
     assert "changed since this search" in search(ws, "--next", first["next"], expect_exit=2)
+# @use-case:end search.pages#acceptance.changed
 
 
+# @use-case:search.pages#acceptance.changed
 def test_a_new_verdict_between_pages_is_a_change_too(ws):
     first = search(ws, "the", "--page-size", "1")
     call_core(str(ws), "record", "app.feed.post.like", "manual", "pass")
     assert "changed since this search" in search(ws, "--next", first["next"], expect_exit=2)
+# @use-case:end search.pages#acceptance.changed
 
 
 @pytest.mark.parametrize("value", ["garbage", "eyJ2IjoyfQ"])
@@ -216,9 +252,11 @@ def test_page_size_is_one_to_a_hundred(ws, size):
     assert "--page-size is 1 to 100" in search(ws, "the", "--page-size", size, expect_exit=2)
 
 
+# @use-case:search.words#acceptance.ranked
 def test_people_see_best_first_with_why_and_where_they_are(ws):
     process = subprocess.run([*COMMAND, "--workspace", str(ws), "search", "the", "--page-size", "2"],
                              capture_output=True, text=True, encoding="utf-8")
     lines = process.stdout.splitlines()
     assert process.returncode == 0 and "1–2 of" in lines[-2] and lines[-1].startswith("→ use-cases search --next ")
     assert all(": \"" in line for line in lines[:2])
+# @use-case:end search.words#acceptance.ranked

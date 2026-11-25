@@ -192,6 +192,9 @@ def languages():
 # ------------------------------------------------------------------ scenarios
 
 
+# @use-case:transformers.junit#acceptance.languages
+# @use-case:verify.run#acceptance.one-command
+# @use-case:status.judging#acceptance.skipped-test
 @languages()
 def test_one_run_gives_every_use_case_its_verdict(workspace):
     language, ws = workspace
@@ -208,8 +211,12 @@ def test_one_run_gives_every_use_case_its_verdict(workspace):
     assert all(status[u] == "stale" for u in stale), status
     passed_elsewhere = [u for u, v in spec["expected"].items() if v == "pass" and u not in stale]
     assert all(status[u] == "verified" for u in passed_elsewhere), status
+# @use-case:end status.judging#acceptance.skipped-test
+# @use-case:end verify.run#acceptance.one-command
+# @use-case:end transformers.junit#acceptance.languages
 
 
+# @use-case:verify.run#acceptance.failing-test-is-verdict
 @languages()
 def test_a_failing_test_fails_its_use_case(workspace):
     language, ws = workspace
@@ -217,8 +224,10 @@ def test_a_failing_test_fails_its_use_case(workspace):
     edit(ws, file, old, new)
     run = uc(ws, "verify", "--run")
     assert verdicts(run)[use_case] == "fail"
+# @use-case:end verify.run#acceptance.failing-test-is-verdict
 
 
+# @use-case:verify.run-errors#acceptance.build-break
 @languages()
 def test_a_build_break_is_a_run_error_not_a_failure(workspace):
     language, ws = workspace
@@ -227,8 +236,10 @@ def test_a_build_break_is_a_run_error_not_a_failure(workspace):
     run = uc(ws, "verify", "--run")
     assert run["results"] == []
     assert len(run["errors"]) == 1
+# @use-case:end verify.run-errors#acceptance.build-break
 
 
+# @use-case:status.judging#acceptance.not-run
 @languages()
 def test_a_filtered_run_never_verifies_what_it_skipped(workspace):
     language, ws = workspace
@@ -240,8 +251,10 @@ def test_a_filtered_run_never_verifies_what_it_skipped(workspace):
     for use_case in skipped:
         assert judged.get(use_case) != "pass", f"{use_case} verified although its tests were filtered out"
     assert set(skipped) <= no_verdict(run, "its test didn't run") | {u for u, v in judged.items() if v == "incomplete"}
+# @use-case:end status.judging#acceptance.not-run
 
 
+# @use-case:verify.start-finish#acceptance.own-step
 @languages()
 def test_tests_you_ran_yourself_between_start_and_finish(workspace):
     language, ws = workspace
@@ -268,6 +281,7 @@ def test_tests_you_ran_yourself_between_start_and_finish(workspace):
     stale = set(stale if isinstance(stale, list) else [stale])
     assert stale <= no_verdict(run, "code changed during the run")
     assert not stale & set(verdicts(run))
+# @use-case:end verify.start-finish#acceptance.own-step
 
 
 @languages()

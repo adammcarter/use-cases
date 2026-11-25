@@ -95,19 +95,24 @@ def after_run(validated, tmp_path):
 # ------------------------------------------------------------------ boundary 1: use cases stand alone
 
 
+# @use-case:validate.refuses-broken-structure#acceptance.no-tool-in-use-case
 @pytest.mark.parametrize("field", ["runner"])
 def test_loader_refuses_tech_fields_in_a_use_case(ws, field):
     edit(ws, "use-cases/login.yml", "    value_tier: critical\n", f"    value_tier: critical\n    {field}: []\n")
     error = uc(ws, "status", expect_exit=2)
     assert "names code or tools" in error and field in error
+# @use-case:end validate.refuses-broken-structure#acceptance.no-tool-in-use-case
 
 
+# @use-case:validate.refuses-broken-structure#acceptance.no-tool-in-use-case
 def test_loader_refuses_tech_fields_in_a_check(ws):
     edit(ws, "use-cases/login.yml", "        covers: [three-failures]\n",
          "        covers: [three-failures]\n        runner: { executable: swift }\n")
     assert "names code or tools" in uc(ws, "status", expect_exit=2)
+# @use-case:end validate.refuses-broken-structure#acceptance.no-tool-in-use-case
 
 
+# @use-case:bridge.no-settings#acceptance.core-alone
 def test_core_alone_needs_no_bridge_settings(ws):
     """No extras set up: links still come from markers, verdicts can be recorded, status works."""
     os.remove(os.path.join(ws, "use-cases-bridge.yml"))
@@ -117,6 +122,7 @@ def test_core_alone_needs_no_bridge_settings(ws):
     assert status_of(ws)["lockout"]["unit-tests"]["status"] == "verified"
     run = uc(ws, "verify", "--finish")
     assert run["results"] == [] and "use-cases record" in run["notes"][0]
+# @use-case:end bridge.no-settings#acceptance.core-alone
 
 
 # ------------------------------------------------------------------ manual bindings: optional, in the use case YAML
@@ -149,9 +155,11 @@ def test_a_manual_binding_links_code_with_no_marker_and_goes_stale(ws):
     assert status_of(ws)["lockout"]["unit-tests"]["status"] == "stale"
 
 
+# @use-case:links.manual-bindings#acceptance.missing-file
 def test_a_manual_binding_to_a_missing_file_is_refused(ws):
     bind_lockout(ws, use_case_bindings=HELPER_BINDING.replace("LoginService.swift", "Nope.swift"))
     assert "is missing" in uc(ws, "status", expect_exit=2)
+# @use-case:end links.manual-bindings#acceptance.missing-file
 
 
 def test_marker_bindings_need_no_yaml_entry(ws):
@@ -159,6 +167,7 @@ def test_marker_bindings_need_no_yaml_entry(ws):
     assert "need no entry" in uc(ws, "status", expect_exit=2)
 
 
+# @use-case:links.manual-bindings#acceptance.binding-links
 def test_a_manual_binding_around_a_test_receives_its_result(ws):
     bind_lockout(ws, check_bindings="""        bindings:
           - id: helper-test
@@ -169,6 +178,7 @@ def test_a_manual_binding_around_a_test_receives_its_result(ws):
     lockout = next(r for r in run["results"] if r["use_case"] == "shop.login.lockout")
     assert lockout["links"]["shop.login.lockout#unit-tests.helper-test@Tests/AuthTests/LoginTests.swift:35"] == "pass"
     assert lockout["status"] == "fail"  # its marked test still fails
+# @use-case:end links.manual-bindings#acceptance.binding-links
 
 
 # ------------------------------------------------------------------ resources: freshness only, never expect a result
@@ -192,6 +202,7 @@ def test_a_resource_never_expects_a_result(ws):
     assert authenticate["status"] == "pass"  # the fixture is not a missing test
 
 
+# @use-case:status.resources#acceptance.resources
 def test_editing_a_resource_makes_its_route_stale(ws):
     add_fixture(ws)
     uc(ws, "record", "shop.login.authenticate", "unit-tests", "pass")
@@ -199,14 +210,18 @@ def test_editing_a_resource_makes_its_route_stale(ws):
     with open(os.path.join(ws, "Fixtures", "users.json"), "w") as handle:
         handle.write('{"sam@example.com": "changed"}\n')
     assert status_of(ws)["authenticate"]["unit-tests"]["status"] == "stale"
+# @use-case:end status.resources#acceptance.resources
 
 
+# @use-case:status.resources#acceptance.missing
 def test_a_missing_resource_is_refused(ws):
     edit(ws, "use-cases/login.yml", "        covers: [valid-credentials, invalid-password]\n",
          "        covers: [valid-credentials, invalid-password]\n" + FIXTURE_RESOURCE)
     assert "missing" in uc(ws, "status", expect_exit=2)
+# @use-case:end status.resources#acceptance.missing
 
 
+# @use-case:validate.draft-or-ready#acceptance.ready-without-links
 def test_links_are_never_required_to_be_ready(ws):
     """A use case with no links at all is still judged normally, with a warning."""
     for rel in ["Sources/Auth/LoginService.swift", "Tests/AuthTests/LoginTests.swift", "Tests/SessionTests/RememberMeTests.swift"]:
@@ -220,6 +235,7 @@ def test_links_are_never_required_to_be_ready(ws):
     assert lockout["status"] == "verified"
     assert any("no implementation links" in w for w in lockout["warnings"])
     assert any("only `use-cases record` can verify it" in w for w in lockout["warnings"])
+# @use-case:end validate.draft-or-ready#acceptance.ready-without-links
 
 
 # ------------------------------------------------------------------ boundary 3: transformers
@@ -231,6 +247,7 @@ def test_links_job_is_deterministic(ws):
     assert first == second and b"unit-tests.valid-credentials" in first
 
 
+# @use-case:transformers.swift#acceptance.saved-report
 def test_swift_transformer_alone_against_a_saved_report(tmp_path):
     """No Swift needed: a transformer is a pure conversion."""
     with open(os.path.join(FIXTURES, "links.json")) as handle:
@@ -245,11 +262,13 @@ def test_swift_transformer_alone_against_a_saved_report(tmp_path):
     subprocess.run([*transformer_argv("swift-testing"), "results", str(request_path), str(response_path)], check=True)
     with open(os.path.join(FIXTURES, "expected-results.json")) as handle:
         assert json.loads(response_path.read_text()) == json.load(handle)
+# @use-case:end transformers.swift#acceptance.saved-report
 
 
 # ------------------------------------------------------------------ one run, every verdict
 
 
+# @use-case:verify.run#acceptance.one-command
 def test_one_command_gives_every_use_case_its_verdict(validated):
     workspace, run = validated
     assert len(run["sources"]) == 1 and run["errors"] == []
@@ -257,18 +276,23 @@ def test_one_command_gives_every_use_case_its_verdict(validated):
     assert status["authenticate"]["unit-tests"]["status"] == "verified"
     assert status["lockout"]["unit-tests"]["status"] == "failed"
     assert status["password-reset"]["unit-tests"]["status"] == "incomplete"
+# @use-case:end verify.run#acceptance.one-command
 
 
+# @use-case:status.judging#acceptance.not-run
 def test_a_marked_test_the_command_skips_is_never_a_pass(validated):
     workspace, _ = validated
     remember = status_of(workspace)["remember-me"]["unit-tests"]
     assert remember["status"] == "unverified"
     assert "its test didn't run" in remember["note"]
+# @use-case:end status.judging#acceptance.not-run
 
 
+# @use-case:verify.unlinked-tests#acceptance.unlinked
 def test_tests_without_a_use_case_are_reported(validated):
     _, run = validated
     assert [t["test"].split("/")[1] for t in run["unlinked_tests"]] == ["notTiedToAnyUseCase()"]
+# @use-case:end verify.unlinked-tests#acceptance.unlinked
 
 
 def test_tests_without_a_use_case_are_told_to_a_person(after_run):
@@ -293,6 +317,7 @@ def test_the_old_false_pass_cannot_happen(ws):
     assert all(u["status"] != "verified" for u in status_of(ws).values())
 
 
+# @use-case:verify.run#acceptance.merge
 def test_results_from_every_command_merge_before_judging(ws):
     write_bridge(ws, [
         {"id": "auth-tests", "transformer": "swift-testing", "run": ["swift", "test", "--filter", "AuthTests", *SWIFT_REPORT_FLAGS]},
@@ -302,8 +327,10 @@ def test_results_from_every_command_merge_before_judging(ws):
     status = status_of(ws)
     assert status["remember-me"]["unit-tests"]["status"] == "verified"
     assert status["authenticate"]["unit-tests"]["status"] == "verified"
+# @use-case:end verify.run#acceptance.merge
 
 
+# @use-case:verify.run-errors#acceptance.build-break
 def test_a_build_break_gives_no_verdicts_and_one_run_error(ws):
     edit(ws, "Sources/Auth/LoginService.swift", "public func unrelatedHelper() -> Int { 42 }", "public func unrelatedHelper( {")
     run = uc(ws, "verify", "--run")
@@ -311,12 +338,15 @@ def test_a_build_break_gives_no_verdicts_and_one_run_error(ws):
     assert run["results"] == []
     assert len(run["errors"]) == 1
     assert all(u["status"] in ("unverified", "not linked") for u in status_of(ws).values())
+# @use-case:end verify.run-errors#acceptance.build-break
 
 
+# @use-case:verify.reports-owned-by-run#acceptance.own-reports
 def test_the_report_is_kept_in_the_run_that_read_it(validated):
     workspace, run = validated
     assert run["sources"][0]["report"] == "reports/auth-tests/auth-tests.jsonl"
     assert os.path.getsize(os.path.join(workspace, ".use-cases", "runs", run["run_id"], "reports", "auth-tests", "auth-tests.jsonl"))
+# @use-case:end verify.reports-owned-by-run#acceptance.own-reports
 
 
 # ------------------------------------------------------------------ runs in place, no frozen copy
@@ -329,12 +359,15 @@ def swift_after(edit_command):
             "run": ["sh", "-c", f"{edit_command} && {tests}", "sh", "{report}"]}
 
 
+# @use-case:verify.commands#acceptance.real-project
 def test_runs_in_the_real_project_not_a_copy(validated):
     workspace, run = validated
     assert os.path.isdir(os.path.join(workspace, ".build"))  # swift test built right here
     assert "freeze_seconds" not in run
+# @use-case:end verify.commands#acceptance.real-project
 
 
+# @use-case:verify.guard#acceptance.changed-during
 def test_linked_code_edited_during_the_run_gives_no_verdict(ws):
     write_bridge(ws, [swift_after("perl -pi -e 's/user-1\"\\)/user-9\")/' Sources/Auth/LoginService.swift")])
     run = uc(ws, "verify", "--run")
@@ -343,13 +376,16 @@ def test_linked_code_edited_during_the_run_gives_no_verdict(ws):
     # only authenticate's linked region holds that line; the same file's other regions are unchanged
     assert {d["use_case"].split(".")[-1] for d in changed} == {"authenticate"}
     assert "authenticate" not in verdicts and {"lockout", "password-reset"} <= verdicts
+# @use-case:end verify.guard#acceptance.changed-during
 
 
+# @use-case:verify.guard#acceptance.unlinked-edit
 def test_an_unlinked_edit_during_the_run_keeps_every_verdict(ws):
     write_bridge(ws, [swift_after("printf '// notes\\n' >> Sources/Auth/LoginService.swift")])
     run = uc(ws, "verify", "--run")
     assert not [d for d in run["diagnostics"] if isinstance(d, dict) and d["problem"] == "code changed during the run"]
     assert {"authenticate", "lockout", "password-reset"} <= {r["use_case"].split(".")[-1] for r in run["results"]}
+# @use-case:end verify.guard#acceptance.unlinked-edit
 
 
 def test_an_intent_edit_during_the_run_only_affects_that_use_case(ws):
@@ -370,6 +406,7 @@ def run_tests_yourself(workspace, started):
                    cwd=workspace, capture_output=True)
 
 
+# @use-case:verify.start-finish#acceptance.own-step
 def test_validate_uses_the_report_from_tests_you_ran_yourself(ws, validated):
     started = uc(ws, "verify", "--start")
     run_tests_yourself(ws, started)
@@ -377,13 +414,17 @@ def test_validate_uses_the_report_from_tests_you_ran_yourself(ws, validated):
     assert run["run_id"] == started["run_id"]
     assert "exit_code" not in run["sources"][0]  # nothing was run by use-cases
     assert {r["use_case"]: r["status"] for r in run["results"]} == {r["use_case"]: r["status"] for r in validated[1]["results"]}
+# @use-case:end verify.start-finish#acceptance.own-step
 
 
+# @use-case:verify.start-finish#acceptance.finish-without-start
 def test_finish_without_a_start_is_refused(ws):
     assert "no started run" in uc(ws, "verify", "--finish", expect_exit=2)
     assert status_of(ws)["authenticate"]["status"] == "unverified"
+# @use-case:end verify.start-finish#acceptance.finish-without-start
 
 
+# @use-case:verify.reports-owned-by-run#acceptance.never-earlier
 def test_a_new_run_never_reads_an_earlier_runs_report(ws):
     first = uc(ws, "verify", "--start")
     run_tests_yourself(ws, first)
@@ -393,6 +434,7 @@ def test_a_new_run_never_reads_an_earlier_runs_report(ws):
     run = uc(ws, "verify", "--finish")
     assert run["results"] == [] and "no report" in run["errors"][0]
     assert os.path.getsize(first["reports"]["auth-tests"])  # and the first run still has its own
+# @use-case:end verify.reports-owned-by-run#acceptance.never-earlier
 
 
 def test_validate_never_runs_tests(ws, tmp_path):
@@ -404,6 +446,7 @@ def test_validate_never_runs_tests(ws, tmp_path):
     assert run["results"] == [] and "no report" in run["errors"][0] and "the path `--start` gave" in run["errors"][0]
 
 
+# @use-case:verify.guard#acceptance.changed-during
 def test_code_changed_during_the_run_gives_no_verdict(ws):
     run_tests_yourself(ws, uc(ws, "verify", "--start"))
     edit(ws, "Sources/Auth/LoginService.swift", 'User(id: "user-1")', 'User(id: "user-9")')
@@ -413,25 +456,31 @@ def test_code_changed_during_the_run_gives_no_verdict(ws):
     assert changed == {"authenticate"}
     assert "authenticate" not in {r["use_case"].split(".")[-1] for r in run["results"]}
     assert status_of(ws)["authenticate"]["unit-tests"]["status"] == "unverified"  # nothing speaks for the new code
+# @use-case:end verify.guard#acceptance.changed-during
 
 
+# @use-case:verify.open-runs#acceptance.locked
 def test_a_finished_run_cannot_be_finished_again(ws):
     run_tests_yourself(ws, uc(ws, "verify", "--start"))
     uc(ws, "verify", "--finish")
     assert "no started run" in uc(ws, "verify", "--finish", expect_exit=2)
+# @use-case:end verify.open-runs#acceptance.locked
 
 
+# @use-case:verify.reports-owned-by-run#acceptance.never-earlier
 def test_run_never_reads_a_report_left_by_an_earlier_run(ws):
     run_tests_yourself(ws, uc(ws, "verify", "--start"))
     uc(ws, "verify", "--finish")
     write_bridge(ws, [{"id": "auth-tests", "transformer": "swift-testing", "run": ["true"]}])
     run = uc(ws, "verify", "--run")
     assert run["results"] == [] and "no report" in run["errors"][0]
+# @use-case:end verify.reports-owned-by-run#acceptance.never-earlier
 
 
 # ------------------------------------------------------------------ transformer misbehaving
 
 
+# @use-case:verify.run-errors#acceptance.broken-transformer
 @pytest.mark.parametrize("body, reason", [
     ("open(sys.argv[3], 'w').write('not json')", "malformed output"),
     ("json.dump({'contract': 1, 'results': [{'link': 'made-up', 'status': 'fail'}]}, open(sys.argv[3], 'w'))", "does not exist"),
@@ -451,46 +500,59 @@ def test_a_broken_transformer_fails_the_run_not_the_use_cases(ws, body, reason):
     assert run["results"] == []
     assert len(run["errors"]) == 1 and reason in run["errors"][0]
     assert all(u["status"] != "failed" for u in status_of(ws).values())
+# @use-case:end verify.run-errors#acceptance.broken-transformer
 
 
 # ------------------------------------------------------------------ freshness
 
 
+# @use-case:status.staleness#acceptance.linked-code
 def test_editing_linked_code_makes_it_stale(after_run):
     edit(after_run, "Sources/Auth/LoginService.swift", 'return User(id: "user-1")', 'return User(id: "user-2")')
     status = status_of(after_run)
     assert status["authenticate"]["unit-tests"]["status"] == "stale"
     assert status["lockout"]["unit-tests"]["status"] == "failed"  # other use cases untouched
+# @use-case:end status.staleness#acceptance.linked-code
 
 
+# @use-case:status.staleness#acceptance.linked-code
 def test_editing_a_linked_test_makes_it_stale(after_run):
     edit(after_run, "Tests/AuthTests/LoginTests.swift", 'password: "wrong")\n        }', 'password: "nope")\n        }')
     assert status_of(after_run)["authenticate"]["unit-tests"]["status"] == "stale"
+# @use-case:end status.staleness#acceptance.linked-code
 
 
+# @use-case:status.staleness#acceptance.unlinked-code
 def test_editing_unlinked_code_changes_nothing(after_run):
     edit(after_run, "Sources/Auth/LoginService.swift", "{ 42 }", "{ 43 }")
     assert status_of(after_run)["authenticate"]["unit-tests"]["status"] == "verified"
+# @use-case:end status.staleness#acceptance.unlinked-code
 
 
+# @use-case:status.staleness#acceptance.promise
 def test_intent_change_is_stale_title_change_is_not(after_run):
     edit(after_run, "use-cases/login.yml", "title: Authenticate user", "title: Sign in")
     assert status_of(after_run)["authenticate"]["unit-tests"]["status"] == "verified"
     edit(after_run, "use-cases/login.yml", "and reject anyone without them.", "and reject everyone else.")
     assert status_of(after_run)["authenticate"]["unit-tests"]["status"] == "stale"
+# @use-case:end status.staleness#acceptance.promise
 
 
+# @use-case:status.staleness#acceptance.move
 def test_moving_linked_code_without_changing_it_stays_verified(after_run):
     edit(after_run, "Sources/Auth/LoginService.swift", "public final class LoginService {",
          "// a new comment line shifts everything down\npublic final class LoginService {")
     assert status_of(after_run)["authenticate"]["unit-tests"]["status"] == "verified"
+# @use-case:end status.staleness#acceptance.move
 
 
 # ------------------------------------------------------------------ manual checks
 
 
+# @use-case:record.by-hand#acceptance.record
 def test_manual_verdict_needs_no_transformer_and_respects_gating(after_run):
     uc(after_run, "record", "shop.login.authenticate", "manual-login-check", "fail", "dashboard never loads")
     status = status_of(after_run)["authenticate"]
     assert status["manual-login-check"]["status"] == "failed"
     assert status["status"] == "verified"  # non-gating check cannot lower the use case
+# @use-case:end record.by-hand#acceptance.record

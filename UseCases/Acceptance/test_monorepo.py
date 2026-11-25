@@ -69,34 +69,43 @@ def validated(tmp_path_factory):
 # ------------------------------------------------------------------ nested scopes
 
 
+# @use-case:bridge.monorepo#acceptance.nested-scopes
 def test_nested_scopes_compose_one_namespace(ws):
     assert sorted(status(ws)) == sorted(EVERY)
+# @use-case:end bridge.monorepo#acceptance.nested-scopes
 
 
+# @use-case:bridge.settings#acceptance.root-only
 def test_bridge_settings_below_the_root_are_refused(ws):
     shutil.copy(os.path.join(ws, "use-cases-bridge.yml"), os.path.join(ws, "pricing", "use-cases-bridge.yml"))
     assert "root-only" in uc(ws, "status", expect_exit=2)
+# @use-case:end bridge.settings#acceptance.root-only
 
 
 # ------------------------------------------------------------------ one run, three languages
 
 
+# @use-case:bridge.monorepo#acceptance.every-service
 def test_one_run_verifies_every_service(validated):
     workspace, run = validated
     assert run["errors"] == [] and len(run["sources"]) == 3
     assert all(u["status"] == "verified" for u in status(workspace).values())
     assert [t["test"] for t in run["unlinked_tests"]] == ["tests.test_catalog/test_catalog_is_priced_in_pounds"]
+# @use-case:end bridge.monorepo#acceptance.every-service
 
 
+# @use-case:verify.run#acceptance.merge
 def test_a_use_case_proved_in_two_languages_merges_both_runs(validated):
     _, run = validated
     cross = {r["route"]: r["via"] for r in run["results"] if r["use_case"] == CROSS}
     assert cross == {"pricing-quotes": ["pricing-tests"], "checkout-totals": ["checkout-tests"]}
+# @use-case:end verify.run#acceptance.merge
 
 
 # ------------------------------------------------------------------ one source at a time
 
 
+# @use-case:verify.run#acceptance.only
 def test_running_one_service_never_verifies_the_other_half(ws):
     run = uc(ws, "verify", "--run", "--only", "pricing-tests")
     assert (CROSS, "checkout-totals") in didnt_run(run)
@@ -105,13 +114,17 @@ def test_running_one_service_never_verifies_the_other_half(ws):
     assert routes(now[CROSS])["pricing-quotes"] == "verified"
     assert all(now[u]["status"] == "verified" for u in PRICING)
     assert all(now[u]["status"] == "unverified" for u in CHECKOUT + STOREFRONT)
+# @use-case:end verify.run#acceptance.only
 
 
+# @use-case:verify.run#acceptance.only
 def test_unknown_only_names_are_refused_before_anything_runs(ws):
     assert "unknown validations" in uc(ws, "verify", "--run", "--only", "nope", expect_exit=2)
     assert not os.path.exists(os.path.join(ws, ".use-cases", "runs"))
+# @use-case:end verify.run#acceptance.only
 
 
+# @use-case:status.judging#acceptance.worst-of-routes
 def test_a_go_failure_fails_the_shared_use_case_even_though_python_passed(ws):
     edit(ws, "checkout/cart/cart_test.go", "}{{4, 5000}, {5, 5625}, {12, 12750}}", "}{{4, 5000}, {5, 5626}, {12, 12750}}")
     uc(ws, "verify", "--run")
@@ -119,8 +132,10 @@ def test_a_go_failure_fails_the_shared_use_case_even_though_python_passed(ws):
     assert routes(now[CROSS]) == {"pricing-quotes": "verified", "checkout-totals": "failed"}
     assert now[CROSS]["status"] == "failed"
     assert all(now[u]["status"] == "verified" for u in PRICING + CHECKOUT + STOREFRONT)
+# @use-case:end status.judging#acceptance.worst-of-routes
 
 
+# @use-case:verify.run-errors#acceptance.build-break
 def test_a_go_build_break_leaves_python_and_javascript_verdicts_intact(ws):
     edit(ws, "checkout/cart/cart.go", "func (c Catalog) Total(lines []Line) (int, error) {", "func (c Catalog) Total(lines []Line) (int, error {")
     run = uc(ws, "verify", "--run")
@@ -129,11 +144,13 @@ def test_a_go_build_break_leaves_python_and_javascript_verdicts_intact(ws):
     assert all(now[u]["status"] == "verified" for u in PRICING + STOREFRONT)
     assert all(now[u]["status"] == "unverified" for u in CHECKOUT)
     assert routes(now[CROSS]) == {"pricing-quotes": "verified", "checkout-totals": "unverified"}
+# @use-case:end verify.run-errors#acceptance.build-break
 
 
 # ------------------------------------------------------------------ freshness across services
 
 
+# @use-case:bridge.monorepo#acceptance.locality
 def test_editing_the_shared_catalog_stales_both_languages_routes(validated, tmp_path):
     workspace = str(tmp_path / "after")
     shutil.copytree(validated[0], workspace)
@@ -142,8 +159,10 @@ def test_editing_the_shared_catalog_stales_both_languages_routes(validated, tmp_
     assert routes(now[CROSS]) == {"pricing-quotes": "stale", "checkout-totals": "stale"}
     # Declared-input boundary: these tests read the catalog too, but their use cases don't declare it.
     assert all(now[u]["status"] == "verified" for u in PRICING + CHECKOUT)
+# @use-case:end bridge.monorepo#acceptance.locality
 
 
+# @use-case:bridge.monorepo#acceptance.locality
 def test_editing_one_service_leaves_the_others_verified(validated, tmp_path):
     workspace = str(tmp_path / "after")
     shutil.copytree(validated[0], workspace)
@@ -151,3 +170,4 @@ def test_editing_one_service_leaves_the_others_verified(validated, tmp_path):
     now = status(workspace)
     assert now["shop.storefront.labels.savings"]["status"] == "stale"
     assert all(now[u]["status"] == "verified" for u in EVERY if u != "shop.storefront.labels.savings")
+# @use-case:end bridge.monorepo#acceptance.locality

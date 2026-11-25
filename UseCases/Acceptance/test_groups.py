@@ -46,22 +46,29 @@ def members(ws, name):
     return sorted(u["use_case"] for u in uc(ws, "status", "--group", name)["use_cases"])
 
 
+# @use-case:groups.membership#acceptance.selectors
 def test_prefixes_are_namespace_aware(ws):
     groups(ws, "  g:\n    include: { prefixes: [app.auth] }\n")
     assert members(ws, "g") == ["app.auth.reset"]  # never app.authentication.sso
+# @use-case:end groups.membership#acceptance.selectors
 
 
+# @use-case:groups.membership#acceptance.selectors
 def test_globs_match_whole_segments(ws):
     groups(ws, "  one:\n    include: { globs: [app.*.success] }\n  any:\n    include: { globs: ['**.success'] }\n")
     assert members(ws, "one") == ["app.checkout.success", "app.login.success"]
     assert members(ws, "any") == ["app.checkout.success", "app.login.success"]
+# @use-case:end groups.membership#acceptance.selectors
 
 
+# @use-case:groups.membership#acceptance.exclude-wins
 def test_exclude_always_wins_and_omitted_include_means_everything(ws):
     groups(ws, "  g:\n    exclude: { prefixes: [app.login], ids: [app.auth.reset] }\n")
     assert members(ws, "g") == ["app.authentication.sso", "app.checkout.success"]
+# @use-case:end groups.membership#acceptance.exclude-wins
 
 
+# @use-case:groups.file-rules#acceptance.invalid
 @pytest.mark.parametrize("text, reason", [
     ("  g:\n    include: { ids: [app.nope] }\n", "no use case"),
     ("  g:\n    include: { globs: [app.log*] }\n", "is not allowed at groups/g/include/globs/0"),
@@ -74,8 +81,10 @@ def test_exclude_always_wins_and_omitted_include_means_everything(ws):
 def test_what_makes_the_groups_file_invalid(ws, text, reason):
     groups(ws, text)
     assert reason in uc(ws, "status", expect_exit=2)
+# @use-case:end groups.file-rules#acceptance.invalid
 
 
+# @use-case:groups.file-rules#acceptance.warns
 def test_what_only_warns(ws):
     groups(ws, "  g:\n    include: { prefixes: [app.nothing, app.login, app.login] }\n  empty:\n    include: { ids: [app.auth.reset] }\n"
                "    exclude: { ids: [app.auth.reset] }\n")
@@ -83,8 +92,10 @@ def test_what_only_warns(ws):
     assert any("matches nothing" in w for w in warnings)
     assert any("duplicate selector" in w for w in warnings)
     assert any("has no members" in w for w in warnings)
+# @use-case:end groups.file-rules#acceptance.warns
 
 
+# @use-case:gate.groups#acceptance.members-only
 def test_a_group_is_gated_on_its_members_only(ws):
     groups(ws, "  release:\n    include: { prefixes: [app.login] }\n")
     uc(ws, "record", "app.checkout.success", "manual", "fail")  # outside the group: never its gate
@@ -96,23 +107,29 @@ def test_a_group_is_gated_on_its_members_only(ws):
     strict = uc(ws, "status", "--group", "release", "--gate", "--strict")
     assert strict["group"] == "release" and strict["gate"] == {"passed": True, "strict": True, "blocking": [], "warning": []}
     assert strict["summary"] == {"total": 2, "by_status": {"verified": 2}}
+# @use-case:end gate.groups#acceptance.members-only
 
 
+# @use-case:groups.membership#acceptance.rename
 def test_renaming_a_group_changes_no_verdict(ws):
     groups(ws, "  release:\n    include: { prefixes: [app.login] }\n")
     uc(ws, "record", "app.login.success", "manual", "pass")
     groups(ws, "  shipping:\n    include: { prefixes: [app.login] }\n")
     assert next(u for u in uc(ws, "status")["use_cases"] if u["use_case"] == "app.login.success")["status"] == "verified"
+# @use-case:end groups.membership#acceptance.rename
 
 
+# @use-case:gate.groups#acceptance.unknown-group
 def test_an_unknown_group_is_refused(ws):
     groups(ws, "  release: { include: { prefixes: [app.login] } }\n")
     assert "no group 'nope'" in uc(ws, "status", "--group", "nope", expect_exit=2)
+# @use-case:end gate.groups#acceptance.unknown-group
 
 
 # ------------------------------------------------------------------ bridge warnings
 
 
+# @use-case:bridge.settings#acceptance.warnings
 @pytest.mark.parametrize("bridge, warning", [
     ("schema_version: 1\nvalidations: []\n", "validations is empty"),
     ("schema_version: 1\nvalidations:\n  - id: a\n    report: r.xml\n    transformer: junit\n", "has no run command"),
@@ -122,3 +139,4 @@ def test_bridge_settings_that_are_valid_but_worth_a_warning(ws, bridge, warning)
     with open(os.path.join(ws, "use-cases-bridge.yml"), "w") as handle:
         handle.write(bridge)
     assert any(warning in w for w in uc(ws, "status")["warnings"])
+# @use-case:end bridge.settings#acceptance.warnings

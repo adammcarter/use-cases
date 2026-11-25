@@ -136,17 +136,22 @@ def test_decoration_on_sentinel_lines_is_not_content(tmp_path):
     assert fingerprint(bc_with(tmp_path / "b", f"/* {OPEN} */\nabc\n# {CLOSE} ~~~\n"), "unit-tests") == baseline
 
 
+# @use-case:links.markers#acceptance.nesting
 def test_adding_a_nested_marker_never_changes_the_outer_region(tmp_path):
     baseline = fingerprint(bc_with(tmp_path / "a", f"// {OPEN}\nabc\n// {CLOSE}\n"), "unit-tests")
     nested = f"// {OPEN}\n// {SENTINEL}example.other#inner\nabc\n// {SENTINEL}end example.other#inner\n// {CLOSE}\n"
     assert fingerprint(bc_with(tmp_path / "b", nested), "unit-tests") == baseline
+# @use-case:end links.markers#acceptance.nesting
 
 
+# @use-case:links.scan-robustness#acceptance.line-endings
 def test_crlf_and_bom_files_resolve(tmp_path):
     ws = bc_with(tmp_path, ("﻿// " + OPEN + "\r\nabc\r\n// " + CLOSE + "\r\n").encode())
     assert [l["range"] for l in uc(ws, "links")["links"] if l["role"] == "validation"] == [{"start": 2, "end": 2}]
+# @use-case:end links.scan-robustness#acceptance.line-endings
 
 
+# @use-case:status.line-endings#acceptance.lf-crlf
 def test_lf_and_crlf_checkouts_agree_by_default(tmp_path):
     unix = f"// {OPEN}\nabc\n// {CLOSE}\n"
     windows = unix.replace("\n", "\r\n")
@@ -155,6 +160,7 @@ def test_lf_and_crlf_checkouts_agree_by_default(tmp_path):
     exact = "normalization:\n  ignore: []"
     strict = [fingerprint(bc_with(tmp_path / n, t, exact), "unit-tests") for n, t in (("c", unix), ("d", windows))]
     assert strict[0] != strict[1]
+# @use-case:end status.line-endings#acceptance.lf-crlf
 
 
 def test_whitespace_normalization(tmp_path):
@@ -164,11 +170,14 @@ def test_whitespace_normalization(tmp_path):
     assert a == b
 
 
+# @use-case:links.scan-robustness#acceptance.not-utf8
 def test_text_that_is_not_utf8_is_skipped_with_a_warning(tmp_path):
     ws = bc_with(tmp_path, f"// {OPEN}\nabc\n// {CLOSE}\n", extra={"legacy/latin1.c": b"/* " + SENTINEL.encode() + b"example.success#x */ caf\xe9 /* " + SENTINEL.encode() + b"end example.success#x */"})
     assert any("unsupported-text" in d for d in uc(ws, "links")["diagnostics"])
+# @use-case:end links.scan-robustness#acceptance.not-utf8
 
 
+# @use-case:links.markers#acceptance.broken-pairs-invalid
 @pytest.mark.parametrize("body, reason", [
     (f"// {OPEN}\nabc\n", "never closed"),
     (f"abc\n// {CLOSE}\n", "has no start"),
@@ -177,29 +186,36 @@ def test_text_that_is_not_utf8_is_skipped_with_a_warning(tmp_path):
 ])
 def test_broken_marker_structure_is_invalid(tmp_path, body, reason):
     assert reason in uc(bc_with(tmp_path, body), "status", expect_exit=2)
+# @use-case:end links.markers#acceptance.broken-pairs-invalid
 
 
+# @use-case:validate.checks-files-only#acceptance.warnings-never-fail
 def test_malformed_and_unknown_markers_only_warn(tmp_path):
     body = f"// {OPEN}\nabc\n// {CLOSE}\n// {SENTINEL}Bad_ID\n// {SENTINEL}example.nope#x\nz\n// {SENTINEL}end example.nope#x\n"
     diagnostics = uc(bc_with(tmp_path, body), "links")["diagnostics"]
     assert any("malformed marker id" in d for d in diagnostics)
     assert any("unknown use case" in d for d in diagnostics)
+# @use-case:end validate.checks-files-only#acceptance.warnings-never-fail
 
 
+# @use-case:links.manual-bindings#acceptance.claimed-twice
 def test_a_binding_claimed_twice_is_invalid(tmp_path):
     use_case = VECTOR_BC_USE_CASE.replace("        resources:", "        bindings:\n          - id: success\n            kind: manual\n            locator: { file: src/app.swift }\n        resources:")
     ws = workspace(tmp_path, {**BC_FILES, "use-cases/success.yml": use_case})
     assert "claimed by" in uc(ws, "status", expect_exit=2)
+# @use-case:end links.manual-bindings#acceptance.claimed-twice
 
 
 # ------------------------------------------------------------------ manual ranges and strict mode
 
+# @use-case:status.staleness#acceptance.move
 def test_strict_mode_stales_on_moves_content_mode_does_not(tmp_path):
     moved = f"\n\n// {OPEN}\nabc\n// {CLOSE}\n"
     for policy, same in ((None, True), ("binding_identity: content-and-locator", False)):
         a = fingerprint(bc_with(tmp_path / f"a{same}", f"// {OPEN}\nabc\n// {CLOSE}\n", policy), "unit-tests")
         b = fingerprint(bc_with(tmp_path / f"b{same}", moved, policy), "unit-tests")
         assert (a == b) is same
+# @use-case:end status.staleness#acceptance.move
 
 
 # ------------------------------------------------------------------ the sentinel token (chapter 08)
@@ -209,6 +225,7 @@ def validation_links(ws):
     return [l for l in uc(ws, "links")["links"] if l["role"] == "validation" and l["file"] != "tests/app_tests.swift"]
 
 
+# @use-case:links.markers#acceptance.malformed-id
 @pytest.mark.parametrize("rel, text", [
     ("page.html", f"<!--{SENTINEL}example.success#unit-tests.html-->\n<p>x</p>\n<!--{SENTINEL}end example.success#unit-tests.html-->\n"),
     ("notebook.ipynb", '{"cells": [{"source": ["# ' + SENTINEL + 'example.success#unit-tests.cell\\n", "x = 1\\n",\n'
@@ -219,18 +236,22 @@ def validation_links(ws):
 def test_the_id_ends_at_the_first_character_no_id_can_hold(tmp_path, rel, text):
     ws = bc_with(tmp_path, f"// {OPEN}\nabc\n// {CLOSE}\n", extra={rel: text})
     assert [l["file"] for l in validation_links(ws)] == [rel]
+# @use-case:end links.markers#acceptance.malformed-id
 
 
+# @use-case:links.manual-bindings#acceptance.claimed-twice
 def test_the_same_binding_twice_on_one_line_is_invalid(tmp_path):
     line = (f"/* {SENTINEL}example.success#unit-tests.x */ a /* {SENTINEL}end example.success#unit-tests.x */ "
             f"/* {SENTINEL}example.success#unit-tests.x */ b /* {SENTINEL}end example.success#unit-tests.x */\n")
     ws = bc_with(tmp_path, f"// {OPEN}\nabc\n// {CLOSE}\n", extra={"src/twice.js": line})
     assert "share the link key" in uc(ws, "status", expect_exit=2)
+# @use-case:end links.manual-bindings#acceptance.claimed-twice
 
 
 # ------------------------------------------------------------------ discovery (chapter 04, ADR 012)
 
 
+# @use-case:validate.discovery-exclusions#acceptance.excluded-folder
 def test_a_folder_pattern_excludes_the_whole_folder(tmp_path):
     vendored = {"vendor/lib/copy.js": f"// {SENTINEL}example.success#unit-tests.v\nx\n// {SENTINEL}end example.success#unit-tests.v\n"}
     ws = bc_with(tmp_path / "a", f"// {OPEN}\nabc\n// {CLOSE}\n", extra=vendored)
@@ -239,12 +260,15 @@ def test_a_folder_pattern_excludes_the_whole_folder(tmp_path):
     with open(os.path.join(ws, "use-cases.yml"), "a") as handle:
         handle.write("discovery:\n  exclude: [vendor]\n")
     assert validation_links(ws) == []
+# @use-case:end validate.discovery-exclusions#acceptance.excluded-folder
 
 
+# @use-case:validate.discovery-exclusions#acceptance.history-and-store
 def test_a_nested_store_is_never_scanned(tmp_path):
     console = {"sub/.use-cases/runs/x/outputs/y/console.txt": f"noise {SENTINEL}end example.success#unit-tests.z\n"}
     ws = bc_with(tmp_path, f"// {OPEN}\nabc\n// {CLOSE}\n", extra=console)
     uc(ws, "status")  # an unmatched end inside a vendored workspace's store would make this INVALID
+# @use-case:end validate.discovery-exclusions#acceptance.history-and-store
 
 
 # ------------------------------------------------------------------ links: warnings, ranges, reads (chapter 08)
@@ -278,6 +302,7 @@ def warnings_about(ws, word):
     return said
 
 
+# @use-case:links.manual-bindings#acceptance.excluded-target
 @pytest.mark.parametrize("rel, exclude", [("vendor/lib.js", "discovery:\n  exclude: [vendor]\n"), (".git/config", "")])
 def test_a_manual_binding_into_excluded_content_warns_and_the_workspace_stays_valid(tmp_path, rel, exclude):
     ws = workspace(tmp_path, {"use-cases.yml": CONFIG + exclude, "use-cases/success.yml": linked([("lib", f"{{ file: {rel} }}")]),
@@ -285,8 +310,10 @@ def test_a_manual_binding_into_excluded_content_warns_and_the_workspace_stays_va
     said = warnings_about(ws, "points at excluded content")
     assert len(said) == 1 and said[0].startswith(rel)
     assert [l["file"] for l in uc(ws, "links")["links"]] == [rel]
+# @use-case:end links.manual-bindings#acceptance.excluded-target
 
 
+# @use-case:links.markers#acceptance.nesting
 @pytest.mark.parametrize("given, overlaps", [
     ({"implementation": [("a", lines(1, 3)), ("b", lines(3, 4))]}, 1),
     ({"implementation": [("a", lines(1, 2)), ("b", lines(3, 4))]}, 0),
@@ -297,12 +324,15 @@ def test_a_manual_binding_into_excluded_content_warns_and_the_workspace_stays_va
 def test_links_of_one_use_case_and_role_that_overlap_warn_and_nothing_else_does(tmp_path, given, overlaps):
     ws = workspace(tmp_path, {"use-cases/success.yml": linked(**given), "src/code.py": CODE})
     assert len(warnings_about(ws, "overlap")) == overlaps
+# @use-case:end links.markers#acceptance.nesting
 
 
+# @use-case:links.markers#acceptance.nesting
 def test_nested_markers_of_one_use_case_and_route_overlap(tmp_path):
     inner = "example.success#unit-tests.inner"
     ws = bc_with(tmp_path, f"// {OPEN}\nabc\n// {SENTINEL}{inner}\ndef\n// {SENTINEL}end {inner}\n// {CLOSE}\n")
     assert len(warnings_about(ws, "overlap")) == 1
+# @use-case:end links.markers#acceptance.nesting
 
 
 @pytest.mark.parametrize("end_column, exit_code", [(3, 0), (4, 2)])
@@ -312,23 +342,28 @@ def test_a_leading_byte_order_mark_is_not_a_column(tmp_path, end_column, exit_co
     uc(ws, "validate", expect_exit=exit_code)
 
 
+# @use-case:links.manual-bindings#acceptance.missing-file
 def test_an_end_column_on_an_empty_line_is_invalid(tmp_path):
     where = "{ file: src/a.txt, start: { line: 1 }, end: { line: 2, column: 1 } }"
     ws = workspace(tmp_path, {"use-cases/success.yml": linked([("a", where)]), "src/a.txt": "a\n\nb\n"})
     assert "column" in uc(ws, "validate", expect_exit=2)
+# @use-case:end links.manual-bindings#acceptance.missing-file
 
 
+# @use-case:links.manual-bindings#acceptance.excluded-target
 def test_an_empty_file_bound_whole_warns(tmp_path):
     ws = workspace(tmp_path, {"use-cases/success.yml": linked([("a", "{ file: src/empty.py }"), ("b", "{ file: src/full.py }")]),
                               "src/empty.py": "", "src/full.py": "x = 1\n"})
     said = warnings_about(ws, "empty whole-file binding")
     assert len(said) == 1 and said[0].startswith("src/empty.py")
+# @use-case:end links.manual-bindings#acceptance.excluded-target
 
 
 UNREADABLE = pytest.mark.skipif(os.name == "nt" or (hasattr(os, "getuid") and os.getuid() == 0),
                                 reason="an administrator can read any file, and Windows has no mode bits")
 
 
+# @use-case:links.scan-robustness#acceptance.unreadable
 @UNREADABLE
 @pytest.mark.parametrize("name", ["secret.py", "locked"])
 def test_a_file_or_folder_the_scan_cannot_read_is_invalid_naming_it(tmp_path, name):
@@ -340,13 +375,16 @@ def test_a_file_or_folder_the_scan_cannot_read_is_invalid_naming_it(tmp_path, na
     finally:
         os.chmod(target, 0o755)
     assert f"src/{name}" in message
+# @use-case:end links.scan-robustness#acceptance.unreadable
 
 
+# @use-case:links.scan-robustness#acceptance.special-files
 @pytest.mark.skipif(not hasattr(os, "mkfifo"), reason="a pipe in the file system is POSIX only")
 def test_a_pipe_in_the_scanned_tree_warns_and_is_never_opened(tmp_path):
     ws = workspace(tmp_path, {"use-cases/success.yml": linked(), "src/a.py": "x = 1\n"})
     os.mkfifo(os.path.join(ws, "src", "pipe.fifo"))
     assert [d for d in warnings_about(ws, "src/pipe.fifo")] != []
+# @use-case:end links.scan-robustness#acceptance.special-files
 
 
 MARKED = f"// {OPEN}\nabc\n// {CLOSE}\n"
@@ -356,26 +394,33 @@ WIDE = {
 }
 
 
+# @use-case:links.scan-robustness#acceptance.not-utf8
 @pytest.mark.parametrize("encoding", sorted(WIDE))
 def test_a_file_starting_with_a_utf_16_or_32_byte_order_mark_warns_that_its_markers_cannot_be_read(tmp_path, encoding):
     ws = bc_with(tmp_path, MARKED, extra={"src/wide.txt": WIDE[encoding]})
     said = warnings_about(ws, "src/wide.txt")
     assert len(said) == 1 and "unsupported-text" in said[0]
     assert [l for l in uc(ws, "links")["links"] if l["file"] == "src/wide.txt"] == []
+# @use-case:end links.scan-robustness#acceptance.not-utf8
 
 
+# @use-case:links.list-links#acceptance.ordered
 def test_diagnostics_sort_by_path_then_line_as_a_number(tmp_path):
     ws = bc_with(tmp_path, MARKED, extra={"src/x.py": "\n" * 8 + f"# {SENTINEL}BAD\n# {SENTINEL}BAD\n", "src/a.py": "\n" * 19 + f"# {SENTINEL}BAD\n"})
     where = [d.split(": ")[0] for d in uc(ws, "links")["diagnostics"] if "malformed" in d]
     assert where == ["src/a.py:20", "src/x.py:9", "src/x.py:10"]
+# @use-case:end links.list-links#acceptance.ordered
 
 
+# @use-case:links.list-links#acceptance.whole-file-range
 @pytest.mark.parametrize("content, last", [("", 1), ("a", 1), ("a\n", 1), ("a\nb", 2), ("a\nb\n", 2), ("a\n\n", 2), ("\n", 1), ("a\r\nb\r\n", 2)])
 def test_a_whole_file_links_range_ends_at_the_last_line_holding_bytes(tmp_path, content, last):
     ws = workspace(tmp_path, {"use-cases/success.yml": linked([("a", "{ file: src/a.txt }")]), "src/a.txt": content})
     assert next(l for l in uc(ws, "links")["links"] if l["file"] == "src/a.txt")["range"] == {"start": 1, "end": last}
+# @use-case:end links.list-links#acceptance.whole-file-range
 
 
+# @use-case:links.list-links#acceptance.whole-file-range
 @POSIX_ONLY
 def test_a_transformers_whole_file_link_has_the_same_range(tmp_path):
     response = json.dumps({"contract": 1, "diagnostics": [], "links": [
@@ -386,8 +431,10 @@ def test_a_transformers_whole_file_link_has_the_same_range(tmp_path):
     os.chmod(os.path.join(ws, "tools", "links"), 0o755)
     record_exchanges(os.path.join(ws, "tools", "links"))
     assert next(l for l in uc(ws, "links")["links"] if l["file"] == "src/a.txt")["range"] == {"start": 1, "end": 2}
+# @use-case:end links.list-links#acceptance.whole-file-range
 
 
+# @use-case:links.markers#acceptance.broken-pairs-invalid
 @pytest.mark.parametrize("body, reason", [
     (f"// {SENTINEL}example.nope#x\nz\n", "never closed"),
     (f"z\n// {SENTINEL}end example.nope#x\n", "has no start"),
@@ -396,8 +443,10 @@ def test_a_transformers_whole_file_link_has_the_same_range(tmp_path):
 def test_pairing_comes_before_lookup_so_a_broken_marker_for_an_unknown_target_is_still_invalid(tmp_path, body, reason):
     ws = bc_with(tmp_path, MARKED, extra={"src/x.js": body})
     assert reason in uc(ws, "validate", expect_exit=2)
+# @use-case:end links.markers#acceptance.broken-pairs-invalid
 
 
+# @use-case:links.markers#acceptance.malformed-id
 @pytest.mark.parametrize("tail", ["T", "_d", "-T"])
 def test_an_id_run_followed_by_a_letter_or_underscore_is_malformed_never_a_shorter_id(tmp_path, tail):
     name = f"example.success#unit-tests.sub{tail}"
@@ -407,16 +456,20 @@ def test_an_id_run_followed_by_a_letter_or_underscore_is_malformed_never_a_short
     assert [d for d in document["diagnostics"] if d.startswith("src/bad.js") and "malformed marker id" in d] != []
     assert [l for l in document["links"] if l["file"] == "src/bad.js"] == []
     uc(ws, "validate")  # a malformed marker only warns, and never pairs, so the missing end cannot make it INVALID
+# @use-case:end links.markers#acceptance.malformed-id
 
 
+# @use-case:links.markers#acceptance.pair-links-region
 def test_an_id_followed_by_syntax_that_is_not_a_letter_still_links(tmp_path):
     ws = bc_with(tmp_path, MARKED, extra={"page.html": f"<!--{SENTINEL}example.success#unit-tests.html-->\n<p>x</p>\n"
                                                        f"<!--{SENTINEL}end example.success#unit-tests.html-->\n"})
     document = uc(ws, "links")
     assert [l["binding"] for l in document["links"] if l["file"] == "page.html"] == ["html"]
     assert not [d for d in document["diagnostics"] if d.startswith("page.html")]
+# @use-case:end links.markers#acceptance.pair-links-region
 
 
+# @use-case:links.list-links#acceptance.ordered
 def test_the_links_document_orders_the_start_line_as_a_number(tmp_path):
     region = f"// {SENTINEL}example.success#again\nx\n// {SENTINEL}end example.success#again\n"
     text = region + "\n" * 2 + region + "\n" * 4 + region
@@ -424,9 +477,12 @@ def test_the_links_document_orders_the_start_line_as_a_number(tmp_path):
     assert [l["range"]["start"] for l in uc(ws, "links")["links"] if l["file"] == "src/x.js"] == [2, 7, 14]
     ws = workspace(tmp_path / "ten", {"use-cases/success.yml": linked(), "src/x.js": region + "\n" * 8 + region})
     assert [l["range"]["start"] for l in uc(ws, "links")["links"] if l["file"] == "src/x.js"] == [2, 13]
+# @use-case:end links.list-links#acceptance.ordered
 
 
+# @use-case:links.manual-bindings#acceptance.excluded-target
 def test_an_empty_manual_range_is_valid_and_warns(tmp_path):
     where = "{ file: src/a.txt, start: { line: 1, column: 3 }, end: { line: 1, column: 2 } }"
     ws = workspace(tmp_path, {"use-cases/success.yml": linked([("a", where)]), "src/a.txt": "abcd\n"})
     assert len(warnings_about(ws, "empty range")) == 1
+# @use-case:end links.manual-bindings#acceptance.excluded-target

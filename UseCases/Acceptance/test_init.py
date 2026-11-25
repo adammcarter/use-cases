@@ -35,6 +35,7 @@ def read(folder, rel):
 # ------------------------------------------------------------------ what it creates (§2, §4, §7)
 
 
+# @use-case:init.scaffold#acceptance.empty-folder
 def test_an_empty_folder_becomes_a_valid_workspace_with_a_draft_example(repo):
     made = init(repo)
     assert made["created"] == ["use-cases.yml", "use-cases/example.yml", "use-case-groups.yml", "use-cases-bridge.yml"]
@@ -46,15 +47,19 @@ def test_an_empty_folder_becomes_a_valid_workspace_with_a_draft_example(repo):
     for strict in ([], ["--strict"]):  # the example never blocks a gate
         assert call_core(str(repo), "status", "--gate", *strict)["gate"]["passed"]
     assert call_core(str(repo), "status", "--group", "smoke")["summary"]["total"] == 1
+# @use-case:end init.scaffold#acceptance.empty-folder
 
 
+# @use-case:init.scaffold#acceptance.minimal
 def test_minimal_writes_the_workspace_file_alone(repo):
     made = init(repo, "--minimal")
     assert made["created"] == ["use-cases.yml"]
     assert sorted(os.listdir(repo)) == ["use-cases.yml"]
     assert call_core(str(repo), "validate")["use_cases"] == 0
+# @use-case:end init.scaffold#acceptance.minimal
 
 
+# @use-case:init.choices#acceptance.prefix
 def test_no_root_prefix_unless_asked_and_both_forms_give_the_same_ids(tmp_path):
     full, minimal, named = tmp_path / "full", tmp_path / "minimal", tmp_path / "named"
     for folder, args in ((full, []), (minimal, ["--minimal"]), (named, ["--prefix", "shop"])):
@@ -66,17 +71,21 @@ def test_no_root_prefix_unless_asked_and_both_forms_give_the_same_ids(tmp_path):
     ids = lambda folder: [u["use_case"] for u in call_core(str(folder), "status")["use_cases"]]
     assert ids(full) == ids(minimal) == ["example.getting-started"]
     assert ids(named) == ["shop.example.getting-started"]
+# @use-case:end init.choices#acceptance.prefix
 
 
+# @use-case:init.choices#acceptance.prefix
 @pytest.mark.parametrize("prefix", ["Shop", "shop_", "shop..app", "-shop"])
 def test_an_invalid_prefix_is_a_usage_error(repo, prefix):
     assert "not a valid prefix" in init(repo, f"--prefix={prefix}", expect_exit=2)
     assert os.listdir(repo) == []
+# @use-case:end init.choices#acceptance.prefix
 
 
 # ------------------------------------------------------------------ never overwrites (§3)
 
 
+# @use-case:init.scaffold#acceptance.never-overwrites
 def test_it_never_overwrites_and_a_second_run_keeps_everything(repo):
     (repo / "use-case-groups.yml").write_text("schema_version: 1\ngroups:\n  mine:\n    include: {prefixes: [example]}\n")
     before = read(repo, "use-case-groups.yml")
@@ -85,8 +94,10 @@ def test_it_never_overwrites_and_a_second_run_keeps_everything(repo):
     second = init(repo)
     assert second["created"] == [] and sorted(second["kept"]) == sorted(
         ["use-cases.yml", "use-cases/example.yml", "use-case-groups.yml", "use-cases-bridge.yml"])
+# @use-case:end init.scaffold#acceptance.never-overwrites
 
 
+# @use-case:init.scaffold#acceptance.never-overwrites
 def test_an_existing_workspace_gains_only_what_it_lacks(tmp_path):
     ws = tmp_path / "py"
     shutil.copytree(os.path.join(FIXTURES, "python", "2-use-cases"), ws)
@@ -95,8 +106,10 @@ def test_an_existing_workspace_gains_only_what_it_lacks(tmp_path):
     assert made["created"] == ["use-cases-bridge.yml"] and made["kept"] == ["use-cases.yml"]
     assert not (ws / "use-cases" / "example.yml").exists() and not (ws / "use-case-groups.yml").exists()
     assert [u["use_case"] for u in call_core(str(ws), "status")["use_cases"]] == [u["use_case"] for u in before]
+# @use-case:end init.scaffold#acceptance.never-overwrites
 
 
+# @use-case:init.scaffold#acceptance.inside-workspace
 def test_inside_a_workspace_is_refused(repo):
     init(repo, "--minimal")
     below = repo / "services" / "pay"
@@ -105,17 +118,21 @@ def test_inside_a_workspace_is_refused(repo):
                              text=True, encoding="utf-8")
     assert process.returncode == 2 and "inside the workspace" in process.stderr and '"refused"' in process.stdout
     assert os.listdir(below) == []
+# @use-case:end init.scaffold#acceptance.inside-workspace
 
 
+# @use-case:init.scaffold#acceptance.inside-workspace
 def test_a_child_scope_file_is_left_alone(repo):
     (repo / "use-cases.yml").write_text("schema_version: 1\nprefix: svc\n")
     assert "not a workspace root" in init(repo, expect_exit=2)
     assert read(repo, "use-cases.yml") == "schema_version: 1\nprefix: svc\n"
+# @use-case:end init.scaffold#acceptance.inside-workspace
 
 
 # ------------------------------------------------------------------ .gitignore (§6)
 
 
+# @use-case:init.gitignore#acceptance.one-line
 def test_gitignore_gains_one_line_once_when_version_control_is_there(repo):
     (repo / ".git").mkdir()
     (repo / ".gitignore").write_text("node_modules/")  # no trailing newline
@@ -123,18 +140,22 @@ def test_gitignore_gains_one_line_once_when_version_control_is_there(repo):
     assert read(repo, ".gitignore") == "node_modules/\n.use-cases/\n"
     assert init(repo, "--minimal")["gitignore"] == "present"
     assert read(repo, ".gitignore").count(".use-cases") == 1
+# @use-case:end init.gitignore#acceptance.one-line
 
 
+# @use-case:init.gitignore#acceptance.existing
 @pytest.mark.parametrize("line", [".use-cases", ".use-cases/", "/.use-cases", "/.use-cases/"])
 def test_an_existing_exclusion_is_recognised(repo, line):
     (repo / ".gitignore").write_text(f"{line}\n")
     assert init(repo, "--minimal")["gitignore"] == "present"
     assert read(repo, ".gitignore") == f"{line}\n"
+# @use-case:end init.gitignore#acceptance.existing
 
 
 # ------------------------------------------------------------------ base files only (§5)
 
 
+# @use-case:init.no-test-command#acceptance.template
 @pytest.mark.parametrize("language", ["python", "javascript", "go", "rust", "c", "java", "kotlin", "swift", "bdd"])
 def test_init_never_writes_a_test_command_whatever_the_codebase(tmp_path, language):
     ws = tmp_path / language
@@ -144,10 +165,13 @@ def test_init_never_writes_a_test_command_whatever_the_codebase(tmp_path, langua
     assert yaml.safe_load(bridge) == {"schema_version": 1}  # a template: no validation, no command
     assert "# validations:" in bridge and "your, test, command" in bridge
     assert call_core(str(ws), "verify", "--run")["notes"]  # nothing set up, so nothing runs
+# @use-case:end init.no-test-command#acceptance.template
 
 
+# @use-case:init.scaffold#acceptance.empty-folder
 def test_the_human_output_lists_what_it_made_and_one_next_step(repo):
     process = subprocess.run([*COMMAND, "init"], cwd=repo, capture_output=True, stdin=subprocess.DEVNULL, text=True, encoding="utf-8")
     lines = process.stdout.strip().splitlines()
     assert process.returncode == 0 and "a commented template: add your own test command" in process.stdout
     assert lines[-1] == "→ use-cases status"
+# @use-case:end init.scaffold#acceptance.empty-folder

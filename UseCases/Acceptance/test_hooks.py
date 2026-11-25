@@ -40,12 +40,15 @@ def hook_file(folder, event):
 # ------------------------------------------------------------------ opt-in (§1)
 
 
+# @use-case:hooks.opt-in#acceptance.asked-only
 def test_nothing_is_added_unless_asked(repo):
     listed = hooks(repo)
     assert [(h["name"], h["state"]) for h in listed["hooks"]] == [("commit", "absent"), ("push", "absent")]
     assert not hook_file(repo, "pre-commit").exists() and not hook_file(repo, "pre-push").exists()
+# @use-case:end hooks.opt-in#acceptance.asked-only
 
 
+# @use-case:hooks.opt-in#acceptance.add-remove
 def test_add_and_remove(repo):
     added = hooks(repo, "add", "commit", "push")
     assert added["changed"] == ["commit", "push"] and {h["state"] for h in added["hooks"]} == {"installed"}
@@ -55,6 +58,7 @@ def test_add_and_remove(repo):
     removed = hooks(repo, "remove", "commit")
     assert removed["changed"] == ["commit"] and not hook_file(repo, "pre-commit").exists()
     assert hook_file(repo, "pre-push").exists()
+# @use-case:end hooks.opt-in#acceptance.add-remove
 
 
 def test_hooks_are_per_clone_and_never_committed(repo):
@@ -68,6 +72,7 @@ def test_hooks_are_per_clone_and_never_committed(repo):
 # ------------------------------------------------------------------ never overwrites (§4)
 
 
+# @use-case:hooks.never-overwrites#acceptance.other-hook
 def test_another_hook_is_left_alone_and_the_line_is_given(repo):
     hook_file(repo, "pre-commit").parent.mkdir(parents=True, exist_ok=True)
     hook_file(repo, "pre-commit").write_text("#!/bin/sh\necho mine\n")
@@ -76,8 +81,10 @@ def test_another_hook_is_left_alone_and_the_line_is_given(repo):
     assert hook_file(repo, "pre-commit").read_text() == "#!/bin/sh\necho mine\n"
     assert hooks(repo, "remove", "commit", expect_exit=1)["changed"] == []
     assert hook_file(repo, "pre-commit").read_text() == "#!/bin/sh\necho mine\n"
+# @use-case:end hooks.never-overwrites#acceptance.other-hook
 
 
+# @use-case:hooks.never-overwrites#acceptance.edited
 def test_an_edited_hook_is_no_longer_ours_to_remove(repo):
     hooks(repo, "add", "commit")
     with open(hook_file(repo, "pre-commit"), "a") as handle:
@@ -85,15 +92,19 @@ def test_an_edited_hook_is_no_longer_ours_to_remove(repo):
     assert hooks(repo)["hooks"][0]["state"] == "other"
     hooks(repo, "remove", "commit", expect_exit=1)
     assert hook_file(repo, "pre-commit").exists()
+# @use-case:end hooks.never-overwrites#acceptance.edited
 
 
+# @use-case:hooks.never-overwrites#acceptance.hook-manager
 def test_a_hook_manager_is_never_written_into(repo):
     git(repo, "config", "core.hooksPath", ".husky")
     result = hooks(repo, "add", "push", expect_exit=1)
     assert result["managed"] and result["changed"] == [] and "core.hooksPath" in result["notes"][0]
     assert not (repo / ".husky").exists()
+# @use-case:end hooks.never-overwrites#acceptance.hook-manager
 
 
+# @use-case:hooks.opt-in#acceptance.not-git
 def test_not_a_git_repository_is_refused(tmp_path):
     folder = tmp_path / "plain"
     folder.mkdir()
@@ -101,10 +112,13 @@ def test_not_a_git_repository_is_refused(tmp_path):
     process = subprocess.run([*COMMAND, "--workspace", str(folder), "--json", "hooks", "add", "commit"],
                              capture_output=True, stdin=subprocess.DEVNULL, text=True, encoding="utf-8")
     assert process.returncode == 2 and "not a git repository" in process.stderr
+# @use-case:end hooks.opt-in#acceptance.not-git
 
 
+# @use-case:hooks.opt-in#acceptance.not-git
 def test_an_unknown_hook_is_a_usage_error(repo):
     assert "unknown hook merge" in hooks(repo, "add", "merge", expect_exit=2)
+# @use-case:end hooks.opt-in#acceptance.not-git
 
 
 def test_a_workspace_in_a_subfolder_is_named_from_the_top(tmp_path):
@@ -136,6 +150,7 @@ def commit(folder, env, message):
                           encoding="utf-8", env=env)
 
 
+# @use-case:hooks.stops#acceptance.commit
 @POSIX_ONLY
 def test_the_commit_hook_stops_an_invalid_workspace(repo, on_path):
     hooks(repo, "add", "commit")
@@ -146,8 +161,10 @@ def test_the_commit_hook_stops_an_invalid_workspace(repo, on_path):
     assert stopped.returncode != 0 and "stray" in stopped.stderr
     skipped = subprocess.run([*GIT, "commit", "-q", "--no-verify", "-m", "anyway"], cwd=repo, capture_output=True, text=True, env=on_path)
     assert skipped.returncode == 0  # --no-verify skips it once, as for any git hook
+# @use-case:end hooks.stops#acceptance.commit
 
 
+# @use-case:hooks.stops#acceptance.push
 @POSIX_ONLY
 def test_the_push_hook_stops_a_blocked_gate(repo, on_path, tmp_path):
     remote = tmp_path / "remote.git"
@@ -163,6 +180,7 @@ def test_the_push_hook_stops_a_blocked_gate(repo, on_path, tmp_path):
     call_core(str(repo), "record", "example.getting-started", "manual-check", "pass")
     push = subprocess.run([*GIT, "push", "-q", "origin", "HEAD"], cwd=repo, capture_output=True, text=True, env=on_path)
     assert push.returncode == 0, push.stderr
+# @use-case:end hooks.stops#acceptance.push
 
 
 def fallback(hook):
@@ -183,6 +201,7 @@ def no_use_cases(tmp_path):
     return {**os.environ, "PATH": f"{bin_dir}{os.pathsep}/usr/bin{os.pathsep}/bin"}
 
 
+# @use-case:hooks.stops#acceptance.finds-tool
 @POSIX_ONLY
 def test_without_use_cases_on_path_the_hook_uses_the_one_that_added_it(repo, no_use_cases):
     hooks(repo, "add", "commit")
@@ -190,8 +209,10 @@ def test_without_use_cases_on_path_the_hook_uses_the_one_that_added_it(repo, no_
         handle.write("    stray: true\n")
     stopped = commit(repo, no_use_cases, "broken")
     assert stopped.returncode != 0 and "stray" in stopped.stderr  # checked, not skipped
+# @use-case:end hooks.stops#acceptance.finds-tool
 
 
+# @use-case:hooks.stops#acceptance.finds-tool
 @POSIX_ONLY
 def test_a_hook_that_cannot_find_use_cases_stops_and_says_so(repo, no_use_cases):
     hooks(repo, "add", "commit")
@@ -202,8 +223,10 @@ def test_a_hook_that_cannot_find_use_cases_stops_and_says_so(repo, no_use_cases)
     assert stopped.returncode != 0
     assert "use-cases isn't installed here, so this hook can't check your use cases." in stopped.stderr
     assert "git commit --no-verify" in stopped.stderr  # how to skip it, deliberately
+# @use-case:end hooks.stops#acceptance.finds-tool
 
 
+# @use-case:hooks.never-overwrites#acceptance.edited
 def test_our_hook_is_ours_whichever_use_cases_added_it(repo):
     hooks(repo, "add", "commit")
     path = hook_file(repo, "pre-commit")
@@ -213,11 +236,13 @@ def test_our_hook_is_ours_whichever_use_cases_added_it(repo):
     hooks(repo, "add", "commit")
     path.write_bytes(path.read_bytes().replace(b"validate --quiet", b"validate"))
     assert hooks(repo)["hooks"][0]["state"] == "other"  # any other change: someone's own hook, left alone
+# @use-case:end hooks.never-overwrites#acceptance.edited
 
 
 # ------------------------------------------------------------------ init: hooks and the wizard (chapter 17)
 
 
+# @use-case:hooks.opt-in#acceptance.asked-only
 def test_init_adds_hooks_only_when_asked(tmp_path):
     folder = tmp_path / "r"
     folder.mkdir()
@@ -228,13 +253,16 @@ def test_init_adds_hooks_only_when_asked(tmp_path):
     other.mkdir()
     git(other, "init", "-q")
     assert call_core(str(other), "init")["hooks"] == []  # not a terminal: asks nothing, adds nothing
+# @use-case:end hooks.opt-in#acceptance.asked-only
 
 
+# @use-case:hooks.opt-in#acceptance.not-git
 def test_init_hooks_outside_git_need_attention(tmp_path):
     folder = tmp_path / "plain"
     folder.mkdir()
     made = call_core(str(folder), "init", "--hooks", "commit", expect_exit=1)
     assert made["hooks"] == [] and "not a git repository" in made["notes"][-1]
+# @use-case:end hooks.opt-in#acceptance.not-git
 
 
 def wizard(folder, answers, *flags):
@@ -268,6 +296,7 @@ def wizard(folder, answers, *flags):
     return process.returncode, seen.decode(errors="replace")
 
 
+# @use-case:init.choices#acceptance.wizard
 @POSIX_ONLY
 def test_the_wizard_asks_and_its_answers_decide(tmp_path):
     folder = tmp_path / "w"
@@ -279,8 +308,10 @@ def test_the_wizard_asks_and_its_answers_decide(tmp_path):
     assert sorted(p.name for p in folder.iterdir() if p.name != ".git") == [".gitignore", "use-cases.yml"]
     assert "prefix: shop" in (folder / "use-cases.yml").read_text()
     assert (folder / ".git" / "hooks" / "pre-commit").exists() and (folder / ".git" / "hooks" / "pre-push").exists()
+# @use-case:end init.choices#acceptance.wizard
 
 
+# @use-case:init.choices#acceptance.wizard
 @POSIX_ONLY
 def test_the_wizard_defaults_are_full_no_prefix_and_no_hooks(tmp_path):
     folder = tmp_path / "d"
@@ -290,8 +321,10 @@ def test_the_wizard_defaults_are_full_no_prefix_and_no_hooks(tmp_path):
     assert code == 0, out
     assert (folder / "use-cases" / "example.yml").exists() and "\nprefix:" not in (folder / "use-cases.yml").read_text()
     assert not (folder / ".git" / "hooks" / "pre-commit").exists()
+# @use-case:end init.choices#acceptance.wizard
 
 
+# @use-case:init.choices#acceptance.wizard
 @POSIX_ONLY
 def test_flags_answer_the_wizard_in_advance(tmp_path):
     folder = tmp_path / "f"
@@ -305,3 +338,4 @@ def test_flags_answer_the_wizard_in_advance(tmp_path):
     process = subprocess.run([*COMMAND, "init", "--minimal", "--prefix", "shop", "--hooks", "commit"], cwd=other,
                              capture_output=True, text=True, stdin=subprocess.DEVNULL)
     assert process.returncode == 0 and "Full setup" not in process.stdout
+# @use-case:end init.choices#acceptance.wizard

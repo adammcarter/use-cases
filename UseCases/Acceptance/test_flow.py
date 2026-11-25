@@ -76,6 +76,7 @@ def verify(repo):
     assert ran["errors"] == [], ran["errors"]
 
 
+# @use-case:flow.whole-flow#acceptance.end-to-end
 def test_the_whole_flow(repo):
     if not shutil.which("python3"):
         pytest.skip("needs python3 with pytest")
@@ -118,3 +119,4 @@ def test_the_whole_flow(repo):
     assert results["use_cases"] == [{"use_case": USE_CASE, "title": "Count the items on an invoice", "status": "verified",
                                      "checks": [{"label": "unit-tests", "status": "verified"}]}]
     assert uc(repo, "show", USE_CASE)["approval"] == "approved"  # nothing in the build changed what was signed off
+# @use-case:end flow.whole-flow#acceptance.end-to-end

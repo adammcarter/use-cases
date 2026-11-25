@@ -55,6 +55,7 @@ def runs(ws):
     return sorted(os.listdir(os.path.join(ws, ".use-cases", "runs")))
 
 
+# @use-case:store.run-ids#acceptance.order
 def test_run_ids_only_go_up_and_follow_time_across_machines(ws):
     first = uc(ws, "record", "example.success", "manual", "fail")["run_id"]
     second = uc(ws, "record", "example.success", "manual", "pass")["run_id"]
@@ -63,15 +64,19 @@ def test_run_ids_only_go_up_and_follow_time_across_machines(ws):
     assert route_status(ws) == "verified"
     with open(os.path.join(ws, ".use-cases", "run-order.json")) as handle:
         assert json.load(handle) == {"order_version": 1, "last_run_id": second}
+# @use-case:end store.run-ids#acceptance.order
 
 
+# @use-case:store.run-ids#acceptance.deleted-run
 def test_a_deleted_run_never_lowers_the_next_id(ws):
     uc(ws, "record", "example.success", "manual", "pass")
     last = uc(ws, "record", "example.success", "manual", "pass")["run_id"]
     shutil.rmtree(os.path.join(ws, ".use-cases", "runs", last))
     assert int(uc(ws, "record", "example.success", "manual", "pass")["run_id"], 16) > int(last, 16)
+# @use-case:end store.run-ids#acceptance.deleted-run
 
 
+# @use-case:store.run-ids#acceptance.order
 def test_stores_from_two_machines_merge_and_the_newer_verdict_wins(ws, tmp_path):
     """CI records a pass, a developer later records a fail; copying CI's runs in keeps the fail."""
     ci = str(tmp_path / "ci")
@@ -83,15 +88,19 @@ def test_stores_from_two_machines_merge_and_the_newer_verdict_wins(ws, tmp_path)
         shutil.copytree(os.path.join(ci, ".use-cases", "runs", name), os.path.join(ws, ".use-cases", "runs", name))
     assert route_status(ws) == "failed"
     uc(ws, "record", "example.success", "manual", "pass")  # allocation continues past both histories
+# @use-case:end store.run-ids#acceptance.order
 
 
+# @use-case:store.run-ids#acceptance.deleted-run
 def test_a_copied_store_without_its_allocation_file_keeps_working(ws):
     uc(ws, "record", "example.success", "manual", "pass")
     os.remove(os.path.join(ws, ".use-cases", "run-order.json"))
     uc(ws, "record", "example.success", "manual", "fail")
     assert route_status(ws) == "failed"
+# @use-case:end store.run-ids#acceptance.deleted-run
 
 
+# @use-case:store.run-ids#acceptance.newer-core
 @pytest.mark.foreign_store  # this run is written the way a newer core might write one
 def test_a_run_from_a_newer_core_is_read_through_its_envelope(ws):
     run_id = uc(ws, "record", "example.success", "manual", "fail")["run_id"]
@@ -109,8 +118,10 @@ def test_a_run_from_a_newer_core_is_read_through_its_envelope(ws):
         "completion_version": 2, "run_id": newer, "result_count": 1,
         "manifest_sha256": digest("run.json"), "results_sha256": digest("results.jsonl"), "new_digest_kind": {}}))
     assert route_status(ws) == "verified"  # the newer pass wins, read through the four envelope fields
+# @use-case:end store.run-ids#acceptance.newer-core
 
 
+# @use-case:store.sealed-runs#acceptance.tampered
 @pytest.mark.parametrize("target", ["results.jsonl", "run.json", "completion.json"])
 def test_a_tampered_sealed_run_is_a_storage_error_not_skipped(ws, target):
     run_id = uc(ws, "record", "example.success", "manual", "fail")["run_id"]
@@ -121,14 +132,18 @@ def test_a_tampered_sealed_run_is_a_storage_error_not_skipped(ws, target):
         handle.write({"results.jsonl": text.replace('"fail"', '"pass"'), "run.json": text.replace("\n", " \n", 1),
                       "completion.json": text.replace('"result_count": 1', '"result_count": 0')}[target])
     assert "is corrupt" in uc(ws, "status", expect_exit=2)
+# @use-case:end store.sealed-runs#acceptance.tampered
 
 
+# @use-case:store.sealed-runs#acceptance.unsealed
 def test_an_unsealed_run_is_never_evidence(ws):
     run_id = uc(ws, "record", "example.success", "manual", "pass")["run_id"]
     os.remove(os.path.join(ws, ".use-cases", "runs", run_id, "completion.json"))
     assert route_status(ws) == "unverified"
+# @use-case:end store.sealed-runs#acceptance.unsealed
 
 
+# @use-case:store.sealed-runs#acceptance.unsealed
 def test_a_run_that_never_finished_is_a_workspace_warning_in_both_views_and_never_evidence(ws):
     run_id = uc(ws, "record", "example.success", "manual", "pass")["run_id"]
     assert not [w for w in uc(ws, "status")["warnings"] if "never finished" in w]  # sealed: nothing to say
@@ -146,6 +161,7 @@ def test_a_run_that_never_finished_is_a_workspace_warning_in_both_views_and_neve
     uc(ws, "record", "example.success", "manual", "pass")  # a later sealed run still counts, and the warning stays until the folder goes
     assert [w for w in uc(ws, "status")["warnings"] if w.startswith(f"run {run_id} never finished")] != []
     assert route_status(ws) == "verified"
+# @use-case:end store.sealed-runs#acceptance.unsealed
 
 
 def test_a_stray_folder_in_the_store_is_an_error(ws):
@@ -154,15 +170,18 @@ def test_a_stray_folder_in_the_store_is_an_error(ws):
     assert "not a run folder" in uc(ws, "status", expect_exit=2)
 
 
+# @use-case:record.by-hand#acceptance.refusals
 def test_record_refuses_an_unknown_route_or_status(ws):
     assert "no route" in uc(ws, "record", "example.success", "nope", "pass", expect_exit=2)
     assert "status must be one of" in uc(ws, "record", "example.success", "manual", "verified", expect_exit=2)
     assert not os.path.exists(os.path.join(ws, ".use-cases", "runs"))
+# @use-case:end record.by-hand#acceptance.refusals
 
 
 # ------------------------------------------------------------------ attachments (chapter 12 §16-17)
 
 
+# @use-case:record.attachments#acceptance.kept
 def test_an_attachment_is_kept_with_its_verdict_by_content(ws, tmp_path):
     evidence = tmp_path / "screen shot.png"
     evidence.write_bytes(b"\x89PNG fake image")
@@ -173,8 +192,10 @@ def test_an_attachment_is_kept_with_its_verdict_by_content(ws, tmp_path):
     assert open(os.path.join(ws, ".use-cases", "runs", run["run_id"], "attachments", "sha256", digest[:2], digest[2:]), "rb").read() == evidence.read_bytes()
     evidence.write_bytes(b"changed afterwards")
     assert route_status(ws) == "verified"  # the stored copy is the evidence
+# @use-case:end record.attachments#acceptance.kept
 
 
+# @use-case:record.attachments#acceptance.damaged
 def test_a_damaged_attachment_is_reported_but_never_rewrites_the_verdict(ws, tmp_path):
     evidence = tmp_path / "log.txt"
     evidence.write_text("all good\n")
@@ -185,8 +206,10 @@ def test_a_damaged_attachment_is_reported_but_never_rewrites_the_verdict(ws, tmp
     status = uc(ws, "status")
     assert status["use_cases"][0]["status"] == "verified"
     assert any("is damaged" in w for w in status["warnings"])
+# @use-case:end record.attachments#acceptance.damaged
 
 
+# @use-case:record.attachments#acceptance.same-name
 def test_two_attachments_with_one_name_are_refused(ws, tmp_path):
     (tmp_path / "a").mkdir()
     (tmp_path / "b").mkdir()
@@ -194,3 +217,4 @@ def test_two_attachments_with_one_name_are_refused(ws, tmp_path):
     (tmp_path / "b" / "log.txt").write_text("2")
     assert "names must be unique" in uc(ws, "record", "example.success", "manual", "pass", "--attach",
                                         str(tmp_path / "a" / "log.txt"), str(tmp_path / "b" / "log.txt"), expect_exit=2)
+# @use-case:end record.attachments#acceptance.same-name

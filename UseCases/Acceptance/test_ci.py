@@ -35,6 +35,7 @@ def checkout(tmp_path, language, name):
 # ------------------------------------------------------------------ the recipe from a clean checkout (§2, §3)
 
 
+# @use-case:ci.recipe#acceptance.clean-checkout
 def test_the_recipe_from_a_clean_checkout(tmp_path):
     needs("node")
     job = checkout(tmp_path, "javascript", "job")
@@ -44,8 +45,10 @@ def test_the_recipe_from_a_clean_checkout(tmp_path):
     gate = call_core(str(job), "status", "--gate")
     assert gate["gate"]["passed"]
     assert "stale" not in gate["summary"]["by_status"]  # nothing is ever stale from a clean checkout
+# @use-case:end ci.recipe#acceptance.clean-checkout
 
 
+# @use-case:verify.run#acceptance.failing-test-is-verdict
 def test_a_failing_test_fails_the_gate_not_verify(tmp_path):
     needs("node")
     job = checkout(tmp_path, "javascript", "job")
@@ -55,11 +58,13 @@ def test_a_failing_test_fails_the_gate_not_verify(tmp_path):
     assert call_core(str(job), "verify", "--run", env=env())["errors"] == []  # exit 0: the failing test is a verdict
     gate = call_core(str(job), "status", "--gate", expect_exit=1)["gate"]
     assert {b["use_case"] for b in gate["blocking"]} == {spec[3]}
+# @use-case:end verify.run#acceptance.failing-test-is-verdict
 
 
 # ------------------------------------------------------------------ tests split across machines (§6)
 
 
+# @use-case:ci.recipe#acceptance.shards
 def test_tests_split_across_machines_are_one_run(tmp_path):
     """Start on one machine, test in two shards on two others, finish on a fourth: the verdicts are those of one run."""
     needs("python3")
@@ -80,8 +85,10 @@ def test_tests_split_across_machines_are_one_run(tmp_path):
     finished = call_core(str(machines["finish"]), "verify", "--finish", "--run-id", started["run_id"], env=env())
     assert finished["errors"] == [] and verdicts(finished) == LANGUAGES["python"]["expected"]
     assert sorted(os.listdir(machines["finish"] / run / "reports" / "pytest")) == ["shard-1.xml", "shard-2.xml"]
+# @use-case:end ci.recipe#acceptance.shards
 
 
+# @use-case:ci.recipe#acceptance.shards
 def test_overlapping_shard_files_merge_into_one_verdict_each(tmp_path):
     needs("python3")
     base = checkout(tmp_path, "python", "commit")
@@ -97,6 +104,7 @@ def test_overlapping_shard_files_merge_into_one_verdict_each(tmp_path):
     finished = call_core(str(base), "verify", "--finish", env=env())
     assert finished["errors"] == []
     assert verdicts(finished) == LANGUAGES["python"]["expected"]
+# @use-case:end ci.recipe#acceptance.shards
 
 
 # ------------------------------------------------------------------ the recipes (§7)

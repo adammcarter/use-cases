@@ -22,12 +22,15 @@ def run(folder, *args, expect_exit=0):
     return json.loads(process.stdout)
 
 
+# @use-case:docs.guides#acceptance.list
 def test_the_list_is_every_guide_in_order_and_needs_no_workspace(tmp_path):
     listed = run(tmp_path)
     assert listed["view"] == "list" and [g["guide"] for g in listed["guides"]] == GUIDES
     assert all(g["title"] and g["covers"] for g in listed["guides"])
+# @use-case:end docs.guides#acceptance.list
 
 
+# @use-case:docs.guides#acceptance.search
 def test_words_find_sections_ranked_as_search_ranks(tmp_path):
     found = run(tmp_path, "stale")
     assert found["view"] == "search" and found["matches"][0]["guide"] == "reading-status"
@@ -40,8 +43,10 @@ def test_words_find_sections_ranked_as_search_ranks(tmp_path):
     assert set(without) < set(every)
     assert sections("--", "verify -spaceship") == every
     assert run(tmp_path, "spaceship")["matches"] == []  # nothing found is not an error
+# @use-case:end docs.guides#acceptance.search
 
 
+# @use-case:docs.guides#acceptance.search
 def test_pages_and_the_next_token(tmp_path):
     everything = run(tmp_path, "the", "--page-size", "100")["matches"]
     pages, page = [], run(tmp_path, "the", "--page-size", "1")
@@ -56,3 +61,4 @@ def test_pages_and_the_next_token(tmp_path):
     assert "--next continues" in subprocess.run([*COMMAND, "docs", "--next", first["next"], "--exact"], cwd=tmp_path,
                                                  capture_output=True, text=True).stderr
     assert run(tmp_path, "--next", "garbage", expect_exit=2)["error"]["kind"] == "usage"
+# @use-case:end docs.guides#acceptance.search

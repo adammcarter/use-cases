@@ -104,6 +104,7 @@ def test_a_named_path_must_match_its_on_disk_unicode_form(tmp_path):
     assert "paths must match exactly" in uc(ws, "status", expect_exit=2)
 
 
+# @use-case:links.scan-robustness#acceptance.special-files
 def test_a_file_name_with_a_control_character_is_skipped_with_a_warning(tmp_path):
     ws = workspace(tmp_path / "ws", "tests/add.test.js")
     if os.name == "nt":
@@ -113,6 +114,7 @@ def test_a_file_name_with_a_control_character_is_skipped_with_a_warning(tmp_path
     found = uc(ws, "links")
     assert all("\n" not in l["file"] for l in found["links"])
     assert any("control character" in d for d in found["diagnostics"])
+# @use-case:end links.scan-robustness#acceptance.special-files
 
 
 def test_a_marker_region_on_the_last_line_without_a_newline(tmp_path):
@@ -156,6 +158,7 @@ def resource(pattern):
     return f"        resources:\n          - kind: glob\n            pattern: {json.dumps(pattern)}\n"
 
 
+# @use-case:validate.discovery-exclusions#acceptance.pattern-dialect
 @pytest.mark.parametrize("pattern, matches", [
     ("fixtures/**/*.json", True),      # ** matches zero folders
     ("fixtures/*.json", True),
@@ -177,6 +180,7 @@ def test_resource_globs_use_the_one_dialect(tmp_path, pattern, matches):
         uc(ws, "status")
     else:
         assert "matches nothing" in uc(ws, "status", expect_exit=2)
+# @use-case:end validate.discovery-exclusions#acceptance.pattern-dialect
 
 
 def with_resource(ws, resources):
@@ -194,6 +198,7 @@ def put(ws, rel, text="{}"):
         handle.write(text)
 
 
+# @use-case:status.resources#acceptance.globs
 @pytest.mark.parametrize("pattern", [
     "vendor/*.json",                  # discovery.exclude
     ".git/*",                         # a built-in exclusion
@@ -211,8 +216,10 @@ def test_a_resource_glob_matches_only_files_the_scan_reads(tmp_path, pattern):
     put(ws, "nested/a.json")
     with_resource(ws, f"          - kind: glob\n            pattern: {json.dumps(pattern)}\n")
     assert "matches nothing" in uc(ws, "status", expect_exit=2)
+# @use-case:end status.resources#acceptance.globs
 
 
+# @use-case:status.resources#acceptance.globs
 def test_an_excluded_file_never_changes_a_globs_fingerprint_but_an_explicit_path_may_name_one(tmp_path):
     ws = workspace(tmp_path / "ws", "tests/add.test.js")
     with open(os.path.join(ws, "use-cases.yml"), "a") as handle:
@@ -228,11 +235,14 @@ def test_an_excluded_file_never_changes_a_globs_fingerprint_but_an_explicit_path
     assert uc(ws, "status")["use_cases"][0]["status"] == "stale"
     with_resource(ws, "          - kind: file\n            path: vendor/a.json\n")  # explicit: allowed in an excluded folder
     uc(ws, "status")
+# @use-case:end status.resources#acceptance.globs
 
 
+# @use-case:validate.discovery-exclusions#acceptance.pattern-dialect
 @pytest.mark.parametrize("pattern", ["build**", "/abs/**", "a//b", "../x/**", "./build/**", "build/"])
 def test_a_malformed_pattern_is_invalid(tmp_path, pattern):
     ws = workspace(tmp_path / "ws", "tests/add.test.js")
     with open(os.path.join(ws, "use-cases.yml"), "a") as handle:
         handle.write(f"discovery:\n  exclude: [{json.dumps(pattern)}]\n")
     assert "pattern" in uc(ws, "status", expect_exit=2)
+# @use-case:end validate.discovery-exclusions#acceptance.pattern-dialect

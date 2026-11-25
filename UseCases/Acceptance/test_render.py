@@ -52,17 +52,20 @@ def text(ws, kind, data):
 # ------------------------------------------------------------------ intent
 
 
+# @use-case:render.layouts#acceptance.intent
 def test_intent_is_what_why_who_and_needs_no_workspace(tmp_path):
     out = render(None, "intent", {"what": "Refund part of an invoice", "why": "Customers return single items",
                                   "who": ["support staff", "customers"]}, cwd=tmp_path, workspace=False)
     assert out["text"].splitlines() == ["WHAT   Refund part of an invoice", "WHY    Customers return single items",
                                         "WHO    support staff · customers"]
     assert "intent has `what` and `why`" in render(None, "intent", {"what": "x"}, expect_exit=2, cwd=tmp_path, workspace=False)["error"]["message"]
+# @use-case:end render.layouts#acceptance.intent
 
 
 # ------------------------------------------------------------------ the brief's cards
 
 
+# @use-case:render.layouts#acceptance.brief
 def test_a_card_for_each_change_with_its_id_top_right(ws):
     out = render(ws, "brief", PROPOSAL)
     assert [c["use_case"] for c in out["model"]["cards"]] == [
@@ -71,8 +74,10 @@ def test_a_card_for_each_change_with_its_id_top_right(ws):
     assert lines[0].endswith(" invoicing.refunds.partial ──┐") and lines[0].startswith("┌─")
     widths = {len(l) for l in lines if l}
     assert widths == {63}  # every row exactly as wide as the card, wrapped text included
+# @use-case:end render.layouts#acceptance.brief
 
 
+# @use-case:render.layouts#acceptance.brief
 def test_a_changed_card_shows_now_and_was_and_its_scenarios(ws):
     card = render(ws, "brief", PROPOSAL)["model"]["cards"][1]
     assert card["fit"] == "changes" and card["tier"] == "core"
@@ -82,22 +87,28 @@ def test_a_changed_card_shows_now_and_was_and_its_scenarios(ws):
     assert card["not_included"] == ["Negative totals as credit notes."] and card["proven_by"] == ["unit tests"]
     picked = render(ws, "brief", {**PROPOSAL, "golden": {"invoicing.billing.discounts": ["percent-cap"]}})["model"]["cards"][1]
     assert [s["golden"] for s in picked["scenarios"]] == [False, True]
+# @use-case:end render.layouts#acceptance.brief
 
 
+# @use-case:render.layouts#acceptance.brief
 def test_a_replaced_card_shows_what_goes_and_nothing_more(ws):
     card = render(ws, "brief", PROPOSAL)["model"]["cards"][2]
     assert card["fit"] == "replaces" and card["now"] == "Removed." and card["was"].startswith("Each supported region")
     assert card["scenarios"] == [] and card["proven_by"] == []
+# @use-case:end render.layouts#acceptance.brief
 
 
+# @use-case:cli.people-first-output#acceptance.no-colour-in-pipes
 def test_plain_text_has_no_escape_codes_outside_a_terminal(ws):
     assert "\033[" not in text(ws, "brief", PROPOSAL)
     assert text(ws, "proposal", PROPOSAL).rstrip("\n") == render(ws, "proposal", PROPOSAL)["text"]
+# @use-case:end cli.people-first-output#acceptance.no-colour-in-pipes
 
 
 # ------------------------------------------------------------------ the proposal
 
 
+# @use-case:render.layouts#acceptance.proposal
 def test_the_proposal_is_the_whole_change_on_one_screen(ws):
     out = render(ws, "proposal", PROPOSAL)
     lines = out["text"].splitlines()
@@ -108,6 +119,7 @@ def test_the_proposal_is_the_whole_change_on_one_screen(ws):
     assert out["model"]["sign_off"] == {"critical": 1, "core": 2}  # untouched is not signed off
     assert "SIGN-OFF     yours: 1 critical, 2 core" in out["text"]
     assert lines[-1].split()[0] == "ids" and lines[-1].endswith("invoicing.billing.totals")
+# @use-case:end render.layouts#acceptance.proposal
 
 
 def test_a_change_can_be_called_extends(ws):
@@ -115,6 +127,7 @@ def test_a_change_can_be_called_extends(ws):
     assert [c["fit"] for c in out["model"]["changes"]] == ["new", "extends", "replaces", "untouched"]
 
 
+# @use-case:render.layouts#acceptance.refused
 @pytest.mark.parametrize("change, message", [
     ({"title": ""}, "has a `title`"),
     ({"fits": {"invoicing.billing.discounts": "new"}}, "extends or changes"),
@@ -124,11 +137,13 @@ def test_a_change_can_be_called_extends(ws):
 ])
 def test_a_bad_proposal_is_refused(ws, change, message):
     assert message in render(ws, "proposal", {**PROPOSAL, **change}, expect_exit=2)["error"]["message"]
+# @use-case:end render.layouts#acceptance.refused
 
 
 # ------------------------------------------------------------------ the same file is applied, then its results drawn
 
 
+# @use-case:render.layouts#acceptance.results
 def test_the_proposal_file_is_applied_as_it_is_and_its_results_drawn(ws):
     assert "apply the proposal before its results" in render(ws, "results", PROPOSAL, expect_exit=2)["error"]["message"]
     adds_only = {**PROPOSAL, "remove": []}
@@ -145,3 +160,4 @@ def test_the_proposal_file_is_applied_as_it_is_and_its_results_drawn(ws):
     assert results["use_cases"][0]["checks"] == [{"label": "unit-tests", "status": "unverified"}]
     assert results["removed"] == ["invoicing.billing.tax-regions"] and results["gate"] is True
     assert shown[0]["fit"] == "changes"  # after apply, the saved use case exists: rendered again it is a change, not new
+# @use-case:end render.layouts#acceptance.results

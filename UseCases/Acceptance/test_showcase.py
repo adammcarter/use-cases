@@ -36,6 +36,7 @@ def try_it(ws):
     return entry["status"], next(r for r in entry["routes"] if r["route"] == "try-it")
 
 
+# @use-case:showcase.kept#acceptance.kept
 def test_a_showcase_kept_as_a_verdict_with_its_evidence(ws, tmp_path):
     assert try_it(ws)[0] == "unverified"  # not seen yet: nothing claims it works
     recording, notes = tmp_path / "drop.mov", tmp_path / "notes.txt"
@@ -51,16 +52,21 @@ def test_a_showcase_kept_as_a_verdict_with_its_evidence(ws, tmp_path):
         assert os.path.exists(os.path.join(ws, ".use-cases", "runs", run["run_id"], "attachments", "sha256", digest[:2], digest[2:]))
     status, route = try_it(ws)
     assert status == "verified" and route["status"] == "verified"
+# @use-case:end showcase.kept#acceptance.kept
 
 
+# @use-case:showcase.kept#acceptance.stale
 def test_a_kept_showcase_goes_stale_when_what_it_performed_changes(ws):
     uc(ws, "record", USE_CASE, "try-it", "pass", "tried by Sam, live")
     path = ws / "use-cases" / "cart.yml"
     path.write_text(path.read_text().replace("Watch the drop.", "Watch the drop, at half speed."))
     assert try_it(ws)[0] == "stale"  # an old showcase never vouches for what it did not perform
+# @use-case:end showcase.kept#acceptance.stale
 
 
+# @use-case:showcase.kept#acceptance.blocks
 def test_a_failed_showcase_blocks_the_gate(ws):
     uc(ws, "record", USE_CASE, "try-it", "fail", "the card flashes on drop")
     assert try_it(ws)[0] == "failed"
     assert uc(ws, "status", "--gate", expect_exit=1)["gate"]["passed"] is False
+# @use-case:end showcase.kept#acceptance.blocks

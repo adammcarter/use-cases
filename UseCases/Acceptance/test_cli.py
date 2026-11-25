@@ -78,6 +78,7 @@ def every_state(ws):
 # ------------------------------------------------------------------ status: order, filters, detail (§9)
 
 
+# @use-case:status.list#acceptance.nothing-run-yet
 def test_a_checkout_where_nothing_has_run_says_so_in_one_line(ws):
     code, out, _ = human(ws, "status")
     assert code == 0 and out.splitlines() == ["no verdicts in this checkout yet: 6 use cases (1 draft), none run here",
@@ -86,9 +87,11 @@ def test_a_checkout_where_nothing_has_run_says_so_in_one_line(ws):
     assert "shop.pay.card" in human(ws, "status", "--state", "unverified")[1]  # a filtered view lists as ever
     record(ws, "shop.cart.add", "pass")
     assert "no verdicts in this checkout" not in human(ws, "status")[1]
+# @use-case:end status.list#acceptance.nothing-run-yet
 
 
 
+# @use-case:status.list#acceptance.worst-first
 def test_status_lists_worst_first_then_drafts(every_state):
     status = uc(every_state, "status")
     assert [(u["use_case"], u["status"]) for u in status["use_cases"]] == [
@@ -97,23 +100,30 @@ def test_status_lists_worst_first_then_drafts(every_state):
         ("shop.cart.share", "draft")]
     assert status["summary"] == {"total": 7, "by_status": {"failed": 1, "error": 1, "incomplete": 1, "unverified": 1,
                                                           "stale": 1, "verified": 1, "draft": 1}}
+# @use-case:end status.list#acceptance.worst-first
 
 
+# @use-case:status.list#acceptance.filters
 def test_state_filters_and_a_prefix_narrows(every_state):
     assert [u["use_case"] for u in uc(every_state, "status", "--state", "failed,stale")["use_cases"]] == [
         "shop.pay.card", "shop.pay.refund"]
     assert [u["use_case"] for u in uc(every_state, "status", "--state", "draft")["use_cases"]] == ["shop.cart.share"]
     assert [u["use_case"] for u in uc(every_state, "status", "shop.cart")["use_cases"]] == ["shop.cart.add", "shop.cart.share"]
     assert [u["use_case"] for u in uc(every_state, "status", "shop.pay", "--state", "stale")["use_cases"]] == ["shop.pay.refund"]
+# @use-case:end status.list#acceptance.filters
 
 
+# @use-case:status.detail#acceptance.why
 def test_one_use_case_in_detail_says_why(every_state):
     code, out, _ = human(every_state, "status", "shop.pay.refund")
     assert code == 0 and "stale" in out and "changed since run" in out and "(last result: " in out and "check" in out
     code, out, _ = human(every_state, "status", "shop.pay.card")
     assert "extra" in out and "no " in out  # the non-gating route is listed, marked as not gating
+# @use-case:end status.detail#acceptance.why
 
 
+# @use-case:cli.json-contract#acceptance.error-kinds
+# @use-case:cli.exit-codes#acceptance.usage-is-2
 @pytest.mark.parametrize("args, message", [
     (["status", "--state", "broken"], "unknown: broken"),
     (["status", "shop.nope"], "no use case or id prefix"),
@@ -132,6 +142,8 @@ def test_usage_errors_exit_2_with_kind_usage(ws, args, message):
     document = json.loads(process.stdout)
     assert process.returncode == 2 and document["error"]["kind"] == "usage" and message in document["error"]["message"]
     assert message in process.stderr  # a person still sees it
+# @use-case:end cli.exit-codes#acceptance.usage-is-2
+# @use-case:end cli.json-contract#acceptance.error-kinds
 
 
 # ------------------------------------------------------------------ the gate (§10)
@@ -141,6 +153,7 @@ def gate(ws, *extra, expect_exit):
     return uc(ws, "status", "--gate", *extra, expect_exit=expect_exit)["gate"]
 
 
+# @use-case:gate.default#acceptance.blocks
 def test_the_default_gate_blocks_failed_error_and_stale_and_warns_on_the_rest(every_state):
     result = gate(every_state, expect_exit=1)
     assert not result["passed"] and not result["strict"]
@@ -148,15 +161,21 @@ def test_the_default_gate_blocks_failed_error_and_stale_and_warns_on_the_rest(ev
         ("shop.pay.card", "failed"), ("shop.pay.wallet", "error"), ("shop.pay.refund", "stale")}
     assert {(w["use_case"], w["status"]) for w in result["warning"]} == {
         ("shop.pay.voucher", "incomplete"), ("shop.pay.gift", "unverified")}
+# @use-case:end gate.default#acceptance.blocks
 
 
+# @use-case:gate.default#acceptance.drafts
+# @use-case:gate.strict#acceptance.strict-blocks
 def test_strict_blocks_everything_not_verified_but_never_a_draft(every_state):
     result = gate(every_state, "--strict", expect_exit=1)
     assert {b["use_case"] for b in result["blocking"]} == {
         "shop.pay.card", "shop.pay.wallet", "shop.pay.refund", "shop.pay.voucher", "shop.pay.gift"}
     assert result["warning"] == []
+# @use-case:end gate.strict#acceptance.strict-blocks
+# @use-case:end gate.default#acceptance.drafts
 
 
+# @use-case:gate.default#acceptance.blocks
 @pytest.mark.parametrize("verdict, blocks", [("fail", True), ("error", True), ("incomplete", False)])
 def test_each_status_on_its_own(ws, verdict, blocks):
     for local in ("card", "wallet", "refund", "voucher", "gift"):
@@ -165,40 +184,52 @@ def test_each_status_on_its_own(ws, verdict, blocks):
     record(ws, "shop.pay.card", verdict)
     result = gate(ws, expect_exit=1 if blocks else 0)
     assert result["passed"] is not blocks
+# @use-case:end gate.default#acceptance.blocks
 
 
+# @use-case:gate.default#acceptance.blocks
 def test_stale_alone_blocks(ws):
     for use_case_id in ("shop.pay.card", "shop.pay.wallet", "shop.pay.refund", "shop.pay.voucher", "shop.pay.gift", "shop.cart.add"):
         record(ws, use_case_id, "pass")
     assert gate(ws, "--strict", expect_exit=0)["passed"]
     edit_intent(ws, "card")
     assert gate(ws, expect_exit=1)["blocking"] == [{"use_case": "shop.pay.card", "status": "stale"}]
+# @use-case:end gate.default#acceptance.blocks
 
 
+# @use-case:status.judging#acceptance.non-gating
 def test_a_failing_non_gating_route_never_blocks(ws):
     for use_case_id in ("shop.pay.card", "shop.pay.wallet", "shop.pay.refund", "shop.pay.voucher", "shop.pay.gift", "shop.cart.add"):
         record(ws, use_case_id, "pass")
     record(ws, "shop.pay.card", "fail", route="extra")
     assert gate(ws, "--strict", expect_exit=0)["passed"]
+# @use-case:end status.judging#acceptance.non-gating
 
 
+# @use-case:cli.exit-codes#acceptance.invalid-is-2
+# @use-case:gate.default#acceptance.invalid
 def test_an_invalid_workspace_blocks_with_exit_2(ws):
     with open(os.path.join(ws, "use-cases", "cart.yml"), "a") as handle:
         handle.write("    stray: true\n")
     process = subprocess.run([*COMMAND, "--workspace", ws, "--json", "status", "--gate"], capture_output=True, stdin=subprocess.DEVNULL, text=True, encoding="utf-8")
     assert process.returncode == 2 and json.loads(process.stdout)["error"]["kind"] == "invalid"
+# @use-case:end gate.default#acceptance.invalid
+# @use-case:end cli.exit-codes#acceptance.invalid-is-2
 
 
 # ------------------------------------------------------------------ finding the workspace (§3)
 
 
+# @use-case:cli.finds-the-workspace#acceptance.from-below
 def test_the_workspace_is_found_from_any_folder_below_it(ws):
     below = os.path.join(ws, "use-cases", "deep", "er")
     os.makedirs(below)
     code, out, _ = human(below, "validate")
     assert code == 0 and "valid" in out and "7 use cases" in out
+# @use-case:end cli.finds-the-workspace#acceptance.from-below
 
 
+# @use-case:cli.finds-the-workspace#acceptance.from-below
 def test_a_child_scope_is_passed_over_on_the_way_up(ws):
     child = os.path.join(ws, "services", "pay")
     os.makedirs(os.path.join(child, "use-cases"))
@@ -206,8 +237,10 @@ def test_a_child_scope_is_passed_over_on_the_way_up(ws):
         handle.write("schema_version: 1\nprefix: svc\n")
     code, out, _ = human(child, "status", "shop.pay", "--quiet")  # found from below: the root's ids, not svc's
     assert code == 0 and "shop.pay.card" in out
+# @use-case:end cli.finds-the-workspace#acceptance.from-below
 
 
+# @use-case:cli.finds-the-workspace#acceptance.nested-root
 def test_a_nested_root_is_its_own_workspace(ws):
     nested = os.path.join(ws, "vendor", "lib")
     os.makedirs(os.path.join(nested, "use-cases"))
@@ -215,37 +248,47 @@ def test_a_nested_root_is_its_own_workspace(ws):
         handle.write("schema_version: 1\nroot: true\nprefix: lib\n")
     code, out, _ = human(nested, "validate")
     assert code == 0 and "0 use cases" in out
+# @use-case:end cli.finds-the-workspace#acceptance.nested-root
 
 
+# @use-case:cli.finds-the-workspace#acceptance.no-root
 def test_no_workspace_above_is_a_clear_refusal(tmp_path):
     code, _, err = human(str(tmp_path), "validate")
     assert code == 2 and "no use-cases.yml with root: true" in err and "use-cases init" in err
+# @use-case:end cli.finds-the-workspace#acceptance.no-root
 
 
+# @use-case:cli.finds-the-workspace#acceptance.child-scope-named
 def test_a_child_scope_named_directly_is_refused(ws):
     child = os.path.join(ws, "services", "pay")
     os.makedirs(os.path.join(child, "use-cases"))
     with open(os.path.join(child, "use-cases.yml"), "w") as handle:
         handle.write("schema_version: 1\nprefix: svc\n")
     assert "child scope" in uc(child, "validate", expect_exit=2)
+# @use-case:end cli.finds-the-workspace#acceptance.child-scope-named
 
 
 # ------------------------------------------------------------------ output, help, version (§4-§7, §13)
 
 
+# @use-case:cli.version-and-help#acceptance.help
 def test_plain_use_cases_is_help(ws):
     for args in ([], ["--help"]):
         code, out, _ = human(ws, *args)
         assert code == 0 and "validate" in out and "verify --start" in out and "record --interactive" in out
+# @use-case:end cli.version-and-help#acceptance.help
 
 
+# @use-case:cli.version-and-help#acceptance.version
 def test_version(ws):
     process = subprocess.run([*COMMAND, "--version", "--json"], capture_output=True, stdin=subprocess.DEVNULL, text=True, encoding="utf-8")
     document = json.loads(process.stdout)
     assert document["command"] == "version" and document["contract"] == 1 and document["store"] == 1
     assert human(ws, "--version")[1].startswith("use-cases ")
+# @use-case:end cli.version-and-help#acceptance.version
 
 
+# @use-case:cli.people-first-output#acceptance.worst-first
 def test_human_output_leads_with_the_worst_and_ends_with_one_hint(every_state):
     code, out, _ = human(every_state, "status")
     lines = out.strip().splitlines()
@@ -253,8 +296,10 @@ def test_human_output_leads_with_the_worst_and_ends_with_one_hint(every_state):
     assert lines[-1] == "→ use-cases status shop.pay.card   to see why"
     assert sum(1 for l in lines if l.startswith("→")) == 1
     assert "\033[" not in out  # not a terminal: no colour
+# @use-case:end cli.people-first-output#acceptance.worst-first
 
 
+# @use-case:status.list#acceptance.nothing-run-yet
 def test_the_hint_after_status_offers_run_when_a_validation_has_a_run_command_else_start(ws):
     bridge = os.path.join(ws, "use-cases-bridge.yml")
     with open(bridge, "w") as handle:
@@ -265,47 +310,61 @@ def test_the_hint_after_status_offers_run_when_a_validation_has_a_run_command_el
     assert human(ws, "status")[1].splitlines()[-1] == "→ use-cases verify --run"
     os.remove(bridge)
     assert human(ws, "status")[1].splitlines()[-1] == "→ use-cases verify --start"
+# @use-case:end status.list#acceptance.nothing-run-yet
 
 
+# @use-case:cli.people-first-output#acceptance.quiet
 def test_quiet_removes_the_hint_and_json_never_has_one(every_state):
     assert "→" not in human(every_state, "status", "--quiet")[1]
     code, out, _ = human(every_state, "status", "--json")
     assert "→" not in out and json.loads(out)["command"] == "status"
+# @use-case:end cli.people-first-output#acceptance.quiet
 
 
+# @use-case:cli.json-contract#acceptance.one-document
 def test_json_is_exactly_one_document_for_every_command(every_state):
     for args in (["validate"], ["status"], ["status", "--gate"], ["links"], ["record", "shop.cart.add", "check", "pass"],
                  ["status", "nosuch"]):
         process = subprocess.run([*COMMAND, "--workspace", every_state, "--json", *args], capture_output=True, stdin=subprocess.DEVNULL, text=True, encoding="utf-8")
         document = json.loads(process.stdout)  # one document, nothing else on stdout
         assert document["output_version"] == 1 and document["command"] == args[0]
+# @use-case:end cli.json-contract#acceptance.one-document
 
 
+# @use-case:cli.json-contract#acceptance.error-kinds
+# @use-case:verify.start-finish#acceptance.finish-without-start
 def test_a_refusal_has_kind_refused(ws):
     with open(os.path.join(ws, "use-cases-bridge.yml"), "w") as handle:
         handle.write("schema_version: 1\nvalidations:\n  - id: t\n    transformer: exit-code\n")
     process = subprocess.run([*COMMAND, "--workspace", ws, "--json", "verify", "--finish"], capture_output=True, stdin=subprocess.DEVNULL, text=True, encoding="utf-8")
     document = json.loads(process.stdout)
     assert process.returncode == 2 and document["error"]["kind"] == "refused" and "no started run" in document["error"]["message"]
+# @use-case:end verify.start-finish#acceptance.finish-without-start
+# @use-case:end cli.json-contract#acceptance.error-kinds
 
 
+# @use-case:record.by-hand#acceptance.refusals
 def test_a_draft_cannot_be_recorded_and_that_is_a_refusal(ws):
     process = subprocess.run([*COMMAND, "--workspace", ws, "--json", "record", "shop.cart.share", "check", "pass"],
                              capture_output=True, stdin=subprocess.DEVNULL, text=True, encoding="utf-8")
     assert process.returncode == 2 and json.loads(process.stdout)["error"]["kind"] == "refused"
+# @use-case:end record.by-hand#acceptance.refusals
 
 
 # ------------------------------------------------------------------ record --interactive (§12)
 
 
+# @use-case:record.by-hand#acceptance.interactive
 def test_interactive_needs_a_terminal(ws):
     process = subprocess.run([*COMMAND, "--workspace", ws, "record", "--interactive"], capture_output=True,
                              text=True, encoding="utf-8", stdin=subprocess.DEVNULL)
     assert process.returncode == 2 and "needs a terminal" in process.stderr
     process = subprocess.run([*COMMAND, "--workspace", ws, "--json", "record", "--interactive"], capture_output=True, stdin=subprocess.DEVNULL, text=True, encoding="utf-8")
     assert process.returncode == 2 and json.loads(process.stdout)["error"]["kind"] == "usage"
+# @use-case:end record.by-hand#acceptance.interactive
 
 
+# @use-case:record.by-hand#acceptance.interactive
 @POSIX_ONLY
 def test_interactive_input_that_ends_is_a_refusal_not_a_hang(ws):
     import pty
@@ -317,8 +376,10 @@ def test_interactive_input_that_ends_is_a_refusal_not_a_hang(ws):
     _, err = process.communicate(timeout=15)
     os.close(leader)
     assert process.returncode == 2 and b"input ended" in err
+# @use-case:end record.by-hand#acceptance.interactive
 
 
+# @use-case:record.by-hand#acceptance.interactive
 @POSIX_ONLY
 def test_interactive_asks_for_each_value_and_shows_the_steps(ws):
     import pty
@@ -367,11 +428,13 @@ def test_interactive_asks_for_each_value_and_shows_the_steps(ws):
     os.close(leader)
     detail = uc(ws, "status", "shop.pay.voucher")["use_cases"][0]
     assert detail["status"] == "verified"
+# @use-case:end record.by-hand#acceptance.interactive
 
 
 # ------------------------------------------------------------------ code moved out of its markers (chapter 08)
 
 
+# @use-case:links.moved-code#acceptance.empty-region
 @pytest.mark.parametrize("inside", ["", "\n\n   \n"])
 def test_an_emptied_marked_region_is_said_everywhere_people_look(ws, inside):
     os.makedirs(os.path.join(ws, "src"))
@@ -384,19 +447,23 @@ def test_an_emptied_marked_region_is_said_everywhere_people_look(ws, inside):
     record(ws, "shop.cart.add", "pass")
     assert "warning: shop.pay.card: src/pay.py:2: its marked region is empty" in human(ws, "status")[1]  # the full list
     assert "its marked region is empty" in human(ws, "status", "shop.pay.card")[1]
+# @use-case:end links.moved-code#acceptance.empty-region
 
 
+# @use-case:links.markers#acceptance.pair-links-region
 def test_a_marked_region_with_code_raises_nothing(ws):
     os.makedirs(os.path.join(ws, "src"))
     with open(os.path.join(ws, "src", "pay.py"), "w") as handle:
         handle.write(f"# {SENTINEL}shop.pay.card#charge\ndef charge(): pass\n# {SENTINEL}end shop.pay.card#charge\n")
     assert uc(ws, "links")["diagnostics"] == []
     assert "marked region is empty" not in human(ws, "status")[1]
+# @use-case:end links.markers#acceptance.pair-links-region
 
 
 # ------------------------------------------------------------------ links <target> (chapter 16 §9, chapter 08)
 
 
+# @use-case:links.list-links#acceptance.by-prefix
 def test_links_for_an_id_that_is_also_a_prefix_is_that_use_case_alone_and_diagnostics_are_never_filtered(ws):
     with open(os.path.join(ws, "use-cases", "top.yml"), "w") as handle:
         handle.write("use_cases:\n" + use_case("pay"))  # shop.pay, beside shop.pay.card and the rest
@@ -413,4 +480,5 @@ def test_links_for_an_id_that_is_also_a_prefix_is_that_use_case_alone_and_diagno
     assert {l["use_case"] for l in uc(ws, "links", "shop.cart")["links"]} == {"shop.cart.add"}
     assert exact["diagnostics"] == everything["diagnostics"] == uc(ws, "links", "shop.cart")["diagnostics"]
     assert uc(ws, "links", "shop.cart.share")["links"] == []  # a use case with no links is still a known target
+# @use-case:end links.list-links#acceptance.by-prefix
 

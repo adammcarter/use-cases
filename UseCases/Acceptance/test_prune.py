@@ -61,6 +61,7 @@ def twice(ws):
     return ws, older, newer
 
 
+# @use-case:store.prune#acceptance.no-answer-changes
 def test_prune_removes_the_older_run_and_no_answer_of_status_or_the_gate_changes(twice):
     ws, older, newer = twice
     status = uc(ws, "status")
@@ -76,8 +77,10 @@ def test_prune_removes_the_older_run_and_no_answer_of_status_or_the_gate_changes
     assert without_store(after) == without_store(status)
     assert after["store"]["runs"] == 1 and after["store"]["superseded"] == 0
     assert gate(ws) == gated
+# @use-case:end store.prune#acceptance.no-answer-changes
 
 
+# @use-case:store.prune#acceptance.dry-run
 def test_a_dry_run_names_the_older_run_and_leaves_both(twice):
     ws, older, newer = twice
 
@@ -87,6 +90,7 @@ def test_a_dry_run_names_the_older_run_and_leaves_both(twice):
     assert [run["run_id"] for run in preview["removed"]] == [older]
     assert runs(ws) == [older, newer]
     assert human(ws, "prune", "--dry-run")[0].startswith(f"would remove  run {older}  ")
+# @use-case:end store.prune#acceptance.dry-run
 
 
 def test_the_documents_follow_the_published_schema(twice):
@@ -96,6 +100,7 @@ def test_the_documents_follow_the_published_schema(twice):
         assert problems(f"cli-{document['command']}.schema.json", document, document["command"]) == []
 
 
+# @use-case:store.prune#acceptance.dry-run
 def test_nothing_to_prune_says_so_and_status_names_the_store(twice):
     ws, older, newer = twice
     lines = human(ws, "status")
@@ -106,6 +111,7 @@ def test_nothing_to_prune_says_so_and_status_names_the_store(twice):
     assert human(ws, "prune") == ["nothing to prune"]
     assert runs(ws) == [newer]
     assert not any("superseded" in line or "prune" in line for line in human(ws, "status"))
+# @use-case:end store.prune#acceptance.dry-run
 
 
 def test_a_run_that_never_finished_is_never_pruned(twice):
@@ -118,6 +124,7 @@ def test_a_run_that_never_finished_is_never_pruned(twice):
     uc(ws, "verify", "--abort", "--run-id", started)
 
 
+# @use-case:store.prune#acceptance.no-answer-changes
 def test_a_run_that_holds_the_newest_reason_for_a_route_is_kept_until_a_later_run_says_it_again(tmp_path):
     """A run whose tests did not run has no results, only the reason for each route ("its test didn't run"). A later
     run for one use case leaves that reason the newest for every other route, so the run is kept; a later run with the
@@ -147,6 +154,7 @@ def test_a_run_that_holds_the_newest_reason_for_a_route_is_kept_until_a_later_ru
     assert runs(ws) == sorted([recorded, again])
     assert without_store(uc(ws, "status")) == without_store(before)
     assert gate(ws) == gated
+# @use-case:end store.prune#acceptance.no-answer-changes
 
 
 def test_code_back_at_an_older_state_keeps_the_run_that_decides_it(ws):
@@ -172,6 +180,7 @@ def test_code_back_at_an_older_state_keeps_the_run_that_decides_it(ws):
     assert gate(ws) == gated
 
 
+# @use-case:store.prune#acceptance.refused
 def test_an_invalid_workspace_is_refused_and_nothing_is_removed(twice):
     ws, older, newer = twice
     with open(os.path.join(ws, "use-cases", "broken.yml"), "w") as handle:
@@ -181,3 +190,4 @@ def test_an_invalid_workspace_is_refused_and_nothing_is_removed(twice):
 
     assert message
     assert runs(ws) == [older, newer]
+# @use-case:end store.prune#acceptance.refused

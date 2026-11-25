@@ -42,6 +42,7 @@ def junit(cases):
 FILE_LINE = {"find": "file-line", "line_base": 0}
 
 
+# @use-case:transformers.junit#acceptance.status-rules
 @pytest.mark.parametrize("cases, expected", [
     # a retry plugin (Gradle test-retry, pytest-rerunfailures) writes the test again: the final attempt decides
     ('<testcase classname="t" name="test_a" file="tests/test_a.py" line="2"><failure/></testcase>'
@@ -58,6 +59,7 @@ FILE_LINE = {"find": "file-line", "line_base": 0}
 ])
 def test_junit_follows_the_status_rules(tmp_path, cases, expected):
     assert run("junit", tmp_path, "report.xml", junit(cases), FILE_LINE) == [expected]
+# @use-case:end transformers.junit#acceptance.status-rules
 
 
 def swift_events(issue_known, code_root):
@@ -68,8 +70,10 @@ def swift_events(issue_known, code_root):
     return [test, issue, ended]
 
 
+# @use-case:transformers.swift#acceptance.known-issue
 @pytest.mark.parametrize("known, expected", [(True, "incomplete"), (False, "fail")])
 def test_swift_testing_treats_a_known_issue_as_an_expected_failure(tmp_path, known, expected):
     code_root = str(tmp_path / "code")
     lines = [json.dumps(e) for e in swift_events(known, code_root)]
     assert run("swift-testing", tmp_path, "events.jsonl", "\n".join(lines) + "\n") == [expected]
+# @use-case:end transformers.swift#acceptance.known-issue
