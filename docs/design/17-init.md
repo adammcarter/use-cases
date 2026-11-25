@@ -128,7 +128,7 @@ The command line is chapter 16's. With `--json`:
 ```
 
 - `gitignore` is `added`, `present` or `skipped`. `hooks` lists the hooks it added.
-- Exit 0 when done; exit 1 when a requested hook was left alone or could not be added (chapter 18 §4); exit 2 when refused (section 3) or when `--prefix` is not a valid prefix.
+- Exit 0 when done; exit 1 when a requested hook was left alone or could not be added (chapter 18 §4); exit 2 when refused (section 3), when `--prefix` is not a valid prefix, or when the workspace as init would leave it is INVALID (architecture.md §2): init writes nothing in that case. A `use-cases.yml` below the folder that is not a scope, such as one in build output, makes it INVALID; the error names how to exclude its folder (chapter 09 §6.2), and the exclusion can be written in the root `use-cases.yml` before init runs.
 
 ## 9. Final model
 

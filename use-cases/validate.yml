@@ -133,10 +133,17 @@ use_cases:
       - id: pattern-dialect
         when: [A pattern is malformed.]
         then: [It is INVALID.]
+      - id: not-a-scope
+        given: [A file named use-cases.yml below the root that is not a scope, such as one in build output.]
+        when: [The workspace loads, or init runs.]
+        then: ["It is INVALID, and the error says to exclude its folder with discovery.exclude in the root use-cases.yml."]
     validation:
       - id: acceptance
         type: { kind: acceptance }
         covers: [excluded-folder, history-and-store, exclusion-into-definitions, pattern-dialect]
+      - id: swift-tests
+        type: { kind: unit }
+        covers: [not-a-scope]
   - id: scale
     title: Commands stay quick on a large workspace
     description: Promised in chapter 09 (Workspace loading) §36 Required properties (Performant); chapter 11 (Fingerprints and freshness) §87.

@@ -181,6 +181,8 @@ It makes the workspace INVALID.
 
 Where safe, loading SHOULD continue so independent diagnostics from other scopes can also be reported.
 
+A file named `use-cases.yml` below the root is read as a child scope wherever it sits, so a file of that name in build output or test data is an invalid child scope, not a skipped one. Every error about such a file ends with the way out, the same kind of clause as a marker error (chapter 08): `; if this file is not a Use Cases scope (build output, test data), exclude its folder with discovery.exclude in the root use-cases.yml`. The error for the root's own `use-cases.yml` has no such clause.
+
 ---
 
 # 7. Discovery exclusions

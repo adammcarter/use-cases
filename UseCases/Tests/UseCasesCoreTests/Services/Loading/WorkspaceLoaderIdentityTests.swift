@@ -94,6 +94,32 @@ struct WorkspaceLoaderIdentityTests {
   }
 
   @Test
+  func `a child scope that is not a scope says how to exclude it, the root's own file does not`()
+    throws
+  {
+    let fixture = try WorkspaceFixture()
+    try fixture.write("build/deep/use-cases.yml", "foo: bar\n")
+
+    let child = fixture.problems()
+
+    #expect(!child.isEmpty)
+    #expect(child.allSatisfy { problem in problem.hasPrefix("build/deep/use-cases.yml: ") })
+    #expect(
+      child.allSatisfy { problem in
+        problem.hasSuffix(
+          "; if this file is not a Use Cases scope (build output, test data), exclude its "
+            + "folder with discovery.exclude in the root use-cases.yml",
+        )
+      },
+    )
+
+    try fixture.write("use-cases.yml", "foo: bar\n")
+    let root = fixture.problems()
+
+    #expect(root.allSatisfy { problem in !problem.contains("discovery.exclude") })
+  }
+
+  @Test
   func `files below a scope that could not be read are still checked`() throws {
     let fixture = try WorkspaceFixture()
     try fixture.write("pay/use-cases.yml", "schema_version: 1\nprefix: [\n")

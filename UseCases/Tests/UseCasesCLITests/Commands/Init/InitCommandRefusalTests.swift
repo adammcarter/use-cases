@@ -43,6 +43,21 @@ struct InitCommandRefusalTests {
     #expect(try place.snapshot() == ["use-cases.yml": "schema_version: 1\nprefix: svc\n"])
   }
 
+  @Test
+  func `a use-cases file below the folder that is no scope refuses init with the way out`()
+    async throws
+  {
+    try place.folder.write("some/deep/use-cases.yml", "foo: bar\n")
+    let before = try place.snapshot()
+
+    let result = await place.run(["init", "--no-input"])
+
+    #expect(result.exitCode == 2)
+    #expect(result.standardError.contains("some/deep/use-cases.yml"))
+    #expect(result.standardError.contains("discovery.exclude in the root use-cases.yml"))
+    #expect(try place.snapshot() == before)
+  }
+
   @Test(arguments: ["Shop", "shop_", "shop..app", "-shop"])
   func `a prefix off the grammar is a usage error and writes nothing`(prefix: String) async throws {
     let result = await place.run(["--json", "init", "--prefix=\(prefix)"])

@@ -27,8 +27,38 @@ extension Diagnostic {
     )
   }
 
-  /// A `use-cases.yml` that could not be read or is not valid scope settings.
+  /// The way out of a child scope that is not a scope: a file named `use-cases.yml` in build
+  /// output or test data (chapter 09 §6.2). The exclusion goes in the root `use-cases.yml`,
+  /// which can be written before `init`.
+  static let notAScope = "if this file is not a Use Cases scope (build output, test data), "
+    + "exclude its folder with discovery.exclude in the root use-cases.yml"
+
+  /// A `use-cases.yml` that could not be read or is not valid scope settings. A refusal of a
+  /// file below the root ends with the way out; the root's own file is the workspace itself, so
+  /// it has none.
   static func configuration(
+    _ configuration: WorkspacePath,
+    refused error: ScopeSettingsLoadingError,
+  ) -> [Diagnostic] {
+    let rootFile = WorkspacePath.root.appending(literal: DiscoveredScope.configurationFileName)
+    let isRootFile = configuration == rootFile
+
+    return refusals(configuration, refused: error).map { found in
+      guard !isRootFile else {
+        return found
+      }
+
+      return Diagnostic(
+        file: found.file,
+        position: found.position,
+        code: found.code,
+        severity: found.severity,
+        message: "\(found.message); \(notAScope)",
+      )
+    }
+  }
+
+  private static func refusals(
     _ configuration: WorkspacePath,
     refused error: ScopeSettingsLoadingError,
   ) -> [Diagnostic] {

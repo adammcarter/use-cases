@@ -223,6 +223,21 @@ struct WorkspaceDiscovererScopesTests {
   }
 
   @Test
+  func `a child scope that cannot be read says how to exclude it when it is not a scope`() throws {
+    let fixture = try DiscoveryFixture()
+    try fixture.scope("build/out", "invalid\n")
+
+    let discovery = try fixture.discover()
+
+    #expect(
+      discovery.diagnostics.first?.message.hasSuffix(
+        "; if this file is not a Use Cases scope (build output, test data), exclude its "
+          + "folder with discovery.exclude in the root use-cases.yml",
+      ) == true,
+    )
+  }
+
+  @Test
   func `a scope under an unreadable parent takes the nearest readable ancestor as its parent`(
   ) throws {
     let fixture = try DiscoveryFixture()
