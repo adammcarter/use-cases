@@ -1,0 +1,9 @@
+schema_version: 1
+
+validations:
+  - id: cart-tests
+    report: cart-tests.xml
+    run: [pytest, tests/test_cart.py, "--junitxml={report}"]
+    transformer: exit-code
+    settings:
+      file: tests/test_cart.py

@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CLI output: use-cases remove",
+  "description": "One use case taken out; its past verdicts stay in the store (chapter 16).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "output_version",
+    "command",
+    "use_case",
+    "file",
+    "action",
+    "changes",
+    "warnings",
+    "dry_run"
+  ],
+  "properties": {
+    "output_version": {
+      "$ref": "cli-common.schema.json#/$defs/outputVersion"
+    },
+    "command": {
+      "const": "remove"
+    },
+    "use_case": {
+      "$ref": "../engine/common.schema.json#/$defs/useCaseId"
+    },
+    "file": {
+      "$ref": "../engine/common.schema.json#/$defs/path"
+    },
+    "action": {
+      "const": "removed"
+    },
+    "changes": {
+      "$ref": "cli-common.schema.json#/$defs/changes"
+    },
+    "warnings": {
+      "description": "Markers in code that still name the use case.",
+      "$ref": "cli-common.schema.json#/$defs/warnings"
+    },
+    "dry_run": {
+      "$ref": "cli-common.schema.json#/$defs/dryRun"
+    }
+  }
+}

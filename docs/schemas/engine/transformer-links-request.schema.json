@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Transformer Links Request",
+  "description": "What the core writes to request.json for a links job (chapter 10). The transformer must treat code_root as read-only.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "job",
+    "use_cases",
+    "code_root",
+    "ignore",
+    "settings"
+  ],
+  "properties": {
+    "contract": {
+      "const": 1
+    },
+    "job": {
+      "const": "links"
+    },
+    "use_cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/useCaseId"
+          }
+        }
+      }
+    },
+    "code_root": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ignore": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/path"
+      }
+    },
+    "settings": {
+      "type": "object"
+    }
+  }
+}

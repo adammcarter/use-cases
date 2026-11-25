@@ -1,0 +1,172 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CLI output: use-cases docs",
+  "description": "The guides that ship with this version (chapter 16): the list, one guide, or one page of matching sections.",
+  "type": "object",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "output_version",
+        "command",
+        "view",
+        "guides"
+      ],
+      "properties": {
+        "output_version": {
+          "$ref": "cli-common.schema.json#/$defs/outputVersion"
+        },
+        "command": {
+          "const": "docs"
+        },
+        "view": {
+          "const": "list"
+        },
+        "guides": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "guide",
+              "title",
+              "covers"
+            ],
+            "properties": {
+              "guide": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?!\\n)"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
+              "covers": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "output_version",
+        "command",
+        "view",
+        "guide",
+        "title",
+        "text"
+      ],
+      "properties": {
+        "output_version": {
+          "$ref": "cli-common.schema.json#/$defs/outputVersion"
+        },
+        "command": {
+          "const": "docs"
+        },
+        "view": {
+          "const": "guide"
+        },
+        "guide": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?!\\n)"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "output_version",
+        "command",
+        "view",
+        "total",
+        "offset",
+        "page_size",
+        "matches",
+        "next"
+      ],
+      "properties": {
+        "output_version": {
+          "$ref": "cli-common.schema.json#/$defs/outputVersion"
+        },
+        "command": {
+          "const": "docs"
+        },
+        "view": {
+          "const": "search"
+        },
+        "total": {
+          "$ref": "cli-common.schema.json#/$defs/count"
+        },
+        "offset": {
+          "$ref": "cli-common.schema.json#/$defs/count"
+        },
+        "page_size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "matches": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "guide",
+              "section",
+              "text",
+              "score"
+            ],
+            "properties": {
+              "guide": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?!\\n)"
+              },
+              "section": {
+                "type": "string",
+                "minLength": 1
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "score": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 1
+              }
+            }
+          }
+        },
+        "next": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]+$(?!\\n)"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+prefix: borrowing
+use_cases:
+  - id: borrow
+    title: Borrow a book
+    value_tier: core
+    intent: A member takes a book home for a fixed loan period, while copies last.
+    scenarios:
+      - id: available-copy
+        given: [The library has a copy of the book on the shelf.]
+        when: [A member borrows it.]
+        then: ["The loan is due fourteen days later, and one copy fewer is left."]
+      - id: last-copy
+        given: [Every copy of the book is on loan.]
+        when: [Another member tries to borrow it.]
+        then: [The loan is refused because no copies are left.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [available-copy, last-copy]
+
+  - id: loan-limit
+    title: Loan limit
+    value_tier: core
+    intent: No member holds more than three books at once, so books keep circulating.
+    scenarios:
+      - id: fourth-book
+        given: [A member already has three books.]
+        when: [They try to borrow a fourth.]
+        then: [The loan is refused and says why.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [fourth-book]

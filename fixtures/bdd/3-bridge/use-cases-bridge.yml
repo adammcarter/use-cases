@@ -1,0 +1,7 @@
+schema_version: 1
+
+validations:
+  - id: cucumber
+    report: cucumber.ndjson
+    run: [npx, cucumber-js, --no-strict, --format, "message:{report}"]
+    transformer: cucumber-messages

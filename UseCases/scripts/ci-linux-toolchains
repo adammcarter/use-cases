@@ -1,0 +1,131 @@
+#!/bin/sh
+# ci-linux-toolchains: install the language tools the acceptance tests need into an Ubuntu 24.04
+# based image (swift:6.3-noble, swift:6.4.2-noble), for x86_64 (GitHub's hosted runner) and
+# arm64 (a local VM), so that CI and a local rehearsal run exactly the same commands.
+#
+#   UseCases/scripts/ci-linux-toolchains
+#
+# The fixtures under fixtures/ and UseCases/Acceptance/ are small projects in several languages. The versions
+# are those the macOS job of real-build.yml sets up (Node 22, Go 1.24, Rust stable, Java 21, Gradle 9.7.1),
+# each pinned to one release. Every download that its publisher gives a checksum for is checked
+# against the checksum written below, and the install stops when it differs. Java, cmake and the
+# C toolchain come from Ubuntu's signed packages.
+#
+# Everything lands under $CI_TOOLS_DIR (default /opt/ci-tools). The tools are put on PATH for
+# later steps: inside GitHub Actions this appends to the files $GITHUB_PATH and $GITHUB_ENV; anywhere
+# else it prints the lines to run, each starting with "export ", for instance:
+#   eval "$(UseCases/scripts/ci-linux-toolchains | grep '^export ')"
+# It ends by printing the version of every tool.
+
+set -eu
+
+NODE_VERSION=22.23.5
+GO_VERSION=1.24.13
+RUSTUP_VERSION=1.29.3
+RUST_VERSION=1.100.0
+MAVEN_VERSION=3.9.16
+GRADLE_VERSION=9.7.1
+
+MAVEN_SHA512=831a8591fe20c8243b1dbe7d71e3244f31d1665b0804b2e825e38cbbe5ce0cafb8338851f90780735568773e0a6cd07bbec107cda0b896b008b861075358b6f6 # apache-maven-$MAVEN_VERSION-bin.tar.gz
+GRADLE_SHA256=acd53f1edaf02f1a8ff99879f8a34b302661a057d9b063ae9e35b552f804d20a        # gradle-$GRADLE_VERSION-bin.zip
+
+TOOLS=${CI_TOOLS_DIR:-/opt/ci-tools}
+
+# What differs by machine: the download names and the checksums the publishers give for them.
+case $(uname -m) in
+  x86_64|amd64)
+    arch=x86_64; node_arch=x64; go_arch=amd64
+    node_sha=cdeb8670a0c81f51b4dc4ac61919f9b1ad917b304bf8221eb939570663d240f8   # node-v$NODE_VERSION-linux-x64.tar.xz
+    go_sha=1fc94b57134d51669c72173ad5d49fd62afb0f1db9bf3f798fd98ee423f8d730     # go$GO_VERSION.linux-amd64.tar.gz
+    rustup_sha=b1c8cb14e30889e7e2999e6b69e62d9e9b9ffc0f4df8180564d306d9680e6c55 # rustup-init $RUSTUP_VERSION, x86_64-unknown-linux-gnu
+    ;;
+  aarch64|arm64)
+    arch=aarch64; node_arch=arm64; go_arch=arm64
+    node_sha=2babb9eb5264860d540849f4b064a6fbdebcdc323657d9d382ce23d313fd5e09   # node-v$NODE_VERSION-linux-arm64.tar.xz
+    go_sha=74d97be1cc3a474129590c67ebf748a96e72d9f3a2b6fef3ed3275de591d49b3     # go$GO_VERSION.linux-arm64.tar.gz
+    rustup_sha=9f608c142e0e38a78957d0661ba1dfaf0b6fb37184cfaa4b9a0aa57af6184282 # rustup-init $RUSTUP_VERSION, aarch64-unknown-linux-gnu
+    ;;
+  *) echo "ci-linux-toolchains: unsupported machine $(uname -m)" >&2; exit 1 ;;
+esac
+
+if [ "$(id -u)" = 0 ]; then sudo=; else sudo=sudo; fi
+export DEBIAN_FRONTEND=noninteractive
+
+step() { printf '\n== %s\n' "$*"; }
+
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+$sudo mkdir -p "$TOOLS"
+if [ -n "$sudo" ]; then $sudo chown "$(id -u):$(id -g)" "$TOOLS"; fi
+
+# download URL FILE: fetch, retrying, to a file under $work.
+download() { curl -fsSL --retry 5 --retry-delay 3 --retry-all-errors -o "$work/$2" "$1"; }
+
+step "apt: curl, openssl, xz-utils, unzip, cmake, build-essential, OpenJDK 21"
+$sudo apt-get update -qq
+$sudo apt-get install -y -qq --no-install-recommends \
+  ca-certificates curl openssl xz-utils unzip cmake build-essential openjdk-21-jdk-headless >/dev/null
+$sudo apt-get clean
+
+step "Node $NODE_VERSION"
+download "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-$node_arch.tar.xz" node.tar.xz
+echo "$node_sha  $work/node.tar.xz" | sha256sum -c -
+rm -rf "$TOOLS/node" && mkdir "$TOOLS/node"
+tar -xJf "$work/node.tar.xz" -C "$TOOLS/node" --strip-components=1
+
+step "Go $GO_VERSION"
+download "https://go.dev/dl/go$GO_VERSION.linux-$go_arch.tar.gz" go.tar.gz
+echo "$go_sha  $work/go.tar.gz" | sha256sum -c -
+rm -rf "$TOOLS/go" && mkdir "$TOOLS/go"
+tar -xzf "$work/go.tar.gz" -C "$TOOLS/go" --strip-components=1
+
+step "Maven $MAVEN_VERSION"
+download "https://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz" maven.tar.gz
+echo "$MAVEN_SHA512  $work/maven.tar.gz" | sha512sum -c -
+rm -rf "$TOOLS/maven" && mkdir "$TOOLS/maven"
+tar -xzf "$work/maven.tar.gz" -C "$TOOLS/maven" --strip-components=1
+
+step "Gradle $GRADLE_VERSION"
+download "https://services.gradle.org/distributions/gradle-$GRADLE_VERSION-bin.zip" gradle.zip
+echo "$GRADLE_SHA256  $work/gradle.zip" | sha256sum -c -
+rm -rf "$TOOLS/gradle" "$work/gradle-unzipped"
+unzip -q "$work/gradle.zip" -d "$work/gradle-unzipped"
+mv "$work/gradle-unzipped/gradle-$GRADLE_VERSION" "$TOOLS/gradle"
+
+step "Rust $RUST_VERSION (rustup $RUSTUP_VERSION)"
+export CARGO_HOME="$TOOLS/cargo" RUSTUP_HOME="$TOOLS/rustup"
+download "https://static.rust-lang.org/rustup/archive/$RUSTUP_VERSION/$arch-unknown-linux-gnu/rustup-init" rustup-init
+echo "$rustup_sha  $work/rustup-init" | sha256sum -c -
+chmod +x "$work/rustup-init"
+"$work/rustup-init" -y -q --no-modify-path --profile minimal --default-toolchain "$RUST_VERSION"
+
+# --- put the tools on PATH for what runs next --------------------------------------------------
+
+bins="$TOOLS/node/bin $TOOLS/go/bin $TOOLS/maven/bin $TOOLS/gradle/bin $TOOLS/cargo/bin"
+step "PATH"
+if [ -n "${GITHUB_PATH-}" ]; then
+  for b in $bins; do echo "$b" >> "$GITHUB_PATH"; done
+  echo "CARGO_HOME=$CARGO_HOME" >> "$GITHUB_ENV"
+  echo "RUSTUP_HOME=$RUSTUP_HOME" >> "$GITHUB_ENV"
+  echo "added to GITHUB_PATH: $bins"
+else
+  echo "export PATH=\"$(echo "$bins" | tr ' ' ':'):\$PATH\""
+  echo "export CARGO_HOME=\"$CARGO_HOME\" RUSTUP_HOME=\"$RUSTUP_HOME\""
+fi
+PATH=$(echo "$bins" | tr ' ' ':'):$PATH
+export PATH
+
+# --- versions ----------------------------------------------------------------------------------
+
+step "versions"
+echo "node:   $(node --version)"
+echo "npm:    $(npm --version)"
+echo "go:     $(go version)"
+echo "rustc:  $(rustc --version)"
+echo "cargo:  $(cargo --version)"
+echo "java:   $(java -version 2>&1 | head -n 1)"
+echo "maven:  $(mvn --version | head -n 1)"
+echo "gradle: $(gradle --version | grep '^Gradle')"
+echo "cmake:  $(cmake --version | head -n 1)"
+echo "gcc:    $(gcc --version | head -n 1)"
+echo "make:   $(make --version | head -n 1)"

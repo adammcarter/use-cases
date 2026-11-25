@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CLI output: use-cases prune",
+  "description": "What prune removed, or would remove under --dry-run: each superseded run (removed, oldest first, with the size of its folder in bytes) and each leftover folder of an interrupted prune (leftovers); bytes is the space they free. kept lists the planned runs still in the store (held by another process, or refused by the file system) and left_over the runs taken out of the store whose folder could not be deleted; notes say why (chapter 16 §20, chapter 12 §31).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "output_version",
+    "command",
+    "removed",
+    "leftovers",
+    "kept",
+    "left_over",
+    "bytes",
+    "notes",
+    "dry_run"
+  ],
+  "properties": {
+    "output_version": {
+      "$ref": "cli-common.schema.json#/$defs/outputVersion"
+    },
+    "command": {
+      "const": "prune"
+    },
+    "removed": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "run_id",
+          "bytes"
+        ],
+        "properties": {
+          "run_id": {
+            "$ref": "../engine/common.schema.json#/$defs/runId"
+          },
+          "bytes": {
+            "$ref": "cli-common.schema.json#/$defs/count"
+          }
+        }
+      }
+    },
+    "leftovers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "folder",
+          "bytes"
+        ],
+        "properties": {
+          "folder": {
+            "type": "string",
+            "pattern": "^\\.use-cases/runs/\\.tmp-prune-[0-9a-f]{32}$(?!\\n)"
+          },
+          "bytes": {
+            "$ref": "cli-common.schema.json#/$defs/count"
+          }
+        }
+      }
+    },
+    "kept": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "run_id",
+          "bytes"
+        ],
+        "properties": {
+          "run_id": {
+            "$ref": "../engine/common.schema.json#/$defs/runId"
+          },
+          "bytes": {
+            "$ref": "cli-common.schema.json#/$defs/count"
+          }
+        }
+      }
+    },
+    "left_over": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "folder",
+          "bytes"
+        ],
+        "properties": {
+          "folder": {
+            "type": "string",
+            "pattern": "^\\.use-cases/runs/\\.tmp-prune-[0-9a-f]{32}$(?!\\n)"
+          },
+          "bytes": {
+            "$ref": "cli-common.schema.json#/$defs/count"
+          }
+        }
+      }
+    },
+    "bytes": {
+      "$ref": "cli-common.schema.json#/$defs/count"
+    },
+    "notes": {
+      "$ref": "cli-common.schema.json#/$defs/warnings"
+    },
+    "dry_run": {
+      "description": "True when --dry-run listed the runs and removed nothing.",
+      "type": "boolean"
+    }
+  }
+}

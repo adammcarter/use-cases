@@ -1,0 +1,129 @@
+included:
+  - Sources
+  - Tests
+  - Package.swift
+
+opt_in_rules:
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - empty_count
+  - first_where
+  - last_where
+  - contains_over_filter_count
+  - contains_over_filter_is_empty
+  - explicit_init
+  - redundant_nil_coalescing
+  - toggle_bool
+  - fatal_error_message
+  - yoda_condition
+  - multiline_parameters
+  - multiline_arguments
+
+disabled_rules:
+  - trailing_comma
+  - opening_brace
+  - vertical_whitespace
+  - attributes
+
+multiline_parameters:
+  allows_single_line: false
+
+line_length:
+  warning: 100
+  error: 120
+type_body_length:
+  warning: 300
+  error: 400
+file_length:
+  warning: 500
+  error: 700
+function_body_length:
+  warning: 50
+  error: 80
+cyclomatic_complexity:
+  warning: 10
+  error: 15
+
+custom_rules:
+  legacy_concurrency:
+    name: "Swift Concurrency only"
+    regex: "\\b(DispatchQueue|DispatchGroup|DispatchSemaphore|DispatchWorkItem|NSLock|NSRecursiveLock|NSCondition|OperationQueue|Thread)\\b"
+    message: "Use async/await and actors, never legacy concurrency primitives."
+    severity: error
+  unchecked_sendable:
+    name: "No @unchecked Sendable"
+    regex: "@unchecked\\s+Sendable"
+    message: "State that needs @unchecked Sendable should be an actor."
+    severity: error
+  single_line_closure_body:
+    name: "A closure that does something opens onto its own lines"
+    regex: "(?<!else\\s)\\{(?![^{}]*\\bin\\b)\\s*[^}\\n]*\\([^}\\n]*\\)[^}\\n]*\\}"
+    message: "Put a closure body that does something on its own lines."
+    severity: warning
+  test_sleeps:
+    name: "No Task.sleep in tests"
+    regex: "\\bTask\\s*(<[^>\\n]*>)?\\s*\\.\\s*sleep\\b"
+    included: "Tests/.*\\.swift"
+    message: "Never sleep in a test: drive time with TestClock, and wait on events with Gate, ChildHold or ChildSignal."
+    severity: error
+  test_yields:
+    name: "No Task.yield in tests"
+    regex: "\\bTask\\s*\\.\\s*yield\\b"
+    included: "Tests/.*\\.swift"
+    message: "Never yield to wait for another task: wait on a Gate, a ChildSignal or an event."
+    severity: error
+  test_time_limit:
+    name: "No time limit in tests"
+    regex: "\\.timeLimit\\s*\\("
+    included: "Tests/.*\\.swift"
+    message: "Tests carry no time limit: make the wait an event (Gate, ChildSignal), not a schedule."
+    severity: error
+  blocking_sleep:
+    name: "No blocking sleep in tests"
+    regex: "(?<![\\w.])(?<!func )(sleep|usleep|nanosleep)\\s*\\(|\\bThread\\s*\\.\\s*sleep\\b|\\bRunLoop\\b[^\\n]*\\.\\s*run\\s*\\(\\s*until\\s*:"
+    included: "Tests/.*\\.swift"
+    message: "Never block a thread to wait: drive time with TestClock, and wait on events with Gate, ChildHold or ChildSignal."
+    severity: error
+  child_sleep:
+    name: "No child kept alive by sleep"
+    regex: "\\bsleep\\s+([0-9]|\\$)"
+    included: "Tests/.*\\.swift"
+    message: "Hold a child with ChildHold and release it on an event, never with a sleep command."
+    severity: error
+  blocking_wait:
+    name: "No blocking waits in tests"
+    regex: "\\bwaitUntilExit\\s*\\(|\\bavailableData\\b|\\breadDataToEndOfFile\\s*\\(|\\breadToEnd\\s*\\(|\\.read\\(upToCount|FileHandle\\(forReadingAtPath"
+    included: "Tests/.*\\.swift"
+    message: "Never block a thread: await the supervisor, or wait on ChildSignal and Gate events."
+    severity: error
+  file_signal:
+    name: "No file-polled cancellation"
+    regex: "MockCancellation\\s*\\{[^}]*(fileExists|contentsOf)"
+    included: "Tests/.*\\.swift"
+    message: "Raise cancellation with CancellationSwitch, not by polling a file."
+    severity: error
+  real_clock_in_test:
+    name: "No real clock in tests"
+    regex: "\\b(ContinuousClock|SuspendingClock)\\b|(?<![\\w)\\]])\\.\\s*(continuous|suspending)\\b"
+    included: "Tests/.*\\.swift"
+    excluded:
+      - "Tests/.*/ProcessSupervisorCancellationTests\\.swift"
+      - "Tests/.*/CommandRunnerWatcherTests\\.swift"
+      - "Tests/.*/CommandRunnerTests\\.swift"
+      - "Tests/.*/ProcessSupervisorEndingTests\\.swift"
+      - "Tests/.*/ProcessFixture\\.swift"
+      - "Tests/.*/OffsetClock\\.swift"
+    message: "Use TestClock; only the real-process boundary tests may run on the real clock."
+    severity: error
+  dispatch_time_in_test:
+    name: "No Dispatch timers in tests"
+    regex: "\\b(DispatchTime|DispatchWallTime|DispatchSource)\\b"
+    included: "Tests/.*\\.swift"
+    message: "Never wait on the real clock in a test: drive time with TestClock."
+    severity: error
+  no_source_sleep:
+    name: "No Task.sleep in Sources"
+    regex: "\\bTask\\s*\\.\\s*sleep\\b"
+    included: "Sources/.*\\.swift"
+    message: "A product type that waits takes a clock (any Clock<Duration>) and sleeps on it."
+    severity: error

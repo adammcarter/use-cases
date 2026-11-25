@@ -1,0 +1,11 @@
+schema_version: 1
+
+groups:
+  smoke:
+    description: Fast core behaviour checks.
+    include:
+      ids:
+        - pyshop.cart.add-item
+
+  ci:
+    description: All current use cases.

@@ -1,0 +1,11 @@
+schema_version: 1
+
+validations:
+  - id: node-test
+    report: node-test.xml
+    run: [node, --test, --test-reporter=junit, "--test-reporter-destination={report}"]
+    transformer: junit
+    settings:
+      find: pattern
+      files: "test/**/*.js"
+      patterns: ['"{name}"']

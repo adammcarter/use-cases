@@ -1,0 +1,10 @@
+{
+  "valid": {
+    "username": "legacy-user",
+    "password": "secret"
+  },
+  "invalid": {
+    "username": "legacy-user",
+    "password": "wrong"
+  }
+}

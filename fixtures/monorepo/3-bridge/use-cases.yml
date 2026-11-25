@@ -1,0 +1,12 @@
+schema_version: 1
+root: true
+
+prefix: shop
+
+use_cases_dir: use-cases
+
+discovery:
+  exclude:
+    - "build/**"
+    - "**/node_modules/**"
+    - "**/__pycache__/**"

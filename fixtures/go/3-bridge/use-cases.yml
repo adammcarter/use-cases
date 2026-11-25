@@ -1,0 +1,6 @@
+schema_version: 1
+root: true
+
+prefix: linkshort
+
+use_cases_dir: use-cases

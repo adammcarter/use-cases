@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CLI output: use-cases links",
+  "description": "Every link, in the shape transformers receive it (chapter 10): lines, never bytes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "output_version",
+    "command",
+    "links",
+    "diagnostics"
+  ],
+  "properties": {
+    "output_version": {
+      "$ref": "cli-common.schema.json#/$defs/outputVersion"
+    },
+    "command": {
+      "const": "links"
+    },
+    "links": {
+      "$ref": "../engine/transformer-results-request.schema.json#/properties/links"
+    },
+    "diagnostics": {
+      "$ref": "cli-common.schema.json#/$defs/warnings"
+    }
+  }
+}

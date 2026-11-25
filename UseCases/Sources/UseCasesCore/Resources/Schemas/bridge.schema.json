@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Use Cases Bridge Settings",
+  "description": "Structural schema for the optional root use-cases-bridge.yml. It configures helpers only: link transformers, validations (optional report name, optional run command, results transformer). Unique validation ids, transformer resolution and working_dir containment are core checks. Reports live in the run that reads them, never in the project.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "links": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/linkTransformer"
+      }
+    },
+    "validations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/validation"
+      }
+    }
+  },
+  "$defs": {
+    "transformer": {
+      "description": "A bundled transformer name (e.g. swift-testing) or a project-relative program path.",
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!\\./)(?!.*/\\.(?:/|$))(?!.*//)(?!.*/$)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)[^\\u0000-\\u001f\\u007f\\u2028\\u2029]+$(?!\\n)"
+    },
+    "settings": {
+      "type": "object",
+      "description": "Passed to the transformer unchanged."
+    },
+    "linkTransformer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "transformer"
+      ],
+      "properties": {
+        "transformer": {
+          "$ref": "#/$defs/transformer"
+        },
+        "settings": {
+          "$ref": "#/$defs/settings"
+        }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "transformer"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$(?!\\n)",
+          "not": {
+            "anyOf": [
+              {
+                "const": "record"
+              },
+              {
+                "pattern": "^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])$(?!\\n)"
+              }
+            ]
+          },
+          "description": "Segment grammar. Also the name of the validation's reports folder in each run, so names Windows reserves for devices are refused on every system. `record` is reserved for recorded verdicts."
+        },
+        "report": {
+          "description": "Optional name of the report file or folder the tests write inside this validation's reports folder, .use-cases/runs/<run-id>/reports/<id>/. {report} is the absolute path of that name, or of the folder itself when report is omitted. A plain name, never a path: the core, not the project, decides where reports live.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z0-9_-](?:[A-Za-z0-9._-]*[A-Za-z0-9_-])?$(?!\\n)",
+          "not": {
+            "pattern": "^(?:[Cc][Oo][Nn]|[Pp][Rr][Nn]|[Aa][Uu][Xx]|[Nn][Uu][Ll]|[Cc][Oo][Mm][1-9]|[Ll][Pp][Tt][1-9])(?:\\..*)?$(?!\\n)"
+          }
+        },
+        "run": {
+          "description": "Used by `use-cases verify --run` only. Direct exec, no shell. {report} is the only placeholder: the absolute path this run's report is written to. A word in braces that is a near miss of {report} (the same word in other letter case, or one edit from it, a swap of neighbouring letters counting as one, such as {reprot}) is refused by the core, by name; every other brace, a bare word in braces included, is plain text.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "working_dir": {
+          "description": "Project-relative folder the run command runs in, and where relative paths in the report start. Defaults to the project root. Must exist, and never inside .use-cases/.",
+          "type": "string",
+          "minLength": 1,
+          "allOf": [
+            {
+              "pattern": "^(?!/)(?!\\./)(?!.*/\\.(?:/|$))(?!.*//)(?!.*/$)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)[^\\u0000-\\u001f\\u007f\\u2028\\u2029]+$(?!\\n)"
+            },
+            {
+              "pattern": "^(?!\\.use-cases(?:/|$))"
+            }
+          ]
+        },
+        "transformer": {
+          "$ref": "#/$defs/transformer"
+        },
+        "settings": {
+          "$ref": "#/$defs/settings"
+        },
+        "timeout_seconds": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CLI output: use-cases record",
+  "description": "The sealed record run: its manifest fields and its one result (chapter 12).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "output_version",
+    "command",
+    "run_version",
+    "run_id",
+    "created_at",
+    "kind",
+    "sources",
+    "errors",
+    "diagnostics",
+    "unlinked_tests",
+    "notes",
+    "results"
+  ],
+  "properties": {
+    "output_version": {
+      "$ref": "cli-common.schema.json#/$defs/outputVersion"
+    },
+    "command": {
+      "const": "record"
+    },
+    "run_version": {
+      "$ref": "../engine/run.schema.json#/properties/run_version"
+    },
+    "run_id": {
+      "$ref": "../engine/run.schema.json#/properties/run_id"
+    },
+    "created_at": {
+      "$ref": "../engine/run.schema.json#/properties/created_at"
+    },
+    "kind": {
+      "const": "record"
+    },
+    "sources": {
+      "$ref": "../engine/run.schema.json#/properties/sources"
+    },
+    "errors": {
+      "$ref": "../engine/run.schema.json#/properties/errors"
+    },
+    "diagnostics": {
+      "$ref": "../engine/run.schema.json#/properties/diagnostics"
+    },
+    "unlinked_tests": {
+      "$ref": "../engine/run.schema.json#/properties/unlinked_tests"
+    },
+    "notes": {
+      "$ref": "../engine/run.schema.json#/properties/notes"
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "$ref": "../engine/result.schema.json"
+      },
+      "minItems": 1,
+      "maxItems": 1
+    }
+  }
+}

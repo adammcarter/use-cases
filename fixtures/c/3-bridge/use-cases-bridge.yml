@@ -1,0 +1,11 @@
+schema_version: 1
+
+validations:
+  - id: ctest
+    report: ctest.xml
+    run: [sh, -c, 'cmake -S . -B build && cmake --build build --config Debug && ctest --test-dir build -C Debug --output-junit "$1"', sh, "{report}"]
+    transformer: junit
+    settings:
+      find: pattern
+      files: tests/**/*.c
+      patterns: ["static int {name}(void)"]

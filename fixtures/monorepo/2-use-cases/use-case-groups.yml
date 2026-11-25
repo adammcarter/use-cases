@@ -1,0 +1,11 @@
+schema_version: 1
+
+groups:
+  checkout-flow:
+    description: Everything a customer meets between the product page and payment.
+    include:
+      prefixes: [shop.rules, shop.checkout]
+  storefront:
+    description: What the storefront shows.
+    include:
+      prefixes: [shop.storefront]

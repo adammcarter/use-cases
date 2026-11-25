@@ -1,0 +1,7 @@
+schema_version: 1
+
+validations:
+  - id: go-test
+    report: go-test.jsonl
+    run: [sh, -c, 'go test -json ./... > "$1"', sh, "{report}"]
+    transformer: go-test-json

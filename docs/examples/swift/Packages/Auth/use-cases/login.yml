@@ -1,0 +1,74 @@
+prefix: login
+
+use_cases:
+  - id: authenticate
+    title: Authenticate user
+    description: Handles authentication through the primary login flow.
+    value_tier: core
+
+    intent: >
+      Allow a user with valid credentials to create an authenticated session,
+      while rejecting invalid credentials without creating one.
+
+    out_of_scope:
+      - Social login.
+      - Password reset.
+
+    scenarios:
+      - id: valid-credentials
+        given:
+          - The user is signed out.
+          - The account exists.
+        when:
+          - The user submits valid credentials.
+        then:
+          - An authenticated session is created.
+          - Authentication succeeds.
+
+      - id: invalid-password
+        given:
+          - The user is signed out.
+          - The account exists.
+        when:
+          - The user submits an invalid password.
+        then:
+          - No authenticated session is created.
+          - Authentication is rejected.
+
+    validation:
+      - id: unit-tests
+        type:
+          kind: unit
+        covers:
+          - valid-credentials
+          - invalid-password
+        resources:
+          - kind: file
+            path: Packages/Auth/Fixtures/users.json
+
+      - id: manual-login-check
+        type:
+          kind: acceptance
+        covers:
+          - valid-credentials
+          - invalid-password
+        gates_verification: false
+        procedure:
+          setup:
+            - Launch the app in a signed-out state.
+          steps:
+            - Perform the valid-credentials scenario.
+            - Sign out.
+            - Perform the invalid-password scenario.
+          reset:
+            - Return the app to the signed-out state.
+
+    bindings:
+      - id: legacy-audit-hook
+        kind: manual
+        locator:
+          file: Packages/Auth/Sources/Auth/LoginService.swift
+          start:
+            line: 37
+          end:
+            line: 40

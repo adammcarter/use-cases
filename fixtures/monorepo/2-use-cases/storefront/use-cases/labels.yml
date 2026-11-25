@@ -1,0 +1,42 @@
+prefix: labels
+
+use_cases:
+  - id: money
+    title: Show prices in the shop's currency
+    value_tier: core
+    intent: Prices show with the currency symbol and two decimals, and unsupported currencies are refused.
+    scenarios:
+      - id: pounds
+        when:
+          - 1250 pence is shown in GBP.
+        then:
+          - It reads £12.50.
+      - id: unsupported
+        when:
+          - A price is shown in an unsupported currency.
+        then:
+          - It is refused.
+    validation:
+      - id: unit-tests
+        type: { kind: unit }
+        covers: [pounds, unsupported]
+
+  - id: savings
+    title: Tell customers what they saved
+    value_tier: supporting
+    intent: Discounted lines say how much was saved, in money and percent; full-price lines say nothing.
+    scenarios:
+      - id: shows-saving
+        when:
+          - A 62.50 line costs 56.25 after discount.
+        then:
+          - It reads "You save £6.25 (10%)".
+      - id: nothing-saved
+        when:
+          - A line is full price.
+        then:
+          - No savings label is shown.
+    validation:
+      - id: unit-tests
+        type: { kind: unit }
+        covers: [shows-saving, nothing-saved]

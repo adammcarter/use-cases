@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Checks that the release tag (if given, as v1.2.3 or 1.2.3), the plugin manifest and
+# ProductVersion all say the same version. Prints the version when they agree.
+# Usage: scripts/check-versions [tag]
+set -euo pipefail
+
+here="$(cd "$(dirname "$0")" && pwd)"
+root="${RELEASE_ROOT:-$(cd "$here/.." && pwd)}"
+
+product="$(RELEASE_ROOT="$root" "$here/product-version")"
+plugin="$(sed -n 's/^ *"version": *"\([^"]*\)".*$/\1/p' "$root/plugin/.claude-plugin/plugin.json")"
+failed=0
+
+if [[ "$plugin" != "$product" ]]; then
+  echo "check-versions: plugin.json says '$plugin' but ProductVersion says '$product'" >&2
+  failed=1
+fi
+
+if [[ $# -ge 1 && "${1#v}" != "$product" ]]; then
+  echo "check-versions: tag '$1' does not match ProductVersion '$product'" >&2
+  failed=1
+fi
+
+if [[ "$failed" -ne 0 ]]; then
+  exit 1
+fi
+
+echo "$product"

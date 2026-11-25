@@ -1,0 +1,40 @@
+#!/usr/bin/env python3
+"""A stand-in for a future core and a future transformer, for the acceptance suite (chapter 10 §10, "How contract 1 evolves").
+
+It adds fields contract 1 does not define to every object in the request, runs the real
+transformer named by UC_WRAPPED_TRANSFORMER, then adds unknown fields to its response.
+A transformer must ignore what it does not know, and so must the core.
+"""
+import json, os, subprocess, sys
+
+job, request_path, response_path = sys.argv[1:4]
+with open(request_path) as handle:
+    request = json.load(handle)
+request["from_the_future"] = {"any": ["shape"]}
+for use_case in request.get("use_cases", []):
+    use_case["from_the_future"] = True
+for link in request.get("links", []):
+    link["from_the_future"] = 1
+if "output" in request:
+    request["output"]["from_the_future"] = "x"
+future_request = request_path + ".future.json"  # the core's own request stays as the core wrote it
+with open(future_request, "w") as handle:
+    json.dump(request, handle)
+program = os.environ["UC_WRAPPED_TRANSFORMER"]
+launch = [program]
+if os.name == "nt" and os.path.isfile(program + ".cmd"):  # Windows runs the bundled transformer's launcher
+    launch = ["cmd.exe", "/c", program + ".cmd"]
+code = subprocess.run([*launch, job, future_request, response_path]).returncode
+if code:
+    sys.exit(code)
+with open(response_path) as handle:
+    response = json.load(handle)
+response["from_the_future"] = {"note": "a newer transformer"}
+for result in response.get("results", []):
+    result["from_the_future"] = 2
+for test in response.get("unlinked", []):
+    test["from_the_future"] = 3
+for link in response.get("links", []):
+    link["from_the_future"] = 4
+with open(response_path, "w") as handle:
+    json.dump(response, handle)

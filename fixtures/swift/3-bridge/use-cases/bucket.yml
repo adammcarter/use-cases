@@ -1,0 +1,38 @@
+prefix: bucket
+
+use_cases:
+  - id: take
+    title: Spend tokens until empty
+    value_tier: critical
+    intent: A client can make requests while tokens remain and is refused once the bucket is empty.
+    scenarios:
+      - id: starts-full
+        when: [A bucket is created.]
+        then: [It holds its full capacity.]
+      - id: drains
+        when: [Tokens are taken beyond capacity.]
+        then: [The extra take is refused.]
+    validation:
+      - id: unit-tests
+        type: { kind: unit }
+        covers: [starts-full, drains]
+
+  - id: refill
+    title: Refill over time
+    value_tier: core
+    intent: Tokens return at the refill rate, never above capacity, and a bucket with no refill never recovers.
+    scenarios:
+      - id: caps-at-capacity
+        when: [Much more time passes than needed to refill.]
+        then: [The bucket holds exactly its capacity.]
+      - id: wait-time
+        when: [Some tokens are missing.]
+        then: [The wait time is the deficit divided by the refill rate.]
+      - id: no-refill
+        given: [A refill rate of zero.]
+        when: [The bucket is empty.]
+        then: [The wait time is infinite.]
+    validation:
+      - id: unit-tests
+        type: { kind: unit }
+        covers: [caps-at-capacity, wait-time, no-refill]

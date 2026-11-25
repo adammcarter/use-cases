@@ -1,0 +1,10 @@
+{
+  "sku-1": {
+    "price": 10,
+    "in_stock": true
+  },
+  "sku-2": {
+    "price": 20,
+    "in_stock": false
+  }
+}

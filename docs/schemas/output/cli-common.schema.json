@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CLI output: shared parts",
+  "description": "Parts every `use-cases --json` document shares (chapter 16 §5). Readers ignore fields they do not know; a later output version only adds optional fields.",
+  "$defs": {
+    "outputVersion": {
+      "const": 1
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "useCaseStatus": {
+      "enum": [
+        "verified",
+        "stale",
+        "unverified",
+        "incomplete",
+        "error",
+        "failed",
+        "draft"
+      ]
+    },
+    "routeStatus": {
+      "enum": [
+        "verified",
+        "stale",
+        "unverified",
+        "incomplete",
+        "error",
+        "failed"
+      ]
+    },
+    "count": {
+      "$ref": "../engine/common.schema.json#/$defs/safeNonNegativeInteger"
+    },
+    "changes": {
+      "description": "Every file the command changes, or would change under --dry-run.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "action"
+        ],
+        "properties": {
+          "path": {
+            "$ref": "../engine/common.schema.json#/$defs/path"
+          },
+          "action": {
+            "enum": [
+              "create",
+              "replace",
+              "delete"
+            ]
+          }
+        }
+      }
+    },
+    "dryRun": {
+      "description": "True when --dry-run showed the change and wrote nothing.",
+      "type": "boolean"
+    },
+    "definition": {
+      "description": "One use case, whole: its fields as authored, with its full id. What show returns and save accepts.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "../authored/use-cases.schema.json#/$defs/namespace"
+        },
+        "title": {
+          "$ref": "../authored/use-cases.schema.json#/$defs/useCase/properties/title"
+        },
+        "description": {
+          "$ref": "../authored/use-cases.schema.json#/$defs/useCase/properties/description"
+        },
+        "value_tier": {
+          "$ref": "../authored/use-cases.schema.json#/$defs/useCase/properties/value_tier"
+        },
+        "intent": {
+          "$ref": "../authored/use-cases.schema.json#/$defs/useCase/properties/intent"
+        },
+        "out_of_scope": {
+          "$ref": "../authored/use-cases.schema.json#/$defs/useCase/properties/out_of_scope"
+        },
+        "scenarios": {
+          "$ref": "../authored/use-cases.schema.json#/$defs/useCase/properties/scenarios"
+        },
+        "validation": {
+          "$ref": "../authored/use-cases.schema.json#/$defs/useCase/properties/validation"
+        },
+        "bindings": {
+          "$ref": "../authored/use-cases.schema.json#/$defs/useCase/properties/bindings"
+        },
+        "approved": {
+          "$ref": "../authored/use-cases.schema.json#/$defs/useCase/properties/approved"
+        }
+      }
+    },
+    "approval": {
+      "description": "approved: signed off as it reads now; changed: signed off, then its promise changed; unapproved: never signed off.",
+      "enum": [
+        "approved",
+        "changed",
+        "unapproved"
+      ]
+    }
+  }
+}

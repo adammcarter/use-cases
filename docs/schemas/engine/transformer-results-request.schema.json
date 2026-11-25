@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Transformer Results Request",
+  "description": "What the core writes to request.json for a results job (chapter 10). A transformer ignores fields it does not know (ADR 015).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "job",
+    "use_cases",
+    "links",
+    "output",
+    "code_root",
+    "settings"
+  ],
+  "properties": {
+    "contract": {
+      "const": 1
+    },
+    "job": {
+      "const": "results"
+    },
+    "use_cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/useCaseId"
+          }
+        }
+      }
+    },
+    "links": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "use_case",
+          "binding",
+          "role",
+          "file",
+          "source",
+          "range"
+        ],
+        "properties": {
+          "key": {
+            "$ref": "common.schema.json#/$defs/linkKey"
+          },
+          "source": {
+            "enum": [
+              "marker",
+              "manual",
+              "transformer"
+            ]
+          },
+          "use_case": {
+            "$ref": "common.schema.json#/$defs/useCaseId"
+          },
+          "route": {
+            "$ref": "common.schema.json#/$defs/segment"
+          },
+          "binding": {
+            "$ref": "common.schema.json#/$defs/segment"
+          },
+          "role": {
+            "enum": [
+              "implementation",
+              "validation"
+            ]
+          },
+          "file": {
+            "$ref": "common.schema.json#/$defs/path"
+          },
+          "range": {
+            "$ref": "common.schema.json#/$defs/range"
+          }
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "report_path",
+        "exit_code",
+        "working_dir"
+      ],
+      "properties": {
+        "report_path": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Absolute path of the report, file or folder, inside the run that reads it. Read it; never change it: the core seals the bytes as read and refuses results from a report that changed while it was read. Its location carries no meaning."
+        },
+        "exit_code": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "description": "The run command's exit code, or null when the core does not know it (for example when your own test run wrote the report)."
+        },
+        "working_dir": {
+          "description": "Folder the command ran in (or would have run in), relative to code_root; \".\" is the project root. Relative paths inside a report usually start here.",
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!\\./)(?!.*/\\.(?:/|$))(?!.*//)(?!.*/$)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)[^\\u0000-\\u001f\\u007f\\u2028\\u2029]+$(?!\\n)"
+        }
+      }
+    },
+    "code_root": {
+      "type": "string",
+      "minLength": 1
+    },
+    "settings": {
+      "type": "object"
+    }
+  }
+}

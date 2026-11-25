@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Route Result Record",
+  "description": "One parsed results.jsonl record: the core's verdict for one route. via names the bridge validations whose reports produced it, or record. Framing, one record per route per run, and sealing are core checks.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "record_version",
+    "use_case",
+    "route",
+    "fingerprint",
+    "status",
+    "recorded_at",
+    "via"
+  ],
+  "properties": {
+    "record_version": {
+      "const": 1
+    },
+    "use_case": {
+      "$ref": "common.schema.json#/$defs/useCaseId"
+    },
+    "route": {
+      "$ref": "common.schema.json#/$defs/segment"
+    },
+    "fingerprint": {
+      "$ref": "common.schema.json#/$defs/fingerprint"
+    },
+    "status": {
+      "$ref": "common.schema.json#/$defs/verdict"
+    },
+    "recorded_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "via": {
+      "anyOf": [
+        {
+          "const": [
+            "record"
+          ]
+        },
+        {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common.schema.json#/$defs/segment"
+          }
+        }
+      ],
+      "description": "Validation ids that produced this result, or [\"record\"] for a recorded verdict. `record` is reserved and can never be a validation id."
+    },
+    "links": {
+      "description": "Every validation link of the route with the worst result it received, or null when it received none.",
+      "type": "object",
+      "propertyNames": {
+        "$ref": "common.schema.json#/$defs/linkKey"
+      },
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "$ref": "common.schema.json#/$defs/verdict"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "message": {
+      "type": "string"
+    },
+    "attachments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "blob",
+          "size_bytes"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "blob": {
+            "type": "string",
+            "pattern": "^uc-blob-v1-sha256:[0-9a-f]{64}$(?!\\n)"
+          },
+          "size_bytes": {
+            "$ref": "common.schema.json#/$defs/safeNonNegativeInteger"
+          },
+          "media_type": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "via": {
+            "const": [
+              "record"
+            ]
+          }
+        },
+        "required": [
+          "via"
+        ]
+      },
+      "then": {
+        "not": {
+          "required": [
+            "links"
+          ]
+        }
+      },
+      "else": {
+        "required": [
+          "links"
+        ]
+      }
+    }
+  ]
+}

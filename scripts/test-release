@@ -1,0 +1,129 @@
+#!/usr/bin/env bash
+# Tests the release scripts that need no build: the version agreement check, the plugin
+# launcher's choice of platform, and the plugin archive naming the release's own account. Run
+# locally and in CI: scripts/test-release
+set -euo pipefail
+
+here="$(cd "$(dirname "$0")" && pwd)"
+root="$(cd "$here/.." && pwd)"
+work="$(mktemp -d)"
+trap 'rm -rf "$work"' EXIT
+failures=0
+
+expect() { # expect <description> <condition status>
+  if [[ "$2" -eq 0 ]]; then
+    echo "ok   $1"
+  else
+    echo "FAIL $1"
+    failures=$((failures + 1))
+  fi
+}
+
+# --- versions -------------------------------------------------------------------------------
+
+version="$("$here/product-version")"
+expect "the repository's plugin.json and ProductVersion agree" "$("$here/check-versions" >/dev/null 2>&1 && echo 0 || echo 1)"
+expect "a matching tag is accepted" "$("$here/check-versions" "v$version" >/dev/null 2>&1 && echo 0 || echo 1)"
+expect "a different tag is refused" "$("$here/check-versions" "v$version.1" >/dev/null 2>&1 && echo 1 || echo 0)"
+
+copy="$work/repo"
+mkdir -p "$copy/plugin/.claude-plugin" "$copy/UseCases/Sources/UseCasesCore/Models/Version"
+cp "$root/UseCases/Sources/UseCasesCore/Models/Version/ProductVersion.swift" "$copy/UseCases/Sources/UseCasesCore/Models/Version/"
+sed 's/"version": *"[^"]*"/"version": "9.9.9"/' "$root/plugin/.claude-plugin/plugin.json" >"$copy/plugin/.claude-plugin/plugin.json"
+expect "a plugin.json with another version is refused" "$(RELEASE_ROOT="$copy" "$here/check-versions" >/dev/null 2>&1 && echo 1 || echo 0)"
+
+# --- launcher -------------------------------------------------------------------------------
+
+plugin="$work/plugin"
+mkdir -p "$plugin/bin"
+cp "$root/plugin/bin/use-cases" "$plugin/bin/use-cases"
+for platform in macos-universal linux-x86_64 linux-arm64; do
+  mkdir -p "$plugin/bin/$platform"
+  printf '#!/bin/sh\necho "%s $*"\n' "$platform" >"$plugin/bin/$platform/use-cases"
+  chmod +x "$plugin/bin/$platform/use-cases"
+done
+
+launch() { # launch <os> <arch> [arguments...]
+  local os="$1" arch="$2"
+  shift 2
+  USE_CASES_LAUNCHER_OS="$os" USE_CASES_LAUNCHER_ARCH="$arch" "$plugin/bin/use-cases" "$@" 2>&1 || true
+}
+
+expect "macOS on Apple silicon runs the universal build" "$([[ "$(launch Darwin arm64 mcp)" == "macos-universal mcp" ]] && echo 0 || echo 1)"
+expect "macOS on Intel runs the universal build" "$([[ "$(launch Darwin x86_64 mcp)" == "macos-universal mcp" ]] && echo 0 || echo 1)"
+expect "Linux x86_64 runs the x86_64 build" "$([[ "$(launch Linux x86_64 --version)" == "linux-x86_64 --version" ]] && echo 0 || echo 1)"
+expect "Linux aarch64 runs the arm64 build" "$([[ "$(launch Linux aarch64 --version)" == "linux-arm64 --version" ]] && echo 0 || echo 1)"
+
+rm -r "$plugin/bin/linux-arm64"
+missing="$(launch Linux aarch64 mcp)"
+expect "a missing platform is named in the message" "$([[ "$missing" == *"no build for linux-arm64"* ]] && echo 0 || echo 1)"
+status=0
+USE_CASES_LAUNCHER_OS=Linux USE_CASES_LAUNCHER_ARCH=aarch64 "$plugin/bin/use-cases" >/dev/null 2>&1 || status=$?
+expect "a missing platform exits 127" "$([[ "$status" -eq 127 ]] && echo 0 || echo 1)"
+expect "an unknown system is named in the message" "$([[ "$(launch FreeBSD amd64)" == *"no build for FreeBSD-amd64"* ]] && echo 0 || echo 1)"
+
+# --- plugin archive -------------------------------------------------------------------------
+
+# Release tarballs whose programs only say their version, in a dist folder of the test's own.
+fake_dist="$work/dist"
+for platform in macos-universal linux-x86_64 linux-arm64; do
+  folder="$work/tarballs/use-cases-$version-$platform"
+  mkdir -p "$folder" "$fake_dist"
+  printf '#!/bin/sh\necho "use-cases %s"\n' "$version" >"$folder/use-cases"
+  chmod +x "$folder/use-cases"
+  tar -czf "$fake_dist/use-cases-$version-$platform.tar.gz" -C "$work/tarballs" "use-cases-$version-$platform"
+done
+
+package() { # package <release root> <owner>; prints the archive's path, or fails
+  RELEASE_ROOT="$1" RELEASE_OWNER="$2" DIST_DIR="$fake_dist" "$here/package-plugin" 2>"$work/package.err"
+}
+
+shipped_setup() { # shipped_setup <archive>: the setup skill as the archive ships it
+  rm -rf "$work/unpacked"
+  mkdir -p "$work/unpacked"
+  tar -xzf "$1" -C "$work/unpacked"
+  setup="$(printf '%s\n' "$work"/unpacked/*/skills/setup/SKILL.md)"
+  # Read through redirection: some machines refuse a command that only prints a file.
+  while IFS= read -r line; do printf '%s\n' "$line"; done <"$setup"
+}
+
+archive="$(package "$root" acme || true)"
+expect "the plugin archive is made for a named account" "$([[ -f "$archive" ]] && echo 0 || echo 1)"
+if [[ -f "$archive" ]]; then
+  skill="$(shipped_setup "$archive")"
+  expect "the shipped setup skill offers that account's release download" "$([[ "$skill" == *"github.com/acme/use-cases/releases"* ]] && echo 0 || echo 1)"
+  expect "the shipped setup skill holds no OWNER" "$([[ "$skill" != *OWNER* ]] && echo 0 || echo 1)"
+fi
+expect "the source setup skill keeps OWNER" "$(grep -q 'github.com/OWNER/use-cases/releases' "$root/plugin/skills/setup/SKILL.md" && echo 0 || echo 1)"
+zip="$fake_dist/use-cases-plugin.zip"
+expect "the plugin zip is made beside the archive" "$([[ -f "$zip" ]] && echo 0 || echo 1)"
+if [[ -f "$zip" ]]; then
+  listing="$(zipinfo "$zip")"
+  expect "the zip holds .claude-plugin/plugin.json at its root" "$([[ "$(zipinfo -1 "$zip")" == *$'\n.claude-plugin/plugin.json'* || "$(zipinfo -1 "$zip")" == .claude-plugin/plugin.json* ]] && echo 0 || echo 1)"
+  mode_of() { printf '%s\n' "$listing" | awk -v f="$1" '$NF == f { print $1 }'; }
+  expect "the zip keeps bin/use-cases executable" "$([[ "$(mode_of bin/use-cases)" == "-rwxr-xr-x" ]] && echo 0 || echo 1)"
+  for platform in macos-universal linux-x86_64 linux-arm64; do
+    expect "the zip keeps bin/$platform/use-cases executable" "$([[ "$(mode_of "bin/$platform/use-cases")" == "-rwxr-xr-x" ]] && echo 0 || echo 1)"
+  done
+fi
+
+marketplace="$root/.claude-plugin/marketplace.json"
+url="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["plugins"][0]["source"]["url"])' "$marketplace" 2>/dev/null || true)"
+expect "the marketplace parses and its url names the zip package-plugin writes" "$([[ "${url##*/}" == "$(basename "$zip")" ]] && echo 0 || echo 1)"
+expect "no account, no plugin archive" "$(package "$root" "" >/dev/null 2>&1 && echo 1 || echo 0)"
+
+planted="$work/planted"
+mkdir -p "$planted/UseCases/Sources/UseCasesCore/Models/Version"
+cp -R "$root/plugin" "$planted/plugin"
+cp "$root/UseCases/Sources/UseCasesCore/Models/Version/ProductVersion.swift" "$planted/UseCases/Sources/UseCasesCore/Models/Version/"
+printf 'Ask OWNER_NAME for the tap.\n' >"$planted/plugin/skills/setup/NOTE.md"
+status=0
+package "$planted" acme >/dev/null || status=$?
+expect "a placeholder left in the shipped text fails the packaging" "$([[ "$status" -ne 0 ]] && echo 0 || echo 1)"
+expect "and the message names the file" "$(grep -q 'skills/setup/NOTE.md' "$work/package.err" && echo 0 || echo 1)"
+
+if [[ "$failures" -ne 0 ]]; then
+  echo "$failures failed"
+  exit 1
+fi
+echo "all passed"

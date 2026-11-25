@@ -1,0 +1,17 @@
+{
+  "name": "use-cases",
+  "owner": {
+    "name": "Adam Carter"
+  },
+  "description": "Work use-case first: the use-cases tools and skills.",
+  "plugins": [
+    {
+      "name": "use-cases",
+      "description": "Work use-case first: the use-cases tools and the skills that drive the flow.",
+      "source": {
+        "source": "archive",
+        "url": "https://github.com/adammcarter/use-cases/releases/latest/download/use-cases-plugin.zip"
+      }
+    }
+  ]
+}

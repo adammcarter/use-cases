@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CLI output: a refused request",
+  "description": "Any command whose request was refused (exit 2) or, with kind cancelled, stopped by Ctrl-C or SIGTERM (exit 130). A person sees the same message on stderr.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "output_version",
+    "command",
+    "error"
+  ],
+  "properties": {
+    "output_version": {
+      "$ref": "cli-common.schema.json#/$defs/outputVersion"
+    },
+    "command": {
+      "enum": [
+        "validate",
+        "status",
+        "verify",
+        "record",
+        "links",
+        "search",
+        "docs",
+        "render",
+        "show",
+        "save",
+        "remove",
+        "apply",
+        "approve",
+        "init",
+        "hooks",
+        "prune",
+        "version",
+        null
+      ]
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "message"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "usage",
+            "invalid",
+            "refused",
+            "storage",
+            "cancelled"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

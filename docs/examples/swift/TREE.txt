@@ -1,0 +1,26 @@
+shop-app/
+├─ use-cases.yml
+├─ use-case-groups.yml
+├─ use-cases-bridge.yml
+├─ .gitignore
+├─ README.md
+├─ Sources/
+│  └─ App.swift
+├─ Tests/
+│  └─ AppSmokeTests.swift
+├─ use-cases/
+│  └─ checkout.yml
+└─ Packages/
+   └─ Auth/
+      ├─ use-cases.yml
+      ├─ Sources/
+      │  └─ Auth/
+      │     ├─ LoginService.swift
+      │     └─ SessionStore.swift
+      ├─ Tests/
+      │  └─ AuthTests/
+      │     └─ LoginTests.swift
+      ├─ Fixtures/
+      │  └─ users.json
+      └─ use-cases/
+         └─ login.yml

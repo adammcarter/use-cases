@@ -1,0 +1,11 @@
+schema_version: 1
+
+validations:
+  - id: surefire
+    run: [mvn, -q, -B, test, "-DjunitDir={report}"]
+    transformer: junit
+    settings:
+      find: pattern
+      files: src/test/**/*.java
+      class_file: true
+      patterns: ["void {method}("]

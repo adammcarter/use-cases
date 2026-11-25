@@ -1,0 +1,27 @@
+schema_version: 1
+
+validations:
+  - id: pricing-tests
+    working_dir: pricing
+    report: pricing.xml
+    run: [python3, -m, pytest, -q, -o, junit_family=xunit1, "--junitxml={report}"]
+    transformer: junit
+    settings:
+      find: file-line
+      line_base: 0
+
+  - id: checkout-tests
+    working_dir: checkout
+    report: checkout.jsonl
+    run: [sh, -c, 'go test -json ./... > "$1"', sh, "{report}"]
+    transformer: go-test-json
+
+  - id: storefront-tests
+    working_dir: storefront
+    report: storefront.xml
+    run: [node, --test, --test-reporter=junit, "--test-reporter-destination={report}"]
+    transformer: junit
+    settings:
+      find: pattern
+      files: "storefront/test/**/*.js"
+      patterns: ['"{name}"']

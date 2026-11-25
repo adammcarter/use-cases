@@ -1,0 +1,11 @@
+{
+  "name": "human-duration",
+  "version": "1.1.0",
+  "description": "Parse and format human durations like '1h 30m'.",
+  "type": "module",
+  "main": "src/duration.js",
+  "scripts": {
+    "test": "node --test"
+  },
+  "license": "MIT"
+}

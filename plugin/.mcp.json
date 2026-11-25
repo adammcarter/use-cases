@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "use-cases": {
+      "command": "${CLAUDE_PLUGIN_ROOT}/bin/use-cases",
+      "args": ["mcp"]
+    }
+  }
+}

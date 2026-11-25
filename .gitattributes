@@ -1,0 +1,2 @@
+# Windows launchers for bundled transformers must keep CRLF line endings.
+*.cmd text eol=crlf

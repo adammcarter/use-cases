@@ -1,0 +1,54 @@
+prefix: accounts
+
+use_cases:
+  - id: deposits
+    title: Deposit money
+    value_tier: core
+    intent: Deposits raise the balance, and only positive amounts are accepted.
+    scenarios:
+      - id: raises-balance
+        when: [120.50 is deposited.]
+        then: [The balance is 120.50.]
+      - id: positive-only
+        when: [Zero or a negative amount is deposited.]
+        then: [It is refused.]
+    validation:
+      - id: unit-tests
+        type: { kind: unit }
+        covers: [raises-balance, positive-only]
+
+  - id: overdraft
+    title: Withdraw within the overdraft limit
+    value_tier: critical
+    intent: A withdrawal may use the overdraft but never go beyond it.
+    scenarios:
+      - id: within-limit
+        when: [A withdrawal leaves the balance within the overdraft.]
+        then: [It succeeds.]
+      - id: beyond-limit
+        when: [A withdrawal would pass the overdraft limit.]
+        then: [It is refused with insufficient funds.]
+    validation:
+      - id: unit-tests
+        type: { kind: unit }
+        covers: [within-limit, beyond-limit]
+
+  - id: transfers
+    title: Transfer between accounts
+    value_tier: critical
+    intent: A transfer moves money from one account to another, or changes neither.
+    scenarios:
+      - id: moves-money
+        when: [40 is transferred from a to b.]
+        then: [a is 40 lower and b is 40 higher.]
+      - id: all-or-nothing
+        when: [A transfer fails for insufficient funds.]
+        then: [Neither balance changes.]
+    validation:
+      - id: unit-tests
+        type: { kind: unit }
+        covers: [moves-money, all-or-nothing]
+    bindings:
+      - id: transfer-service
+        kind: manual
+        locator: { file: src/main/java/com/example/ledger/Transfers.java }

@@ -1,0 +1,30 @@
+#!/bin/sh
+# Starts the use-cases program built for this machine. The release archive holds one folder per
+# platform under bin/ (macos-universal, linux-x86_64, linux-arm64), each with the program and its
+# resource bundles beside it. USE_CASES_LAUNCHER_OS and USE_CASES_LAUNCHER_ARCH replace
+# `uname -s` and `uname -m`; the launcher's test uses them.
+os="${USE_CASES_LAUNCHER_OS:-$(uname -s)}"
+arch="${USE_CASES_LAUNCHER_ARCH:-$(uname -m)}"
+
+case "$os" in
+  Darwin) platform="macos-universal" ;;
+  Linux)
+    case "$arch" in
+      x86_64 | amd64) platform="linux-x86_64" ;;
+      aarch64 | arm64) platform="linux-arm64" ;;
+      *) platform="linux-$arch" ;;
+    esac
+    ;;
+  *) platform="$os-$arch" ;;
+esac
+
+here="$(cd "$(dirname "$0")" && pwd)"
+program="$here/$platform/use-cases"
+
+if [ ! -x "$program" ]; then
+  echo "use-cases: this plugin has no build for $platform ($os $arch); looked for $program" >&2
+  echo "use-cases: the release ships macos-universal, linux-x86_64 and linux-arm64" >&2
+  exit 127
+fi
+
+exec "$program" "$@"

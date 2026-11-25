@@ -1,0 +1,218 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Runtime shared definitions",
+  "$defs": {
+    "runId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$(?!\\n)",
+      "not": {
+        "const": "00000000000000000000000000000000"
+      }
+    },
+    "safeNonNegativeInteger": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "useCaseId": {
+      "type": "string",
+      "pattern": "^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*$(?!\\n)"
+    },
+    "segment": {
+      "type": "string",
+      "pattern": "^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$(?!\\n)"
+    },
+    "pair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "use_case",
+        "route"
+      ],
+      "properties": {
+        "use_case": {
+          "$ref": "#/$defs/useCaseId"
+        },
+        "route": {
+          "$ref": "#/$defs/segment"
+        }
+      }
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$(?!\\n)"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "(?:Z|\\+00:00)$(?!\\n)"
+    },
+    "epochSeconds": {
+      "type": "number",
+      "minimum": 0
+    },
+    "fingerprint": {
+      "type": "string",
+      "pattern": "^uc-route-v[1-9][0-9]*-[a-z0-9-]+:[^\\s:]+$(?!\\n)",
+      "allOf": [
+        {
+          "if": {
+            "pattern": "^uc-route-v1-sha256:"
+          },
+          "then": {
+            "pattern": "^uc-route-v1-sha256:[0-9a-f]{64}$(?!\\n)"
+          }
+        }
+      ],
+      "description": "Opaque historical fingerprints are retained; comparability is a core check. V1 SHA-256 is structurally exact."
+    },
+    "verdict": {
+      "enum": [
+        "pass",
+        "fail",
+        "incomplete",
+        "error"
+      ]
+    },
+    "linkKey": {
+      "description": "Core-assigned link key: <use_case>#[<route>.]<binding>@<file>:<start line>. The file part is the link's path exactly, spaces and any other characters included. Keys are opaque: transformers echo them and never parse them.",
+      "type": "string",
+      "pattern": "^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*#(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)?[a-z0-9](?:[a-z0-9-]*[a-z0-9])?@[^\\u0000-\\u001f\\u007f\\u2028\\u2029]+:[1-9][0-9]*$(?!\\n)"
+    },
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!\\./)(?!.*/\\.(?:/|$))(?!.*//)(?!.*/$)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)[^\\u0000-\\u001f\\u007f\\u2028\\u2029]+$(?!\\n)"
+    },
+    "range": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end"
+      ],
+      "properties": {
+        "start": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "contentReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "algorithm",
+        "byte_length",
+        "digest"
+      ],
+      "properties": {
+        "algorithm": {
+          "const": "sha256"
+        },
+        "byte_length": {
+          "$ref": "#/$defs/safeNonNegativeInteger"
+        },
+        "digest": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "link": {
+      "description": "A resolved link. role validation requires route; role implementation forbids it. A missing range means the whole file.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "use_case",
+        "binding",
+        "role",
+        "file"
+      ],
+      "properties": {
+        "use_case": {
+          "$ref": "#/$defs/useCaseId"
+        },
+        "route": {
+          "$ref": "#/$defs/segment"
+        },
+        "binding": {
+          "$ref": "#/$defs/segment"
+        },
+        "role": {
+          "enum": [
+            "implementation",
+            "validation"
+          ]
+        },
+        "file": {
+          "$ref": "#/$defs/path"
+        },
+        "range": {
+          "$ref": "#/$defs/range"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "role": {
+                "const": "validation"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "then": {
+            "required": [
+              "route"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "route"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "unlinkedTest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "test",
+        "file",
+        "line",
+        "status"
+      ],
+      "properties": {
+        "test": {
+          "type": "string",
+          "minLength": 1
+        },
+        "file": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "line": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "status": {
+          "$ref": "#/$defs/verdict"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,72 @@
+import Testing
+@testable import UseCasesCore
+
+struct ArrayTextEncodingTests {
+  @Test(
+    arguments: [
+      [],
+      Array("plain".utf8),
+      Array("café 日本語 🎉".utf8),
+      [0xEF, 0xBB, 0xBF, 0x61],
+      [0x00, 0x7F],
+      [0xEF, 0xBF, 0xBD],
+      [0xF4, 0x8F, 0xBF, 0xBF],
+      [0xEF, 0xBF, 0xBE],
+    ] as [[UInt8]],
+  )
+  func `strict UTF-8 is accepted`(bytes: [UInt8]) {
+    #expect(bytes.isStrictUTF8)
+  }
+
+  @Test(
+    arguments: [
+      [0xE9],
+      [0xC0, 0x80],
+      [0xC1, 0xBF],
+      [0xE0, 0x80, 0x80],
+      [0xED, 0xA0, 0x80],
+      [0xED, 0xBF, 0xBF],
+      [0xE2, 0x82],
+      [0xF0, 0x9F, 0x8E],
+      [0xF4, 0x90, 0x80, 0x80],
+      [0xF8, 0x88, 0x80, 0x80, 0x80],
+      [0x80],
+      [0xFF],
+      [0xFE],
+      Array("ok".utf8) + [0xE9] + Array("ok".utf8),
+    ] as [[UInt8]],
+  )
+  func `anything else is refused`(bytes: [UInt8]) {
+    #expect(!bytes.isStrictUTF8)
+  }
+
+  @Test(
+    arguments: [
+      [0xFF, 0xFE],
+      [0xFE, 0xFF],
+      [0xFF, 0xFE, 0x00, 0x00],
+      [0x00, 0x00, 0xFE, 0xFF],
+      [0xFF, 0xFE, 0x40, 0x00],
+      [0xFE, 0xFF, 0x00, 0x40],
+    ] as [[UInt8]],
+  )
+  func `a UTF-16 or UTF-32 byte-order mark is seen`(bytes: [UInt8]) {
+    #expect(bytes.startsWithWideByteOrderMark)
+  }
+
+  @Test(
+    arguments: [
+      [],
+      [0xFF],
+      [0xFE],
+      [0x00, 0x00],
+      [0x00, 0x00, 0xFE],
+      [0xEF, 0xBB, 0xBF],
+      Array("@use-case:".utf8),
+      [0x61, 0xFF, 0xFE],
+    ] as [[UInt8]],
+  )
+  func `anything else is not one`(bytes: [UInt8]) {
+    #expect(!bytes.startsWithWideByteOrderMark)
+  }
+}

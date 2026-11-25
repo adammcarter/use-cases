@@ -1,0 +1,86 @@
+prefix: auth
+
+use_cases:
+  - id: login
+    title: Legacy login
+    description: Existing login behaviour spanning C, JavaScript, shell, and Python tests.
+    value_tier: critical
+
+    intent: >
+      Allow a known user to authenticate while preserving the existing audit side effect.
+
+    out_of_scope:
+      - Password reset.
+      - MFA.
+      - OAuth.
+
+    scenarios:
+      - id: valid-user
+        given:
+          - The username and password are valid.
+        when:
+          - Login is submitted.
+        then:
+          - Authentication succeeds.
+          - An audit entry is written.
+
+      - id: invalid-user
+        given:
+          - The username or password is invalid.
+        when:
+          - Login is submitted.
+        then:
+          - Authentication fails.
+          - No authenticated session is created.
+
+    validation:
+      - id: mixed-regression
+        type:
+          kind: integration
+        covers:
+          - valid-user
+          - invalid-user
+        bindings:
+          - id: integration-script
+            kind: manual
+            locator:
+              file: tests/python/test_login_integration.py
+        resources:
+          - kind: file
+            path: fixtures/users.json
+          - kind: file
+            path: config/auth.ini
+
+      - id: browser-smoke
+        type:
+          kind: acceptance
+        covers:
+          - valid-user
+        gates_verification: false
+        procedure:
+          setup:
+            - Start the existing legacy app using scripts/start-legacy.sh.
+            - Open the login page in a browser.
+          steps:
+            - Enter the known fixture user credentials.
+            - Submit login.
+            - Confirm the authenticated home page is shown.
+            - Confirm logs/audit.log contains a new login entry.
+          reset:
+            - Stop the legacy app.
+            - Remove the test audit entry if needed.
+
+    bindings:
+      - id: credential-check
+        kind: manual
+        locator:
+          file: legacy/c/auth.c
+          start:
+            line: 5
+          end:
+            line: 16
+
+      - id: audit-script
+        kind: manual
+        locator:
+          file: scripts/audit-login.sh

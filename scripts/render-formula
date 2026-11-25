@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Prints the Homebrew formula for a release, filled in from the checksums in the dist folder.
+# Usage: RELEASE_REPOSITORY=owner/repo scripts/render-formula [--partial] <version> <dist-dir>
+# All three platforms' .sha256 files must be there; --partial (for trying the template locally)
+# fills a missing one with zeros, which no real download matches.
+set -euo pipefail
+
+here="$(cd "$(dirname "$0")" && pwd)"
+partial=0
+if [[ "${1:-}" == "--partial" ]]; then
+  partial=1
+  shift
+fi
+
+if [[ $# -ne 2 || -z "${RELEASE_REPOSITORY:-}" ]]; then
+  echo "usage: RELEASE_REPOSITORY=owner/repo render-formula [--partial] <version> <dist-dir>" >&2
+  exit 2
+fi
+version="$1"
+dist="$2"
+
+formula="$(<"$here/../packaging/homebrew/use-cases.rb.template")"
+formula="${formula//@VERSION@/$version}"
+formula="${formula//@REPOSITORY@/$RELEASE_REPOSITORY}"
+
+for platform in macos-universal linux-arm64 linux-x86_64; do
+  file="$dist/use-cases-$version-$platform.tar.gz.sha256"
+  key="@SHA256_$(echo "$platform" | tr 'a-z-' 'A-Z_')@"
+
+  if [[ -f "$file" ]]; then
+    sum="$(awk '{ print $1 }' "$file")"
+  elif [[ "$partial" -eq 1 ]]; then
+    echo "render-formula: no checksum for $platform; using zeros" >&2
+    sum="0000000000000000000000000000000000000000000000000000000000000000"
+  else
+    echo "render-formula: missing $file" >&2
+    exit 1
+  fi
+
+  formula="${formula//$key/$sum}"
+done
+
+printf '%s\n' "$formula"

@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Prints the release version: the one constant, ProductVersion.current.release.
+set -euo pipefail
+
+root="${RELEASE_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
+source_file="$root/UseCases/Sources/UseCasesCore/Models/Version/ProductVersion.swift"
+
+version="$(sed -n 's/^ *release: "\([^"]*\)",$/\1/p' "$source_file")"
+
+if [[ -z "$version" ]]; then
+  echo "product-version: no release version found in $source_file" >&2
+  exit 1
+fi
+
+echo "$version"

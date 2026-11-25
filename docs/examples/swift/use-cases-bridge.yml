@@ -1,0 +1,16 @@
+schema_version: 1
+
+validations:
+  - id: app-tests
+    report: app-tests.jsonl
+    run: [swift, test,
+          --experimental-event-stream-output, "{report}",
+          --experimental-event-stream-version, "0"]
+    transformer: swift-testing
+
+  - id: auth-tests
+    report: auth-tests.jsonl
+    run: [swift, test, --package-path, Packages/Auth,
+          --experimental-event-stream-output, "{report}",
+          --experimental-event-stream-version, "0"]
+    transformer: swift-testing

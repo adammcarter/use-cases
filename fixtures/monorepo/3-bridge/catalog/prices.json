@@ -1,0 +1,8 @@
+{
+  "currency": "GBP",
+  "items": {
+    "coffee-beans": { "unit_price": "12.50", "bulk": [ { "min": 5, "percent": 10 }, { "min": 10, "percent": 15 } ] },
+    "grinder": { "unit_price": "89.00", "bulk": [] },
+    "filter-papers": { "unit_price": "3.20", "bulk": [ { "min": 20, "percent": 25 } ] }
+  }
+}

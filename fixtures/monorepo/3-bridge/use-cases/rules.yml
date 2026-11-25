@@ -1,0 +1,33 @@
+prefix: rules
+
+use_cases:
+  - id: bulk-discount
+    title: Bulk discount is the same everywhere
+    value_tier: critical
+    intent: >
+      A customer buying in bulk gets the best tier's discount, and the product page quote
+      matches what checkout charges.
+    scenarios:
+      - id: below-first-tier
+        when:
+          - Fewer bags are bought than the first tier needs.
+        then:
+          - The full price is charged.
+      - id: best-tier
+        when:
+          - Enough bags are bought to reach one or more tiers.
+        then:
+          - The biggest discount reached is applied.
+    validation:
+      - id: pricing-quotes
+        type: { kind: unit }
+        covers: [below-first-tier, best-tier]
+        resources:
+          - kind: file
+            path: catalog/prices.json
+      - id: checkout-totals
+        type: { kind: unit }
+        covers: [below-first-tier, best-tier]
+        resources:
+          - kind: file
+            path: catalog/prices.json

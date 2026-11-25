@@ -1,0 +1,193 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Run Manifest",
+  "description": "One run.json. kind verify reads the reports its tests wrote into the run's reports/ folder, between the start and finish points; when `verify --run` ran the commands, each source also says what ran. record holds one manual verdict. Diagnostics explain every route that received no verdict.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "run_version",
+    "run_id",
+    "created_at",
+    "kind",
+    "sources",
+    "errors",
+    "diagnostics",
+    "unlinked_tests",
+    "notes"
+  ],
+  "properties": {
+    "run_version": {
+      "const": 1
+    },
+    "run_id": {
+      "$ref": "common.schema.json#/$defs/runId"
+    },
+    "created_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "kind": {
+      "enum": [
+        "verify",
+        "record"
+      ]
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/source"
+      }
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/diagnostic"
+      }
+    },
+    "unlinked_tests": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/unlinkedTest"
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "record"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "sources": {
+            "maxItems": 0
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "source": {
+      "description": "One bridge validation that fed this run.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "report",
+        "transformer"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/segment"
+        },
+        "report": {
+          "description": "Where the report was written, relative to the run folder: reports/<id> or reports/<id>/<name>.",
+          "type": "string",
+          "pattern": "^reports/[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:/[A-Za-z0-9_-](?:[A-Za-z0-9._-]*[A-Za-z0-9_-])?)?$(?!\\n)"
+        },
+        "transformer": {
+          "type": "string",
+          "minLength": 1
+        },
+        "working_dir": {
+          "description": "Folder the command ran in, relative to the project root. Omitted means the project root.",
+          "$ref": "common.schema.json#/$defs/path"
+        },
+        "command": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "The run command as use-cases-bridge.yml wrote it, present when `verify --run` ran it."
+        },
+        "exit_code": {
+          "type": "integer"
+        },
+        "seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "error": {
+          "type": "string",
+          "minLength": 1
+        },
+        "diagnostics": {
+          "description": "What the transformer reported about the report, for people. Never verdicts.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "dependentRequired": {
+        "exit_code": [
+          "command"
+        ],
+        "seconds": [
+          "command"
+        ]
+      }
+    },
+    "diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "problem"
+      ],
+      "properties": {
+        "problem": {
+          "type": "string",
+          "minLength": 1
+        },
+        "use_case": {
+          "$ref": "common.schema.json#/$defs/useCaseId"
+        },
+        "route": {
+          "$ref": "common.schema.json#/$defs/segment"
+        },
+        "fingerprint": {
+          "$ref": "common.schema.json#/$defs/fingerprint"
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/path"
+          }
+        },
+        "links": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/linkKey"
+          }
+        }
+      },
+      "dependentRequired": {
+        "route": [
+          "use_case"
+        ]
+      }
+    }
+  }
+}

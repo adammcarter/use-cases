@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Start Stamp",
+  "description": "One start.json: the code as it was when a verify run began, and which request opened it. The core compares it with the code at finish; a route whose fingerprint changed in between gets no verdict (\"code changed during the run\").",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "start_version",
+    "run_id",
+    "started_at",
+    "opened_by",
+    "selected",
+    "validations_sha256",
+    "routes",
+    "files"
+  ],
+  "properties": {
+    "start_version": {
+      "const": 1
+    },
+    "run_id": {
+      "$ref": "common.schema.json#/$defs/runId"
+    },
+    "started_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "opened_by": {
+      "description": "Which request opened the run. `--finish` finishes only runs `--start` opened; a run `--run` opened is finished by that request alone, and if it stopped first it can only be aborted.",
+      "enum": [
+        "start",
+        "run"
+      ]
+    },
+    "selected": {
+      "description": "The validations this run reads, after --only.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "common.schema.json#/$defs/segment"
+      }
+    },
+    "validations_sha256": {
+      "description": "SHA-256 of the selected validations exactly as use-cases-bridge.yml wrote them (canonical JSON). `--finish` refuses to read reports when they no longer match.",
+      "$ref": "common.schema.json#/$defs/sha256"
+    },
+    "routes": {
+      "description": "Every route's fingerprint at the start point.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "use_case",
+          "route",
+          "fingerprint"
+        ],
+        "properties": {
+          "use_case": {
+            "$ref": "common.schema.json#/$defs/useCaseId"
+          },
+          "route": {
+            "$ref": "common.schema.json#/$defs/segment"
+          },
+          "fingerprint": {
+            "$ref": "common.schema.json#/$defs/fingerprint"
+          }
+        }
+      }
+    },
+    "files": {
+      "description": "SHA-256 of every linked and resource file at the start point, so a changed-during-the-run diagnostic can name the files.",
+      "type": "object",
+      "propertyNames": {
+        "$ref": "common.schema.json#/$defs/path"
+      },
+      "additionalProperties": {
+        "$ref": "common.schema.json#/$defs/sha256"
+      }
+    }
+  }
+}

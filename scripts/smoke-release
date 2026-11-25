@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+# Proves a release tarball works the way it will be used: unpacked into one folder and run
+# through a symlink from another, as Homebrew's bin/ does.
+# Usage: scripts/smoke-release dist/use-cases-<version>-<platform>.tar.gz
+set -euo pipefail
+
+if [[ $# -ne 1 || ! -f "$1" ]]; then
+  echo "usage: smoke-release <use-cases-VERSION-PLATFORM.tar.gz>" >&2
+  exit 2
+fi
+
+here="$(cd "$(dirname "$0")" && pwd)"
+root="$(cd "$here/.." && pwd)"
+tarball="$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
+version="$("$here/product-version")"
+
+work="$(mktemp -d)"
+trap 'rm -rf "$work"' EXIT
+failures=0
+step() { echo "== $*"; }
+fail() {
+  echo "FAIL: $*"
+  failures=$((failures + 1))
+}
+
+# Checksum, if the release wrote one beside the tarball.
+if [[ -f "$tarball.sha256" ]]; then
+  step "checksum"
+  (cd "$(dirname "$tarball")" && { sha256sum -c "$(basename "$tarball").sha256" 2>/dev/null || shasum -a 256 -c "$(basename "$tarball").sha256"; })
+fi
+
+step "the tarball holds the resource bundles"
+listing="$(tar -tzf "$tarball")"
+for bundle in UseCases_UseCasesCore UseCases_UseCasesMCP; do
+  [[ "$listing" == *"/$bundle."* ]] || fail "the tarball has no $bundle bundle"
+done
+
+mkdir "$work/unpacked" "$work/bin"
+tar -xzf "$tarball" -C "$work/unpacked" --strip-components=1
+ln -s "$work/unpacked/use-cases" "$work/bin/use-cases"
+ln -s "$work/unpacked/use-cases-transformers" "$work/bin/use-cases-transformers"
+uc="$work/bin/use-cases"
+
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  step "both slices run on macOS 14 (Package.swift)"
+  for arch in arm64 x86_64; do
+    minos="$(vtool -arch "$arch" -show-build "$work/unpacked/use-cases" | awk '$1 == "minos" { print $2 }')"
+    [[ "$minos" == "14.0" ]] || fail "$arch slice has minos $minos"
+  done
+fi
+
+step "--version is $version"
+[[ "$("$uc" --version)" == "use-cases $version" ]] || fail "--version said '$("$uc" --version)'"
+
+step "docs lists the guides"
+guides="$("$uc" docs)"
+for guide in getting-started verifying; do
+  [[ "$guides" == *"$guide"* ]] || fail "docs does not list $guide"
+done
+echo "$guides" | head -3
+
+step "validate --json on a fixture workspace"
+cp -R "$root/fixtures/python/2-use-cases" "$work/workspace"
+validated="$("$uc" validate --json --workspace "$work/workspace")"
+[[ "$validated" == *'"valid" : true'* ]] || fail "validate did not say valid"
+echo "$validated" | grep -E '"(valid|use_cases|links)"'
+
+step "mcp answers initialize and tools/list over stdio"
+mkfifo "$work/to-server" "$work/from-server"
+"$uc" mcp <"$work/to-server" >"$work/from-server" &
+server=$!
+exec 3>"$work/to-server" 4<"$work/from-server"
+initialize='{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"smoke","version":"0"}}}'
+printf '%s\n' "$initialize" >&3
+read -r -t 30 -u 4 reply_one || reply_one=""
+printf '%s\n' '{"jsonrpc":"2.0","method":"notifications/initialized"}' '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' >&3
+read -r -t 30 -u 4 reply_two || reply_two=""
+exec 3>&- 4<&-
+wait "$server" || fail "mcp exited with an error"
+[[ "$reply_one" == *"\"version\":\"$version\""* ]] || fail "initialize did not answer with version $version: $reply_one"
+tools="$(printf '%s' "$reply_two" | grep -o '"name":"use_cases_[a-z_]*"' | wc -l | tr -d ' ')"
+[[ "$tools" == "13" ]] || fail "tools/list holds $tools tools, not 13"
+echo "initialize answered; tools/list holds $tools tools"
+
+step "the bundled transformer program runs"
+printf '%s' '{"contract":1,"links":[],"output":{"report_path":"report.xml","exit_code":0},"code_root":".","settings":{"file":"x"}}' >"$work/request.json"
+"$work/bin/use-cases-transformers" exit-code results "$work/request.json" "$work/response.json" || fail "use-cases-transformers failed"
+grep -q '"contract" *: *1' "$work/response.json" || fail "the transformer wrote no contract-1 response"
+echo "exit-code transformer answered"
+
+if [[ "$failures" -ne 0 ]]; then
+  echo "$failures smoke check(s) failed"
+  exit 1
+fi
+echo "smoke passed: $(basename "$tarball")"

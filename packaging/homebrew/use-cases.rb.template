@@ -1,0 +1,41 @@
+class UseCases < Formula
+  desc "Behaviour your code promises, and the proof it keeps that promise"
+  homepage "https://github.com/@REPOSITORY@"
+  version "@VERSION@"
+
+  # One universal build serves both Mac architectures; Homebrew wants the url under an architecture.
+  on_macos do
+    on_arm do
+      url "https://github.com/@REPOSITORY@/releases/download/v@VERSION@/use-cases-@VERSION@-macos-universal.tar.gz"
+      sha256 "@SHA256_MACOS_UNIVERSAL@"
+    end
+    on_intel do
+      url "https://github.com/@REPOSITORY@/releases/download/v@VERSION@/use-cases-@VERSION@-macos-universal.tar.gz"
+      sha256 "@SHA256_MACOS_UNIVERSAL@"
+    end
+  end
+
+  on_linux do
+    on_arm do
+      url "https://github.com/@REPOSITORY@/releases/download/v@VERSION@/use-cases-@VERSION@-linux-arm64.tar.gz"
+      sha256 "@SHA256_LINUX_ARM64@"
+    end
+    on_intel do
+      url "https://github.com/@REPOSITORY@/releases/download/v@VERSION@/use-cases-@VERSION@-linux-x86_64.tar.gz"
+      sha256 "@SHA256_LINUX_X86_64@"
+    end
+  end
+
+  def install
+    # The programs look for their resource bundles beside themselves, so everything stays together
+    # in libexec and the PATH gets links to the programs.
+    libexec.install Dir["*"]
+    bin.install_symlink libexec/"use-cases"
+    bin.install_symlink libexec/"use-cases-transformers"
+  end
+
+  test do
+    assert_match version.to_s, shell_output("#{bin}/use-cases --version")
+    assert_match "getting-started", shell_output("#{bin}/use-cases docs")
+  end
+end

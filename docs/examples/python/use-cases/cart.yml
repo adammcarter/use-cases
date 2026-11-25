@@ -1,0 +1,58 @@
+prefix: cart
+
+use_cases:
+  - id: add-item
+    title: Add item to cart
+    value_tier: core
+
+    intent: Allow a shopper to add an in-stock item to their cart.
+
+    out_of_scope:
+      - Inventory reservation.
+      - Checkout.
+
+    scenarios:
+      - id: in-stock
+        given:
+          - The cart is empty.
+          - The item is in stock.
+        when:
+          - The shopper adds the item.
+        then:
+          - The cart contains one item.
+          - The cart total includes the item price.
+
+      - id: out-of-stock
+        given:
+          - The cart is empty.
+          - The item is out of stock.
+        when:
+          - The shopper tries to add the item.
+        then:
+          - The cart remains empty.
+          - An out-of-stock error is returned.
+
+    validation:
+      - id: unit-tests
+        type:
+          kind: unit
+        covers:
+          - in-stock
+          - out-of-stock
+        resources:
+          - kind: file
+            path: fixtures/catalog.json
+
+      - id: manual-smoke
+        type:
+          kind: acceptance
+        covers:
+          - in-stock
+        gates_verification: false
+        procedure:
+          steps:
+            - Start a Python shell from the repository root.
+            - Import Cart and Item from src.shop.cart.
+            - Create an empty cart and an in-stock item priced at 10.
+            - Add the item.
+            - Confirm the cart contains one item and totals 10.

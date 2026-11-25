@@ -1,0 +1,75 @@
+prefix: billing
+
+use_cases:
+  - id: totals
+    title: Total an invoice
+    value_tier: critical
+    intent: Customers are charged the sum of their lines, less discounts, plus the right tax, rounded to the cent.
+    scenarios:
+      - id: sum-lines
+        when: [An invoice has several lines.]
+        then: [The subtotal is the sum of every line's price times quantity.]
+      - id: tax-after-discount
+        given: [A UK invoice with a percentage discount.]
+        when: [The total is calculated.]
+        then: [Tax is charged on the discounted amount.]
+      - id: round-half-up
+        when: [Tax comes to a fraction of a cent.]
+        then: [It is rounded half up to the cent.]
+    validation:
+      - id: unit-tests
+        type: { kind: unit }
+        covers: [sum-lines, tax-after-discount, round-half-up]
+    bindings: []
+
+  - id: discounts
+    title: Discounts never make a total negative
+    value_tier: core
+    intent: A discount larger than the invoice brings it to zero, never below.
+    scenarios:
+      - id: capped-at-zero
+        given: [A 3.00 invoice.]
+        when: [A 5.00 fixed discount is applied.]
+        then: [The total is 0.00.]
+    validation:
+      - id: unit-tests
+        type: { kind: unit }
+        covers: [capped-at-zero]
+    bindings:
+      - id: discount-rules
+        kind: manual
+        locator: { file: src/invoicing/discounts.py }
+
+  - id: tax-regions
+    title: Charge tax by region
+    value_tier: core
+    intent: Each supported region is taxed at its rate, and unknown regions are refused rather than taxed at zero.
+    out_of_scope:
+      - Tax for regions not in the rate table.
+    scenarios:
+      - id: known-rates
+        when: ["A supported region is looked up, in any letter case."]
+        then: [Its rate is returned.]
+      - id: unknown-refused
+        when: [An unknown region is looked up.]
+        then: [It is refused with an error naming the region.]
+      - id: reverse-charge
+        given: [An EU business customer.]
+        when: [Tax is looked up.]
+        then: [No tax is charged (reverse charge).]
+    validation:
+      - id: unit-tests
+        type: { kind: unit }
+        covers: [known-rates, unknown-refused, reverse-charge]
+      - id: rate-table-review
+        type: { kind: acceptance }
+        covers: [known-rates]
+        gates_verification: false
+        procedure:
+          steps:
+            - Compare TAX_RATES with the current published rates for each region.
+            - Record pass if every rate matches.
+    bindings:
+      - id: rate-table
+        kind: manual
+        locator: { file: src/invoicing/tax.py }

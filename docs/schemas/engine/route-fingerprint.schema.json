@@ -1,0 +1,392 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "V1 Route Fingerprint Input",
+  "description": "Exact semantic payload from chapter 11 section 89. Canonical bytes, ordering, binding-ID uniqueness, ranges and coverage agreement are core checks.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fingerprint_version",
+    "freshness_policy",
+    "use_case_id",
+    "route_id",
+    "intent",
+    "covered_scenarios",
+    "route",
+    "implementation_links",
+    "validation_links",
+    "resources"
+  ],
+  "properties": {
+    "fingerprint_version": {
+      "const": 1
+    },
+    "freshness_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "binding_identity",
+        "normalization"
+      ],
+      "properties": {
+        "binding_identity": {
+          "enum": [
+            "content",
+            "content-and-locator"
+          ]
+        },
+        "normalization": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ignore"
+          ],
+          "properties": {
+            "ignore": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "line-endings",
+                  "whitespace"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "use_case_id": {
+      "$ref": "common.schema.json#/$defs/useCaseId"
+    },
+    "route_id": {
+      "$ref": "common.schema.json#/$defs/segment"
+    },
+    "intent": {
+      "type": "string",
+      "minLength": 1
+    },
+    "covered_scenarios": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "given",
+          "when",
+          "then"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/segment"
+          },
+          "given": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "when": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          },
+          "then": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          }
+        }
+      }
+    },
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "covers",
+        "gates_verification",
+        "procedure"
+      ],
+      "properties": {
+        "type": {
+          "$ref": "../authored/use-cases.schema.json#/$defs/validationType"
+        },
+        "covers": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common.schema.json#/$defs/segment"
+          }
+        },
+        "gates_verification": {
+          "type": "boolean"
+        },
+        "procedure": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "setup",
+                "steps",
+                "reset"
+              ],
+              "properties": {
+                "setup": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "steps": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1
+                },
+                "reset": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "implementation_links": {
+      "type": "array"
+    },
+    "validation_links": {
+      "type": "array"
+    },
+    "resources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "file",
+          "content"
+        ],
+        "properties": {
+          "file": {
+            "type": "string",
+            "minLength": 1
+          },
+          "content": {
+            "$ref": "common.schema.json#/$defs/contentReference"
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "freshness_policy": {
+            "properties": {
+              "binding_identity": {
+                "const": "content"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "implementation_links": {
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "regions"
+              ],
+              "properties": {
+                "id": {
+                  "$ref": "common.schema.json#/$defs/segment"
+                },
+                "regions": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "$ref": "common.schema.json#/$defs/contentReference"
+                  }
+                }
+              }
+            }
+          },
+          "validation_links": {
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "regions"
+              ],
+              "properties": {
+                "id": {
+                  "$ref": "common.schema.json#/$defs/segment"
+                },
+                "regions": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "$ref": "common.schema.json#/$defs/contentReference"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "implementation_links": {
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "kind",
+                "regions"
+              ],
+              "properties": {
+                "id": {
+                  "$ref": "common.schema.json#/$defs/segment"
+                },
+                "kind": {
+                  "enum": [
+                    "marker",
+                    "manual",
+                    "transformer"
+                  ]
+                },
+                "regions": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "locator",
+                      "content"
+                    ],
+                    "properties": {
+                      "locator": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "file",
+                          "start_byte",
+                          "end_byte"
+                        ],
+                        "properties": {
+                          "file": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "start_byte": {
+                            "$ref": "common.schema.json#/$defs/safeNonNegativeInteger"
+                          },
+                          "end_byte": {
+                            "$ref": "common.schema.json#/$defs/safeNonNegativeInteger"
+                          }
+                        }
+                      },
+                      "content": {
+                        "$ref": "common.schema.json#/$defs/contentReference"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "validation_links": {
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "kind",
+                "regions"
+              ],
+              "properties": {
+                "id": {
+                  "$ref": "common.schema.json#/$defs/segment"
+                },
+                "kind": {
+                  "enum": [
+                    "marker",
+                    "manual",
+                    "transformer"
+                  ]
+                },
+                "regions": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "locator",
+                      "content"
+                    ],
+                    "properties": {
+                      "locator": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "file",
+                          "start_byte",
+                          "end_byte"
+                        ],
+                        "properties": {
+                          "file": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "start_byte": {
+                            "$ref": "common.schema.json#/$defs/safeNonNegativeInteger"
+                          },
+                          "end_byte": {
+                            "$ref": "common.schema.json#/$defs/safeNonNegativeInteger"
+                          }
+                        }
+                      },
+                      "content": {
+                        "$ref": "common.schema.json#/$defs/contentReference"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

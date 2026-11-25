@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Transformer Results Response",
+  "description": "What a results transformer writes to response.json: one result per validation link it heard from, never a verdict per route. The core rejects results for unknown keys.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "results",
+    "unlinked",
+    "diagnostics"
+  ],
+  "properties": {
+    "contract": {
+      "const": 1
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "link",
+          "status"
+        ],
+        "properties": {
+          "link": {
+            "$ref": "common.schema.json#/$defs/linkKey"
+          },
+          "status": {
+            "$ref": "common.schema.json#/$defs/verdict"
+          },
+          "tests": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "unlinked": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/unlinkedTest"
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

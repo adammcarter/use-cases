@@ -1,0 +1,106 @@
+[
+  {
+    "binding": "check-credentials",
+    "file": "Sources/Auth/LoginService.swift",
+    "key": "shop.login.authenticate#check-credentials@Sources/Auth/LoginService.swift:15",
+    "range": {
+      "end": 22,
+      "start": 15
+    },
+    "role": "implementation",
+    "use_case": "shop.login.authenticate"
+  },
+  {
+    "binding": "invalid-password",
+    "file": "Tests/AuthTests/LoginTests.swift",
+    "key": "shop.login.authenticate#unit-tests.invalid-password@Tests/AuthTests/LoginTests.swift:13",
+    "range": {
+      "end": 17,
+      "start": 13
+    },
+    "role": "validation",
+    "route": "unit-tests",
+    "use_case": "shop.login.authenticate"
+  },
+  {
+    "binding": "valid-credentials",
+    "file": "Tests/AuthTests/LoginTests.swift",
+    "key": "shop.login.authenticate#unit-tests.valid-credentials@Tests/AuthTests/LoginTests.swift:6",
+    "range": {
+      "end": 9,
+      "start": 6
+    },
+    "role": "validation",
+    "route": "unit-tests",
+    "use_case": "shop.login.authenticate"
+  },
+  {
+    "binding": "lock-after-failures",
+    "file": "Sources/Auth/LoginService.swift",
+    "key": "shop.login.lockout#lock-after-failures@Sources/Auth/LoginService.swift:26",
+    "range": {
+      "end": 28,
+      "start": 26
+    },
+    "role": "implementation",
+    "use_case": "shop.login.lockout"
+  },
+  {
+    "binding": "three-failures",
+    "file": "Tests/AuthTests/LoginTests.swift",
+    "key": "shop.login.lockout#unit-tests.three-failures@Tests/AuthTests/LoginTests.swift:21",
+    "range": {
+      "end": 25,
+      "start": 21
+    },
+    "role": "validation",
+    "route": "unit-tests",
+    "use_case": "shop.login.lockout"
+  },
+  {
+    "binding": "send-reset",
+    "file": "Sources/Auth/LoginService.swift",
+    "key": "shop.login.password-reset#send-reset@Sources/Auth/LoginService.swift:38",
+    "range": {
+      "end": 40,
+      "start": 38
+    },
+    "role": "implementation",
+    "use_case": "shop.login.password-reset"
+  },
+  {
+    "binding": "sends-reset",
+    "file": "Tests/AuthTests/LoginTests.swift",
+    "key": "shop.login.password-reset#unit-tests.sends-reset@Tests/AuthTests/LoginTests.swift:29",
+    "range": {
+      "end": 32,
+      "start": 29
+    },
+    "role": "validation",
+    "route": "unit-tests",
+    "use_case": "shop.login.password-reset"
+  },
+  {
+    "binding": "persist-session",
+    "file": "Sources/Auth/LoginService.swift",
+    "key": "shop.login.remember-me#persist-session@Sources/Auth/LoginService.swift:32",
+    "range": {
+      "end": 34,
+      "start": 32
+    },
+    "role": "implementation",
+    "use_case": "shop.login.remember-me"
+  },
+  {
+    "binding": "persists-session",
+    "file": "Tests/SessionTests/RememberMeTests.swift",
+    "key": "shop.login.remember-me#unit-tests.persists-session@Tests/SessionTests/RememberMeTests.swift:6",
+    "range": {
+      "end": 8,
+      "start": 6
+    },
+    "role": "validation",
+    "route": "unit-tests",
+    "use_case": "shop.login.remember-me"
+  }
+]

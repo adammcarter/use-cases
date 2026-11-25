@@ -1,0 +1,306 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "V1 Workspace Fingerprint Input",
+  "description": "Chapter 11 section 89 canonical model projection. Sorting, scope hierarchy, explicit defaults, unique IDs, complete resolved membership and equivalence to source remain core checks. Bridge settings, markers and linked file bytes never appear.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fingerprint_version",
+    "scopes",
+    "use_cases",
+    "groups"
+  ],
+  "properties": {
+    "fingerprint_version": {
+      "const": 1
+    },
+    "scopes": {
+      "type": "array",
+      "minItems": 1,
+      "contains": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "const": "."
+          }
+        },
+        "required": [
+          "path"
+        ]
+      },
+      "minContains": 1,
+      "maxContains": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "parent",
+          "namespace",
+          "schema_version",
+          "use_cases_dir",
+          "configuration"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "parent": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "namespace": {
+            "anyOf": [
+              {
+                "const": ""
+              },
+              {
+                "$ref": "../authored/use-cases.schema.json#/$defs/namespace"
+              }
+            ]
+          },
+          "schema_version": {
+            "const": 1
+          },
+          "use_cases_dir": {
+            "type": "string",
+            "minLength": 1
+          },
+          "configuration": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "freshness": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "binding_identity",
+                  "normalization"
+                ],
+                "properties": {
+                  "binding_identity": {
+                    "enum": [
+                      "content",
+                      "content-and-locator"
+                    ]
+                  },
+                  "normalization": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "ignore"
+                    ],
+                    "properties": {
+                      "ignore": {
+                        "type": "array",
+                        "uniqueItems": true,
+                        "items": {
+                          "enum": [
+                            "line-endings",
+                            "whitespace"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "discovery": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "exclude"
+                ],
+                "properties": {
+                  "exclude": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "path": {
+                  "const": "."
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "parent": {
+                  "type": "null"
+                },
+                "configuration": {
+                  "required": [
+                    "freshness",
+                    "discovery"
+                  ]
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "parent": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "configuration": {
+                  "maxProperties": 0
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "use_cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "title",
+          "scope",
+          "out_of_scope",
+          "scenarios",
+          "validation",
+          "bindings"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "../authored/use-cases.schema.json#/$defs/namespace"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value_tier": {
+            "enum": [
+              "critical",
+              "core",
+              "supporting"
+            ]
+          },
+          "intent": {
+            "type": "string",
+            "minLength": 1
+          },
+          "out_of_scope": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "scenarios": {
+            "type": "array",
+            "items": {
+              "$ref": "../authored/use-cases.schema.json#/$defs/scenario"
+            }
+          },
+          "validation": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "gates_verification",
+                "bindings",
+                "resources"
+              ],
+              "properties": {
+                "id": {
+                  "$ref": "../authored/use-cases.schema.json#/$defs/idSegment"
+                },
+                "type": {
+                  "$ref": "../authored/use-cases.schema.json#/$defs/validationType"
+                },
+                "covers": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": {
+                    "$ref": "../authored/use-cases.schema.json#/$defs/idSegment"
+                  }
+                },
+                "gates_verification": {
+                  "type": "boolean"
+                },
+                "procedure": {
+                  "$ref": "../authored/use-cases.schema.json#/$defs/procedure"
+                },
+                "bindings": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "../authored/use-cases.schema.json#/$defs/manualBinding"
+                  }
+                },
+                "resources": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "../authored/use-cases.schema.json#/$defs/resource"
+                  }
+                }
+              }
+            }
+          },
+          "bindings": {
+            "type": "array",
+            "items": {
+              "$ref": "../authored/use-cases.schema.json#/$defs/manualBinding"
+            }
+          },
+          "scope": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "groups": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$(?!\\n)"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "members"
+        ],
+        "properties": {
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "members": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "$ref": "../authored/use-cases.schema.json#/$defs/namespace"
+            }
+          }
+        }
+      }
+    }
+  }
+}

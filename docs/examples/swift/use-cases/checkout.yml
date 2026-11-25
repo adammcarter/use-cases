@@ -1,0 +1,48 @@
+prefix: checkout
+
+use_cases:
+  - id: complete
+    title: Complete checkout
+    value_tier: critical
+
+    intent: >
+      Allow a signed-in customer with a valid cart to complete checkout
+      and see confirmation of the created order.
+
+    out_of_scope:
+      - Guest checkout.
+      - Subscription purchases.
+
+    scenarios:
+      - id: valid-cart
+        given:
+          - The customer is signed in.
+          - The cart contains at least one purchasable item.
+        when:
+          - The customer confirms checkout.
+        then:
+          - An order is created.
+          - The confirmation screen shows the order number.
+
+    validation:
+      - id: app-smoke
+        type:
+          kind: e2e
+        covers:
+          - valid-cart
+
+      - id: real-app-acceptance
+        type:
+          kind: acceptance
+        covers:
+          - valid-cart
+        procedure:
+          setup:
+            - Launch the app signed in with a seeded customer account.
+            - Add one in-stock item to the cart.
+          steps:
+            - Open the cart.
+            - Confirm checkout.
+            - Observe the confirmation screen.
+          reset:
+            - Remove the created test order.

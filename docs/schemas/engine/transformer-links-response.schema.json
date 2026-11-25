@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Transformer Links Response",
+  "description": "What a links transformer writes to response.json. Links only report file and range; the core reads and fingerprints the content itself.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "links",
+    "diagnostics"
+  ],
+  "properties": {
+    "contract": {
+      "const": 1
+    },
+    "links": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/link"
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

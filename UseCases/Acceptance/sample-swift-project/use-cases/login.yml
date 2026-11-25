@@ -1,0 +1,69 @@
+prefix: login
+
+use_cases:
+  - id: authenticate
+    title: Authenticate user
+    value_tier: core
+    intent: Let a user with valid credentials sign in, and reject anyone without them.
+    scenarios:
+      - id: valid-credentials
+        given: [The user is signed out., The account exists.]
+        when: [The user submits valid credentials.]
+        then: [The user is signed in.]
+      - id: invalid-password
+        given: [The user is signed out., The account exists.]
+        when: [The user submits a wrong password.]
+        then: [Sign-in is rejected.]
+    validation:
+      - id: unit-tests
+        type: { kind: unit }
+        covers: [valid-credentials, invalid-password]
+      - id: manual-login-check
+        type: { kind: acceptance }
+        covers: [valid-credentials]
+        gates_verification: false
+        procedure:
+          setup: [Launch the app signed out.]
+          steps: [Enter valid credentials., Submit., Observe the dashboard.]
+
+  - id: lockout
+    title: Lock out after repeated failures
+    value_tier: critical
+    intent: Stop password guessing by locking the account after three failed attempts.
+    scenarios:
+      - id: three-failures
+        given: [The account exists.]
+        when: [Three wrong passwords are submitted in a row.]
+        then: [The account is locked out.]
+    validation:
+      - id: unit-tests
+        type: { kind: unit }
+        covers: [three-failures]
+
+  - id: remember-me
+    title: Remember the session
+    value_tier: supporting
+    intent: Keep a returning user signed in without asking for credentials again.
+    scenarios:
+      - id: persists-session
+        given: [The user signed in with remember me.]
+        when: [The user returns later.]
+        then: [The user is still signed in.]
+    validation:
+      - id: unit-tests
+        type: { kind: unit }
+        covers: [persists-session]
+
+  - id: password-reset
+    title: Send a password reset
+    value_tier: supporting
+    intent: Let a user who forgot their password get back in by email.
+    scenarios:
+      - id: sends-reset
+        given: [The account exists.]
+        when: [The user asks for a password reset.]
+        then: [A reset email is sent.]
+    validation:
+      - id: unit-tests
+        type: { kind: unit }
+        covers: [sends-reset]

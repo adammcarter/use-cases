@@ -1,0 +1,15 @@
+#!/bin/sh
+# Formats and lints staged Swift in UseCases/ (swift-writing): the formatter's result is re-staged,
+# and any strict lint finding refuses the commit.
+set -e
+cd "$(git rev-parse --show-toplevel)"
+staged=$(git diff --cached --name-only --diff-filter=ACM -- 'UseCases/*.swift' 'UseCases/**/*.swift' ':(exclude)UseCases/Acceptance/**')
+[ -z "$staged" ] && exit 0
+# shellcheck disable=SC2086
+swiftformat --quiet --config UseCases/.swiftformat $staged
+# shellcheck disable=SC2086
+git add $staged
+cd UseCases
+relative=$(printf '%s\n' $staged | sed 's#^UseCases/##')
+# shellcheck disable=SC2086
+swiftlint lint --strict --quiet -- $relative

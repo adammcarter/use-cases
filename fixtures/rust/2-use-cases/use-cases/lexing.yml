@@ -1,0 +1,53 @@
+prefix: lexing
+
+use_cases:
+  - id: literals
+    title: Recognise numbers and names
+    value_tier: core
+    intent: Numbers (including leading-dot decimals) and identifiers become single tokens.
+    scenarios:
+      - id: decimals
+        when: [The input has 3.14 and .5.]
+        then: [Each is one number token.]
+      - id: identifiers
+        when: [The input has rate_2.]
+        then: [It is one identifier token.]
+    validation:
+      - id: unit-tests
+        type: { kind: unit }
+        covers: [decimals, identifiers]
+
+  - id: errors
+    title: Point at the bad character
+    value_tier: core
+    intent: Users can find their mistake because errors carry the byte offset of the character that failed.
+    scenarios:
+      - id: offset
+        when: [The input contains an unsupported character.]
+        then: [The error names it and its byte offset.]
+    validation:
+      - id: unit-tests
+        type: { kind: unit }
+        covers: [offset]
+
+  - id: expressions
+    title: Tokenize whole expressions
+    value_tier: critical
+    intent: A full expression tokenizes in order with correct offsets, with or without spaces.
+    scenarios:
+      - id: order-and-offsets
+        when: ["(price + 2) * qty is tokenized."]
+        then: [Tokens keep their order and byte offsets.]
+      - id: no-spaces
+        when: [Operators appear with no spaces.]
+        then: [Every operator and number is still a token.]
+      - id: unicode-operators
+        when: [The input uses ×.]
+        then: [It is a multiplication operator.]
+    validation:
+      - id: integration-tests
+        type: { kind: integration }
+        covers: [order-and-offsets, no-spaces]
+      - id: unit-tests
+        type: { kind: unit }
+        covers: [unicode-operators]

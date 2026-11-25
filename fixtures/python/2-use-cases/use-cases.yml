@@ -1,0 +1,12 @@
+schema_version: 1
+root: true
+
+prefix: invoicing
+
+use_cases_dir: use-cases
+
+discovery:
+  exclude:
+    - "build/**"
+    - "**/__pycache__/**"
+    - ".pytest_cache/**"

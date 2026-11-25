@@ -1,0 +1,9 @@
+schema_version: 1
+
+validations:
+  - id: login-regression
+    report: login-regression.xml
+    run: [pytest, tests/python/test_login_integration.py, "--junitxml={report}"]
+    transformer: exit-code
+    settings:
+      file: tests/python/test_login_integration.py

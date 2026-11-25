@@ -1,0 +1,162 @@
+name: real build
+
+# The Swift use-cases (ADR 036-038): built and unit-tested on macOS and Linux, then held to its
+# acceptance suite, UseCases/Acceptance (ADR 037), run against the built binaries.
+# macOS runs the runner's Xcode Swift; Linux runs the official swift:6.4.2-noble image.
+
+# Started by hand for now (Actions tab, or `gh workflow run "real build"`): the unit tests do not
+# end on the hosted machines yet, and every run is paid for. Pushes start it again once it is green.
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: real-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  macos:
+    # A macOS minute costs ten Linux ones, so macOS runs only once Linux has passed.
+    needs: linux
+    runs-on: macos-latest
+    timeout-minutes: 60
+    env:
+      PYTHONUTF8: "1"
+      # Every language tool the fixtures need must be here: a missing one fails its tests, never skips them.
+      UC_REQUIRE_TOOLS: "all"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      # The language tools the acceptance tests run the fixtures with.
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - uses: actions/setup-go@v5
+        with: { go-version: "1.24" }
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "21" }
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: "9.7.1" }
+      - name: Build
+        run: swift --version && swift build --package-path UseCases
+      - name: Unit tests
+        # Compiling the tests takes most of this on a hosted runner. test-bounded kills a test run that never ends at its
+        # 14-minute limit and names the tests that never finished; the step limit is the outer guard. The output goes to
+        # files only (the suite prints lines of up to 2 MB, which the runner scans one by one); the step prints a bounded
+        # view of it, and the whole logs are kept by the last step.
+        timeout-minutes: 18
+        run: |
+          UseCases/scripts/ci-bounded-step run "$RUNNER_TEMP/logs/unit-tests/log" \
+            env TEST_BOUNDED_LOG="$RUNNER_TEMP/logs/unit-tests/test-bounded.log" \
+            UseCases/scripts/test-bounded 14 swift test --package-path UseCases
+      - name: Keep the unit test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-unit-test-logs
+          path: ${{ runner.temp }}/logs/unit-tests/
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Release scripts
+        run: scripts/test-release
+      - name: Acceptance tests
+        # About 7 minutes on a hosted runner. ci-bounded-step ends the run and everything it started
+        # at 14 minutes and fails the step (124); the step limit is the outer guard only.
+        timeout-minutes: 17
+        run: |
+          BIN="$(swift build --package-path UseCases --show-bin-path)"
+          export USE_CASES_UNDER_TEST="$BIN/use-cases" USE_CASES_TRANSFORMERS_UNDER_TEST="$BIN/use-cases-transformers"
+          UseCases/scripts/ci-bounded-step run --minutes 14 "$RUNNER_TEMP/logs/acceptance.log" \
+            uv run --python 3.12 --with pyyaml --with pytest --with 'jsonschema[format]' \
+            pytest UseCases/Acceptance -q -p no:cacheprovider -rs
+      - name: Keep the logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-logs
+          path: ${{ runner.temp }}/logs/*.log
+          if-no-files-found: warn
+          retention-days: 7
+
+  linux:
+    runs-on: ubuntu-latest
+    container:
+      image: swift:6.4.2-noble
+      options: --init
+    timeout-minutes: 100
+    env:
+      PYTHONUTF8: "1"
+      # Every language tool the fixtures need must be here: a missing one fails its tests, never skips them.
+      UC_REQUIRE_TOOLS: "all"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Language tools
+        # Node, Go, Rust, Java, Gradle, Maven and a C toolchain, which the image does not hold and the
+        # fixtures need. A script, not setup actions, so that the same commands can be rehearsed in a
+        # local container of the image (UseCases/scripts/ci-linux-toolchains).
+        run: UseCases/scripts/ci-linux-toolchains
+      - name: Schemas and examples
+        # Every published schema against its samples, the chapters' examples, every example and fixture
+        # YAML file, and the fingerprint vectors (also against openssl).
+        run: uv run --python 3.12 --with 'jsonschema[format]' --with pyyaml python docs/schemas/engine/validate.py
+      - name: Build
+        run: swift --version && swift build --package-path UseCases
+      - name: Unit tests (start)
+        # The tests run in the background, so that the next step can watch them and end them itself. The
+        # machine is described first: what the run saw is the evidence when it does not end. The logs go to
+        # the runner's temp folder (/__w/_temp in the container), outside the checkout; the last step keeps them.
+        run: |
+          uname -a; nproc; getconf _NPROCESSORS_ONLN; free -m; df -h / /tmp; ulimit -a
+          head -n1 /sys/fs/cgroup/memory.max /sys/fs/cgroup/pids.max 2>/dev/null || true
+          UseCases/scripts/ci-bounded-step start /__w/_temp/logs/unit-tests \
+            env TEST_BOUNDED_LOG=/__w/_temp/logs/unit-tests/test-bounded.log \
+            UseCases/scripts/test-bounded 25 swift test --package-path UseCases
+      - name: Unit tests
+        # Waits at most 28 minutes from the start, printing the machine's state every minute; then kills every
+        # process in the container but its init and entrypoint, prints the log and fails. test-bounded's own
+        # 25-minute limit comes first and names the tests that never finished. The log is printed bounded (the
+        # suite prints lines of up to 2 MB, which the runner scans one by one). The step limit is the outer
+        # guard only: like a cancel, it depends on the runner on the host being able to act.
+        timeout-minutes: 31
+        run: UseCases/scripts/ci-bounded-step wait /__w/_temp/logs/unit-tests 28
+      - name: Keep the unit test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-unit-test-logs
+          path: /__w/_temp/logs/unit-tests/
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Release scripts
+        run: scripts/test-release
+      - name: File listing under AddressSanitizer
+        # Linux file systems hold names that are not UTF-8, which macOS refuses, so the raw
+        # readdir listing only truly runs here. Leak checks are off: the leaks it finds are in
+        # XCTest and Foundation, not in this package; overruns are what this step is for. About 12
+        # minutes on a hosted runner, most of it building the whole package with the sanitizer;
+        # ci-bounded-step ends it and everything it started at 25 minutes and fails the
+        # step (124); the step limit is the outer guard only.
+        timeout-minutes: 28
+        env:
+          ASAN_OPTIONS: detect_leaks=0
+        run: |
+          UseCases/scripts/ci-bounded-step run --minutes 25 /__w/_temp/logs/asan.log \
+            swift test --package-path UseCases --scratch-path UseCases/.build-asan --sanitize=address --filter LocalFileSystem
+      - name: Acceptance tests
+        # About 11 minutes in the container. ci-bounded-step ends the run and everything it started at
+        # 22 minutes and fails the step (124); the step limit is the outer guard only.
+        timeout-minutes: 25
+        run: |
+          BIN="$(swift build --package-path UseCases --show-bin-path)"
+          export USE_CASES_UNDER_TEST="$BIN/use-cases" USE_CASES_TRANSFORMERS_UNDER_TEST="$BIN/use-cases-transformers"
+          UseCases/scripts/ci-bounded-step run --minutes 22 /__w/_temp/logs/acceptance.log \
+            uv run --python 3.12 --with pyyaml --with pytest --with 'jsonschema[format]' \
+            pytest UseCases/Acceptance -q -p no:cacheprovider -rs
+      - name: Keep the logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-logs
+          path: /__w/_temp/logs/*.log
+          if-no-files-found: warn
+          retention-days: 7

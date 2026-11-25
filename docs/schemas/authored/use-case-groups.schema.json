@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Use Case Groups File",
+  "description": "Structural schema for optional root use-case-groups.yml. Selector existence, zero-match warnings, duplicate selector warnings, membership resolution, DRAFT/READY membership, and exclusion precedence are verifier responsibilities.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "groups"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "groups": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$(?!\\n)"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/group"
+      }
+    }
+  },
+  "$defs": {
+    "namespace": {
+      "type": "string",
+      "pattern": "^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*$(?!\\n)"
+    },
+    "selectors": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/namespace"
+          }
+        },
+        "prefixes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/namespace"
+          }
+        },
+        "globs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\*|\\*\\*)(?:\\.(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\*|\\*\\*))*$(?!\\n)"
+          }
+        }
+      }
+    },
+    "group": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "include": {
+          "$ref": "#/$defs/selectors"
+        },
+        "exclude": {
+          "$ref": "#/$defs/selectors"
+        }
+      }
+    }
+  }
+}

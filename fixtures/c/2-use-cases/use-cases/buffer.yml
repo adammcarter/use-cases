@@ -1,0 +1,42 @@
+prefix: buffer
+
+use_cases:
+  - id: fifo
+    title: Values come out in the order they went in
+    value_tier: critical
+    intent: The logger reads entries back in exactly the order they were written, across wrap-around.
+    scenarios:
+      - id: push-then-pop
+        when: ["Two values are pushed, then popped."]
+        then: [They come back in the same order.]
+      - id: wrap-around
+        when: [Many more values than the capacity pass through.]
+        then: [Order is kept as the buffer wraps.]
+      - id: peek
+        when: [The oldest value is peeked.]
+        then: [It is returned and stays in the buffer.]
+    validation:
+      - id: unit-tests
+        type: { kind: unit }
+        covers: [push-then-pop, wrap-around, peek]
+    bindings:
+      - id: public-api
+        kind: manual
+        locator: { file: include/ringbuf.h }
+
+  - id: full
+    title: A full buffer refuses or overwrites
+    value_tier: core
+    intent: When full, the buffer either refuses new values or, in overwrite mode, drops the oldest.
+    scenarios:
+      - id: refuses
+        when: [A value is pushed into a full buffer.]
+        then: [The push is refused.]
+      - id: overwrites-oldest
+        given: [Overwrite mode.]
+        when: [A value is pushed into a full buffer.]
+        then: [The oldest value is dropped.]
+    validation:
+      - id: unit-tests
+        type: { kind: unit }
+        covers: [refuses, overwrites-oldest]

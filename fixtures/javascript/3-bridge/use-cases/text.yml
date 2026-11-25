@@ -1,0 +1,43 @@
+prefix: text
+
+use_cases:
+  - id: parse
+    title: Read a human duration
+    value_tier: core
+    intent: People can type durations like "1h 30m" or "2m30s" and get exact milliseconds, or a clear error.
+    scenarios:
+      - id: adds-units
+        when: ['"1h 30m" is parsed.']
+        then: ["The result is 5,400,000 ms."]
+      - id: decimals-and-spacing
+        when: ['"1.5h" or "2m30s" is parsed.']
+        then: [Decimals and missing spaces are accepted.]
+      - id: garbage-refused
+        when: [Text that is not a duration is parsed.]
+        then: [It is refused.]
+    validation:
+      - id: unit-tests
+        type: { kind: unit }
+        covers: [adds-units, decimals-and-spacing, garbage-refused]
+
+  - id: format
+    title: Show a duration to people
+    value_tier: supporting
+    intent: Durations display with the largest units first and read back to the same value.
+    scenarios:
+      - id: largest-first
+        when: [A duration over a day is formatted.]
+        then: ["Days come first, then hours, minutes, seconds."]
+      - id: zero
+        when: [Zero is formatted.]
+        then: [It shows 0s.]
+      - id: round-trip
+        when: [A formatted duration is parsed again.]
+        then: [It gives the same text back.]
+      - id: weeks
+        when: [A week is formatted.]
+        then: [It shows 1w.]
+    validation:
+      - id: unit-tests
+        type: { kind: unit }
+        covers: [largest-first, zero, round-trip, weeks]

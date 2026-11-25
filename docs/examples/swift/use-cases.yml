@@ -1,0 +1,16 @@
+schema_version: 1
+root: true
+
+prefix: shop
+
+use_cases_dir: use-cases
+
+freshness:
+  binding_identity: content
+  normalization:
+    ignore:
+      - line-endings
+
+discovery:
+  exclude:
+    - Generated/**

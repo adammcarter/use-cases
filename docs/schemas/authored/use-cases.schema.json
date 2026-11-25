@@ -1,0 +1,402 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Use Cases Definition File",
+  "description": "Structural schema for authored use-case definition YAML/JSON. Use cases name no commands, runners or test tools. DRAFT/READY state, reference resolution, manual binding and resource resolution, coverage completeness and freshness are core checks.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "use_cases"
+  ],
+  "properties": {
+    "prefix": {
+      "$ref": "#/$defs/namespace"
+    },
+    "use_cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/useCase"
+      }
+    }
+  },
+  "$defs": {
+    "idSegment": {
+      "type": "string",
+      "pattern": "^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$(?!\\n)"
+    },
+    "namespace": {
+      "type": "string",
+      "pattern": "^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*$(?!\\n)"
+    },
+    "position": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "line"
+      ],
+      "properties": {
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "column": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "manualLocator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "file"
+      ],
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/projectPath"
+        },
+        "start": {
+          "$ref": "#/$defs/position"
+        },
+        "end": {
+          "$ref": "#/$defs/position"
+        }
+      },
+      "oneOf": [
+        {
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "start"
+                ]
+              },
+              {
+                "required": [
+                  "end"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "required": [
+            "start",
+            "end"
+          ]
+        }
+      ]
+    },
+    "manualBinding": {
+      "description": "Only manual bindings are written in YAML. Markers are found in the code and need no entry.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "locator"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/idSegment"
+        },
+        "kind": {
+          "const": "manual"
+        },
+        "locator": {
+          "$ref": "#/$defs/manualLocator"
+        }
+      }
+    },
+    "resource": {
+      "description": "A freshness-only route input. It never expects a validation result.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "path"
+          ],
+          "properties": {
+            "kind": {
+              "const": "file"
+            },
+            "path": {
+              "$ref": "#/$defs/projectPath"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "pattern"
+          ],
+          "properties": {
+            "kind": {
+              "const": "glob"
+            },
+            "pattern": {
+              "$ref": "#/$defs/projectPath"
+            }
+          }
+        }
+      ]
+    },
+    "validationType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "unit",
+            "integration",
+            "contract",
+            "snapshot",
+            "ui",
+            "e2e",
+            "acceptance",
+            "performance",
+            "custom"
+          ]
+        },
+        "name": {
+          "$ref": "#/$defs/idSegment"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "custom"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "name"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "name"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "procedure": {
+      "description": "Plain-language steps a person or agent performs. The performer is runtime context.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "steps"
+      ],
+      "properties": {
+        "setup": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "reset": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "scenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "when",
+        "then"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/idSegment"
+        },
+        "given": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "when": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "then": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "validationRoute": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type",
+        "covers"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/idSegment"
+        },
+        "type": {
+          "$ref": "#/$defs/validationType"
+        },
+        "covers": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/idSegment"
+          }
+        },
+        "gates_verification": {
+          "type": "boolean",
+          "default": true,
+          "description": "Defaults to true when omitted."
+        },
+        "procedure": {
+          "$ref": "#/$defs/procedure"
+        },
+        "bindings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/manualBinding"
+          }
+        },
+        "resources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/resource"
+          }
+        }
+      }
+    },
+    "useCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/idSegment"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "value_tier": {
+          "enum": [
+            "critical",
+            "core",
+            "supporting"
+          ]
+        },
+        "intent": {
+          "type": "string",
+          "minLength": 1
+        },
+        "out_of_scope": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "scenarios": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/scenario"
+          }
+        },
+        "validation": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/validationRoute"
+          }
+        },
+        "bindings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/manualBinding"
+          }
+        },
+        "approved": {
+          "description": "The sign-off of this use case's promise (chapter 21): who, when, and a fingerprint of its words then. Written by `use-cases approve` or `apply --approved-by`, never by hand. A later change to the promise leaves it standing but no longer matching: the use case reads `changed since approved`.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "by",
+            "on",
+            "behaviour"
+          ],
+          "properties": {
+            "by": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "on": {
+              "type": "string",
+              "format": "date"
+            },
+            "behaviour": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$(?!\\n)"
+            }
+          }
+        }
+      }
+    },
+    "projectPath": {
+      "description": "Project-root-relative path. Never absolute, never escaping the project with '..'.",
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!\\./)(?!.*/\\.(?:/|$))(?!.*//)(?!.*/$)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)[^\\u0000-\\u001f\\u007f\\u2028\\u2029]+$(?!\\n)"
+    }
+  }
+}

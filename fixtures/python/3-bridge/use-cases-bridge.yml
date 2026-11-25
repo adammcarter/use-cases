@@ -1,0 +1,10 @@
+schema_version: 1
+
+validations:
+  - id: pytest
+    report: pytest.xml
+    run: [python3, -m, pytest, -q, -o, junit_family=xunit1, "--junitxml={report}"]
+    transformer: junit
+    settings:
+      find: file-line
+      line_base: 0

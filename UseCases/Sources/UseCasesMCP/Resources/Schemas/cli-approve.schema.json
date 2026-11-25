@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CLI output: use-cases approve",
+  "description": "Sign-offs recorded on use cases: who, today, and a fingerprint of each promise as it reads now (chapter 16).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "output_version",
+    "command",
+    "by",
+    "use_cases",
+    "changes",
+    "dry_run"
+  ],
+  "properties": {
+    "output_version": {
+      "$ref": "cli-common.schema.json#/$defs/outputVersion"
+    },
+    "command": {
+      "const": "approve"
+    },
+    "by": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "use_cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "use_case",
+          "file",
+          "action"
+        ],
+        "properties": {
+          "use_case": {
+            "$ref": "../engine/common.schema.json#/$defs/useCaseId"
+          },
+          "file": {
+            "$ref": "../engine/common.schema.json#/$defs/path"
+          },
+          "action": {
+            "description": "approved: recorded now; unchanged: already approved as it reads now.",
+            "enum": [
+              "approved",
+              "unchanged"
+            ]
+          }
+        }
+      }
+    },
+    "changes": {
+      "$ref": "cli-common.schema.json#/$defs/changes"
+    },
+    "warnings": {
+      "description": "Each comment inside an approved field written again, which is dropped.",
+      "$ref": "cli-common.schema.json#/$defs/warnings"
+    },
+    "dry_run": {
+      "$ref": "cli-common.schema.json#/$defs/dryRun"
+    }
+  }
+}

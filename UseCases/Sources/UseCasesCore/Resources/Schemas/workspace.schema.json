@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Use Cases Workspace Configuration",
+  "description": "Structural schema for root/child use-cases.yml scope configuration. The core enforces root-only settings, matching schema versions across scopes, scope ownership, discovery boundaries, path containment and global resolved-ID uniqueness.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "root": {
+      "description": "Only in the workspace root's use-cases.yml, and required there: it marks where identities start. A folder below whose use-cases.yml says root: true is a separate workspace and is never entered.",
+      "const": true
+    },
+    "prefix": {
+      "type": "string",
+      "pattern": "^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*$(?!\\n)"
+    },
+    "use_cases_dir": {
+      "type": "string",
+      "minLength": 1,
+      "default": "use-cases",
+      "description": "Scope-relative authored definition directory. The core ensures it does not escape the scope."
+    },
+    "freshness": {
+      "$ref": "#/$defs/freshness"
+    },
+    "discovery": {
+      "$ref": "#/$defs/discovery"
+    },
+    "sign_off": {
+      "description": "Root only. `required`: the gate holds use cases whose promise is not approved as it reads now (chapter 16 §10). Absent: approvals are recorded and shown, never gating.",
+      "const": "required"
+    }
+  },
+  "$defs": {
+    "freshness": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "binding_identity": {
+          "enum": [
+            "content",
+            "content-and-locator"
+          ],
+          "default": "content"
+        },
+        "normalization": {
+          "$ref": "#/$defs/normalization"
+        }
+      }
+    },
+    "normalization": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ignore": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "line-endings",
+              "whitespace"
+            ]
+          },
+          "default": []
+        }
+      }
+    },
+    "discovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "exclude": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

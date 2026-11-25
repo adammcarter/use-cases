@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CLI output: use-cases show",
+  "description": "One use case, whole (chapter 16).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "output_version",
+    "command",
+    "use_case",
+    "file",
+    "state",
+    "missing",
+    "definition"
+  ],
+  "properties": {
+    "output_version": {
+      "$ref": "cli-common.schema.json#/$defs/outputVersion"
+    },
+    "command": {
+      "const": "show"
+    },
+    "use_case": {
+      "$ref": "../engine/common.schema.json#/$defs/useCaseId"
+    },
+    "file": {
+      "$ref": "../engine/common.schema.json#/$defs/path"
+    },
+    "state": {
+      "enum": [
+        "READY",
+        "DRAFT"
+      ]
+    },
+    "missing": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "definition": {
+      "$ref": "cli-common.schema.json#/$defs/definition"
+    },
+    "approval": {
+      "$ref": "cli-common.schema.json#/$defs/approval"
+    }
+  }
+}

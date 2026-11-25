@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CLI output: use-cases hooks",
+  "description": "This clone's hooks and what the request changed (chapter 18 §5).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "output_version",
+    "command",
+    "hooks_dir",
+    "managed",
+    "hooks",
+    "changed",
+    "notes",
+    "dry_run"
+  ],
+  "properties": {
+    "output_version": {
+      "$ref": "cli-common.schema.json#/$defs/outputVersion"
+    },
+    "command": {
+      "const": "hooks"
+    },
+    "hooks_dir": {
+      "description": "This clone's git hooks folder, relative to the workspace root.",
+      "type": "string",
+      "minLength": 1
+    },
+    "managed": {
+      "description": "core.hooksPath is set: a hook manager owns every hook.",
+      "type": "boolean"
+    },
+    "hooks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "event",
+          "state",
+          "runs"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "commit",
+              "push"
+            ]
+          },
+          "event": {
+            "enum": [
+              "pre-commit",
+              "pre-push"
+            ]
+          },
+          "state": {
+            "enum": [
+              "installed",
+              "absent",
+              "other",
+              "managed"
+            ]
+          },
+          "runs": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "changed": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "commit",
+          "push"
+        ]
+      }
+    },
+    "notes": {
+      "$ref": "cli-common.schema.json#/$defs/warnings"
+    },
+    "dry_run": {
+      "description": "True when --dry-run showed the change and wrote nothing.",
+      "type": "boolean"
+    }
+  }
+}

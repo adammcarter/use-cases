@@ -1,0 +1,37 @@
+prefix: cart
+
+use_cases:
+  - id: total
+    title: Total the cart
+    value_tier: critical
+    intent: Checkout charges the sum of every line, and an empty cart is free.
+    scenarios:
+      - id: many-lines
+        when:
+          - A cart has several lines.
+        then:
+          - The total is the sum of each line's price.
+      - id: empty
+        when:
+          - The cart is empty.
+        then:
+          - The total is zero.
+    validation:
+      - id: unit-tests
+        type: { kind: unit }
+        covers: [many-lines, empty]
+
+  - id: unknown-items
+    title: Unknown items stop checkout
+    value_tier: critical
+    intent: A cart with an item missing from the catalog cannot be charged.
+    scenarios:
+      - id: refused
+        when:
+          - The cart holds an unknown item.
+        then:
+          - Checkout refuses to total it.
+    validation:
+      - id: unit-tests
+        type: { kind: unit }
+        covers: [refused]

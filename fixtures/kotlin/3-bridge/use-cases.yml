@@ -1,0 +1,12 @@
+schema_version: 1
+root: true
+
+prefix: todo
+
+use_cases_dir: use-cases
+
+discovery:
+  exclude:
+    - "build/**"
+    - ".gradle/**"
+    - ".kotlin/**"

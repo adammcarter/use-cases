@@ -1,0 +1,20 @@
+schema_version: 1
+
+groups:
+  smoke:
+    description: Fast critical-path behaviours.
+    include:
+      ids:
+        - shop.checkout.complete
+
+  auth:
+    description: All authentication behaviours.
+    include:
+      prefixes:
+        - shop.auth
+
+  ci:
+    description: Everything except future slow legacy behaviours.
+    exclude:
+      globs:
+        - shop.**.slow-legacy

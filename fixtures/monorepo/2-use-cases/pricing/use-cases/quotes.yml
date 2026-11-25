@@ -1,0 +1,32 @@
+prefix: quotes
+
+use_cases:
+  - id: flat-price
+    title: Items without tiers are full price
+    value_tier: supporting
+    intent: Items with no bulk tiers are quoted at unit price times quantity.
+    scenarios:
+      - id: no-tiers
+        when:
+          - Three grinders are quoted.
+        then:
+          - The quote is three times the unit price.
+    validation:
+      - id: unit-tests
+        type: { kind: unit }
+        covers: [no-tiers]
+
+  - id: unknown-items
+    title: Unknown items are refused
+    value_tier: core
+    intent: A product that is not in the catalog is never quoted.
+    scenarios:
+      - id: refused
+        when:
+          - An item missing from the catalog is quoted.
+        then:
+          - It is refused, naming the item.
+    validation:
+      - id: unit-tests
+        type: { kind: unit }
+        covers: [refused]

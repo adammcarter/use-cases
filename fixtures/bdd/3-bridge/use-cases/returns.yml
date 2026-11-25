@@ -1,0 +1,29 @@
+prefix: returns
+use_cases:
+  - id: fines
+    title: Late fines
+    value_tier: core
+    intent: A book returned late costs its borrower a fine for every day it was late.
+    scenarios:
+      - id: late
+        given: [A book was due back on a given day.]
+        when: [It comes back later than that.]
+        then: [The borrower is fined 20 pence for each day late.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [late]
+
+  - id: renewal
+    title: Renew a loan
+    value_tier: supporting
+    intent: A member can keep a book for one more loan period without bringing it in.
+    scenarios:
+      - id: renew-once
+        given: [A member has a book on loan.]
+        when: [They renew it before it is due.]
+        then: [The loan is due fourteen days after the old due date.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [renew-once]

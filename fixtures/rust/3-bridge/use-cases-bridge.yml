@@ -1,0 +1,7 @@
+schema_version: 1
+
+validations:
+  - id: cargo-test
+    report: cargo-test.txt
+    run: [sh, -c, 'cargo test --no-fail-fast > "$1" 2>&1', sh, "{report}"]
+    transformer: cargo-test

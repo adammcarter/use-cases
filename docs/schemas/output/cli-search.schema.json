@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CLI output: use-cases search",
+  "description": "One page of the use cases that match a search, best match first (chapter 16). Scores order the matches and are not comparable between searches.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "output_version",
+    "command",
+    "total",
+    "offset",
+    "page_size",
+    "matches",
+    "next"
+  ],
+  "properties": {
+    "output_version": {
+      "$ref": "cli-common.schema.json#/$defs/outputVersion"
+    },
+    "command": {
+      "const": "search"
+    },
+    "total": {
+      "description": "How many use cases match, across every page.",
+      "$ref": "cli-common.schema.json#/$defs/count"
+    },
+    "offset": {
+      "description": "How many matches come before this page.",
+      "$ref": "cli-common.schema.json#/$defs/count"
+    },
+    "page_size": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+    },
+    "matches": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "$ref": "#/$defs/match"
+      }
+    },
+    "next": {
+      "description": "Pass to --next for the following page; null on the last page.",
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$(?!\\n)"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "field": {
+      "enum": [
+        "id",
+        "title",
+        "description",
+        "intent",
+        "scenarios",
+        "out_of_scope",
+        "validation"
+      ]
+    },
+    "match": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "use_case",
+        "title",
+        "file",
+        "status",
+        "score",
+        "why"
+      ],
+      "properties": {
+        "use_case": {
+          "$ref": "../engine/common.schema.json#/$defs/useCaseId"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "file": {
+          "$ref": "../engine/common.schema.json#/$defs/path"
+        },
+        "status": {
+          "$ref": "cli-common.schema.json#/$defs/useCaseStatus"
+        },
+        "value_tier": {
+          "enum": [
+            "critical",
+            "core",
+            "supporting"
+          ]
+        },
+        "score": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1
+        },
+        "why": {
+          "description": "Every place the use case matched, the strongest first.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "field",
+              "text"
+            ],
+            "properties": {
+              "field": {
+                "$ref": "#/$defs/field"
+              },
+              "where": {
+                "description": "The scenario or route the text is in.",
+                "$ref": "../authored/use-cases.schema.json#/$defs/idSegment"
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              }
+            }
+          }
+        },
+        "definition": {
+          "description": "The whole use case, with --full.",
+          "$ref": "cli-common.schema.json#/$defs/definition"
+        }
+      }
+    }
+  }
+}

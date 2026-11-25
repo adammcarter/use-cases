@@ -1,0 +1,6 @@
+schema_version: 1
+
+validations:
+  - id: swift-test
+    run: [sh, -c, 'swift test --experimental-event-stream-output "$1/events.jsonl" --experimental-event-stream-version 0 > "$1/console.txt" 2>&1', sh, "{report}"]
+    transformer: swift-test

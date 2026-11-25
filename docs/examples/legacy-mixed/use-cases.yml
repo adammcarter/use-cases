@@ -1,0 +1,11 @@
+schema_version: 1
+root: true
+prefix: legacyapp
+use_cases_dir: use-cases
+
+freshness:
+  binding_identity: content-and-locator
+
+discovery:
+  exclude:
+    - tmp/**

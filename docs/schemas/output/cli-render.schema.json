@@ -1,0 +1,400 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CLI output: use-cases render",
+  "description": "A canonical layout (chapter 21 §7): its model, for any view to draw, and the plain text the core draws from it.",
+  "type": "object",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "output_version",
+        "command",
+        "kind",
+        "model",
+        "text"
+      ],
+      "properties": {
+        "output_version": {
+          "$ref": "cli-common.schema.json#/$defs/outputVersion"
+        },
+        "command": {
+          "const": "render"
+        },
+        "kind": {
+          "const": "intent"
+        },
+        "model": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "what",
+            "why",
+            "who"
+          ],
+          "properties": {
+            "what": {
+              "type": "string",
+              "minLength": 1
+            },
+            "why": {
+              "type": "string",
+              "minLength": 1
+            },
+            "who": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "output_version",
+        "command",
+        "kind",
+        "model",
+        "text"
+      ],
+      "properties": {
+        "output_version": {
+          "$ref": "cli-common.schema.json#/$defs/outputVersion"
+        },
+        "command": {
+          "const": "render"
+        },
+        "kind": {
+          "const": "brief"
+        },
+        "model": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "cards"
+          ],
+          "properties": {
+            "cards": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "use_case",
+                  "fit",
+                  "title",
+                  "now",
+                  "scenarios",
+                  "not_included",
+                  "proven_by"
+                ],
+                "properties": {
+                  "use_case": {
+                    "$ref": "../engine/common.schema.json#/$defs/useCaseId"
+                  },
+                  "fit": {
+                    "enum": [
+                      "new",
+                      "extends",
+                      "changes",
+                      "replaces"
+                    ]
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "tier": {
+                    "enum": [
+                      "critical",
+                      "core",
+                      "supporting"
+                    ]
+                  },
+                  "now": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "was": {
+                    "type": "string"
+                  },
+                  "scenarios": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "golden",
+                        "text"
+                      ],
+                      "properties": {
+                        "golden": {
+                          "type": "boolean"
+                        },
+                        "text": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      }
+                    }
+                  },
+                  "not_included": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "proven_by": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "output_version",
+        "command",
+        "kind",
+        "model",
+        "text"
+      ],
+      "properties": {
+        "output_version": {
+          "$ref": "cli-common.schema.json#/$defs/outputVersion"
+        },
+        "command": {
+          "const": "render"
+        },
+        "kind": {
+          "const": "proposal"
+        },
+        "model": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "title",
+            "changes",
+            "decisions",
+            "sign_off"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "changes": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "use_case",
+                  "fit",
+                  "title"
+                ],
+                "properties": {
+                  "use_case": {
+                    "$ref": "../engine/common.schema.json#/$defs/useCaseId"
+                  },
+                  "fit": {
+                    "enum": [
+                      "new",
+                      "extends",
+                      "changes",
+                      "replaces",
+                      "untouched"
+                    ]
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "tier": {
+                    "enum": [
+                      "critical",
+                      "core",
+                      "supporting"
+                    ]
+                  },
+                  "you_see": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            },
+            "decisions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "question",
+                  "options"
+                ],
+                "properties": {
+                  "question": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "options": {
+                    "type": "array",
+                    "minItems": 2,
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                }
+              }
+            },
+            "sign_off": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [],
+              "properties": {
+                "critical": {
+                  "$ref": "cli-common.schema.json#/$defs/count"
+                },
+                "core": {
+                  "$ref": "cli-common.schema.json#/$defs/count"
+                },
+                "supporting": {
+                  "$ref": "cli-common.schema.json#/$defs/count"
+                },
+                "no_tier": {
+                  "$ref": "cli-common.schema.json#/$defs/count",
+                  "description": "Use cases with no value tier: without a tier's permission they come to the person."
+                }
+              }
+            }
+          }
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "output_version",
+        "command",
+        "kind",
+        "model",
+        "text"
+      ],
+      "properties": {
+        "output_version": {
+          "$ref": "cli-common.schema.json#/$defs/outputVersion"
+        },
+        "command": {
+          "const": "render"
+        },
+        "kind": {
+          "const": "results"
+        },
+        "model": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "title",
+            "use_cases",
+            "removed",
+            "gate"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "use_cases": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "use_case",
+                  "title",
+                  "status",
+                  "checks"
+                ],
+                "properties": {
+                  "use_case": {
+                    "$ref": "../engine/common.schema.json#/$defs/useCaseId"
+                  },
+                  "title": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "status": {
+                    "$ref": "cli-common.schema.json#/$defs/useCaseStatus"
+                  },
+                  "checks": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "label",
+                        "status"
+                      ],
+                      "properties": {
+                        "label": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "status": {
+                          "$ref": "cli-common.schema.json#/$defs/routeStatus"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "removed": {
+              "type": "array",
+              "items": {
+                "$ref": "../engine/common.schema.json#/$defs/useCaseId"
+              }
+            },
+            "gate": {
+              "type": "boolean",
+              "description": "Whether the gate passes, as status --gate decides."
+            }
+          }
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  ]
+}

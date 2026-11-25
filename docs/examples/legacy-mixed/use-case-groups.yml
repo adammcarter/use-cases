@@ -1,0 +1,14 @@
+schema_version: 1
+
+groups:
+  critical:
+    description: Critical legacy behaviours.
+    include:
+      prefixes:
+        - legacyapp.auth
+
+  modernization:
+    description: Behaviours relevant to modernization work.
+    include:
+      globs:
+        - legacyapp.**

@@ -1,0 +1,173 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CLI output: use-cases verify",
+  "description": "--start: the run id and each {report} path. --finish and --run: the sealed run's manifest fields and its results (chapter 12). --abort: the run it closed.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "output_version",
+    "command",
+    "step"
+  ],
+  "properties": {
+    "output_version": {
+      "$ref": "cli-common.schema.json#/$defs/outputVersion"
+    },
+    "command": {
+      "const": "verify"
+    },
+    "step": {
+      "enum": [
+        "start",
+        "finish",
+        "run",
+        "abort"
+      ]
+    },
+    "started": {
+      "type": "boolean"
+    },
+    "selected": {
+      "type": "array",
+      "items": {
+        "$ref": "../engine/common.schema.json#/$defs/segment"
+      }
+    },
+    "reports": {
+      "description": "Each selected validation's {report}: an absolute path.",
+      "type": "object",
+      "propertyNames": {
+        "$ref": "../engine/common.schema.json#/$defs/segment"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "aborted": {
+      "const": true
+    },
+    "cancelled": {
+      "const": true
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "$ref": "../engine/result.schema.json"
+      }
+    },
+    "run_version": {
+      "$ref": "../engine/run.schema.json#/properties/run_version"
+    },
+    "run_id": {
+      "$ref": "../engine/run.schema.json#/properties/run_id"
+    },
+    "created_at": {
+      "$ref": "../engine/run.schema.json#/properties/created_at"
+    },
+    "kind": {
+      "$ref": "../engine/run.schema.json#/properties/kind"
+    },
+    "sources": {
+      "$ref": "../engine/run.schema.json#/properties/sources"
+    },
+    "errors": {
+      "$ref": "../engine/run.schema.json#/properties/errors"
+    },
+    "diagnostics": {
+      "$ref": "../engine/run.schema.json#/properties/diagnostics"
+    },
+    "unlinked_tests": {
+      "$ref": "../engine/run.schema.json#/properties/unlinked_tests"
+    },
+    "notes": {
+      "$ref": "../engine/run.schema.json#/properties/notes"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "step": {
+            "const": "start"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "started",
+          "notes"
+        ],
+        "properties": {
+          "results": false,
+          "aborted": false,
+          "cancelled": false,
+          "sources": false
+        },
+        "if": {
+          "properties": {
+            "started": {
+              "const": true
+            }
+          }
+        },
+        "then": {
+          "required": [
+            "run_id",
+            "selected",
+            "reports"
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "step": {
+            "const": "abort"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "run_id",
+          "aborted"
+        ],
+        "properties": {
+          "results": false,
+          "started": false,
+          "reports": false
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "step": {
+            "enum": [
+              "finish",
+              "run"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "results",
+          "errors",
+          "diagnostics",
+          "notes"
+        ],
+        "properties": {
+          "started": false,
+          "reports": false,
+          "selected": false,
+          "aborted": false,
+          "kind": {
+            "const": "verify"
+          }
+        }
+      }
+    }
+  ]
+}

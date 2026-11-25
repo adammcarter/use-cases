@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CLI output: use-cases --version",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "output_version",
+    "command",
+    "version",
+    "contract",
+    "store"
+  ],
+  "properties": {
+    "output_version": {
+      "$ref": "cli-common.schema.json#/$defs/outputVersion"
+    },
+    "command": {
+      "const": "version"
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "contract": {
+      "description": "The transformer contract version (chapter 10).",
+      "type": "integer",
+      "minimum": 1
+    },
+    "store": {
+      "description": "The run version the core writes (chapter 12).",
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

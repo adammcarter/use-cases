@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CLI output: use-cases init",
+  "description": "What init made and kept (chapter 17 §7). Init writes base files only, never a test command.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "output_version",
+    "command",
+    "workspace",
+    "created",
+    "kept",
+    "gitignore",
+    "hooks",
+    "notes",
+    "dry_run"
+  ],
+  "properties": {
+    "output_version": {
+      "$ref": "cli-common.schema.json#/$defs/outputVersion"
+    },
+    "command": {
+      "const": "init"
+    },
+    "workspace": {
+      "description": "The absolute path of the folder set up.",
+      "type": "string",
+      "minLength": 1
+    },
+    "created": {
+      "type": "array",
+      "items": {
+        "$ref": "../engine/common.schema.json#/$defs/path"
+      }
+    },
+    "kept": {
+      "type": "array",
+      "items": {
+        "$ref": "../engine/common.schema.json#/$defs/path"
+      }
+    },
+    "gitignore": {
+      "enum": [
+        "added",
+        "present",
+        "skipped"
+      ]
+    },
+    "hooks": {
+      "description": "The hooks this request added (chapter 18); opt-in only.",
+      "type": "array",
+      "items": {
+        "enum": [
+          "commit",
+          "push"
+        ]
+      }
+    },
+    "notes": {
+      "$ref": "cli-common.schema.json#/$defs/warnings"
+    },
+    "dry_run": {
+      "description": "True when --dry-run showed the change and wrote nothing.",
+      "type": "boolean"
+    }
+  }
+}

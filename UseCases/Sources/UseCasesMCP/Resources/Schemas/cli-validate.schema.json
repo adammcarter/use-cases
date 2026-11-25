@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CLI output: use-cases validate",
+  "description": "A valid workspace (an INVALID one is a cli-error document).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "output_version",
+    "command",
+    "valid",
+    "use_cases",
+    "ready",
+    "draft",
+    "links",
+    "files",
+    "warnings"
+  ],
+  "properties": {
+    "output_version": {
+      "$ref": "cli-common.schema.json#/$defs/outputVersion"
+    },
+    "command": {
+      "const": "validate"
+    },
+    "valid": {
+      "const": true
+    },
+    "use_cases": {
+      "$ref": "cli-common.schema.json#/$defs/count"
+    },
+    "ready": {
+      "$ref": "cli-common.schema.json#/$defs/count"
+    },
+    "draft": {
+      "$ref": "cli-common.schema.json#/$defs/count"
+    },
+    "links": {
+      "$ref": "cli-common.schema.json#/$defs/count"
+    },
+    "files": {
+      "description": "The use case files read, relative to the workspace root.",
+      "type": "array",
+      "items": {
+        "$ref": "../engine/common.schema.json#/$defs/path"
+      }
+    },
+    "warnings": {
+      "$ref": "cli-common.schema.json#/$defs/warnings"
+    }
+  }
+}

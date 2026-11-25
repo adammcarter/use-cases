@@ -1,0 +1,35 @@
+prefix: links
+
+use_cases:
+  - id: shorten
+    title: Shorten a link
+    value_tier: critical
+    intent: A valid web address gets a unique short code that resolves back to it.
+    scenarios:
+      - id: round-trip
+        when: [An https address is shortened.]
+        then: [Its code resolves to the same address.]
+      - id: invalid-refused
+        when: ["An address has no scheme, a non-web scheme, or no host."]
+        then: [It is refused.]
+      - id: collision-retry
+        when: [A generated code is already taken.]
+        then: [A new code is generated.]
+    validation:
+      - id: unit-tests
+        type: { kind: unit }
+        covers: [round-trip, invalid-refused, collision-retry]
+
+  - id: expiry
+    title: Expired links stop working
+    value_tier: core
+    intent: A link created with a lifetime stops resolving once that lifetime has passed.
+    scenarios:
+      - id: expired
+        given: [A link with a one-hour lifetime.]
+        when: [It is resolved two hours later.]
+        then: [It reports expired.]
+    validation:
+      - id: unit-tests
+        type: { kind: unit }
+        covers: [expired]

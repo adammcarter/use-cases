@@ -1,0 +1,256 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CLI output: use-cases status",
+  "description": "The use cases chosen by the target, --group and --state, worst first then drafts (chapter 16 §9). With --gate, the gate's answer (§10).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "output_version",
+    "command",
+    "use_cases",
+    "summary",
+    "warnings"
+  ],
+  "properties": {
+    "output_version": {
+      "$ref": "cli-common.schema.json#/$defs/outputVersion"
+    },
+    "command": {
+      "const": "status"
+    },
+    "use_cases": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/useCase"
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "total",
+        "by_status"
+      ],
+      "properties": {
+        "total": {
+          "$ref": "cli-common.schema.json#/$defs/count"
+        },
+        "by_status": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "cli-common.schema.json#/$defs/useCaseStatus"
+          },
+          "additionalProperties": {
+            "$ref": "cli-common.schema.json#/$defs/count"
+          }
+        }
+      }
+    },
+    "warnings": {
+      "$ref": "cli-common.schema.json#/$defs/warnings"
+    },
+    "group": {
+      "$ref": "../engine/common.schema.json#/$defs/segment"
+    },
+    "store": {
+      "description": "What the results store holds: every run folder (runs), the size in bytes of every file under .use-cases/ (bytes), and the sealed runs use-cases prune would remove (superseded, chapter 12 §31). Absent when the store holds no run (chapter 16 §9).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runs",
+        "bytes",
+        "superseded"
+      ],
+      "properties": {
+        "runs": {
+          "$ref": "cli-common.schema.json#/$defs/count"
+        },
+        "bytes": {
+          "$ref": "cli-common.schema.json#/$defs/count"
+        },
+        "superseded": {
+          "$ref": "cli-common.schema.json#/$defs/count"
+        }
+      }
+    },
+    "gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "passed",
+        "strict",
+        "blocking",
+        "warning"
+      ],
+      "properties": {
+        "passed": {
+          "type": "boolean"
+        },
+        "strict": {
+          "type": "boolean"
+        },
+        "blocking": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/gated"
+          }
+        },
+        "warning": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/gated"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "useCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "use_case",
+        "title",
+        "state",
+        "status",
+        "warnings",
+        "routes"
+      ],
+      "properties": {
+        "use_case": {
+          "$ref": "../engine/common.schema.json#/$defs/useCaseId"
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "state": {
+          "enum": [
+            "READY",
+            "DRAFT"
+          ]
+        },
+        "status": {
+          "$ref": "cli-common.schema.json#/$defs/useCaseStatus"
+        },
+        "missing": {
+          "description": "What a DRAFT use case lacks before it is READY.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "warnings": {
+          "$ref": "cli-common.schema.json#/$defs/warnings"
+        },
+        "routes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/route"
+          }
+        },
+        "approval": {
+          "$ref": "cli-common.schema.json#/$defs/approval"
+        },
+        "value_tier": {
+          "enum": [
+            "critical",
+            "core",
+            "supporting"
+          ]
+        }
+      },
+      "if": {
+        "properties": {
+          "state": {
+            "const": "DRAFT"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "missing"
+        ],
+        "properties": {
+          "status": {
+            "const": "draft"
+          },
+          "routes": {
+            "maxItems": 0
+          }
+        }
+      },
+      "else": {
+        "not": {
+          "required": [
+            "missing"
+          ]
+        },
+        "properties": {
+          "status": {
+            "$ref": "cli-common.schema.json#/$defs/routeStatus"
+          }
+        }
+      }
+    },
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "route",
+        "gates",
+        "linked",
+        "status",
+        "note"
+      ],
+      "properties": {
+        "route": {
+          "$ref": "../engine/common.schema.json#/$defs/segment"
+        },
+        "gates": {
+          "type": "boolean"
+        },
+        "linked": {
+          "description": "The route has a procedure or validation links, so something can reach it.",
+          "type": "boolean"
+        },
+        "status": {
+          "$ref": "cli-common.schema.json#/$defs/routeStatus"
+        },
+        "note": {
+          "description": "Why it has this status: the deciding run, a run diagnostic, or what changed (chapter 15). For people.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "gated": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "use_case",
+        "status"
+      ],
+      "properties": {
+        "use_case": {
+          "$ref": "../engine/common.schema.json#/$defs/useCaseId"
+        },
+        "status": {
+          "$ref": "cli-common.schema.json#/$defs/routeStatus"
+        },
+        "approval": {
+          "description": "Present when the use case is held for its sign-off: changed or unapproved.",
+          "enum": [
+            "changed",
+            "unapproved"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+schema_version: 1
+
+validations:
+  - id: gradle-test
+    run: [gradle, test, -q, "-PjunitDir={report}"]
+    transformer: junit
+    settings:
+      find: pattern
+      files: src/test/**/*.kt
+      class_file: true
+      patterns: ["fun {method}(", "fun `{method}`("]

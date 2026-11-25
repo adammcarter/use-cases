@@ -1,0 +1,253 @@
+#!/bin/sh
+# test-bounded: run a test command so that a stuck run always ends, its log is
+# whole, and the tests that never finished are named.
+#
+#   test-bounded [MINUTES] COMMAND [ARGS...]
+#       e.g.  UseCases/scripts/test-bounded 12 swift test --package-path UseCases
+#
+# MINUTES (all digits, first argument) or $TEST_BOUNDED_MINUTES, default 15.
+# Exit status: the command's own when it ends by itself; 124 when the limit fired.
+# When the command is `swift test ...`, test-bounded adds --experimental-event-stream-output, so that
+# the tests that never ended are read from Swift Testing's own record of starts and ends rather than
+# from the console log (set TEST_BOUNDED_NO_EVENTS=1 to turn this off).
+# Other settings: TEST_BOUNDED_LOG   where the whole log is kept (default: a mktemp file)
+#                 TEST_BOUNDED_MATCH text unique to this run; any process whose command line
+#                                    contains it is killed too (default: the event file's path,
+#                                    when there is one)
+#                 TEST_BOUNDED_NO_PTY=1  skip script(1); use a plain file + tail (block-buffered)
+#
+# Why this exists: these tests carry no time limits, so a stuck test is a run
+# that never ends. GitHub ignored the step's time limit and a normal cancel on
+# such a run, and output going to a pipe or file is block-buffered, so a killed
+# run lost its last 4 KiB of log. Killing "swift test" also leaves its helper
+# (swiftpm-testing-helper / the .xctest binary) running as an orphan.
+#
+# Why the tests that never ended are read from an event file and not from the log: the log is
+# what swift-test relays of the helper's output, and the relay is not faithful. Measured with
+# tests that all pass: 1530 "started" lines but only 1381 to 1478 "passed" ones on macOS, 685 of
+# 720 on Linux, lines cut short ("Suite P54seconds."), whole suites reported passed with their
+# tests' lines missing. The helper's own event file (--experimental-event-stream-output) held every
+# start and end up to the kill. Test names are also written two ways: Test "display name" started.
+# and, for a test with no display name, Test name() started. (an older scanner knew only the first).
+
+LIMIT_EXIT=124
+
+case ${1-} in
+  ''|*[!0-9]*) minutes=${TEST_BOUNDED_MINUTES:-15} ;;
+  *) minutes=$1; shift ;;
+esac
+if [ $# -eq 0 ]; then
+  echo "usage: test-bounded [MINUTES] COMMAND [ARGS...]" >&2
+  exit 2
+fi
+
+log=${TEST_BOUNDED_LOG:-$(mktemp "${TMPDIR:-/tmp}/test-bounded.XXXXXX")}
+: > "$log" || exit 2
+
+# --- killing ---------------------------------------------------------------
+
+# reap ROOTS: SIGKILL (SIGINT/SIGTERM may be handled, or the process stopped) only what this run
+# started, never another run or build of the same package:
+#   - every descendant of the pids in ROOTS,
+#   - every process in the process group of one of those (script(1) puts the command in its own
+#     session, and a test helper or a command a test starts can be in a group of its own),
+#   - every process on the terminal of one of those (script(1) gives the command a terminal of its
+#     own, which a process that was orphaned and so is no longer anybody's descendant keeps), and
+#   - every process whose command line contains $match, text unique to this run.
+# Zombies (already dead, just not yet waited for) are skipped.
+# We never kill ourselves, our ancestors, our own process group or what is on our own
+# terminal. awk reads
+# the process table from a file and gets the text to match through the
+# environment, so that no helper process of ours carries it on its command line.
+# Repeats until nothing is left, because a dying process can have just forked.
+reap() {
+  _roots=$1
+  _n=0
+  while [ "$_n" -lt 5 ]; do
+    _n=$((_n + 1))
+    ps -A -ww -o pid=,ppid=,pgid=,tty=,stat=,command= > "$log.ps" 2>/dev/null
+    TB_MATCH=$match TB_ROOTS=$_roots TB_SELF=$$ awk '
+      { pid=$1; ppid[pid]=$2; grp[pid]=$3; tty[pid]=$4; zombie[pid]=($5 ~ /^Z/)
+        sub(/^ *[0-9]+ +[0-9]+ +[0-9]+ +[^ ]+ +[^ ]+ */, ""); cmd[pid]=$0 }
+      END {
+        m = ENVIRON["TB_MATCH"]
+        n = split(ENVIRON["TB_ROOTS"], r, " ")
+        for (i = 1; i <= n; i++) if (r[i] in ppid) sel[r[i]] = 1
+        # No terminal reads "?" on Linux and "??" on macOS.
+        safet["?"] = 1; safet["??"] = 1; safet["-"] = 1
+        for (p = ENVIRON["TB_SELF"]; p != "" && p != 0 && !(p in safe); p = ppid[p]) {
+          safe[p] = 1; safeg[grp[p]] = 1; safet[tty[p]] = 1 }
+        do { changed = 0
+          for (p in sel) {
+            if (!(grp[p] in safeg)) selg[grp[p]] = 1
+            if (!(tty[p] in safet)) selt[tty[p]] = 1 }
+          for (p in ppid)
+            if (!(p in sel) && ((ppid[p] in sel) || (grp[p] in selg) || (tty[p] in selt) ||
+                (m != "" && index(cmd[p], m)))) {
+              sel[p] = 1; changed = 1 }
+        } while (changed)
+        for (p in sel) if (p in ppid && !(p in safe) && !zombie[p]) {
+          print "P", p
+          if (!(grp[p] in safeg)) g[grp[p]] = 1 }
+        for (x in g) print "G", x
+      }' "$log.ps" > "$log.kill"
+    _any=0
+    while read -r kind id; do
+      _any=1
+      if [ "$kind" = G ]; then kill -KILL -- "-$id" 2>/dev/null; else kill -KILL "$id" 2>/dev/null; fi
+    done < "$log.kill"
+    [ "$_any" = 0 ] && break
+    sleep 1
+  done
+  rm -f "$log.ps" "$log.kill"
+}
+
+# --- report ----------------------------------------------------------------
+
+# Tests that started and never ended, worked out from the log. Swift Testing prints
+#   <symbol> Test "name" started.   and   <symbol> Test "name" passed|failed after ...
+# (the symbol is a private-use character on macOS; ◇ ✔ ✘ on Linux, so we ignore it).
+# "Test case ..." lines (parameterized tests) and "Suite ..." lines never match
+# because we need 'Test "' exactly. Counting handles a name used twice. A run
+# also prints ANSI colour codes (it thinks it is on a terminal); they are stripped.
+unfinished() {
+  awk '
+    function unquoted(s) { return substr(s, 1, 1) == "\"" ? substr(s, 2, length(s) - 2) : s }
+    { gsub(/\r/, ""); gsub(/\033\[[0-9;]*[A-Za-z]/, "") }
+    # A test with a display name is named in quotes: Test "name" started.
+    # One without is named by its function: Test name() started. or Test name(_:with:) started.
+    # (the pattern for those needs the parentheses, so that "Test run started." and
+    # "Test case ..." never match.)
+    match($0, /Test ("(.*)"|[A-Za-z_][A-Za-z0-9_]*\([^)]*\)) started\.$/) {
+      n = unquoted(substr($0, RSTART + 5, RLENGTH - 5 - 9))
+      if (!(n in open)) order[++count] = n
+      open[n]++; next }
+    # The end of a parameterized test reads: Test "name" with 4 test cases passed after ...
+    match($0, /Test ("(.*)"|[A-Za-z_][A-Za-z0-9_]*\([^)]*\)) (with [0-9]+ test cases? )?(passed after|failed after|skipped)/) {
+      s = substr($0, RSTART + 5, RLENGTH - 5)
+      sub(/ (with [0-9]+ test cases? )?(passed after|failed after|skipped)$/, "", s)
+      s = unquoted(s)
+      if (s in open) open[s]-- }
+    END {
+      for (i = 1; i <= count; i++) if (open[order[i]] > 0) list[++total] = order[i]
+      # The most recently started are the likeliest to be the stuck ones: show the last 10.
+      first = total > 10 ? total - 9 : 1
+      if (first > 1) print "  ... and " first - 1 " more, started earlier"
+      for (i = first; i <= total; i++) print "  - " list[i]
+      if (total == 0) print "  (none found in the log)" }
+  ' "$log"
+}
+
+# The same, from Swift Testing's own event stream, which the test helper writes straight to a
+# file: one JSON record per line, a "test" record for every test (its name) and an "event" record
+# when a test starts and when it ends. Unlike the console log, nothing in between handles it, so
+# it holds every start and end, up to the moment the run was killed. Tests are paired by id.
+unfinished_from_events() {
+  awk '
+    # The JSON string value of KEY in LINE, unescaped, or "" when there is none.
+    function value(line, key,   p, i, c, n, out) {
+      p = index(line, "\"" key "\":\"")
+      if (p == 0) return ""
+      i = p + length(key) + 4; n = length(line); out = ""
+      while (i <= n) {
+        c = substr(line, i, 1)
+        if (c == "\"") break
+        if (c == "\\") { i++; c = substr(line, i, 1); if (c == "n") c = " "; else if (c == "t") c = " " }
+        out = out c; i++
+      }
+      return out
+    }
+    /^\{"kind":"test",/ {
+      if (index($0, "\"kind\":\"function\"") == 0) next
+      id = value($0, "id"); name = value($0, "displayName")
+      if (name == "") name = value($0, "name")
+      label[id] = name; next }
+    /^\{"kind":"event",/ {
+      id = value($0, "testID")
+      if (!(id in label)) next
+      if (index($0, "\"kind\":\"testStarted\"")) { if (!(id in began)) { began[id] = ++count; order[count] = id } }
+      else if (index($0, "\"kind\":\"testEnded\"")) ended[id] = 1 }
+    END {
+      for (i = 1; i <= count; i++) if (!(order[i] in ended)) list[++total] = label[order[i]]
+      first = total > 10 ? total - 9 : 1
+      if (first > 1) print "  ... and " first - 1 " more, started earlier"
+      for (i = first; i <= total; i++) print "  - " list[i]
+      if (total == 0) print "  (none found in the event stream)" }
+  ' "$events"
+}
+
+# --- run -------------------------------------------------------------------
+
+# Swift Testing writes every start and end of a test to its own file, which loses nothing on the way
+# (the console log passes through swift-test, which drops or holds back lines: see the notes above).
+events=
+if [ -z "${TEST_BOUNDED_NO_EVENTS-}" ] && [ "$1" = swift ] && [ "${2-}" = test ]; then
+  events="$log.events"
+  : > "$events" || exit 2
+  _swift=$1; _test=$2; shift 2
+  set -- "$_swift" "$_test" --experimental-event-stream-output "$events" "$@"
+fi
+match=${TEST_BOUNDED_MATCH:-$events}
+
+hit=0
+watchdog=
+follower=
+# shellcheck disable=SC2329  # called by trap
+on_limit() { hit=1; { reap "$pid"; } 2>/dev/null; }
+# shellcheck disable=SC2329  # called by trap
+on_signal() { reap "$pid"; [ -n "$watchdog" ] && reap "$watchdog"; [ -n "$follower" ] && kill "$follower" 2>/dev/null; exit "$1"; }
+trap on_limit USR1
+trap 'on_signal 130' INT
+trap 'on_signal 143' TERM HUP
+
+# Quote the arguments into one string for util-linux script, which takes a command string.
+quoted=
+for a in "$@"; do
+  quoted="$quoted '$(printf %s "$a" | sed "s/'/'\\\\''/g")'"
+done
+
+# script(1) runs the command on a pseudo-terminal, so its output is line-buffered
+# and the log is whole whenever the run ends. The flags differ by system.
+# Its exit status is the command's (-e on util-linux). util-linux also buffers the
+# typescript file unless told to flush after every write (-f); without it the log
+# file stayed empty when the run was killed.
+if [ -n "${TEST_BOUNDED_NO_PTY-}" ] || ! command -v script >/dev/null 2>&1; then
+  "$@" > "$log" 2>&1 &
+  pid=$!
+  tail -f "$log" &
+  follower=$!
+else
+  follower=
+  case $(uname -s) in
+    Darwin|*BSD) script -q "$log" "$@" & ;;
+    *) script -q -e -f -c "$quoted" "$log" & ;;
+  esac
+  pid=$!
+fi
+
+# The clock: a helper that signals us at the limit. Our own shell must stay free to
+# act, so it only sends USR1 (which interrupts the wait below).
+( sleep $((minutes * 60)); kill -USR1 $$ 2>/dev/null ) &
+watchdog=$!
+
+wait "$pid"
+status=$?
+# After a limit kill, collect the dead command quietly (bash prints "Killed: 9").
+if [ "$hit" = 1 ]; then { wait "$pid"; } 2>/dev/null; fi
+[ -n "$follower" ] && { sleep 1; kill "$follower" 2>/dev/null; }
+# Quietly: bash would otherwise print "Killed: 9" for the clock it is told to kill.
+{ reap "$watchdog"; wait "$watchdog"; } 2>/dev/null
+watchdog=
+# Ended by itself or not, leave nothing of the run behind.
+reap "$pid"
+
+echo
+if [ "$hit" = 1 ]; then
+  echo "test-bounded: LIMIT REACHED after $minutes minute(s); the command and everything it started were killed."
+  echo "test-bounded: tests that started and never ended:"
+  if [ -n "$events" ] && [ -s "$events" ]; then unfinished_from_events; else unfinished; fi
+  echo "test-bounded: whole log: $log"
+  exit "$LIMIT_EXIT"
+fi
+echo "test-bounded: command ended by itself (exit $status); whole log: $log"
+exit "$status"

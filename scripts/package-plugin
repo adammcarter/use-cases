@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+# Assembles the plugin archive from plugin/ and the release tarballs in the dist folder: each
+# platform's programs and bundles go under bin/<platform>/ (the repository holds no binaries).
+#   dist/use-cases-plugin-<version>.tar.gz
+# Usage: RELEASE_OWNER=<account> scripts/package-plugin [--partial] [tag]
+# All three platforms' tarballs must be in dist; --partial (for trying it locally) takes
+# whichever are there. RELEASE_OWNER is the account that publishes the release: the setup skill
+# links its release downloads, so every OWNER in the shipped text is replaced by it, and packaging
+# fails if any OWNER is left.
+set -euo pipefail
+
+here="$(cd "$(dirname "$0")" && pwd)"
+root="${RELEASE_ROOT:-$(cd "$here/.." && pwd)}"
+owner="${RELEASE_OWNER:-}"
+
+if [[ ! "$owner" =~ ^[A-Za-z0-9][A-Za-z0-9-]*$ ]]; then
+  echo "package-plugin: RELEASE_OWNER must name the account that publishes the release, not '$owner'" >&2
+  exit 1
+fi
+
+dist="${DIST_DIR:-$root/dist}"
+
+partial=0
+if [[ "${1:-}" == "--partial" ]]; then
+  partial=1
+  shift
+fi
+
+version="$(RELEASE_ROOT="$root" "$here/check-versions" "$@")"
+name="use-cases-plugin-$version"
+stage="$dist/plugin-stage/$name"
+
+rm -rf "$dist/plugin-stage"
+mkdir -p "$stage"
+cp -R "$root/plugin/." "$stage/"
+
+found=0
+for platform in macos-universal linux-x86_64 linux-arm64; do
+  tarball="$dist/use-cases-$version-$platform.tar.gz"
+
+  if [[ -f "$tarball" ]]; then
+    mkdir -p "$stage/bin/$platform"
+    tar -xzf "$tarball" -C "$stage/bin/$platform" --strip-components=1
+    found=$((found + 1))
+  elif [[ "$partial" -eq 0 ]]; then
+    echo "package-plugin: missing $tarball" >&2
+    exit 1
+  fi
+done
+
+if [[ "$found" -eq 0 ]]; then
+  echo "package-plugin: no release tarballs in $dist" >&2
+  exit 1
+fi
+
+# The text the plugin ships names the release's own account; programs and bundles (binary) are
+# left as they are. perl -pi edits in place the same way on macOS and Linux.
+{ grep -rlIw OWNER "$stage" || true; } | while IFS= read -r file; do
+  OWNER_NAME="$owner" perl -pi -e 's/\bOWNER\b/$ENV{OWNER_NAME}/g' "$file"
+done
+
+if left="$(grep -rnI OWNER "$stage")"; then
+  echo "package-plugin: a placeholder is left in what the plugin ships:" >&2
+  echo "$left" >&2
+  exit 1
+fi
+
+# The plugin starts the program through its launcher; when this machine's build is in the archive,
+# prove that path works.
+case "$(uname -s)-$(uname -m)" in
+  Darwin-*) mine="macos-universal" ;;
+  Linux-x86_64) mine="linux-x86_64" ;;
+  Linux-aarch64 | Linux-arm64) mine="linux-arm64" ;;
+  *) mine="" ;;
+esac
+
+if [[ -n "$mine" && -d "$stage/bin/$mine" ]]; then
+  said="$("$stage/bin/use-cases" --version)"
+  if [[ "$said" != "use-cases $version" ]]; then
+    echo "package-plugin: the launcher ran '$said', not 'use-cases $version'" >&2
+    exit 1
+  fi
+fi
+
+COPYFILE_DISABLE=1 tar -czf "$dist/$name.tar.gz" -C "$dist/plugin-stage" "$name"
+
+# The marketplace installs the plugin from this fixed-name zip, with the plugin root at the zip's
+# root. zip stores the unix modes, so the launcher and the programs stay executable.
+rm -f "$dist/use-cases-plugin.zip"
+(cd "$stage" && zip -qr -X "$dist/use-cases-plugin.zip" .)
+rm -rf "$dist/plugin-stage"
+echo "$dist/$name.tar.gz"

@@ -1,0 +1,8 @@
+schema_version: 1
+root: true
+prefix: library
+
+discovery:
+  exclude:
+    - "node_modules/**"
+    - "reports/**"

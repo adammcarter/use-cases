@@ -1,0 +1,51 @@
+prefix: tasks
+
+use_cases:
+  - id: completion
+    title: Complete a task
+    value_tier: core
+    intent: Completing a task removes it from the open list and it can no longer be overdue.
+    scenarios:
+      - id: leaves-open-list
+        when: [A task is completed.]
+        then: [It is no longer in the open list.]
+      - id: unknown-task
+        when: [An unknown task is completed.]
+        then: [It is refused.]
+      - id: done-not-overdue
+        given: [A task that was due yesterday.]
+        when: [It is done.]
+        then: [It is not overdue.]
+    validation:
+      - id: unit-tests
+        type: { kind: unit }
+        covers: [leaves-open-list, unknown-task, done-not-overdue]
+
+  - id: agenda
+    title: Show what matters first
+    value_tier: critical
+    intent: The agenda shows overdue tasks first, then by priority, then by due date.
+    scenarios:
+      - id: overdue-first
+        when: [A low-priority task is overdue.]
+        then: [It comes before a high-priority task that is not.]
+      - id: priority-then-date
+        when: [Tasks share a priority.]
+        then: ["The one due sooner comes first, undated last."]
+    validation:
+      - id: unit-tests
+        type: { kind: unit }
+        covers: [overdue-first, priority-then-date]
+
+  - id: recurring
+    title: Recurring tasks come back
+    value_tier: supporting
+    intent: A recurring task reappears after it is completed.
+    scenarios:
+      - id: reappears
+        when: [A recurring task is completed.]
+        then: [A new instance appears.]
+    validation:
+      - id: unit-tests
+        type: { kind: unit }
+        covers: [reappears]

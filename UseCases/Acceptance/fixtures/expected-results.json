@@ -1,0 +1,34 @@
+{
+  "contract": 1,
+  "diagnostics": [],
+  "results": [
+    {
+      "link": "shop.login.authenticate#unit-tests.invalid-password@Tests/AuthTests/LoginTests.swift:13",
+      "status": "pass",
+      "tests": ["AuthTests.LoginTests/invalidPasswordIsRejected()/LoginTests.swift:13:6"]
+    },
+    {
+      "link": "shop.login.authenticate#unit-tests.valid-credentials@Tests/AuthTests/LoginTests.swift:6",
+      "status": "pass",
+      "tests": ["AuthTests.LoginTests/validCredentialsAuthenticate()/LoginTests.swift:6:6"]
+    },
+    {
+      "link": "shop.login.lockout#unit-tests.three-failures@Tests/AuthTests/LoginTests.swift:21",
+      "status": "fail",
+      "tests": ["AuthTests.LoginTests/lockedOutAfterThreeFailures()/LoginTests.swift:21:6"]
+    },
+    {
+      "link": "shop.login.password-reset#unit-tests.sends-reset@Tests/AuthTests/LoginTests.swift:29",
+      "status": "incomplete",
+      "tests": ["AuthTests.LoginTests/sendsResetEmail()/LoginTests.swift:29:6"]
+    }
+  ],
+  "unlinked": [
+    {
+      "file": "Tests/AuthTests/LoginTests.swift",
+      "line": 35,
+      "status": "pass",
+      "test": "AuthTests.LoginTests/notTiedToAnyUseCase()/LoginTests.swift:35:6"
+    }
+  ]
+}

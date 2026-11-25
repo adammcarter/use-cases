@@ -1,0 +1,5 @@
+schema_version: 1
+
+prefix: auth
+
+use_cases_dir: use-cases

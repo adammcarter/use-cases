@@ -1,0 +1,206 @@
+#!/bin/sh
+# ci-bounded-step: keep what a CI step prints bounded, and keep a stuck command from holding the job.
+# A test run prints lines of up to 2 MB (test arguments printed whole), and the runner scans every
+# line it receives; so a command's whole output goes to a file (kept as an artifact) and the step
+# prints only a bounded view of it.
+#
+#   ci-bounded-step run   [--minutes N] LOG COMMAND [ARGS...]
+#                                                 run COMMAND with every stream on LOG; then show
+#                                                 LOG and exit with COMMAND's exact status. With
+#                                                 --minutes, at N minutes COMMAND and every
+#                                                 process it started are killed, and the step
+#                                                 fails (124)
+#   ci-bounded-step show  LOG                     print LOG bounded (below)
+#   ci-bounded-step start DIR COMMAND [ARGS...]   start COMMAND in its own session, its output in
+#                                                 DIR/log; return at once (Linux)
+#   ci-bounded-step wait  DIR MINUTES             wait for it; print a snapshot of the machine every
+#                                                 minute; at MINUTES kill every process in the
+#                                                 container except PID 1, the container's entrypoint
+#                                                 and this script's own ancestors, then fail (124)
+#
+# Bounded: every line cut to $LINE_WIDTH characters. A log of more than $MAX_LINES lines is shown as
+# the test-bounded report (from the first "test-bounded: " line among the last $REPORT_LINES), every line that
+# mentions a failure or an issue (at most $MAX_MATCHES), and the last $TAIL_LINES lines.
+#
+# start/wait: DIR holds log (the command's whole output), exit (its exit status, once it ends) and
+# started (the start time, seconds). The bound counts from the start, not from the wait, so it holds
+# whatever the steps in between took. Nothing here relies on the runner's step limit or on a cancel:
+# both go through the runner on the host, which a starved machine may not be able to act on.
+
+set -u
+LINE_WIDTH=500
+MAX_LINES=2000
+TAIL_LINES=300
+MAX_MATCHES=500
+REPORT_LINES=40
+
+usage() { echo "usage: ci-bounded-step run [--minutes N] LOG ... | show LOG | start|wait DIR ..." >&2; exit 2; }
+cmd=${1-}; target=${2-}
+[ -n "$cmd" ] && [ -n "$target" ] || usage
+shift 2
+
+# cut_lines: each line of stdin, its carriage returns dropped (a terminal's line ends), cut to
+# LINE_WIDTH characters.
+cut_lines() { LC_ALL=C tr -d '\r' | LC_ALL=C cut -c1-"$LINE_WIDTH"; }
+
+show() {
+  log=$1
+  [ -f "$log" ] || { echo "ci-bounded-step: no log at $log"; return 0; }
+  lines=$(wc -l < "$log" | tr -d ' ')
+  if [ "$lines" -le "$MAX_LINES" ]; then
+    echo "--- $log: $lines lines, each cut to $LINE_WIDTH characters"
+    cut_lines < "$log"
+    return 0
+  fi
+  echo "--- $log: $lines lines; shown: the test-bounded report, the lines that mention a failure or an issue, the last $TAIL_LINES lines; each cut to $LINE_WIDTH characters; the whole log is in the artifact"
+  echo "--- the test-bounded report"
+  tail -n "$REPORT_LINES" "$log" | LC_ALL=C awk '/^test-bounded: /{ on = 1 } on' | cut_lines
+  matches=$(LC_ALL=C grep -a -c -i -E 'fail|issue' "$log")
+  echo "--- lines that mention a failure or an issue: $matches"
+  LC_ALL=C grep -a -i -E 'fail|issue' "$log" | head -n "$MAX_MATCHES" | cut_lines
+  [ "$matches" -gt "$MAX_MATCHES" ] && echo "... and $((matches - MAX_MATCHES)) more (whole: $log)"
+  echo "--- the last $TAIL_LINES lines"
+  tail -n "$TAIL_LINES" "$log" | cut_lines
+}
+
+# kill_tree PID: SIGKILL PID and every descendant of it, whatever their process groups. The
+# table is read before anything is killed, because a killed parent's children are handed to
+# init and are then nobody's descendants. Repeats, because a dying process can have just forked.
+kill_tree() {
+  _root=$1
+  for _ in 1 2 3; do
+    # shellcheck disable=SC2046  # one word per process ID
+    set -- $(ps -A -o pid=,ppid= | LC_ALL=C awk -v root="$_root" '
+      { parent[$1] = $2 }
+      END {
+        if (!(root in parent)) exit
+        tree[root] = 1
+        do { grown = 0
+          for (p in parent) if (!(p in tree) && (parent[p] in tree)) { tree[p] = 1; grown = 1 }
+        } while (grown)
+        for (p in tree) print p
+      }')
+    [ $# -gt 0 ] || break
+    kill -KILL "$@" 2>/dev/null
+    sleep 1
+  done
+}
+
+case $cmd in
+  run)
+    minutes=
+    if [ "$target" = --minutes ]; then
+      minutes=${1-}; target=${2-}
+      case $minutes in ''|*[!0-9]*) echo "ci-bounded-step run: --minutes takes digits" >&2; exit 2 ;; esac
+      [ -n "$target" ] || usage
+      shift 2
+    fi
+    [ $# -gt 0 ] || usage
+    mkdir -p "$(dirname "$target")" || exit 2
+    if [ -z "$minutes" ]; then
+      # No pipe: the command's status is read straight from it, so none is lost.
+      "$@" > "$target" 2>&1 < /dev/null
+      status=$?
+    else
+      # The clock only signals this shell, which stays free to act; the bound holds whether or
+      # not the runner's own step limit or a cancel can act.
+      hit=0
+      trap 'hit=1' USR1
+      "$@" > "$target" 2>&1 < /dev/null &
+      pid=$!
+      ( sleep $((minutes * 60)); kill -USR1 $$ ) < /dev/null > /dev/null 2>&1 &
+      clock=$!
+      # A wait that a signal ends returns early; wait again unless it was the clock's.
+      while :; do
+        { wait "$pid"; } 2>/dev/null
+        status=$?
+        [ "$hit" = 1 ] && break
+        kill -0 "$pid" 2>/dev/null || break
+      done
+      # Quietly: a shell can report a job it was told to kill ("Killed: 9").
+      { kill_tree "$clock"; wait "$clock"; } 2>/dev/null
+      if [ "$hit" = 1 ]; then
+        { kill_tree "$pid"; wait "$pid"; } 2>/dev/null
+        status=124
+        echo "::error::ci-bounded-step: not ended $minutes minute(s) after it started; the command and everything it started were killed"
+      fi
+    fi
+    show "$target"
+    echo "ci-bounded-step: exit $status: $*" | cut_lines
+    exit "$status"
+    ;;
+  show)
+    show "$target"
+    ;;
+  start)
+    dir=$target
+    [ $# -gt 0 ] || { echo "ci-bounded-step start: no command" >&2; exit 2; }
+    mkdir -p "$dir" && rm -f "$dir/exit" && date +%s > "$dir/started" && : > "$dir/log" || exit 2
+    # Its own session, no terminal, every standard stream on a file: nothing of it holds the step's
+    # pipes, so this step ends at once and the command outlives it.
+    # shellcheck disable=SC2016  # expanded by the inner shell
+    setsid sh -c '"$@" > "$0/log" 2>&1 < /dev/null; echo $? > "$0/exit.tmp"; mv "$0/exit.tmp" "$0/exit"' \
+      "$dir" "$@" < /dev/null > /dev/null 2>&1 &
+    echo "ci-bounded-step: started in the background: $*" | cut_lines
+    ;;
+  wait)
+    dir=$target
+    snapshot() {
+      echo "::group::snapshot $(date -u +%H:%M:%S) ($(( $(date +%s) - $(head -n1 "$dir/started") ))s since start)"
+      uptime
+      free -m
+      df -h / /tmp 2>/dev/null
+      [ -r /proc/pressure/memory ] && { echo "memory pressure:"; head -n2 /proc/pressure/memory; }
+      [ -r /sys/fs/cgroup/memory.events ] && { echo "cgroup memory.events:"; head -n8 /sys/fs/cgroup/memory.events; }
+      [ -r /sys/fs/cgroup/pids.current ] && echo "pids: $(head -n1 /sys/fs/cgroup/pids.current) of $(head -n1 /sys/fs/cgroup/pids.max 2>/dev/null)"
+      set -- /proc/[0-9]*
+      echo "processes: $#"
+      # ps reads every /proc/PID/cmdline, which can block on a stuck process: bound it.
+      timeout -s KILL 20 ps -eo pid,ppid,stat,etime,time,rss,wchan:22,args --sort=-rss 2>&1 | head -n 45 | cut -c1-220
+      echo "--- last 40 lines of the log"
+      tail -n 40 "$dir/log" | cut_lines
+      echo "::endgroup::"
+    }
+    minutes=${1-}
+    case $minutes in ''|*[!0-9]*) echo "ci-bounded-step wait: MINUTES must be digits" >&2; exit 2 ;; esac
+    [ -s "$dir/started" ] || { echo "ci-bounded-step wait: nothing was started in $dir" >&2; exit 2; }
+    deadline=$(( $(head -n1 "$dir/started") + minutes * 60 ))
+    next=0
+    while [ ! -s "$dir/exit" ]; do
+      now=$(date +%s)
+      if [ "$now" -ge "$deadline" ]; then
+        snapshot
+        echo "::error::ci-bounded-step: not ended $minutes minute(s) after it started; killing every process in the container"
+        # Spare PID 1 (the init), the entrypoint (tail -f /dev/null, which keeps the container up
+        # for the later steps and the runner's clean-up), and our own ancestors.
+        spare=" 1 "
+        p=$$
+        while [ -n "$p" ] && [ "$p" != 0 ]; do spare="$spare$p "; p=$(awk '{print $4}' "/proc/$p/stat" 2>/dev/null); done
+        # The process table is read from /proc directly: ps reads every command line and can block
+        # on a stuck process. A command line is NUL-separated: "tail" "-f" "/dev/null".
+        for d in /proc/[0-9]*; do
+          [ "$(tr '\0' ' ' < "$d/cmdline" 2>/dev/null)" = "tail -f /dev/null " ] && spare="$spare${d#/proc/} "
+        done
+        for _ in 1 2 3; do
+          for d in /proc/[0-9]*; do
+            p=${d#/proc/}
+            case $spare in *" $p "*) continue ;; esac
+            kill -KILL "$p" 2>/dev/null
+          done
+          sleep 1
+        done
+        echo "--- processes left"
+        timeout -s KILL 20 ps -eo pid,ppid,stat,args | cut -c1-200
+        show "$dir/log"
+        exit 124
+      fi
+      if [ "$now" -ge "$next" ]; then snapshot; next=$(( now + 60 )); fi
+      sleep 10
+    done
+    status=$(head -n1 "$dir/exit")
+    show "$dir/log"
+    echo "ci-bounded-step: ended by itself, exit $status"
+    exit "$status"
+    ;;
+  *) usage ;;
+esac
