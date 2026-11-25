@@ -10,6 +10,13 @@ work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 failures=0
 
+for tool in zip zipinfo; do
+  if ! command -v "$tool" >/dev/null 2>&1; then
+    echo "test-release: $tool is not installed; the plugin zip checks need zip and unzip (apt-get install zip unzip)" >&2
+    exit 1
+  fi
+done
+
 expect() { # expect <description> <condition status>
   if [[ "$2" -eq 0 ]]; then
     echo "ok   $1"
@@ -108,7 +115,7 @@ if [[ -f "$zip" ]]; then
 fi
 
 marketplace="$root/.claude-plugin/marketplace.json"
-url="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["plugins"][0]["source"]["url"])' "$marketplace" 2>/dev/null || true)"
+url="$(sed -n 's/.*"url": *"\([^"]*\)".*/\1/p' "$marketplace" | head -n 1)"
 expect "the marketplace parses and its url names the zip package-plugin writes" "$([[ "${url##*/}" == "$(basename "$zip")" ]] && echo 0 || echo 1)"
 expect "no account, no plugin archive" "$(package "$root" "" >/dev/null 2>&1 && echo 1 || echo 0)"
 

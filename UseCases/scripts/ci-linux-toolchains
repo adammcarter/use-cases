@@ -61,10 +61,10 @@ if [ -n "$sudo" ]; then $sudo chown "$(id -u):$(id -g)" "$TOOLS"; fi
 # download URL FILE: fetch, retrying, to a file under $work.
 download() { curl -fsSL --retry 5 --retry-delay 3 --retry-all-errors -o "$work/$2" "$1"; }
 
-step "apt: curl, openssl, xz-utils, unzip, cmake, build-essential, OpenJDK 21"
+step "apt: curl, openssl, xz-utils, zip, unzip, cmake, build-essential, OpenJDK 21"
 $sudo apt-get update -qq
 $sudo apt-get install -y -qq --no-install-recommends \
-  ca-certificates curl openssl xz-utils unzip cmake build-essential openjdk-21-jdk-headless >/dev/null
+  ca-certificates curl openssl xz-utils zip unzip cmake build-essential openjdk-21-jdk-headless >/dev/null
 $sudo apt-get clean
 
 step "Node $NODE_VERSION"

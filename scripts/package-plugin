@@ -18,6 +18,11 @@ if [[ ! "$owner" =~ ^[A-Za-z0-9][A-Za-z0-9-]*$ ]]; then
   exit 1
 fi
 
+if ! command -v zip >/dev/null 2>&1; then
+  echo "package-plugin: zip is not installed; the plugin zip needs it (apt-get install zip)" >&2
+  exit 1
+fi
+
 dist="${DIST_DIR:-$root/dist}"
 
 partial=0

@@ -68,6 +68,9 @@ jobs:
       TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
     steps:
       - uses: actions/checkout@v4
+      - name: Zip tools
+        # The swift image holds neither: package-plugin makes the plugin zip, test-release reads it.
+        run: apt-get update -qq && apt-get install -y -qq --no-install-recommends zip unzip
       - name: Release scripts
         run: scripts/test-release
       - name: Package
@@ -95,6 +98,9 @@ jobs:
       TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
     steps:
       - uses: actions/checkout@v4
+      - name: Zip tools
+        # The swift image holds neither: package-plugin makes the plugin zip, test-release reads it.
+        run: apt-get update -qq && apt-get install -y -qq --no-install-recommends zip unzip
       - name: Release scripts
         run: scripts/test-release
       - name: Package
