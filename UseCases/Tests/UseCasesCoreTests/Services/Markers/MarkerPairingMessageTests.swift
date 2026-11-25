@@ -26,8 +26,9 @@ struct MarkerPairingMessageTests {
     #expect(
       diagnostic.description
         == "tests/fixtures/sample.swift:3: marker 'shop.cart.add#add-item' is never closed: "
-        + "no '@use-case:end shop.cart.add#add-item' follows it; if this file holds marker text "
-        + "as data, exclude it with discovery.exclude in use-cases.yml",
+        + "no '\(MarkerText.sentinel)end shop.cart.add#add-item' follows it; "
+        + "if this file holds marker text as data, "
+        + "exclude it with discovery.exclude in use-cases.yml",
     )
   }
 

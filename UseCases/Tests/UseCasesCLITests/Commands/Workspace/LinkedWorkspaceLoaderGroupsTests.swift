@@ -37,7 +37,7 @@ struct LinkedWorkspaceLoaderGroupsTests {
       "schema_version: 1\nlinks:\n  - transformer: tools/links\n",
     )
     try workspace.folder.write("use-case-groups.yml", "schema_version: 1\n")
-    try workspace.folder.write("src/a.swift", "// @use-case:shop.pay.card#x\nwork()\n")
+    try workspace.folder.write("src/a.swift", "// \(MarkerText.sentinel)shop.pay.card#x\nwork()\n")
 
     let refusal = await confirmation(expectedCount: 0) { asked in
       let transformers = MockTransformerLinks { _ in

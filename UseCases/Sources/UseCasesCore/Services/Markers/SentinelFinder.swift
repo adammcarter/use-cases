@@ -1,6 +1,8 @@
 struct SentinelFinder: SentinelFinding {
-  /// The bytes `@use-case:`.
-  private static let sentinel = Array("@use-case:".utf8)
+  /// The sentinel text, built from two parts because the tool scans its own repository for markers.
+  static let sentinelText = "@use-case" + ":"
+
+  private static let sentinel = Array(sentinelText.utf8)
 
   /// How many letters, digits and underscores after an id run are kept to name in a warning.
   private static let followingWordLimit = 40
@@ -39,7 +41,7 @@ struct SentinelFinder: SentinelFinding {
     return found
   }
 
-  /// The offset of the next `@use-case:` at or after `start`.
+  /// The offset of the next sentinel at or after `start`.
   private func nextSentinel(
     in bytes: [UInt8],
     from start: Int,

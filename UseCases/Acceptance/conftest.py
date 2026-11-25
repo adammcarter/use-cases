@@ -20,6 +20,9 @@ import yaml
 from jsonschema import Draft202012Validator, FormatChecker
 from referencing import Registry, Resource
 
+# The marker sentinel, built from two parts: the tool scans its own repository for markers.
+SENTINEL = "@use-case" + ":"
+
 PUBLISHED = Path(__file__).resolve().parents[2] / "docs" / "schemas"
 registry = Registry()
 for path in sorted(PUBLISHED.glob("*/*.schema.json")):

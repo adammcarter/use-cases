@@ -11,7 +11,7 @@ import subprocess
 import sys
 
 import pytest
-from conftest import call_core, COMMAND
+from conftest import SENTINEL, call_core, COMMAND
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ROOT = "schema_version: 1\nroot: true\nprefix: app\n"
@@ -159,7 +159,7 @@ def test_pointing_at_a_child_scope_is_refused_so_ids_never_shift(tmp_path):
 def test_a_vendored_workspace_is_its_own_and_never_entered(tmp_path):
     vendored = {"vendor/auth/use-cases.yml": "schema_version: 1\nroot: true\nprefix: auth\n",
                 "vendor/auth/use-cases/login.yml": use_case("login"),
-                "vendor/auth/src/login.js": "// @use-case:auth.login#code\nx\n// @use-case:end auth.login#code\n"}
+                "vendor/auth/src/login.js": f"// {SENTINEL}auth.login#code\nx\n// {SENTINEL}end auth.login#code\n"}
     ws = workspace(tmp_path, {"use-cases/ui.yml": use_case(), **vendored})
     host = uc(ws, "status")
     assert [u["use_case"] for u in host["use_cases"]] == ["app.toggle"]  # its use cases and markers stay its own

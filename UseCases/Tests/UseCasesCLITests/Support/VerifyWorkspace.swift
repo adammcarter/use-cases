@@ -50,8 +50,8 @@ struct VerifyWorkspace {
     )
     try folder.write(
       "tests/pay.swift",
-      "// @use-case:shop.pay.card#unit-tests.works\ncheck()\n"
-        + "// @use-case:end shop.pay.card#unit-tests.works\n",
+      "// \(MarkerText.sentinel)shop.pay.card#unit-tests.works\ncheck()\n"
+        + "// \(MarkerText.sentinel)end shop.pay.card#unit-tests.works\n",
     )
     try folder.writeProgram("tools/results", transformer)
 

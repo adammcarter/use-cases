@@ -197,8 +197,8 @@ struct VerifyCommandFinishTests {
     _ = try await startedWithReport()
     try workspace.folder.write(
       "tests/pay.swift",
-      "// @use-case:shop.pay.card#unit-tests.works\ncheck(changed)\n"
-        + "// @use-case:end shop.pay.card#unit-tests.works\n",
+      "// \(MarkerText.sentinel)shop.pay.card#unit-tests.works\ncheck(changed)\n"
+        + "// \(MarkerText.sentinel)end shop.pay.card#unit-tests.works\n",
     )
 
     let result = await workspace.run(["--json", "verify", "--finish"])

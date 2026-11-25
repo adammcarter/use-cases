@@ -64,7 +64,7 @@ struct LinkResolverTransformedTests {
 
   @Test
   func `what the transformers said is a warning in the same report order as the rest`() throws {
-    try fixture.write("src/app.swift", "// @use-case:BAD\n")
+    try fixture.write("src/app.swift", "// \(MarkerText.sentinel)BAD\n")
 
     let resolution = try resolve(
       transformed(

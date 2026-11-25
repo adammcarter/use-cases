@@ -67,9 +67,13 @@ struct LinkResolverTests {
 
   @Test
   func `diagnostics order by path, then line as a number, then code`() throws {
-    let lines = String(repeating: "\n", count: 8) + "# @use-case:BAD\n# @use-case:BAD\n"
+    let lines = String(repeating: "\n", count: 8)
+      + "# \(MarkerText.sentinel)BAD\n# \(MarkerText.sentinel)BAD\n"
     try fixture.write("src/x.py", lines)
-    try fixture.write("src/a.py", String(repeating: "\n", count: 19) + "# @use-case:BAD\n")
+    try fixture.write(
+      "src/a.py",
+      String(repeating: "\n", count: 19) + "# \(MarkerText.sentinel)BAD\n",
+    )
 
     let warnings = try fixture.resolved()
       .warnings(containing: "malformed")
@@ -84,7 +88,7 @@ struct LinkResolverTests {
   {
     try fixture.writeUseCase(bindings: [LinkSamples.binding("x", file: "nope.swift")])
     try fixture.write("src/app.swift", LinkSamples.marked("app.toggle#render", "draw()"))
-    try fixture.write("src/other.swift", "// @use-case:Bad_ID\n")
+    try fixture.write("src/other.swift", "// \(MarkerText.sentinel)Bad_ID\n")
 
     let resolution = try fixture.resolved()
 
@@ -102,8 +106,8 @@ struct LinkResolverTests {
         LinkSamples.binding("two", file: "missing/two.swift"),
       ],
     )
-    try fixture.write("src/a.swift", "// @use-case:app.toggle#x\n")
-    try fixture.write("src/b.swift", "// @use-case:end app.toggle#y\n")
+    try fixture.write("src/a.swift", "// \(MarkerText.sentinel)app.toggle#x\n")
+    try fixture.write("src/b.swift", "// \(MarkerText.sentinel)end app.toggle#y\n")
 
     #expect(try fixture.resolved().problems.count == 4)
   }
@@ -111,7 +115,7 @@ struct LinkResolverTests {
   @Test
   func `the warnings of the load come with the warnings of the links`() throws {
     try fixture.write("bad\nfolder/code.swift", "x\n")
-    try fixture.write("src/other.swift", "// @use-case:Bad_ID\n")
+    try fixture.write("src/other.swift", "// \(MarkerText.sentinel)Bad_ID\n")
 
     let resolution = try fixture.resolved()
 
@@ -128,7 +132,7 @@ struct LinkResolverTests {
     try fixture.write("config/auth.yml", "a: 1\n")
     let region = LinkSamples.marked("app.toggle#render", "draw()")
     try fixture.write("src/b.swift", region)
-    try fixture.write("src/a.swift", region + "// @use-case:Bad_ID\n")
+    try fixture.write("src/a.swift", region + "// \(MarkerText.sentinel)Bad_ID\n")
     try fixture.write("tests/c.swift", LinkSamples.marked("app.toggle#manual.t", "x"))
     let workspace = try fixture.loaded()
     let reversed = ReversedListingFileSystem()

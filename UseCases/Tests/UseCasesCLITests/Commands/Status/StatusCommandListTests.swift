@@ -215,7 +215,8 @@ struct StatusCommandListTests {
   ) async throws {
     try workspace.folder.write(
       "src/pay.py",
-      "# @use-case:shop.pay.card#charge\n\(inside)# @use-case:end shop.pay.card#charge\n",
+      "# \(MarkerText.sentinel)shop.pay.card#charge\n\(inside)"
+        + "# \(MarkerText.sentinel)end shop.pay.card#charge\n",
     )
     let expected =
       "warning: shop.pay.card: src/pay.py:2: its marked region is empty; "
@@ -234,8 +235,8 @@ struct StatusCommandListTests {
   func `a marked region with code raises nothing`() async throws {
     try workspace.folder.write(
       "src/pay.py",
-      "# @use-case:shop.pay.card#charge\ndef charge(): pass\n"
-        + "# @use-case:end shop.pay.card#charge\n",
+      "# \(MarkerText.sentinel)shop.pay.card#charge\ndef charge(): pass\n"
+        + "# \(MarkerText.sentinel)end shop.pay.card#charge\n",
     )
 
     #expect(await !(workspace.run(["status"])).standardOutput.contains("marked region is empty"))

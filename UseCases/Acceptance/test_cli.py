@@ -11,7 +11,7 @@ import subprocess
 import sys
 
 import pytest
-from conftest import POSIX_ONLY, call_core, COMMAND
+from conftest import SENTINEL, POSIX_ONLY, call_core, COMMAND
 
 GATING = "        procedure:\n          steps: [Check it.]\n"
 
@@ -376,7 +376,7 @@ def test_interactive_asks_for_each_value_and_shows_the_steps(ws):
 def test_an_emptied_marked_region_is_said_everywhere_people_look(ws, inside):
     os.makedirs(os.path.join(ws, "src"))
     with open(os.path.join(ws, "src", "pay.py"), "w") as handle:
-        handle.write(f"# @use-case:shop.pay.card#charge\n{inside}# @use-case:end shop.pay.card#charge\n")
+        handle.write(f"# {SENTINEL}shop.pay.card#charge\n{inside}# {SENTINEL}end shop.pay.card#charge\n")
     assert "src/pay.py:2: empty marker region: shop.pay.card#charge" in uc(ws, "links")["diagnostics"]
     entry = next(u for u in uc(ws, "status")["use_cases"] if u["use_case"] == "shop.pay.card")
     assert "src/pay.py:2: its marked region is empty; if the code moved, move its markers with it" in entry["warnings"]
@@ -389,7 +389,7 @@ def test_an_emptied_marked_region_is_said_everywhere_people_look(ws, inside):
 def test_a_marked_region_with_code_raises_nothing(ws):
     os.makedirs(os.path.join(ws, "src"))
     with open(os.path.join(ws, "src", "pay.py"), "w") as handle:
-        handle.write("# @use-case:shop.pay.card#charge\ndef charge(): pass\n# @use-case:end shop.pay.card#charge\n")
+        handle.write(f"# {SENTINEL}shop.pay.card#charge\ndef charge(): pass\n# {SENTINEL}end shop.pay.card#charge\n")
     assert uc(ws, "links")["diagnostics"] == []
     assert "marked region is empty" not in human(ws, "status")[1]
 
@@ -401,9 +401,9 @@ def test_links_for_an_id_that_is_also_a_prefix_is_that_use_case_alone_and_diagno
     with open(os.path.join(ws, "use-cases", "top.yml"), "w") as handle:
         handle.write("use_cases:\n" + use_case("pay"))  # shop.pay, beside shop.pay.card and the rest
     os.makedirs(os.path.join(ws, "src"))
-    for rel, text in {"pay.py": "# @use-case:shop.pay#top\nx\n# @use-case:end shop.pay#top\n"
-                                "# @use-case:shop.pay.card#charge\ny\n# @use-case:end shop.pay.card#charge\n",
-                      "cart.py": "# @use-case:shop.cart.add#put\nz\n# @use-case:end shop.cart.add#put\n# @use-case:BAD\n"}.items():
+    for rel, text in {"pay.py": f"# {SENTINEL}shop.pay#top\nx\n# {SENTINEL}end shop.pay#top\n"
+                                f"# {SENTINEL}shop.pay.card#charge\ny\n# {SENTINEL}end shop.pay.card#charge\n",
+                      "cart.py": f"# {SENTINEL}shop.cart.add#put\nz\n# {SENTINEL}end shop.cart.add#put\n# {SENTINEL}BAD\n"}.items():
         with open(os.path.join(ws, "src", rel), "w") as handle:
             handle.write(text)
     everything = uc(ws, "links")

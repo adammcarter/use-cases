@@ -19,9 +19,9 @@ struct MarkerScannerScaleTests {
     text.reserveCapacity(4_000_000)
 
     for index in 0 ..< 30000 {
-      text += "// @use-case:example.big#binding-\(index % 50)\n"
+      text += "// \(MarkerText.sentinel)example.big#binding-\(index % 50)\n"
       text += "let value = \(index) // ordinary code\n"
-      text += "// @use-case:end example.big#binding-\(index % 50)\n"
+      text += "// \(MarkerText.sentinel)end example.big#binding-\(index % 50)\n"
     }
 
     text += String(repeating: "let filler = 1\n", count: 10000)
@@ -39,11 +39,11 @@ struct MarkerScannerScaleTests {
     var text = ""
 
     for index in 0 ..< Self.depth {
-      text += "// @use-case:example.nest#binding-\(index)\nx\n"
+      text += "// \(MarkerText.sentinel)example.nest#binding-\(index)\nx\n"
     }
 
     for index in (0 ..< Self.depth).reversed() {
-      text += "// @use-case:end example.nest#binding-\(index)\nx\n"
+      text += "// \(MarkerText.sentinel)end example.nest#binding-\(index)\nx\n"
     }
 
     let scan = try MarkerSamples.scan(text)
@@ -65,11 +65,11 @@ struct MarkerScannerScaleTests {
     var text = ""
 
     for index in 0 ..< Self.depth {
-      text += "/*@use-case:example.nest#binding-\(index)*/ x "
+      text += "/*\(MarkerText.sentinel)example.nest#binding-\(index)*/ x "
     }
 
     for index in (0 ..< Self.depth).reversed() {
-      text += "/*@use-case:end example.nest#binding-\(index)*/ x "
+      text += "/*\(MarkerText.sentinel)end example.nest#binding-\(index)*/ x "
     }
 
     let scan = try MarkerSamples.scan(text)
@@ -90,11 +90,11 @@ struct MarkerScannerScaleTests {
     var text = ""
 
     for index in 0 ..< depth {
-      text += "@use-case:example.nest#binding-\(index) "
+      text += "\(MarkerText.sentinel)example.nest#binding-\(index) "
     }
 
     for index in (0 ..< depth).reversed() {
-      text += "@use-case:end example.nest#binding-\(index) "
+      text += "\(MarkerText.sentinel)end example.nest#binding-\(index) "
     }
 
     return try MarkerSamples.scan(text)
@@ -114,7 +114,8 @@ struct MarkerScannerScaleTests {
 
   @Test
   func `thirty thousand same-line regions on one line are all found`() throws {
-    let pair = "/* @use-case:example.row#cell */ v /* @use-case:end example.row#cell */ "
+    let pair = "/* \(MarkerText.sentinel)example.row#cell */ v "
+      + "/* \(MarkerText.sentinel)end example.row#cell */ "
     let text = String(repeating: pair, count: 30000) + "\n"
 
     let scan = try MarkerSamples.scan(text)

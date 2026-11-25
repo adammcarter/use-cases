@@ -90,7 +90,7 @@ enum ExpectedFingerprints {
     in file: String,
     policy: FreshnessPolicy = FingerprintSamples.defaultPolicy,
   ) throws -> LinkContribution {
-    let start = "// @use-case:\(target)\n".utf8.count
+    let start = "// \(MarkerText.sentinel)\(target)\n".utf8.count
     let content = Array((body + "\n").utf8)
     let binding = try #require(target.split(separator: "#").last?.split(separator: ".").last)
 

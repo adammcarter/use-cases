@@ -12,7 +12,7 @@ import subprocess
 import sys
 
 import pytest
-from conftest import call_core, COMMAND
+from conftest import SENTINEL, call_core, COMMAND
 from test_languages import FIXTURES, env
 
 USE_CASE = "invoicing.billing.item-count"
@@ -27,17 +27,17 @@ PROPOSAL = {
 }
 TEST = f'''
 
-# @use-case:{USE_CASE}#unit-tests.counts
+# {SENTINEL}{USE_CASE}#unit-tests.counts
 def test_an_invoice_counts_its_items():
     invoice = Invoice("exempt").add(LineItem("Widget", Decimal("1"), 2)).add(LineItem("Gadget", Decimal("1")))
     assert invoice.item_count == 3
-# @use-case:end {USE_CASE}#unit-tests.counts
+# {SENTINEL}end {USE_CASE}#unit-tests.counts
 '''
 CODE = f'''    @property
-    # @use-case:{USE_CASE}#count
+    # {SENTINEL}{USE_CASE}#count
     def item_count(self) -> int:
         return sum(item.quantity for item in self.items)
-    # @use-case:end {USE_CASE}#count
+    # {SENTINEL}end {USE_CASE}#count
 
     def apply(self, discount) -> "Invoice":'''
 

@@ -4,8 +4,8 @@ import Testing
 struct MarkerScannerLineModeTests {
   private static let open = "// \(MarkerSamples.open)\n"
   private static let close = "// \(MarkerSamples.close)\n"
-  private static let innerOpen = "// @use-case:example.other#inner\n"
-  private static let innerClose = "// @use-case:end example.other#inner\n"
+  private static let innerOpen = "// \(MarkerText.sentinel)example.other#inner\n"
+  private static let innerClose = "// \(MarkerText.sentinel)end example.other#inner\n"
 
   private func emptyWarning(
     line: Int,
@@ -255,7 +255,8 @@ struct MarkerScannerLineModeTests {
 
   @Test
   func `a marker inside a string counts`() throws {
-    let text = "let begin = \"@use-case:example.a#b\"\nx\nlet end = \"@use-case:end example.a#b\"\n"
+    let text = "let begin = \"\(MarkerText.sentinel)example.a#b\"\nx\n"
+      + "let end = \"\(MarkerText.sentinel)end example.a#b\"\n"
 
     let region = try #require(MarkerSamples.scan(text).regions.first)
 
@@ -265,7 +266,7 @@ struct MarkerScannerLineModeTests {
 
   @Test
   func `a sentinel line with a malformed id is not content either`() throws {
-    let text = Self.open + "abc\n// @use-case:Bad\ndef\n" + Self.close
+    let text = Self.open + "abc\n// \(MarkerText.sentinel)Bad\ndef\n" + Self.close
 
     let scan = try MarkerSamples.scan(text)
 

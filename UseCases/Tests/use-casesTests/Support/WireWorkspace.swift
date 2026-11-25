@@ -124,9 +124,9 @@ struct WireWorkspace {
 
     """,
     "test/slow.test.sh": """
-    # @use-case:duration.text.parse#unit-tests.adds-units
+    # \(MarkerText.sentinel)duration.text.parse#unit-tests.adds-units
     true
-    # @use-case:end duration.text.parse#unit-tests.adds-units
+    # \(MarkerText.sentinel)end duration.text.parse#unit-tests.adds-units
 
     """,
   ]

@@ -33,8 +33,8 @@ struct LinkResolverConflictTests {
     let id = "app.toggle#manual.x"
     try fixture.write(
       "src/twice.js",
-      "/* @use-case:\(id) */ a /* @use-case:end \(id) */ "
-        + "/* @use-case:\(id) */ b /* @use-case:end \(id) */\n",
+      "/* \(MarkerText.sentinel)\(id) */ a /* \(MarkerText.sentinel)end \(id) */ "
+        + "/* \(MarkerText.sentinel)\(id) */ b /* \(MarkerText.sentinel)end \(id) */\n",
     )
 
     let resolution = try fixture.resolved()

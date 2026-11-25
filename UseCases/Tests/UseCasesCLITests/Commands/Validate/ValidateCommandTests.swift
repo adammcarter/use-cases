@@ -77,7 +77,7 @@ struct ValidateCommandTests {
     )
     try folder.write(
       "src/a.swift",
-      "// @use-case:app.only#top\nwork()\n// @use-case:end app.only#top\n",
+      "// \(MarkerText.sentinel)app.only#top\nwork()\n// \(MarkerText.sentinel)end app.only#top\n",
     )
 
     let result = try await run(["validate", "--quiet"], in: folder)
@@ -111,7 +111,7 @@ struct ValidateCommandTests {
   @Test
   func `a warning is listed and never fails validate`() async throws {
     let workspace = try LinksWorkspace()
-    try workspace.folder.write("src/a.swift", "// @use-case:BAD\n")
+    try workspace.folder.write("src/a.swift", "// \(MarkerText.sentinel)BAD\n")
 
     let human = await workspace.run(["validate"])
     let scripted = try await workspace.run(["--json", "validate"]).document()
@@ -188,7 +188,7 @@ struct ValidateCommandTests {
   func `a groups problem and a marker problem are raised together`() async throws {
     let workspace = try LinksWorkspace()
     try workspace.folder.write("use-case-groups.yml", "schema_version: 1\n")
-    try workspace.folder.write("src/a.swift", "// @use-case:shop.pay.card#x\nwork()\n")
+    try workspace.folder.write("src/a.swift", "// \(MarkerText.sentinel)shop.pay.card#x\nwork()\n")
 
     let result = await workspace.run(["validate"])
 
@@ -308,8 +308,8 @@ struct ValidateCommandTests {
   @Test
   func `a link problem refuses validate as invalid, with the problems one per line`() async throws {
     let workspace = try LinksWorkspace()
-    try workspace.folder.write("src/a.swift", "// @use-case:shop.pay#top\nwork()\n")
-    try workspace.folder.write("src/b.swift", "// @use-case:end shop.pay#top\n")
+    try workspace.folder.write("src/a.swift", "// \(MarkerText.sentinel)shop.pay#top\nwork()\n")
+    try workspace.folder.write("src/b.swift", "// \(MarkerText.sentinel)end shop.pay#top\n")
 
     let result = await workspace.run(["--json", "validate"])
     let found = try result.document()

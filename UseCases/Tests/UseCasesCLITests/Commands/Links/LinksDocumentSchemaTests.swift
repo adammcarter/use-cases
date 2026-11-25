@@ -13,7 +13,7 @@ struct LinksDocumentSchemaTests {
       "src/pay.swift",
       LinksWorkspace.marked("shop.pay#top")
         + LinksWorkspace.marked("shop.pay.card#unit-tests.charges", "check()")
-        + "// @use-case:BAD\n",
+        + "// \(MarkerText.sentinel)BAD\n",
     )
   }
 

@@ -48,7 +48,7 @@ struct LinkedWorkspaceLoaderTests {
 
   @Test
   func `a link problem refuses the workspace as invalid, a problem to a line`() async throws {
-    try workspace.folder.write("src/a.swift", "// @use-case:shop.pay#top\nwork()\n")
+    try workspace.folder.write("src/a.swift", "// \(MarkerText.sentinel)shop.pay#top\nwork()\n")
 
     await #expect(throws: LinkedWorkspaceError.self) {
       try await loader().load(from: .workspace(workspace.folder.url))

@@ -5,8 +5,8 @@ import Testing
 struct CodeScannerTests {
   private let fixture: WorkspaceFixture
   private let region = LinkSamples.marked("app.toggle#render", "draw()")
-  private let unpaired = "// @use-case:app.toggle#render\ndraw()\n"
-  private let comment = "# @use-case:app.toggle#render\n"
+  private let unpaired = "// \(MarkerText.sentinel)app.toggle#render\ndraw()\n"
+  private let comment = "# \(MarkerText.sentinel)app.toggle#render\n"
 
   init() throws {
     fixture = try WorkspaceFixture()
@@ -148,7 +148,10 @@ struct CodeScannerTests {
   func `a file symlink is read as the text it points with, never what is there`() throws {
     try fixture.write("src/real.swift", region)
     try fixture.directory.symlink("src/alias.swift", to: "real.swift")
-    try fixture.directory.symlink("src/marked.txt", to: "see @use-case:app.toggle#render")
+    try fixture.directory.symlink(
+      "src/marked.txt",
+      to: "see \(MarkerText.sentinel)app.toggle#render",
+    )
 
     let scan = try scanned()
 

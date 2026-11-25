@@ -1,5 +1,5 @@
 extension DiagnosticCode {
-  /// A file that holds `@use-case:` but whose markers cannot be read: not strict UTF-8, or
+  /// A file that holds the sentinel but whose markers cannot be read: not strict UTF-8, or
   /// starting with a UTF-16 or UTF-32 byte-order mark.
   static let unsupportedText: DiagnosticCode = "unsupported-text"
 

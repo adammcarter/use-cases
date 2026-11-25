@@ -86,7 +86,7 @@ struct LinksWorkspace {
     _ identifier: String,
     _ body: String = "work()",
   ) -> String {
-    "// @use-case:\(identifier)\n\(body)\n// @use-case:end \(identifier)\n"
+    "// \(MarkerText.sentinel)\(identifier)\n\(body)\n// \(MarkerText.sentinel)end \(identifier)\n"
   }
 
   private static func file(

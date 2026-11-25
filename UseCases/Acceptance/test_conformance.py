@@ -10,13 +10,13 @@ import re
 import subprocess
 
 import pytest
-from conftest import POSIX_ONLY, call_core, record_exchanges
+from conftest import SENTINEL, POSIX_ONLY, call_core, record_exchanges
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 CHAPTER_11 = os.path.join(REPO, "docs", "design", "11-fingerprints-and-freshness.md")
 
-OPEN = "@use-case:example.success#unit-tests.success"
-CLOSE = "@use-case:end example.success#unit-tests.success"
+OPEN = f"{SENTINEL}example.success#unit-tests.success"
+CLOSE = f"{SENTINEL}end example.success#unit-tests.success"
 
 
 def published_vectors():
@@ -107,14 +107,14 @@ def test_vector_b_from_a_workspace(tmp_path):
 
 
 def test_vector_d_from_a_workspace(tmp_path):
-    line = (f"x = /* {OPEN} */ f() + /* @use-case:example.other#inner */ g() /* @use-case:end example.other#inner */"
+    line = (f"x = /* {OPEN} */ f() + /* {SENTINEL}example.other#inner */ g() /* {SENTINEL}end example.other#inner */"
             f" /* {CLOSE} */\n")
     ws = workspace(tmp_path, {**BC_FILES, "tests/app_tests.swift": line})
     assert fingerprint(ws, "unit-tests") == published_vectors()["D"]
 
 
 def test_vector_e_from_a_workspace(tmp_path):
-    text = (f"// {OPEN}\nabc\n// @use-case:example.other#inner\ndef\n// @use-case:end example.other#inner\n// {CLOSE}\n")
+    text = (f"// {OPEN}\nabc\n// {SENTINEL}example.other#inner\ndef\n// {SENTINEL}end example.other#inner\n// {CLOSE}\n")
     ws = workspace(tmp_path, {**BC_FILES, "tests/app_tests.swift": text}, freshness="binding_identity: content-and-locator")
     assert fingerprint(ws, "unit-tests") == published_vectors()["E"]
 
@@ -138,7 +138,7 @@ def test_decoration_on_sentinel_lines_is_not_content(tmp_path):
 
 def test_adding_a_nested_marker_never_changes_the_outer_region(tmp_path):
     baseline = fingerprint(bc_with(tmp_path / "a", f"// {OPEN}\nabc\n// {CLOSE}\n"), "unit-tests")
-    nested = f"// {OPEN}\n// @use-case:example.other#inner\nabc\n// @use-case:end example.other#inner\n// {CLOSE}\n"
+    nested = f"// {OPEN}\n// {SENTINEL}example.other#inner\nabc\n// {SENTINEL}end example.other#inner\n// {CLOSE}\n"
     assert fingerprint(bc_with(tmp_path / "b", nested), "unit-tests") == baseline
 
 
@@ -165,14 +165,14 @@ def test_whitespace_normalization(tmp_path):
 
 
 def test_text_that_is_not_utf8_is_skipped_with_a_warning(tmp_path):
-    ws = bc_with(tmp_path, f"// {OPEN}\nabc\n// {CLOSE}\n", extra={"legacy/latin1.c": b"/* @use-case:example.success#x */ caf\xe9 /* @use-case:end example.success#x */"})
+    ws = bc_with(tmp_path, f"// {OPEN}\nabc\n// {CLOSE}\n", extra={"legacy/latin1.c": b"/* " + SENTINEL.encode() + b"example.success#x */ caf\xe9 /* " + SENTINEL.encode() + b"end example.success#x */"})
     assert any("unsupported-text" in d for d in uc(ws, "links")["diagnostics"])
 
 
 @pytest.mark.parametrize("body, reason", [
     (f"// {OPEN}\nabc\n", "never closed"),
     (f"abc\n// {CLOSE}\n", "has no start"),
-    (f"// {OPEN}\n// @use-case:example.success#b\n// {CLOSE}\n// @use-case:end example.success#b\n", "cross"),
+    (f"// {OPEN}\n// {SENTINEL}example.success#b\n// {CLOSE}\n// {SENTINEL}end example.success#b\n", "cross"),
     (f"// {OPEN}\n// {OPEN}\n// {CLOSE}\n// {CLOSE}\n", "nested inside itself"),
 ])
 def test_broken_marker_structure_is_invalid(tmp_path, body, reason):
@@ -180,7 +180,7 @@ def test_broken_marker_structure_is_invalid(tmp_path, body, reason):
 
 
 def test_malformed_and_unknown_markers_only_warn(tmp_path):
-    body = f"// {OPEN}\nabc\n// {CLOSE}\n// @use-case:Bad_ID\n// @use-case:example.nope#x\nz\n// @use-case:end example.nope#x\n"
+    body = f"// {OPEN}\nabc\n// {CLOSE}\n// {SENTINEL}Bad_ID\n// {SENTINEL}example.nope#x\nz\n// {SENTINEL}end example.nope#x\n"
     diagnostics = uc(bc_with(tmp_path, body), "links")["diagnostics"]
     assert any("malformed marker id" in d for d in diagnostics)
     assert any("unknown use case" in d for d in diagnostics)
@@ -210,11 +210,11 @@ def validation_links(ws):
 
 
 @pytest.mark.parametrize("rel, text", [
-    ("page.html", "<!--@use-case:example.success#unit-tests.html-->\n<p>x</p>\n<!--@use-case:end example.success#unit-tests.html-->\n"),
-    ("notebook.ipynb", '{"cells": [{"source": ["# @use-case:example.success#unit-tests.cell\\n", "x = 1\\n",\n'
-                       '"# @use-case:end example.success#unit-tests.cell\\n"]}]}\n'),
-    ("nbsp.js", "// @use-case:example.success#unit-tests.nbsp note\nx\n// @use-case:end example.success#unit-tests.nbsp\n"),
-    ("doubled.js", "// @use-case:@use-case:example.success#unit-tests.twice\nx\n// @use-case:end example.success#unit-tests.twice\n"),
+    ("page.html", f"<!--{SENTINEL}example.success#unit-tests.html-->\n<p>x</p>\n<!--{SENTINEL}end example.success#unit-tests.html-->\n"),
+    ("notebook.ipynb", '{"cells": [{"source": ["# ' + SENTINEL + 'example.success#unit-tests.cell\\n", "x = 1\\n",\n'
+                       '"# ' + SENTINEL + 'end example.success#unit-tests.cell\\n"]}]}\n'),
+    ("nbsp.js", f"// {SENTINEL}example.success#unit-tests.nbsp note\nx\n// {SENTINEL}end example.success#unit-tests.nbsp\n"),
+    ("doubled.js", f"// {SENTINEL}{SENTINEL}example.success#unit-tests.twice\nx\n// {SENTINEL}end example.success#unit-tests.twice\n"),
 ])
 def test_the_id_ends_at_the_first_character_no_id_can_hold(tmp_path, rel, text):
     ws = bc_with(tmp_path, f"// {OPEN}\nabc\n// {CLOSE}\n", extra={rel: text})
@@ -222,8 +222,8 @@ def test_the_id_ends_at_the_first_character_no_id_can_hold(tmp_path, rel, text):
 
 
 def test_the_same_binding_twice_on_one_line_is_invalid(tmp_path):
-    line = ("/* @use-case:example.success#unit-tests.x */ a /* @use-case:end example.success#unit-tests.x */ "
-            "/* @use-case:example.success#unit-tests.x */ b /* @use-case:end example.success#unit-tests.x */\n")
+    line = (f"/* {SENTINEL}example.success#unit-tests.x */ a /* {SENTINEL}end example.success#unit-tests.x */ "
+            f"/* {SENTINEL}example.success#unit-tests.x */ b /* {SENTINEL}end example.success#unit-tests.x */\n")
     ws = bc_with(tmp_path, f"// {OPEN}\nabc\n// {CLOSE}\n", extra={"src/twice.js": line})
     assert "share the link key" in uc(ws, "status", expect_exit=2)
 
@@ -232,7 +232,7 @@ def test_the_same_binding_twice_on_one_line_is_invalid(tmp_path):
 
 
 def test_a_folder_pattern_excludes_the_whole_folder(tmp_path):
-    vendored = {"vendor/lib/copy.js": "// @use-case:example.success#unit-tests.v\nx\n// @use-case:end example.success#unit-tests.v\n"}
+    vendored = {"vendor/lib/copy.js": f"// {SENTINEL}example.success#unit-tests.v\nx\n// {SENTINEL}end example.success#unit-tests.v\n"}
     ws = bc_with(tmp_path / "a", f"// {OPEN}\nabc\n// {CLOSE}\n", extra=vendored)
     assert [l["binding"] for l in validation_links(ws)] == ["v"]
     ws = bc_with(tmp_path / "b", f"// {OPEN}\nabc\n// {CLOSE}\n", freshness=None, extra=vendored)
@@ -242,7 +242,7 @@ def test_a_folder_pattern_excludes_the_whole_folder(tmp_path):
 
 
 def test_a_nested_store_is_never_scanned(tmp_path):
-    console = {"sub/.use-cases/runs/x/outputs/y/console.txt": "noise @use-case:end example.success#unit-tests.z\n"}
+    console = {"sub/.use-cases/runs/x/outputs/y/console.txt": f"noise {SENTINEL}end example.success#unit-tests.z\n"}
     ws = bc_with(tmp_path, f"// {OPEN}\nabc\n// {CLOSE}\n", extra=console)
     uc(ws, "status")  # an unmatched end inside a vendored workspace's store would make this INVALID
 
@@ -301,7 +301,7 @@ def test_links_of_one_use_case_and_role_that_overlap_warn_and_nothing_else_does(
 
 def test_nested_markers_of_one_use_case_and_route_overlap(tmp_path):
     inner = "example.success#unit-tests.inner"
-    ws = bc_with(tmp_path, f"// {OPEN}\nabc\n// @use-case:{inner}\ndef\n// @use-case:end {inner}\n// {CLOSE}\n")
+    ws = bc_with(tmp_path, f"// {OPEN}\nabc\n// {SENTINEL}{inner}\ndef\n// {SENTINEL}end {inner}\n// {CLOSE}\n")
     assert len(warnings_about(ws, "overlap")) == 1
 
 
@@ -365,7 +365,7 @@ def test_a_file_starting_with_a_utf_16_or_32_byte_order_mark_warns_that_its_mark
 
 
 def test_diagnostics_sort_by_path_then_line_as_a_number(tmp_path):
-    ws = bc_with(tmp_path, MARKED, extra={"src/x.py": "\n" * 8 + "# @use-case:BAD\n# @use-case:BAD\n", "src/a.py": "\n" * 19 + "# @use-case:BAD\n"})
+    ws = bc_with(tmp_path, MARKED, extra={"src/x.py": "\n" * 8 + f"# {SENTINEL}BAD\n# {SENTINEL}BAD\n", "src/a.py": "\n" * 19 + f"# {SENTINEL}BAD\n"})
     where = [d.split(": ")[0] for d in uc(ws, "links")["diagnostics"] if "malformed" in d]
     assert where == ["src/a.py:20", "src/x.py:9", "src/x.py:10"]
 
@@ -389,9 +389,9 @@ def test_a_transformers_whole_file_link_has_the_same_range(tmp_path):
 
 
 @pytest.mark.parametrize("body, reason", [
-    ("// @use-case:example.nope#x\nz\n", "never closed"),
-    ("z\n// @use-case:end example.nope#x\n", "has no start"),
-    ("// @use-case:example.success#nope.x\nz\n", "never closed"),
+    (f"// {SENTINEL}example.nope#x\nz\n", "never closed"),
+    (f"z\n// {SENTINEL}end example.nope#x\n", "has no start"),
+    (f"// {SENTINEL}example.success#nope.x\nz\n", "never closed"),
 ])
 def test_pairing_comes_before_lookup_so_a_broken_marker_for_an_unknown_target_is_still_invalid(tmp_path, body, reason):
     ws = bc_with(tmp_path, MARKED, extra={"src/x.js": body})
@@ -401,7 +401,7 @@ def test_pairing_comes_before_lookup_so_a_broken_marker_for_an_unknown_target_is
 @pytest.mark.parametrize("tail", ["T", "_d", "-T"])
 def test_an_id_run_followed_by_a_letter_or_underscore_is_malformed_never_a_shorter_id(tmp_path, tail):
     name = f"example.success#unit-tests.sub{tail}"
-    body = f"// @use-case:{name}\nx\n// @use-case:end {name}\n"
+    body = f"// {SENTINEL}{name}\nx\n// {SENTINEL}end {name}\n"
     ws = bc_with(tmp_path, MARKED, extra={"src/bad.js": body})
     document = uc(ws, "links")
     assert [d for d in document["diagnostics"] if d.startswith("src/bad.js") and "malformed marker id" in d] != []
@@ -410,15 +410,15 @@ def test_an_id_run_followed_by_a_letter_or_underscore_is_malformed_never_a_short
 
 
 def test_an_id_followed_by_syntax_that_is_not_a_letter_still_links(tmp_path):
-    ws = bc_with(tmp_path, MARKED, extra={"page.html": "<!--@use-case:example.success#unit-tests.html-->\n<p>x</p>\n"
-                                                       "<!--@use-case:end example.success#unit-tests.html-->\n"})
+    ws = bc_with(tmp_path, MARKED, extra={"page.html": f"<!--{SENTINEL}example.success#unit-tests.html-->\n<p>x</p>\n"
+                                                       f"<!--{SENTINEL}end example.success#unit-tests.html-->\n"})
     document = uc(ws, "links")
     assert [l["binding"] for l in document["links"] if l["file"] == "page.html"] == ["html"]
     assert not [d for d in document["diagnostics"] if d.startswith("page.html")]
 
 
 def test_the_links_document_orders_the_start_line_as_a_number(tmp_path):
-    region = "// @use-case:example.success#again\nx\n// @use-case:end example.success#again\n"
+    region = f"// {SENTINEL}example.success#again\nx\n// {SENTINEL}end example.success#again\n"
     text = region + "\n" * 2 + region + "\n" * 4 + region
     ws = workspace(tmp_path, {"use-cases/success.yml": linked(), "src/x.js": text})
     assert [l["range"]["start"] for l in uc(ws, "links")["links"] if l["file"] == "src/x.js"] == [2, 7, 14]

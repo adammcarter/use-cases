@@ -34,7 +34,8 @@ struct LinkResolverMarkersTests {
   func `a region whose end sentinel is the last line without a line break still links`() throws {
     try fixture.write(
       "src/app.js",
-      "// @use-case:app.toggle#render\nexport const add = 1;\n// @use-case:end app.toggle#render",
+      "// \(MarkerText.sentinel)app.toggle#render\nexport const add = 1;\n"
+        + "// \(MarkerText.sentinel)end app.toggle#render",
     )
 
     let link = try #require(fixture.resolved().links.first)
@@ -103,7 +104,7 @@ struct LinkResolverMarkersTests {
 
   @Test
   func `a malformed marker id warns and is ignored`() throws {
-    try fixture.write("src/app.swift", "// @use-case:Bad_ID\ncode\n")
+    try fixture.write("src/app.swift", "// \(MarkerText.sentinel)Bad_ID\ncode\n")
 
     let resolution = try fixture.resolved()
 
@@ -114,17 +115,17 @@ struct LinkResolverMarkersTests {
 
   @Test(
     arguments: [
-      ("// @use-case:app.nope#x\nz\n", "never closed"),
-      ("z\n// @use-case:end app.nope#x\n", "has no start"),
-      ("// @use-case:app.toggle#nope.x\nz\n", "never closed"),
+      ("// \(MarkerText.sentinel)app.nope#x\nz\n", "never closed"),
+      ("z\n// \(MarkerText.sentinel)end app.nope#x\n", "has no start"),
+      ("// \(MarkerText.sentinel)app.toggle#nope.x\nz\n", "never closed"),
       (
-        "// @use-case:app.nope#a\n// @use-case:app.nope#b\n"
-          + "// @use-case:end app.nope#a\n// @use-case:end app.nope#b\n",
+        "// \(MarkerText.sentinel)app.nope#a\n// \(MarkerText.sentinel)app.nope#b\n"
+          + "// \(MarkerText.sentinel)end app.nope#a\n// \(MarkerText.sentinel)end app.nope#b\n",
         "cross",
       ),
       (
-        "// @use-case:app.nope#a\n// @use-case:app.nope#a\n"
-          + "// @use-case:end app.nope#a\n// @use-case:end app.nope#a\n",
+        "// \(MarkerText.sentinel)app.nope#a\n// \(MarkerText.sentinel)app.nope#a\n"
+          + "// \(MarkerText.sentinel)end app.nope#a\n// \(MarkerText.sentinel)end app.nope#a\n",
         "nested inside itself",
       ),
     ],
@@ -145,7 +146,8 @@ struct LinkResolverMarkersTests {
   func `a region with no content links and warns`() throws {
     try fixture.write(
       "src/app.swift",
-      "// @use-case:app.toggle#render\n// @use-case:end app.toggle#render\n",
+      "// \(MarkerText.sentinel)app.toggle#render\n"
+        + "// \(MarkerText.sentinel)end app.toggle#render\n",
     )
 
     let resolution = try fixture.resolved()
@@ -156,9 +158,9 @@ struct LinkResolverMarkersTests {
 
   @Test
   func `a file that is not strict UTF-8 and holds the sentinel warns and links nothing`() throws {
-    var bytes = Array("// @use-case:app.toggle#render\n".utf8)
+    var bytes = Array("// \(MarkerText.sentinel)app.toggle#render\n".utf8)
     bytes += [0xFF, 0x0A]
-    bytes += Array("// @use-case:end app.toggle#render\n".utf8)
+    bytes += Array("// \(MarkerText.sentinel)end app.toggle#render\n".utf8)
     try fixture.write("src/app.bin", bytes: bytes)
 
     let resolution = try fixture.resolved()

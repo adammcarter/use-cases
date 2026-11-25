@@ -146,13 +146,13 @@ struct InitTemplatesTests {
     let fixture = try WorkspaceFixture(rootConfiguration: active)
     try fixture.write(
       "tests/fixtures/sample.swift",
-      "// @use-case:example.getting-started#read-it\n",
+      "// \(MarkerText.sentinel)example.getting-started#read-it\n",
     )
 
     let commented = try WorkspaceFixture(rootConfiguration: InitTemplates.workspace(prefix: nil))
     try commented.write(
       "tests/fixtures/sample.swift",
-      "// @use-case:example.getting-started#read-it\n",
+      "// \(MarkerText.sentinel)example.getting-started#read-it\n",
     )
 
     let loaded = try fixture.loaded()

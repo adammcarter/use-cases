@@ -4,8 +4,8 @@ import Testing
 struct MarkerScannerPairingTests {
   private static let open = "// \(MarkerSamples.open)\n"
   private static let close = "// \(MarkerSamples.close)\n"
-  private static let other = "// @use-case:example.success#b\n"
-  private static let otherClose = "// @use-case:end example.success#b\n"
+  private static let other = "// \(MarkerText.sentinel)example.success#b\n"
+  private static let otherClose = "// \(MarkerText.sentinel)end example.success#b\n"
 
   private static let breaks = [
     PairingBreak(
@@ -53,9 +53,9 @@ struct MarkerScannerPairingTests {
 
   @Test(
     arguments: [
-      "// @use-case:example.nope#x\nz\n",
-      "z\n// @use-case:end example.nope#x\n",
-      "// @use-case:example.success#nope.x\nz\n",
+      "// \(MarkerText.sentinel)example.nope#x\nz\n",
+      "z\n// \(MarkerText.sentinel)end example.nope#x\n",
+      "// \(MarkerText.sentinel)example.success#nope.x\nz\n",
     ],
   )
   func `a pair that is not well formed is an error whatever it names`(text: String) throws {
@@ -92,7 +92,8 @@ struct MarkerScannerPairingTests {
   @Test
   func `several breaks in one file are all told, in line order`() throws {
     let text =
-      "// @use-case:end example.a#b\nx\n// @use-case:example.c#d\ny\n" + Self.open + Self.open
+      "// \(MarkerText.sentinel)end example.a#b\nx\n// \(MarkerText.sentinel)example.c#d\ny\n"
+        + Self.open + Self.open
 
     let scan = try MarkerSamples.scan(text)
 
@@ -108,7 +109,8 @@ struct MarkerScannerPairingTests {
 
   @Test
   func `a malformed id takes no part in pairing`() throws {
-    let text = "// @use-case:Bad_ID\n// @use-case:end Bad_ID\n// @use-case:example.a\n"
+    let text = "// \(MarkerText.sentinel)Bad_ID\n// \(MarkerText.sentinel)end Bad_ID\n"
+      + "// \(MarkerText.sentinel)example.a\n"
 
     let scan = try MarkerSamples.scan(text)
 
@@ -120,7 +122,7 @@ struct MarkerScannerPairingTests {
 
   @Test
   func `a malformed id beside a broken pair is told as a warning next to the error`() throws {
-    let text = "// @use-case:Bad\n" + Self.open
+    let text = "// \(MarkerText.sentinel)Bad\n" + Self.open
 
     let scan = try MarkerSamples.scan(text)
 

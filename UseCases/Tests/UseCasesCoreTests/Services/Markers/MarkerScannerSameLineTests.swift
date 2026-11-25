@@ -5,8 +5,8 @@ import Testing
 struct MarkerScannerSameLineTests {
   private static let open = MarkerSamples.open
   private static let close = MarkerSamples.close
-  private static let innerOpen = "@use-case:example.other#inner"
-  private static let innerClose = "@use-case:end example.other#inner"
+  private static let innerOpen = "\(MarkerText.sentinel)example.other#inner"
+  private static let innerClose = "\(MarkerText.sentinel)end example.other#inner"
 
   /// The bytes a range holds, as text.
   private func slice(
@@ -142,7 +142,7 @@ struct MarkerScannerSameLineTests {
 
   @Test
   func `a sentinel with a malformed id inside is a token to leave out too`() throws {
-    let text = "\(Self.open) a @use-case:Bad b \(Self.close)\n"
+    let text = "\(Self.open) a \(MarkerText.sentinel)Bad b \(Self.close)\n"
 
     let region = try #require(MarkerSamples.scan(text).regions.first)
 
@@ -151,12 +151,12 @@ struct MarkerScannerSameLineTests {
 
   @Test(
     arguments: [
-      "@use-case:x.y#zT",
-      "@use-case:x.y#c_d",
-      "@use-case:x.y#z-T",
-      "@use-case:end x.y#zT",
-      "@use-case:BAD",
-      "@use-case:x.y#zT_and_a_much_longer_word_of_well_over_forty_characters_in_all",
+      "\(MarkerText.sentinel)x.y#zT",
+      "\(MarkerText.sentinel)x.y#c_d",
+      "\(MarkerText.sentinel)x.y#z-T",
+      "\(MarkerText.sentinel)end x.y#zT",
+      "\(MarkerText.sentinel)BAD",
+      "\(MarkerText.sentinel)x.y#zT_and_a_much_longer_word_of_well_over_forty_characters_in_all",
     ],
   )
   func `a word that follows an id run is part of the sentinel token, not content`(
@@ -174,12 +174,12 @@ struct MarkerScannerSameLineTests {
 
   @Test
   func `a trailing hyphen between an id and the word that follows is part of the token`() throws {
-    let text = "\(Self.open)@use-case:x.y#z-T\(Self.close)\n"
+    let text = "\(Self.open)\(MarkerText.sentinel)x.y#z-T\(Self.close)\n"
     let bytes = Array(text.utf8)
 
     let region = try #require(MarkerSamples.scan(text).regions.first)
 
-    #expect(region.byteRange.count == "@use-case:x.y#z-T".utf8.count)
+    #expect(region.byteRange.count == "\(MarkerText.sentinel)x.y#z-T".utf8.count)
     #expect(region.isEmpty)
     #expect(MarkerSamples.content(of: region, in: bytes).isEmpty)
   }
@@ -187,7 +187,7 @@ struct MarkerScannerSameLineTests {
   @Test
   func `a malformed word beside a trimmed trailing hyphen leaves the rest of the region alone`(
   ) throws {
-    let text = "\(Self.open) <!--@use-case:x.y#zT--> \(Self.close)\n"
+    let text = "\(Self.open) <!--\(MarkerText.sentinel)x.y#zT--> \(Self.close)\n"
 
     let region = try #require(MarkerSamples.scan(text).regions.first)
 

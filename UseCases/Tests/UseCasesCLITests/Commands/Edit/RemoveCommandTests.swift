@@ -69,8 +69,8 @@ struct RemoveCommandTests {
   func `the markers that still name the use case are warned about`() async throws {
     try workspace.folder.write(
       "tests/test_wallet.py",
-      "# @use-case:shop.pay.wallet#check.s\ndef test_wallet():\n    pass\n"
-        + "# @use-case:end shop.pay.wallet#check.s\n",
+      "# \(MarkerText.sentinel)shop.pay.wallet#check.s\ndef test_wallet():\n    pass\n"
+        + "# \(MarkerText.sentinel)end shop.pay.wallet#check.s\n",
     )
 
     let result = await workspace.run(["remove", "shop.pay.wallet", "--json"])

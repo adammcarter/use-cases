@@ -9,7 +9,7 @@ struct StringASCIIBytesTests {
 
   @Test
   func `a slice of a longer array gives only the slice`() {
-    let bytes = Array("xx@use-case:a#b".utf8)
+    let bytes = Array("xx\(MarkerText.sentinel)a#b".utf8)
 
     #expect(String(asciiBytes: bytes[12...]) == "a#b")
   }

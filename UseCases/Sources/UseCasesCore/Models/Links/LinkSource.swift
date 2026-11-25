@@ -1,6 +1,6 @@
 /// Where a link was found (chapter 08 "Two ways to link").
 public enum LinkSource: String, Sendable {
-  /// A `@use-case:` comment pair in the code.
+  /// A `@use-case` marker comment pair in the code.
   case marker
 
   /// A manual binding written in a use case's YAML.

@@ -19,7 +19,7 @@ struct LinksCommandTests {
     )
     try workspace.folder.write(
       "src/cart.swift",
-      LinksWorkspace.marked("shop.cart.add#put") + "// @use-case:BAD\n",
+      LinksWorkspace.marked("shop.cart.add#put") + "// \(MarkerText.sentinel)BAD\n",
     )
   }
 
@@ -221,8 +221,11 @@ struct LinksCommandTests {
 
   @Test
   func `a problem in the links refuses the request as invalid, a problem per line`() async throws {
-    try workspace.folder.write("src/a.swift", "// @use-case:shop.pay.card#charge\nwork()\n")
-    try workspace.folder.write("src/b.swift", "// @use-case:end shop.pay.card#charge\n")
+    try workspace.folder.write(
+      "src/a.swift",
+      "// \(MarkerText.sentinel)shop.pay.card#charge\nwork()\n",
+    )
+    try workspace.folder.write("src/b.swift", "// \(MarkerText.sentinel)end shop.pay.card#charge\n")
 
     for arguments in [["links"], ["--json", "links"], ["--json", "links", "shop.nope"]] {
       let result = await workspace.run(arguments)
@@ -238,7 +241,10 @@ struct LinksCommandTests {
   @Test
   func `with json a link problem is a document of kind invalid carrying the same message`(
   ) async throws {
-    try workspace.folder.write("src/a.swift", "// @use-case:shop.pay.card#charge\nwork()\n")
+    try workspace.folder.write(
+      "src/a.swift",
+      "// \(MarkerText.sentinel)shop.pay.card#charge\nwork()\n",
+    )
 
     let result = await workspace.run(["--json", "links"])
     let error = try #require(try result.document()["error"])

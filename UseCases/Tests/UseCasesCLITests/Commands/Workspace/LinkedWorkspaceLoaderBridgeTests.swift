@@ -156,7 +156,7 @@ struct LinkedWorkspaceLoaderBridgeTests {
   @Test
   func `a link problem is refused as invalid once the transformers have answered`() async throws {
     try useLinkProgram()
-    try workspace.folder.write("src/a.swift", "// @use-case:shop.pay#top\nwork()\n")
+    try workspace.folder.write("src/a.swift", "// \(MarkerText.sentinel)shop.pay#top\nwork()\n")
 
     let error = await #expect(throws: LinkedWorkspaceError.self) {
       try await load()
@@ -342,7 +342,7 @@ struct LinkedWorkspaceLoaderBridgeTests {
   @Test(arguments: ["validate", "links"])
   func `an invalid workspace is still refused first`(command: String) async throws {
     try workspace.folder.write("use-cases-bridge.yml", Self.linkBridge)
-    try workspace.folder.write("src/a.swift", "// @use-case:shop.pay#top\nwork()\n")
+    try workspace.folder.write("src/a.swift", "// \(MarkerText.sentinel)shop.pay#top\nwork()\n")
 
     let result = await workspace.run([command])
 

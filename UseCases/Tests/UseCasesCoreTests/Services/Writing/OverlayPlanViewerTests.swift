@@ -49,8 +49,8 @@ struct OverlayPlanViewerTests {
     try directory.write("use-cases.yml", InitTemplates.workspace(prefix: nil))
     try directory.write(
       "src/a.swift",
-      "// @use-case:example.getting-started#top\nwork()\n"
-        + "// @use-case:end example.getting-started#top\n",
+      "// \(MarkerText.sentinel)example.getting-started#top\nwork()\n"
+        + "// \(MarkerText.sentinel)end example.getting-started#top\n",
     )
     let view = try view([.create("use-cases/example.yml", InitTemplates.example)])
     let loaded = try view.loader.load(from: .workspace(directory.url))

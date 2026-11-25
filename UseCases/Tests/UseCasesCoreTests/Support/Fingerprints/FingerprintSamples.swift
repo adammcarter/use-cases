@@ -61,8 +61,8 @@ enum FingerprintSamples {
   static func vectorD() throws -> RouteFingerprintInput {
     let open = MarkerSamples.open
     let close = MarkerSamples.close
-    let text = "x = /* \(open) */ f() + /* @use-case:example.other#inner */ g() "
-      + "/* @use-case:end example.other#inner */ /* \(close) */\n"
+    let text = "x = /* \(open) */ f() + /* \(MarkerText.sentinel)example.other#inner */ g() "
+      + "/* \(MarkerText.sentinel)end example.other#inner */ /* \(close) */\n"
 
     return try automated(
       policy: defaultPolicy,
@@ -72,8 +72,8 @@ enum FingerprintSamples {
 
   /// Vector E: line mode with nested sentinel lines, under content-and-locator.
   static func vectorE() throws -> RouteFingerprintInput {
-    let text = "// \(MarkerSamples.open)\nabc\n// @use-case:example.other#inner\ndef\n"
-      + "// @use-case:end example.other#inner\n// \(MarkerSamples.close)\n"
+    let text = "// \(MarkerSamples.open)\nabc\n// \(MarkerText.sentinel)example.other#inner\ndef\n"
+      + "// \(MarkerText.sentinel)end example.other#inner\n// \(MarkerSamples.close)\n"
 
     return try automated(
       policy: strictPolicy,

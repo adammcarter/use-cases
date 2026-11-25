@@ -47,7 +47,7 @@ enum LinkSamples {
     _ identifier: String,
     _ body: String,
   ) -> String {
-    "// @use-case:\(identifier)\n\(body)\n// @use-case:end \(identifier)\n"
+    "// \(MarkerText.sentinel)\(identifier)\n\(body)\n// \(MarkerText.sentinel)end \(identifier)\n"
   }
 
   /// A JSON string, which YAML reads as a quoted scalar.

@@ -51,7 +51,7 @@ struct StatusCommandRefusalTests {
 
   @Test
   func `a workspace made INVALID by a link is refused as invalid`() async throws {
-    try workspace.folder.write("src/a.swift", "// @use-case:shop.pay.card#a\nx\n")
+    try workspace.folder.write("src/a.swift", "// \(MarkerText.sentinel)shop.pay.card#a\nx\n")
 
     let result = await workspace.run(["--json", "status"])
 

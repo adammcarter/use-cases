@@ -5,8 +5,8 @@ import Foundation
 enum MarkerSamples {
   /// A validation marker's id, and the start and end sentinels written around it.
   static let identifier = "example.success#unit-tests.success"
-  static let open = "@use-case:" + identifier
-  static let close = "@use-case:end " + identifier
+  static let open = MarkerText.sentinel + identifier
+  static let close = "\(MarkerText.sentinel)end " + identifier
 
   /// The file every scan in these tests names.
   static let file = "tests/app_tests.swift"

@@ -12,7 +12,7 @@ import sys
 import time
 
 import pytest
-from conftest import COMMAND
+from conftest import SENTINEL, COMMAND
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 AREAS, PER_AREA, TESTS_PER_CASE = int(os.environ.get("UC_SCALE_AREAS", "50")), 20, 3
@@ -51,10 +51,10 @@ def generate(root):
                 f"  - id: {uc}\n    title: Rule {case}\n    value_tier: core\n    intent: Rule {case} of {name} holds.\n"
                 f"    scenarios:\n      - id: holds\n        when: [Apply the rule.]\n        then: [It holds.]\n"
                 f"    validation:\n      - id: unit-tests\n        type: {{ kind: unit }}\n        covers: [holds]\n")
-            source.append(f"# @use-case:{full}#logic\ndef {uc}(x):\n    return x + {case}\n# @use-case:end {full}#logic\n\n")
+            source.append(f"# {SENTINEL}{full}#logic\ndef {uc}(x):\n    return x + {case}\n# {SENTINEL}end {full}#logic\n\n")
             for number in range(TESTS_PER_CASE):
-                tests.append(f"# @use-case:{full}#unit-tests.t{number}\ndef test_{uc}_{number}():\n"
-                             f"    assert {name}.{uc}({number}) == {number + case}\n# @use-case:end {full}#unit-tests.t{number}\n\n")
+                tests.append(f"# {SENTINEL}{full}#unit-tests.t{number}\ndef test_{uc}_{number}():\n"
+                             f"    assert {name}.{uc}({number}) == {number + case}\n# {SENTINEL}end {full}#unit-tests.t{number}\n\n")
         for rel, parts in ((f"use-cases/{name}.yml", definitions), (f"src/shop/{name}.py", source), (f"tests/test_{name}.py", tests)):
             with open(os.path.join(root, rel), "w") as handle:
                 handle.write("".join(parts))

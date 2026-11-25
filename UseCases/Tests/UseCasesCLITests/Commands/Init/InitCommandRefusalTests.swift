@@ -100,7 +100,7 @@ struct InitCommandRefusalTests {
     async throws
   {
     try place.folder.write("use-cases.yml", "schema_version: 1\nroot: true\n")
-    try place.folder.write("src/a.swift", "// @use-case:app.nothing#x\nwork()\n")
+    try place.folder.write("src/a.swift", "// \(MarkerText.sentinel)app.nothing#x\nwork()\n")
     let before = try place.snapshot()
 
     let result = await place.run(["init", "--no-input"])

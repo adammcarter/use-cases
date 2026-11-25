@@ -4,26 +4,26 @@ import Testing
 struct MarkerScannerMalformedTests {
   @Test(
     arguments: [
-      ("// @use-case:\n", ""),
-      ("// @use-case: example.a#b\n", ""),
-      ("// @use-case:Bad_ID\n", ""),
-      ("// @use-case:App.login#submit\n", ""),
-      ("// @use-case:example.nope\n", "example.nope"),
-      ("// @use-case:a#b#c\n", "a#b#c"),
-      ("// @use-case:a#b.c.d\n", "a#b.c.d"),
-      ("// @use-case:a..b#c\n", "a..b#c"),
-      ("// @use-case:.a#b\n", ".a#b"),
-      ("// @use-case:a#\n", "a#"),
-      ("// @use-case:#b\n", "#b"),
-      ("// @use-case:-a#b\n", "-a#b"),
-      ("// @use-case:a#-b\n", "a#-b"),
-      ("// @use-case:end \n", ""),
-      ("// @use-case:end\n", "end"),
-      ("// @use-case:end Bad\n", ""),
-      ("// @use-case:a.b#submiT\n", "a.b#submi"),
-      ("// @use-case:a.b#c_d\n", "a.b#c"),
-      ("// @use-case:a.b#c-A\n", "a.b#c"),
-      ("// @use-case:end a.b#c_d\n", "a.b#c"),
+      ("// \(MarkerText.sentinel)\n", ""),
+      ("// \(MarkerText.sentinel) example.a#b\n", ""),
+      ("// \(MarkerText.sentinel)Bad_ID\n", ""),
+      ("// \(MarkerText.sentinel)App.login#submit\n", ""),
+      ("// \(MarkerText.sentinel)example.nope\n", "example.nope"),
+      ("// \(MarkerText.sentinel)a#b#c\n", "a#b#c"),
+      ("// \(MarkerText.sentinel)a#b.c.d\n", "a#b.c.d"),
+      ("// \(MarkerText.sentinel)a..b#c\n", "a..b#c"),
+      ("// \(MarkerText.sentinel).a#b\n", ".a#b"),
+      ("// \(MarkerText.sentinel)a#\n", "a#"),
+      ("// \(MarkerText.sentinel)#b\n", "#b"),
+      ("// \(MarkerText.sentinel)-a#b\n", "-a#b"),
+      ("// \(MarkerText.sentinel)a#-b\n", "a#-b"),
+      ("// \(MarkerText.sentinel)end \n", ""),
+      ("// \(MarkerText.sentinel)end\n", "end"),
+      ("// \(MarkerText.sentinel)end Bad\n", ""),
+      ("// \(MarkerText.sentinel)a.b#submiT\n", "a.b#submi"),
+      ("// \(MarkerText.sentinel)a.b#c_d\n", "a.b#c"),
+      ("// \(MarkerText.sentinel)a.b#c-A\n", "a.b#c"),
+      ("// \(MarkerText.sentinel)end a.b#c_d\n", "a.b#c"),
     ] as [(String, String)],
   )
   func `a malformed id is a warning naming the id, and nothing else`(
@@ -45,9 +45,9 @@ struct MarkerScannerMalformedTests {
   @Test
   func `an id run followed by a letter, digit or underscore is never read short`() throws {
     let cases = [
-      "// @use-case:a.b#submiT\nx\n// @use-case:end a.b#submiT\n",
-      "// @use-case:a.b#c_d\nx\n// @use-case:end a.b#c_d\n",
-      "// @use-case:a.b#c_d\nx\n// @use-case:end a.b#c\n",
+      "// \(MarkerText.sentinel)a.b#submiT\nx\n// \(MarkerText.sentinel)end a.b#submiT\n",
+      "// \(MarkerText.sentinel)a.b#c_d\nx\n// \(MarkerText.sentinel)end a.b#c_d\n",
+      "// \(MarkerText.sentinel)a.b#c_d\nx\n// \(MarkerText.sentinel)end a.b#c\n",
     ]
 
     for text in cases {
@@ -63,7 +63,7 @@ struct MarkerScannerMalformedTests {
 
   @Test
   func `a malformed id that would pair if read short is left out of pairing`() throws {
-    let text = "// @use-case:a.b#submiT\nx\n// @use-case:end a.b#submi\n"
+    let text = "// \(MarkerText.sentinel)a.b#submiT\nx\n// \(MarkerText.sentinel)end a.b#submi\n"
 
     let scan = try MarkerSamples.scan(text)
 
@@ -74,10 +74,10 @@ struct MarkerScannerMalformedTests {
   @Test
   func `a trailing hyphen or dot trimmed off the id is fine when no word follows`() throws {
     let cases = [
-      "<!--@use-case:a#b-->\nx\n<!--@use-case:end a#b-->\n",
-      "// @use-case:a#b.\nx\n// @use-case:end a#b.\n",
-      "// @use-case:a#b- note\nx\n// @use-case:end a#b-\n",
-      "/*@use-case:a#b*/\nx\n/*@use-case:end a#b*/\n",
+      "<!--\(MarkerText.sentinel)a#b-->\nx\n<!--\(MarkerText.sentinel)end a#b-->\n",
+      "// \(MarkerText.sentinel)a#b.\nx\n// \(MarkerText.sentinel)end a#b.\n",
+      "// \(MarkerText.sentinel)a#b- note\nx\n// \(MarkerText.sentinel)end a#b-\n",
+      "/*\(MarkerText.sentinel)a#b*/\nx\n/*\(MarkerText.sentinel)end a#b*/\n",
     ]
 
     for text in cases {
@@ -90,7 +90,7 @@ struct MarkerScannerMalformedTests {
 
   @Test
   func `an empty id says no id follows, and names the text that does`() throws {
-    let scan = try MarkerSamples.scan("// @use-case:BAD\n")
+    let scan = try MarkerSamples.scan("// \(MarkerText.sentinel)BAD\n")
 
     let message = try #require(scan.diagnostics.first?.message)
     #expect(message.hasPrefix("malformed marker id '': no marker id follows the sentinel"))
@@ -99,7 +99,7 @@ struct MarkerScannerMalformedTests {
 
   @Test
   func `an id run that runs into a word says what follows it`() throws {
-    let scan = try MarkerSamples.scan("// @use-case:a.b#submiT\n")
+    let scan = try MarkerSamples.scan("// \(MarkerText.sentinel)a.b#submiT\n")
 
     let message = try #require(scan.diagnostics.first?.message)
     #expect(message.hasPrefix("malformed marker id 'a.b#submi': 'T' follows the id directly"))
@@ -107,7 +107,7 @@ struct MarkerScannerMalformedTests {
 
   @Test
   func `nothing at all after the sentinel says no id follows`() throws {
-    let scan = try MarkerSamples.scan("// @use-case: x\n")
+    let scan = try MarkerSamples.scan("// \(MarkerText.sentinel) x\n")
 
     let message = try #require(scan.diagnostics.first?.message)
     #expect(message == "malformed marker id '': no marker id follows the sentinel")
@@ -116,7 +116,8 @@ struct MarkerScannerMalformedTests {
   @Test
   func `a sentinel directly after another is judged on its own`() throws {
     let text =
-      "// @use-case:@use-case:\(MarkerSamples.identifier)\nx\n// \(MarkerSamples.close)\n"
+      "// \(MarkerText.sentinel)\(MarkerText.sentinel)\(MarkerSamples.identifier)\nx\n"
+        + "// \(MarkerSamples.close)\n"
 
     let scan = try MarkerSamples.scan(text)
 
@@ -128,7 +129,8 @@ struct MarkerScannerMalformedTests {
 
   @Test
   func `a well-formed marker for a use case nobody has is still a region`() throws {
-    let text = "// @use-case:example.nope#x\nz\n// @use-case:end example.nope#x\n"
+    let text = "// \(MarkerText.sentinel)example.nope#x\nz\n"
+      + "// \(MarkerText.sentinel)end example.nope#x\n"
 
     let scan = try MarkerSamples.scan(text)
 
@@ -139,15 +141,22 @@ struct MarkerScannerMalformedTests {
   @Test
   func `the id ends at the first character no id can hold`() throws {
     let cases: [(String, String)] = [
-      ("<!--@use-case:a#b-->\n<p>x</p>\n<!--@use-case:end a#b-->\n", "a#b"),
-      ("/*@use-case:a#b*/\nx\n/*@use-case:end a#b*/\n", "a#b"),
+      ("<!--\(MarkerText.sentinel)a#b-->\n<p>x</p>\n<!--\(MarkerText.sentinel)end a#b-->\n", "a#b"),
+      ("/*\(MarkerText.sentinel)a#b*/\nx\n/*\(MarkerText.sentinel)end a#b*/\n", "a#b"),
       (
-        "\"# @use-case:a#b\\n\",\n\"x = 1\\n\",\n\"# @use-case:end a#b\\n\",\n",
+        "\"# \(MarkerText.sentinel)a#b\\n\",\n\"x = 1\\n\",\n"
+          + "\"# \(MarkerText.sentinel)end a#b\\n\",\n",
         "a#b",
       ),
-      ("// @use-case:a#b\u{A0}note\nx\n// @use-case:end a#b\u{A0}\n", "a#b"),
-      ("// @use-case:a#b.\nx\n// @use-case:end a#b.\n", "a#b"),
-      ("// @use-case:a#unit.b-\nx\n// @use-case:end a#unit.b-\n", "a#unit.b"),
+      (
+        "// \(MarkerText.sentinel)a#b\u{A0}note\nx\n// \(MarkerText.sentinel)end a#b\u{A0}\n",
+        "a#b",
+      ),
+      ("// \(MarkerText.sentinel)a#b.\nx\n// \(MarkerText.sentinel)end a#b.\n", "a#b"),
+      (
+        "// \(MarkerText.sentinel)a#unit.b-\nx\n// \(MarkerText.sentinel)end a#unit.b-\n",
+        "a#unit.b",
+      ),
     ]
 
     for (text, identifier) in cases {
@@ -161,10 +170,10 @@ struct MarkerScannerMalformedTests {
   @Test
   func `diagnostics are sorted by line as a number, whatever order they were found in`() throws {
     var lines = Array(repeating: "x", count: 12)
-    lines[1] = "// @use-case:Bad"
-    lines[8] = "// @use-case:Bad2"
-    lines[9] = "// @use-case:Bad3"
-    lines[10] = "// @use-case:a // @use-case:b"
+    lines[1] = "// \(MarkerText.sentinel)Bad"
+    lines[8] = "// \(MarkerText.sentinel)Bad2"
+    lines[9] = "// \(MarkerText.sentinel)Bad3"
+    lines[10] = "// \(MarkerText.sentinel)a // \(MarkerText.sentinel)b"
     let text = lines.joined(separator: "\n") + "\n"
 
     let scan = try MarkerSamples.scan(text)
@@ -174,7 +183,8 @@ struct MarkerScannerMalformedTests {
 
   @Test
   func `errors and warnings sort together by line`() throws {
-    let text = "// @use-case:end example.a#b\n// @use-case:Bad\n// @use-case:example.c#d\n"
+    let text = "// \(MarkerText.sentinel)end example.a#b\n// \(MarkerText.sentinel)Bad\n"
+      + "// \(MarkerText.sentinel)example.c#d\n"
 
     let scan = try MarkerSamples.scan(text)
 

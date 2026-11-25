@@ -1,14 +1,14 @@
 /// The problems the marker scan reports, with their wording in one place (chapter 08).
 extension Diagnostic {
-  /// A file that holds `@use-case:` but is not strict UTF-8.
+  /// A file that holds the sentinel but is not strict UTF-8.
   static func notStrictUTF8(_ file: WorkspacePath) -> Diagnostic {
     Diagnostic(
       file: file,
       position: nil,
       code: .unsupportedText,
       severity: .warning,
-      message: "unsupported-text: the file holds '@use-case:' but is not strict UTF-8, "
-        + "so its markers cannot be read",
+      message: "unsupported-text: the file holds '\(SentinelFinder.sentinelText)' "
+        + "but is not strict UTF-8, so its markers cannot be read",
     )
   }
 
@@ -76,7 +76,8 @@ extension Diagnostic {
         code: .markerNeverClosed,
         severity: .error,
         message: "marker '\(start.identifier)' is never closed: "
-          + "no '@use-case:end \(start.identifier)' follows it; \(Self.markerTextAsData)",
+          + "no '\(SentinelFinder.sentinelText)end \(start.identifier)' follows it; "
+          + Self.markerTextAsData,
       )
     case let .withoutStart(end):
       markerDiagnostic(

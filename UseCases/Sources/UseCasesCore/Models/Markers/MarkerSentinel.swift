@@ -1,4 +1,4 @@
-/// One occurrence of the bytes `@use-case:` with the id that follows it (chapter 08).
+/// One occurrence of the `@use-case` sentinel bytes with the id that follows it (chapter 08).
 struct MarkerSentinel: Hashable, Sendable {
   let kind: MarkerSentinelKind
 

@@ -249,7 +249,7 @@ struct RecordCommandInteractiveTests {
 
   @Test
   func `a workspace that is INVALID is refused before the first question`() async throws {
-    try workspace.folder.write("src/a.swift", "// @use-case:shop.pay#top\nwork()\n")
+    try workspace.folder.write("src/a.swift", "// \(MarkerText.sentinel)shop.pay#top\nwork()\n")
 
     let (result, prompter) = await interview(["shop.pay.card", "unit-tests", "pass", ""])
 

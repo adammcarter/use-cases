@@ -160,7 +160,7 @@ struct StatusJudgeUseCaseTests {
     let fixture = try StatusFixture()
     try fixture.write(
       "src/a.swift",
-      "// @use-case:app.toggle#code\n\n// @use-case:end app.toggle#code\n",
+      "// \(MarkerText.sentinel)app.toggle#code\n\n// \(MarkerText.sentinel)end app.toggle#code\n",
     )
 
     let status = try fixture.status()

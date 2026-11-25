@@ -14,36 +14,36 @@ struct SentinelFinderTests {
   }
 
   private static let samples = [
-    SentinelSample("@use-case:a#b", .start, "a#b"),
-    SentinelSample("@use-case:end a#b", .end, "a#b"),
-    SentinelSample("@use-case:end\ta#b", .end, "a#b"),
-    SentinelSample("@use-case:end \t  a#b", .end, "a#b"),
-    SentinelSample("@use-case:end   ", .end, ""),
-    SentinelSample("@use-case:endpoint#x", .start, "endpoint#x"),
-    SentinelSample("@use-case:end-a#b", .start, "end-a#b"),
-    SentinelSample("@use-case:end", .start, "end"),
-    SentinelSample("@use-case:end\na#b", .start, "end"),
-    SentinelSample("@use-case:end\r\n", .start, "end"),
-    SentinelSample("@use-case:", .start, ""),
-    SentinelSample("@use-case: a#b", .start, ""),
-    SentinelSample("@use-case:App.login#x", .start, ""),
-    SentinelSample("@use-case:app.Login#x", .start, "app"),
-    SentinelSample("// @use-case:app.login#submit", .start, "app.login#submit"),
-    SentinelSample("# @use-case:app.login#submit", .start, "app.login#submit"),
-    SentinelSample("^^^ @use-case:app.login#submit ^^^", .start, "app.login#submit"),
-    SentinelSample("REM @use-case:app.login#submit", .start, "app.login#submit"),
-    SentinelSample("<!--@use-case:a#b-->", .start, "a#b"),
-    SentinelSample("/*@use-case:a#b*/", .start, "a#b"),
-    SentinelSample("\"# @use-case:a#b\\n\",", .start, "a#b"),
-    SentinelSample("@use-case:a#b.", .start, "a#b"),
-    SentinelSample("@use-case:a#b-.-", .start, "a#b"),
-    SentinelSample("@use-case:a#b.c-", .start, "a#b.c"),
-    SentinelSample("@use-case:a#b\u{A0}note", .start, "a#b"),
-    SentinelSample("@use-case:a#bFoo", .start, "a#b"),
-    SentinelSample("@use-case:a#b@x", .start, "a#b"),
-    SentinelSample("@use-case:a#b_c", .start, "a#b"),
-    SentinelSample("@use-case:a#", .start, "a#"),
-    SentinelSample("@use-case:---", .start, ""),
+    SentinelSample("\(MarkerText.sentinel)a#b", .start, "a#b"),
+    SentinelSample("\(MarkerText.sentinel)end a#b", .end, "a#b"),
+    SentinelSample("\(MarkerText.sentinel)end\ta#b", .end, "a#b"),
+    SentinelSample("\(MarkerText.sentinel)end \t  a#b", .end, "a#b"),
+    SentinelSample("\(MarkerText.sentinel)end   ", .end, ""),
+    SentinelSample("\(MarkerText.sentinel)endpoint#x", .start, "endpoint#x"),
+    SentinelSample("\(MarkerText.sentinel)end-a#b", .start, "end-a#b"),
+    SentinelSample("\(MarkerText.sentinel)end", .start, "end"),
+    SentinelSample("\(MarkerText.sentinel)end\na#b", .start, "end"),
+    SentinelSample("\(MarkerText.sentinel)end\r\n", .start, "end"),
+    SentinelSample(MarkerText.sentinel, .start, ""),
+    SentinelSample("\(MarkerText.sentinel) a#b", .start, ""),
+    SentinelSample("\(MarkerText.sentinel)App.login#x", .start, ""),
+    SentinelSample("\(MarkerText.sentinel)app.Login#x", .start, "app"),
+    SentinelSample("// \(MarkerText.sentinel)app.login#submit", .start, "app.login#submit"),
+    SentinelSample("# \(MarkerText.sentinel)app.login#submit", .start, "app.login#submit"),
+    SentinelSample("^^^ \(MarkerText.sentinel)app.login#submit ^^^", .start, "app.login#submit"),
+    SentinelSample("REM \(MarkerText.sentinel)app.login#submit", .start, "app.login#submit"),
+    SentinelSample("<!--\(MarkerText.sentinel)a#b-->", .start, "a#b"),
+    SentinelSample("/*\(MarkerText.sentinel)a#b*/", .start, "a#b"),
+    SentinelSample("\"# \(MarkerText.sentinel)a#b\\n\",", .start, "a#b"),
+    SentinelSample("\(MarkerText.sentinel)a#b.", .start, "a#b"),
+    SentinelSample("\(MarkerText.sentinel)a#b-.-", .start, "a#b"),
+    SentinelSample("\(MarkerText.sentinel)a#b.c-", .start, "a#b.c"),
+    SentinelSample("\(MarkerText.sentinel)a#b\u{A0}note", .start, "a#b"),
+    SentinelSample("\(MarkerText.sentinel)a#bFoo", .start, "a#b"),
+    SentinelSample("\(MarkerText.sentinel)a#b@x", .start, "a#b"),
+    SentinelSample("\(MarkerText.sentinel)a#b_c", .start, "a#b"),
+    SentinelSample("\(MarkerText.sentinel)a#", .start, "a#"),
+    SentinelSample("\(MarkerText.sentinel)---", .start, ""),
   ]
 
   @Test(arguments: Self.samples)
@@ -60,19 +60,19 @@ struct SentinelFinderTests {
 
   @Test(
     arguments: [
-      ("@use-case:a.b#submiT", "T"),
-      ("@use-case:a.b#c_d", "_d"),
-      ("@use-case:a#bFoo", "Foo"),
-      ("@use-case:BAD", "BAD"),
-      ("@use-case:a#b-A", "A"),
-      ("@use-case:a#b.", ""),
-      ("@use-case:a#b_", "_"),
-      ("@use-case:a#b-->", ""),
-      ("@use-case:a#b*/", ""),
-      ("@use-case:a#b\u{A0}note", ""),
-      ("@use-case:a#b é", ""),
-      ("@use-case:a#b@use-case:end a#b", ""),
-      ("@use-case:", ""),
+      ("\(MarkerText.sentinel)a.b#submiT", "T"),
+      ("\(MarkerText.sentinel)a.b#c_d", "_d"),
+      ("\(MarkerText.sentinel)a#bFoo", "Foo"),
+      ("\(MarkerText.sentinel)BAD", "BAD"),
+      ("\(MarkerText.sentinel)a#b-A", "A"),
+      ("\(MarkerText.sentinel)a#b.", ""),
+      ("\(MarkerText.sentinel)a#b_", "_"),
+      ("\(MarkerText.sentinel)a#b-->", ""),
+      ("\(MarkerText.sentinel)a#b*/", ""),
+      ("\(MarkerText.sentinel)a#b\u{A0}note", ""),
+      ("\(MarkerText.sentinel)a#b é", ""),
+      ("\(MarkerText.sentinel)a#b\(MarkerText.sentinel)end a#b", ""),
+      (MarkerText.sentinel, ""),
     ] as [(String, String)],
   )
   func `an id run directly followed by a letter, digit or underscore says what follows`(
@@ -86,13 +86,13 @@ struct SentinelFinderTests {
 
   @Test(
     arguments: [
-      ("@use-case:a.b#submiT", 0 ..< 20),
-      ("@use-case:a.b#c_d", 0 ..< 17),
-      ("@use-case:a#b-A", 0 ..< 15),
-      ("@use-case:BAD", 0 ..< 13),
-      ("@use-case:end a#bZ", 0 ..< 18),
-      ("@use-case:a#b-->", 0 ..< 13),
-      ("@use-case:a#b\u{A0}x", 0 ..< 13),
+      ("\(MarkerText.sentinel)a.b#submiT", 0 ..< 20),
+      ("\(MarkerText.sentinel)a.b#c_d", 0 ..< 17),
+      ("\(MarkerText.sentinel)a#b-A", 0 ..< 15),
+      ("\(MarkerText.sentinel)BAD", 0 ..< 13),
+      ("\(MarkerText.sentinel)end a#bZ", 0 ..< 18),
+      ("\(MarkerText.sentinel)a#b-->", 0 ..< 13),
+      ("\(MarkerText.sentinel)a#b\u{A0}x", 0 ..< 13),
     ] as [(String, Range<Int>)],
   )
   func `a word after an id run is part of the token and a trimmed hyphen or dot is not`(
@@ -106,7 +106,8 @@ struct SentinelFinderTests {
 
   @Test
   func `the whole word is in the token though only forty characters of it are named`() throws {
-    let sentinel = try #require(find("@use-case:a#b" + String(repeating: "Z", count: 100)).first)
+    let text = "\(MarkerText.sentinel)a#b" + String(repeating: "Z", count: 100)
+    let sentinel = try #require(find(text).first)
 
     #expect(sentinel.tokenRange == 0 ..< 113)
     #expect(sentinel.followingWord.count == 40)
@@ -114,7 +115,7 @@ struct SentinelFinderTests {
 
   @Test
   func `scanning goes on after the word`() {
-    let found = find("@use-case:a#bZZ @use-case:c#d")
+    let found = find("\(MarkerText.sentinel)a#bZZ \(MarkerText.sentinel)c#d")
 
     #expect(found.map(\.identifier) == ["a#b", "c#d"])
     #expect(found.map(\.tokenRange) == [0 ..< 15, 16 ..< 29])
@@ -122,7 +123,8 @@ struct SentinelFinderTests {
 
   @Test
   func `the word after an id run is cut at forty characters`() throws {
-    let sentinel = try #require(find("@use-case:a#b" + String(repeating: "Z", count: 100)).first)
+    let text = "\(MarkerText.sentinel)a#b" + String(repeating: "Z", count: 100)
+    let sentinel = try #require(find(text).first)
 
     #expect(sentinel.followingWord == String(repeating: "Z", count: 40))
   }
@@ -139,7 +141,7 @@ struct SentinelFinderTests {
 
   @Test
   func `a token runs from the at sign through the last byte of the id`() throws {
-    let found = find("x @use-case:end  a#b-- y")
+    let found = find("x \(MarkerText.sentinel)end  a#b-- y")
 
     let sentinel = try #require(found.first)
     #expect(sentinel.tokenRange == 2 ..< 20)
@@ -147,7 +149,7 @@ struct SentinelFinderTests {
 
   @Test
   func `one sentinel directly after another is judged on its own`() {
-    let found = find("@use-case:@use-case:a#b")
+    let found = find("\(MarkerText.sentinel)\(MarkerText.sentinel)a#b")
 
     #expect(found.map(\.identifier) == ["", "a#b"])
     #expect(found.map(\.tokenRange) == [0 ..< 10, 10 ..< 23])
@@ -155,7 +157,7 @@ struct SentinelFinderTests {
 
   @Test
   func `an end sentinel with nothing after its separator leaves the next sentinel alone`() {
-    let found = find("@use-case:end @use-case:a#b")
+    let found = find("\(MarkerText.sentinel)end \(MarkerText.sentinel)a#b")
 
     #expect(found.map(\.kind) == [.end, .start])
     #expect(found.map(\.identifier) == ["", "a#b"])
@@ -163,7 +165,10 @@ struct SentinelFinderTests {
 
   @Test
   func `every sentinel on a line is found, each with its line`() {
-    let found = find("@use-case:a#b\r\nx\n@use-case:end a#b @use-case:c#d\r@use-case:e#f")
+    let found = find(
+      "\(MarkerText.sentinel)a#b\r\nx\n\(MarkerText.sentinel)end a#b \(MarkerText.sentinel)c#d\r"
+        + "\(MarkerText.sentinel)e#f",
+    )
 
     #expect(found.map(\.identifier) == ["a#b", "a#b", "c#d", "e#f"])
     #expect(found.map(\.line) == [1, 3, 3, 4])
@@ -171,7 +176,7 @@ struct SentinelFinderTests {
 
   @Test
   func `a sentinel is found after text in any script`() {
-    let found = find("日本語 café @use-case:a#b")
+    let found = find("日本語 café \(MarkerText.sentinel)a#b")
 
     #expect(found.map(\.identifier) == ["a#b"])
     #expect(found.first?.tokenRange == 16 ..< 29)
@@ -179,7 +184,7 @@ struct SentinelFinderTests {
 
   @Test
   func `a file is checked for the sentinel without being read as text`() {
-    let bytes: [UInt8] = [0xFF, 0xC0, 0x80] + Array("@use-case:a#b".utf8) + [0xE9]
+    let bytes: [UInt8] = [0xFF, 0xC0, 0x80] + Array("\(MarkerText.sentinel)a#b".utf8) + [0xE9]
 
     #expect(finder.holdsSentinel(bytes))
   }

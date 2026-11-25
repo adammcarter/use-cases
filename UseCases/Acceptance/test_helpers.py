@@ -12,7 +12,7 @@ import subprocess
 import sys
 
 import pytest
-from conftest import POSIX_ONLY, windows_launcher, call_core, COMMAND, transformer_program, record_exchanges
+from conftest import SENTINEL, POSIX_ONLY, windows_launcher, call_core, COMMAND, transformer_program, record_exchanges
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -437,7 +437,7 @@ def test_only_the_workspace_decides_which_folders_are_skipped(ws):
     """No built-in list of tool folders: a marker in node_modules is found until the workspace excludes it."""
     os.makedirs(os.path.join(ws, "node_modules", "copied"))
     with open(os.path.join(ws, "node_modules", "copied", "math.js"), "w") as handle:
-        handle.write("// @use-case:demo.math.add#vendored\nexport const add = (a, b) => a + b;\n// @use-case:end demo.math.add#vendored\n")
+        handle.write(f"// {SENTINEL}demo.math.add#vendored\nexport const add = (a, b) => a + b;\n// {SENTINEL}end demo.math.add#vendored\n")
     def vendored():
         return [l for l in uc(ws, "links")["links"] if l["binding"] == "vendored"]
     assert len(vendored()) == 1
@@ -456,7 +456,7 @@ def test_version_control_history_is_never_scanned(ws):
     git = ["git", "-c", "user.email=t@example.com", "-c", "user.name=t"]
     subprocess.run(["git", "init", "-q"], cwd=ws, check=True)
     subprocess.run(["git", "add", "-A"], cwd=ws, check=True)
-    subprocess.run(git + ["commit", "-q", "-m", "wip @use-case:demo.math.add#half-written"], cwd=ws, check=True)
+    subprocess.run(git + ["commit", "-q", "-m", f"wip {SENTINEL}demo.math.add#half-written"], cwd=ws, check=True)
     assert status(ws)["demo.math.add"] == "unverified"
 
 

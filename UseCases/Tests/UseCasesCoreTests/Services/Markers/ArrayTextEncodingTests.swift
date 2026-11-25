@@ -62,7 +62,7 @@ struct ArrayTextEncodingTests {
       [0x00, 0x00],
       [0x00, 0x00, 0xFE],
       [0xEF, 0xBB, 0xBF],
-      Array("@use-case:".utf8),
+      Array(MarkerText.sentinel.utf8),
       [0x61, 0xFF, 0xFE],
     ] as [[UInt8]],
   )

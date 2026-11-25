@@ -9,7 +9,7 @@ struct ValidateDocumentSchemaTests {
 
   init() throws {
     workspace = try LinksWorkspace()
-    try workspace.folder.write("src/a.swift", "// @use-case:BAD\n")
+    try workspace.folder.write("src/a.swift", "// \(MarkerText.sentinel)BAD\n")
   }
 
   private func failures(of document: JSONValue) throws -> [String] {

@@ -12,7 +12,7 @@ import sys
 import unicodedata
 
 import pytest
-from conftest import call_core
+from conftest import SENTINEL, call_core
 
 
 def symlink(target, link):
@@ -50,8 +50,8 @@ validations:
 """
 
 TEST = 'import { test } from "node:test";\nimport assert from "node:assert/strict";\n\n' \
-       '// @use-case:demo.math.add#unit-tests.adds\ntest("adds", () => {\n  assert.equal(2 + 3, 5);\n});\n' \
-       '// @use-case:end demo.math.add#unit-tests.adds\n'
+       '// ' + SENTINEL + 'demo.math.add#unit-tests.adds\ntest("adds", () => {\n  assert.equal(2 + 3, 5);\n});\n' \
+       f'// {SENTINEL}end demo.math.add#unit-tests.adds\n'
 
 
 def uc(ws, *args, expect_exit=0):
@@ -109,7 +109,7 @@ def test_a_file_name_with_a_control_character_is_skipped_with_a_warning(tmp_path
     if os.name == "nt":
         pytest.skip("Windows file names cannot hold a control character")
     with open(os.path.join(ws, "tests", "bad\nname.js"), "w") as handle:
-        handle.write("// @use-case:demo.math.add#unit-tests.bad\nx\n// @use-case:end demo.math.add#unit-tests.bad\n")
+        handle.write(f"// {SENTINEL}demo.math.add#unit-tests.bad\nx\n// {SENTINEL}end demo.math.add#unit-tests.bad\n")
     found = uc(ws, "links")
     assert all("\n" not in l["file"] for l in found["links"])
     assert any("control character" in d for d in found["diagnostics"])
@@ -118,7 +118,7 @@ def test_a_file_name_with_a_control_character_is_skipped_with_a_warning(tmp_path
 def test_a_marker_region_on_the_last_line_without_a_newline(tmp_path):
     ws = workspace(tmp_path / "ws", "tests/add.test.js")
     with open(os.path.join(ws, "src", "math.js"), "w") as handle:
-        handle.write("// @use-case:demo.math.add#code\nexport const add = (a, b) => a + b;\n// @use-case:end demo.math.add#code")
+        handle.write(f"// {SENTINEL}demo.math.add#code\nexport const add = (a, b) => a + b;\n// {SENTINEL}end demo.math.add#code")
     link = next(l for l in uc(ws, "links")["links"] if l["binding"] == "code")
     assert link["range"] == {"start": 2, "end": 2}
 
@@ -126,7 +126,7 @@ def test_a_marker_region_on_the_last_line_without_a_newline(tmp_path):
 def test_symlinked_folders_are_never_followed(tmp_path):
     outside = tmp_path / "elsewhere"
     outside.mkdir()
-    (outside / "copy.js").write_text("// @use-case:demo.math.add#via-link\nx\n// @use-case:end demo.math.add#via-link\n")
+    (outside / "copy.js").write_text(f"// {SENTINEL}demo.math.add#via-link\nx\n// {SENTINEL}end demo.math.add#via-link\n")
     ws = workspace(tmp_path / "ws", "tests/add.test.js")
     symlink(outside, os.path.join(ws, "linked"))
     assert all(l["binding"] != "via-link" for l in uc(ws, "links")["links"])

@@ -249,7 +249,7 @@ struct RecordCommandTests {
 
   @Test
   func `a workspace made INVALID by a link is refused as invalid, writing nothing`() async throws {
-    try workspace.folder.write("src/a.swift", "// @use-case:shop.pay#top\nwork()\n")
+    try workspace.folder.write("src/a.swift", "// \(MarkerText.sentinel)shop.pay#top\nwork()\n")
 
     let result = await run(["--json", "record", "shop.pay.card", "unit-tests", "pass"])
 

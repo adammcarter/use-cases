@@ -19,7 +19,8 @@ struct LinkResolutionEmptyRegionsTests {
   @Test(arguments: ["", "\n\n   \n"])
   func `an empty region is tied to the use case it marks`(inside: String) throws {
     let resolution = try resolution(writing: [
-      "src/a.swift": "// @use-case:app.toggle#code\n\(inside)// @use-case:end app.toggle#code\n",
+      "src/a.swift": "// \(MarkerText.sentinel)app.toggle#code\n\(inside)"
+        + "// \(MarkerText.sentinel)end app.toggle#code\n",
     ])
 
     let regions = resolution.emptyMarkerRegions
