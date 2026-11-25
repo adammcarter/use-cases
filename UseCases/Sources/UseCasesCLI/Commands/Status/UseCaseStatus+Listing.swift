@@ -4,13 +4,13 @@ extension UseCaseStatus {
   /// The reason beside the use case in a list (chapter 16 §9): what a DRAFT lacks, or the gating
   /// route that decided the state and why. Nothing for a use case that is verified, and then
   /// `changed since approved` when the promise changed after its sign-off.
-  func listingReason(shortRunIdentifiers: Bool) -> String? {
+  func listingReason(shortening: RunIdentifierShortener?) -> String? {
     var reasons: [String] = []
 
     if !isReady {
       reasons.append("missing: \(missing.joined(separator: ", "))")
     } else if status != .verified, let route = decidingRoute {
-      reasons.append(route.listing(shortRunIdentifiers: shortRunIdentifiers))
+      reasons.append(route.listing(shortening: shortening))
     }
 
     if approval == .changed {
@@ -24,8 +24,8 @@ extension UseCaseStatus {
 extension RouteStatus {
   /// `unit-tests failed (run 0192f0c4 via unit-tests)` where a result decided it, and
   /// `unit-tests: changed since run 0191aa02` where none did.
-  func listing(shortRunIdentifiers: Bool) -> String {
-    let why = explanation.text(shortRunIdentifiers: shortRunIdentifiers)
+  func listing(shortening: RunIdentifierShortener?) -> String {
+    let why = explanation.text(shortening: shortening)
 
     guard case .decided = explanation else {
       return "\(identifier): \(why)"

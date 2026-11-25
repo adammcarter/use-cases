@@ -3,6 +3,9 @@ import Testing
 
 struct RouteExplanationTests {
   private static let run = "0192f0c4e5a17c3e9b04d2f61a8c3b57"
+  private static let shortener = RunIdentifierShortener(runs: [run])
+  private static let sameMinute = "0192f0c4e5b27c3e9b04d2f61a8c3b58"
+  private static let sameMinuteShortener = RunIdentifierShortener(runs: [run, sameMinute])
 
   @Test
   func `a deciding run names the validations that gave the verdict`() {
@@ -12,10 +15,41 @@ struct RouteExplanationTests {
     )
 
     #expect(
-      explanation.text(shortRunIdentifiers: false)
+      explanation.text(shortening: nil)
         == "run 0192f0c4e5a17c3e9b04d2f61a8c3b57 via unit-tests, ui-tests",
     )
-    #expect(explanation.text(shortRunIdentifiers: true) == "run 0192f0c4 via unit-tests, ui-tests")
+    #expect(explanation.text(shortening: Self.shortener) == "run 0192f0c4 via unit-tests, ui-tests")
+  }
+
+  @Test
+  func `two runs that share their first 8 digits are told apart by a longer prefix`() {
+    let first = RouteExplanation.decided(run: Self.run, via: ["acceptance"])
+    let second = RouteExplanation.decided(run: Self.sameMinute, via: ["acceptance"])
+
+    #expect(first.text(shortening: Self.sameMinuteShortener) == "run 0192f0c4e5a via acceptance")
+    #expect(second.text(shortening: Self.sameMinuteShortener) == "run 0192f0c4e5b via acceptance")
+  }
+
+  @Test
+  func `a withheld verdict and a changed route tell two close runs apart`() {
+    #expect(
+      RouteExplanation.withheld(problem: "its test didn't run", run: Self.run)
+        .text(shortening: Self.sameMinuteShortener) == "its test didn't run (run 0192f0c4e5a)",
+    )
+    #expect(
+      RouteExplanation.changedSince(run: Self.sameMinute)
+        .text(shortening: Self.sameMinuteShortener) == "changed since run 0192f0c4e5b",
+    )
+  }
+
+  @Test
+  func `a lone run keeps its first 8 digits among runs that differ earlier`() {
+    let shortener = RunIdentifierShortener(runs: [Self.run, "0192f0c5e5a17c3e9b04d2f61a8c3b57"])
+
+    #expect(
+      RouteExplanation.changedSince(run: Self.run).text(shortening: shortener)
+        == "changed since run 0192f0c4",
+    )
   }
 
   @Test
@@ -25,7 +59,7 @@ struct RouteExplanationTests {
       via: [],
     )
 
-    #expect(explanation.text(shortRunIdentifiers: true) == "run 0192f0c4")
+    #expect(explanation.text(shortening: Self.shortener) == "run 0192f0c4")
   }
 
   @Test
@@ -35,22 +69,22 @@ struct RouteExplanationTests {
       run: Self.run,
     )
 
-    #expect(explanation.text(shortRunIdentifiers: true) == "its test didn't run (run 0192f0c4)")
+    #expect(explanation.text(shortening: Self.shortener) == "its test didn't run (run 0192f0c4)")
   }
 
   @Test
   func `a stale route names the run it changed since`() {
     let explanation = RouteExplanation.changedSince(run: Self.run)
 
-    #expect(explanation.text(shortRunIdentifiers: true) == "changed since run 0192f0c4")
+    #expect(explanation.text(shortening: Self.shortener) == "changed since run 0192f0c4")
     #expect(
-      explanation.text(shortRunIdentifiers: false)
+      explanation.text(shortening: nil)
         == "changed since run 0192f0c4e5a17c3e9b04d2f61a8c3b57",
     )
   }
 
   @Test
   func `a route nothing has run for has no verdict yet`() {
-    #expect(RouteExplanation.noVerdictYet.text(shortRunIdentifiers: true) == "no verdict yet")
+    #expect(RouteExplanation.noVerdictYet.text(shortening: Self.shortener) == "no verdict yet")
   }
 }

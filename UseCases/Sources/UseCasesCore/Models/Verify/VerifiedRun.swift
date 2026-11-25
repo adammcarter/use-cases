@@ -10,12 +10,20 @@ public struct VerifiedRun: Equatable, Sendable {
   /// The notes of a request that read nothing; a run's own notes are in its manifest.
   private let unreadNotes: [String]
 
+  private let runIdentifiers: RunIdentifierShortener
+
   /// The request was cancelled and the run was sealed as interrupted (chapter 13 §15).
   public let isCancelled: Bool
 
   /// The sealed run's id; `nil` when no run was read.
   public var runIdentifier: String? {
     manifest?.identifier.text
+  }
+
+  /// The sealed run's id as a person sees it: short, yet naming only this run of the store;
+  /// `nil` when no run was read.
+  public var shortRunIdentifier: String? {
+    runIdentifier.map(runIdentifiers.shortened)
   }
 
   /// The run-level problems, each starting with the id of the validation it is about.
@@ -70,10 +78,12 @@ public struct VerifiedRun: Equatable, Sendable {
     manifest: RunManifest,
     results: [StoredResult],
     isCancelled: Bool,
+    runIdentifiers: RunIdentifierShortener = RunIdentifierShortener(runs: []),
   ) {
     self.manifest = manifest
     self.results = results
     self.isCancelled = isCancelled
+    self.runIdentifiers = runIdentifiers
     unreadNotes = []
   }
 
@@ -82,6 +92,7 @@ public struct VerifiedRun: Equatable, Sendable {
     manifest = nil
     results = []
     isCancelled = false
+    runIdentifiers = RunIdentifierShortener(runs: [])
     unreadNotes = notes
   }
 }

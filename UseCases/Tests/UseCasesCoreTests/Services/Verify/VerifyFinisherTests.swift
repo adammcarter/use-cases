@@ -56,6 +56,42 @@ struct VerifyFinisherTests {
   }
 
   @Test
+  func `a run is told by its first 8 digits when no other run of the store shares them`()
+    async throws
+  {
+    let (_, verified) = try await finished()
+    let run = try #require(verified.runIdentifier)
+
+    #expect(verified.shortRunIdentifier == String(run.prefix(8)))
+  }
+
+  @Test
+  func `a run that shares its first digits with another run of the store is told by more`()
+    async throws
+  {
+    let started = try fixture.start()
+    let run = try #require(started.runIdentifier)
+    let filler = run.hasSuffix("f") ? "e" : "f"
+    let neighbour = String(run.prefix(10)) + String(repeating: filler, count: 22)
+
+    try fixture.freshness.write(".use-cases/runs/\(neighbour)/completion.json", "{}")
+    try fixture.writeReport(of: started)
+
+    let key = try fixture.linkKey()
+    let verified = try await fixture.finisher(
+      runner: MockTransformerRunner(
+        answers: [.success(VerifyFixture.response([key: "pass"]))],
+      ),
+    ).finish(
+      VerifyFinishRequest(runIdentifier: nil),
+      in: fixture.resolved(),
+      reloading: FixtureReloading(fixture),
+    )
+
+    #expect(verified.shortRunIdentifier == String(run.prefix(11)))
+  }
+
+  @Test
   func `the verdict is fingerprinted at the start point and names the validations that spoke`()
     async throws
   {

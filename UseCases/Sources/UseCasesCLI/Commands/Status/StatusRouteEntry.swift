@@ -14,6 +14,6 @@ struct StatusRouteEntry: Encodable {
     gates = route.gates
     linked = route.isLinked
     status = route.status.rawValue
-    note = route.explanation.text(shortRunIdentifiers: false)
+    note = route.explanation.text(shortening: nil)
   }
 }

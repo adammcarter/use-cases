@@ -41,7 +41,10 @@ struct VerifyReportTests {
     #expect(VerifyReport.humanText(start: started, hint: true) == "nothing to start")
   }
 
-  private func finished(unlinked: [UnlinkedTest]) throws -> VerifiedRun {
+  private func finished(
+    unlinked: [UnlinkedTest],
+    among runIdentifiers: RunIdentifierShortener = RunIdentifierShortener(runs: []),
+  ) throws -> VerifiedRun {
     try VerifiedRun(
       manifest: RunManifest(
         identifier: RunIdentifier(validating: run),
@@ -55,6 +58,7 @@ struct VerifyReportTests {
       ),
       results: [],
       isCancelled: false,
+      runIdentifiers: runIdentifiers,
     )
   }
 
@@ -93,8 +97,21 @@ struct VerifyReportTests {
   }
 
   @Test
-  func `a run id is shortened to its first 8 digits for people`() {
-    #expect(VerifyReport.shortened(run) == "0192f0c4")
+  func `a finished run is told by the short id the store shortener gives it`() throws {
+    let close = "0192f0c4e5b27c3e9b04d2f61a8c3b58"
+    let run = try finished(
+      unlinked: [],
+      among: RunIdentifierShortener(runs: [run, close]),
+    )
+
+    #expect(VerifyReport.humanText(finish: run, hint: false).hasPrefix("run 0192f0c4e5a · "))
+  }
+
+  @Test
+  func `a finished run alone in the store is told by its first 8 digits`() throws {
+    let run = try finished(unlinked: [], among: RunIdentifierShortener(runs: [run]))
+
+    #expect(VerifyReport.humanText(finish: run, hint: false).hasPrefix("run 0192f0c4 · "))
   }
 
   @Test

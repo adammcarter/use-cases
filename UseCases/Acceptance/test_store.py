@@ -137,9 +137,14 @@ def test_a_run_that_never_finished_is_a_workspace_warning_in_both_views_and_neve
     assert route_status(ws) == "unverified"
     process = subprocess.run([*COMMAND, "status"], cwd=ws, capture_output=True, stdin=subprocess.DEVNULL, text=True, encoding="utf-8")
     assert f"warning: run {run_id[:8]} never finished" in process.stdout, process.stdout
-    uc(ws, "record", "example.success", "manual", "pass")  # a later sealed run still counts, and the warning stays until the folder goes
+    neighbour = run_id[:10] + ("1" if run_id[10] == "0" else "0") + "0" * 21  # another run that never finished, sharing the first 10 digits
+    os.makedirs(os.path.join(ws, ".use-cases", "runs", neighbour))
     process = subprocess.run([*COMMAND, "status"], cwd=ws, capture_output=True, stdin=subprocess.DEVNULL, text=True, encoding="utf-8")
-    assert f"warning: run {run_id[:8]} never finished" in process.stdout, process.stdout
+    assert f"warning: run {run_id[:11]} never finished" in process.stdout, process.stdout  # the id grows to name only one run
+    assert f"warning: run {neighbour[:11]} never finished" in process.stdout, process.stdout
+    shutil.rmtree(os.path.join(ws, ".use-cases", "runs", neighbour))  # not a real run: the suite's store check would refuse it
+    uc(ws, "record", "example.success", "manual", "pass")  # a later sealed run still counts, and the warning stays until the folder goes
+    assert [w for w in uc(ws, "status")["warnings"] if w.startswith(f"run {run_id} never finished")] != []
     assert route_status(ws) == "verified"
 
 

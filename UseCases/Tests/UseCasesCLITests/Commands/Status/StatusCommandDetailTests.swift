@@ -33,6 +33,19 @@ struct StatusCommandDetailTests {
   }
 
   @Test
+  func `a run that shares its first digits with another run is shown by the shortest prefix`()
+    async throws
+  {
+    await workspace.record("shop.pay.card", "fail")
+    let run = try workspace.onlyRun()
+    try workspace.plantUnfinishedRun(StatusWorkspace.neighbour(of: run, sharing: 10))
+
+    let output = await lines(["status", "shop.pay.card"])
+
+    #expect(output[3].hasSuffix("run \(run.prefix(11)) via record"))
+  }
+
+  @Test
   func `a stale use case says what it changed since`() async throws {
     try await workspace.recordEveryState()
 

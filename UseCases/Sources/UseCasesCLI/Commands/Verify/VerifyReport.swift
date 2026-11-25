@@ -4,11 +4,6 @@ import UseCasesCore
 /// What `use-cases verify` prints (chapter 16 §11): lines for people, one JSON document for
 /// scripts.
 enum VerifyReport {
-  /// A run id shown short to people, as `status` does (chapter 16 §9).
-  static func shortened(_ identifier: String) -> String {
-    String(identifier.prefix(8))
-  }
-
   /// `started run <id>`, where each report goes, anything else worth knowing, and the hint that
   /// says what to do next (chapter 16 §18).
   static func humanText(
@@ -55,7 +50,7 @@ enum VerifyReport {
     let notTied = run.notTiedTests
     let errors = run.errors.count == 1 ? "1 run error" : "\(run.errors.count) run errors"
     var lines = [
-      "run \(shortened(identifier)) · \(verdicts)"
+      "run \(run.shortRunIdentifier ?? identifier) · \(verdicts)"
         + (counts.isEmpty ? "" : " (\(counts))")
         + " · \(errors)"
         + (notTied.isEmpty ? "" : " · \(notTied.count) not tied to a use case"),

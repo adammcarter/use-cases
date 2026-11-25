@@ -73,6 +73,7 @@ extension FinishPoint {
       manifest: manifest,
       results: judged.results,
       isCancelled: isCancelled,
+      runIdentifiers: store.shortener(in: run.workspace),
     )
   }
 
@@ -184,6 +185,7 @@ extension FinishPoint {
       manifest: manifest,
       results: [],
       isCancelled: true,
+      runIdentifiers: store.shortener(in: run.workspace),
     )
   }
 }

@@ -41,6 +41,32 @@ struct StatusJudgeUseCaseTests {
   }
 
   @Test
+  func `two runs of one store that share their first 8 digits are shown by different prefixes`()
+    throws
+  {
+    let fixture = try StatusFixture(definitions: Self.nonGating)
+    try fixture.record("unit-tests")
+    try fixture.record("extra")
+
+    let status = try fixture.status()
+    let runs = status.useCases.flatMap(\.routes).compactMap { route -> String? in
+      guard case let .decided(run, _) = route.explanation else {
+        return nil
+      }
+
+      return run
+    }
+    let shown = runs.map(status.runIdentifiers.shortened)
+
+    #expect(runs.count == 2)
+    #expect(runs[0].prefix(8) == runs[1].prefix(8))
+    #expect(shown[0] != shown[1])
+    #expect(zip(runs, shown).allSatisfy { run, short in
+      run.hasPrefix(short) && short.count >= 8
+    })
+  }
+
+  @Test
   func `use cases are listed worst first, then drafts, then by id`() throws {
     let fixture = try StatusFixture(definitions: FreshnessSamples.multipleUseCases())
     try fixture.record("unit", "pass", useCase: "app.beta")
@@ -187,7 +213,7 @@ struct StatusJudgeUseCaseTests {
     let status = try fixture.status()
 
     #expect(status.warnings.count == 1)
-    #expect(status.warnings.first?.text(shortRunIdentifiers: false).contains("app.nothing") == true)
+    #expect(status.warnings.first?.text(shortening: nil).contains("app.nothing") == true)
   }
 
   @Test

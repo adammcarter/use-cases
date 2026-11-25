@@ -35,6 +35,19 @@ extension VerifyStore {
     return (runs.open.map(\.identifier) + runs.records).sorted()
   }
 
+  /// How a person sees a run id of this store: every run folder counts, sealed or not, and an
+  /// unreadable store counts none.
+  func shortener(in workspace: URL) -> RunIdentifierShortener {
+    let runs = StoreFile(workspace: workspace).appending(StoreLayout.runsFolder)
+    let entries = (try? access.entries(in: runs)) ?? []
+
+    return RunIdentifierShortener(
+      runs: entries.compactMap { entry in
+        (try? RunIdentifier(validating: entry.name))?.text
+      },
+    )
+  }
+
   /// What the store holds for the run id the person typed. Text that is no run id names no run.
   func find(
     _ text: String,

@@ -84,6 +84,9 @@ public struct StatusJudge: StatusJudging {
           at: fingerprints,
           in: workspace,
         ) : nil,
+      runIdentifiers: RunIdentifierShortener(
+        runs: history.runs.map(\.identifier.text) + history.unfinishedRuns.map(\.identifier.text),
+      ),
     )
   }
 

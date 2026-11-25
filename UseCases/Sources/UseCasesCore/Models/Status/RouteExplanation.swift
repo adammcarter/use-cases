@@ -21,17 +21,17 @@ public enum RouteExplanation: Equatable, Sendable {
   /// Nothing has been run for the route.
   case noVerdictYet
 
-  /// The explanation as a sentence, with a run id in full or as its first 8 digits.
-  public func text(shortRunIdentifiers: Bool) -> String {
+  /// The explanation as a sentence, with a run id in full, or shortened when a shortener is given.
+  public func text(shortening: RunIdentifierShortener?) -> String {
     switch self {
     case let .decided(run, via):
       via.isEmpty
-        ? "run \(Self.shown(run, short: shortRunIdentifiers))"
-        : "run \(Self.shown(run, short: shortRunIdentifiers)) via \(via.joined(separator: ", "))"
+        ? "run \(Self.shown(run, shortening: shortening))"
+        : "run \(Self.shown(run, shortening: shortening)) via \(via.joined(separator: ", "))"
     case let .withheld(problem, run):
-      "\(problem) (run \(Self.shown(run, short: shortRunIdentifiers)))"
+      "\(problem) (run \(Self.shown(run, shortening: shortening)))"
     case let .changedSince(run):
-      "changed since run \(Self.shown(run, short: shortRunIdentifiers))"
+      "changed since run \(Self.shown(run, shortening: shortening))"
     case .noVerdictYet:
       "no verdict yet"
     }
@@ -39,8 +39,8 @@ public enum RouteExplanation: Equatable, Sendable {
 
   static func shown(
     _ run: String,
-    short: Bool,
+    shortening: RunIdentifierShortener?,
   ) -> String {
-    short ? String(run.prefix(8)) : run
+    shortening?.shortened(run) ?? run
   }
 }

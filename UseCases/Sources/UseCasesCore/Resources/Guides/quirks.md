@@ -57,7 +57,7 @@ error: --next continues a search: pass the token alone, with no words, --like or
 
 ## Short run ids look alike
 
-Run ids are ordered by time, so runs started close together share their first digits, and human output shows only the first 8. When you abort or finish a particular run, copy the full 32-digit id from `use-cases verify --start`, or read it from `--json`.
+Human output shows a run id as the shortest prefix of at least 8 digits that names only one run in the store, so runs started close together show different ids. A command that takes a run id wants all 32 digits: when you abort or finish a particular run, copy the full id from `use-cases verify --start`, or read it from `--json`.
 
 ## Changing a use case's words puts its verdict out of date
 

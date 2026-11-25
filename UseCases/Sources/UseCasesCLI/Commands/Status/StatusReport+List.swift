@@ -57,7 +57,7 @@ extension StatusReport {
     let width = (fronts.map(\.count).max() ?? 0) + 2
 
     return zip(useCases, fronts).map { useCase, front in
-      let reason = useCase.listingReason(shortRunIdentifiers: true)
+      let reason = useCase.listingReason(shortening: workspace.runIdentifiers)
       let mark = marks[useCase.identifier]
 
       guard reason != nil || mark != nil else {

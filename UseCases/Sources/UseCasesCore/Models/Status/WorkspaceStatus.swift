@@ -21,4 +21,7 @@ public struct WorkspaceStatus: Equatable, Sendable {
   /// What the results store holds: its runs, its size and how many runs `prune` would remove.
   /// `nil` when the store has no run at all, or when the view asked for does not show it.
   public let store: StoreSummary?
+
+  /// How a person sees a run id of this store (chapter 16 §9).
+  public let runIdentifiers: RunIdentifierShortener
 }

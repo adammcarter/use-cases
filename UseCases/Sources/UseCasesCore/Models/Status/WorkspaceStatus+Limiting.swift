@@ -11,6 +11,7 @@ public extension WorkspaceStatus {
       signOffRequired: signOffRequired,
       hasRunCommand: hasRunCommand,
       store: store,
+      runIdentifiers: runIdentifiers,
     )
   }
 }

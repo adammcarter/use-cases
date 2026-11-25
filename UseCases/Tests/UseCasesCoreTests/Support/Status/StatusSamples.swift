@@ -45,6 +45,7 @@ enum StatusSamples {
     warnings: [WorkspaceWarning] = [],
     hasRunCommand: Bool = false,
     store: StoreSummary? = nil,
+    runIdentifiers: RunIdentifierShortener = RunIdentifierShortener(runs: []),
   ) -> WorkspaceStatus {
     WorkspaceStatus(
       useCases: useCases,
@@ -53,6 +54,7 @@ enum StatusSamples {
       signOffRequired: signOffRequired,
       hasRunCommand: hasRunCommand,
       store: store,
+      runIdentifiers: runIdentifiers,
     )
   }
 }

@@ -11,7 +11,7 @@ extension StatusReport {
       "\(useCase.status.marked)  \(useCase.identifier) · \(useCase.title)",
     ]
 
-    if let reason = useCase.listingReason(shortRunIdentifiers: true), !useCase.isReady {
+    if let reason = useCase.listingReason(shortening: workspace.runIdentifiers), !useCase.isReady {
       lines += ["", reason]
     }
 
@@ -57,7 +57,7 @@ extension StatusReport {
         route.identifier,
         route.gates ? "yes" : "no",
         route.status.marked,
-        route.explanation.text(shortRunIdentifiers: true),
+        route.explanation.text(shortening: workspace.runIdentifiers),
         routeWidth: routeWidth,
       )
     }

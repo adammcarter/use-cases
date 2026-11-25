@@ -31,10 +31,16 @@ use_cases:
       - id: newer-core
         when: [A run written by a newer version of the tool is read.]
         then: [Its verdicts still count in status.]
+      - id: short-ids
+        when: [Two runs start within the same minute.]
+        then: [People see each by a short id that names only that run.]
     validation:
       - id: acceptance
         type: { kind: acceptance }
         covers: [order, deleted-run, newer-core]
+      - id: swift-tests
+        type: { kind: unit }
+        covers: [short-ids]
   - id: prune
     title: Prune removes old runs and changes no answer
     description: Promised in chapter 16 (CLI surface) §20; chapter 12 (Results storage) §30, §31.

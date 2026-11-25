@@ -47,6 +47,38 @@ struct StatusWorkspace {
     precondition(result.exitCode == 0, result.standardError)
   }
 
+  /// The id of the one run in the store, which a test that records once has.
+  func onlyRun() throws -> String {
+    let runs = try FileManager.default.contentsOfDirectory(
+      atPath: folder.url.appendingPathComponent(".use-cases/runs").path,
+    )
+
+    precondition(runs.count == 1, "expected one run, found \(runs.count)")
+
+    return runs[0]
+  }
+
+  /// A run folder with the id the test chose and no completion marker: a run that never
+  /// finished, which `status` still counts when it shortens run ids.
+  func plantUnfinishedRun(
+    _ identifier: String,
+  ) throws {
+    try folder.write(
+      ".use-cases/runs/\(identifier)/run.json",
+      "{}\n",
+    )
+  }
+
+  /// An id that shares its first `digits` digits with `run` and differs at the next one.
+  static func neighbour(
+    of run: String,
+    sharing digits: Int,
+  ) -> String {
+    let next = run.dropFirst(digits).first == "0" ? "1" : "0"
+
+    return String(run.prefix(digits)) + next + String(repeating: "0", count: run.count - digits - 1)
+  }
+
   /// Changes the words of a use case's intent, which makes its verdicts stale.
   func editIntent(of local: String) throws {
     let path = "use-cases/pay.yml"

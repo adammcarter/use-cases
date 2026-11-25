@@ -90,7 +90,8 @@ struct StatusCommandListTests {
 
     #expect(output.count == 11)
     #expect(output[0].hasPrefix("✗ failed      shop.pay.card"))
-    #expect(output[0].hasSuffix("check failed (run \(runPrefix(output[0])) via record)"))
+    #expect(output[0].contains("check failed (run "))
+    #expect(output[0].hasSuffix(" via record)"))
     #expect(output[1].hasPrefix("! error       shop.pay.wallet"))
     #expect(output[2].hasPrefix("◐ incomplete  shop.pay.voucher"))
     #expect(output[3].hasPrefix("○ unverified  shop.pay.gift"))
@@ -113,14 +114,6 @@ struct StatusCommandListTests {
         line.hasPrefix("→")
       } == 1,
     )
-  }
-
-  private func runPrefix(_ line: String) -> String {
-    guard let range = line.range(of: "run ") else {
-      return ""
-    }
-
-    return String(line[range.upperBound...].prefix(8))
   }
 
   @Test
@@ -256,22 +249,31 @@ struct StatusCommandListTests {
   @Test
   func `a run that never finished is a warning under the list, in short`() async throws {
     await workspace.record("shop.cart.add", "pass")
-    let document = try await workspace.run(["--json", "record", "shop.cart.add", "check", "pass"])
-      .document()
-    guard case let .string(identifier)? = document["run_id"] else {
-      Issue.record("no run_id")
-      return
-    }
-    try FileManager.default.removeItem(
-      at: workspace.folder.url
-        .appendingPathComponent(".use-cases/runs/\(identifier)/completion.json"),
-    )
+    let first = "0192f0c4e5a17c3e9b04d2f61a8c3b57"
+    let second = "0192f0c4e5b27c3e9b04d2f61a8c3b58"
+    try workspace.plantUnfinishedRun(first)
+    try workspace.plantUnfinishedRun(second)
 
     let human = await lines(["status"])
     let scripted = await workspace.run(["--json", "status"]).standardOutput
 
-    #expect(human.contains("warning: run \(identifier.prefix(8)) never finished"))
-    #expect(scripted.contains("run \(identifier) never finished"))
+    #expect(human.contains("warning: run 0192f0c4e5a never finished"))
+    #expect(human.contains("warning: run 0192f0c4e5b never finished"))
+    #expect(scripted.contains("run \(first) never finished"))
+    #expect(scripted.contains("run \(second) never finished"))
+  }
+
+  @Test
+  func `a run that shares its first digits with another run is listed by the shortest prefix`()
+    async throws
+  {
+    await workspace.record("shop.pay.card", "fail")
+    let run = try workspace.onlyRun()
+    try workspace.plantUnfinishedRun(StatusWorkspace.neighbour(of: run, sharing: 10))
+
+    let output = await lines(["status"])
+
+    #expect(output[0].hasSuffix("check failed (run \(run.prefix(11)) via record)"))
   }
 
   // MARK: - Where verdicts come from

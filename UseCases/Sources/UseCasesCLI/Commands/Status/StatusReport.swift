@@ -38,7 +38,7 @@ struct StatusReport {
       useCases: shown.map(StatusUseCaseEntry.init),
       summary: StatusSummary(shown),
       warnings: workspace.warnings.map { warning in
-        warning.text(shortRunIdentifiers: false)
+        warning.text(shortening: nil)
       },
       group: group,
       gate: gate.map(StatusGateAnswer.init),
@@ -80,7 +80,7 @@ struct StatusReport {
     }
 
     return owned + workspace.warnings.map { warning in
-      "warning: \(warning.text(shortRunIdentifiers: true))"
+      "warning: \(warning.text(shortening: workspace.runIdentifiers))"
     }
   }
 

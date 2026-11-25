@@ -205,7 +205,7 @@ $ use-cases status checkout.pay.card
 → use-cases verify --run   once it is fixed
 ```
 
-The "why" is chapter 15's explanation for the route: the run that decided it, the run diagnostic ("its test didn't run", "code changed during the run"), or the run it has changed since. Human output shortens a run id to its first 8 digits; `--json` always has all 32.
+The "why" is chapter 15's explanation for the route: the run that decided it, the run diagnostic ("its test didn't run", "code changed during the run"), or the run it has changed since. Human output shortens a run id to the shortest prefix of at least 8 digits that names only one run in the store, so two runs started within the same minute still show different ids; `--json` always has all 32. Commands that take a run id take all 32 digits.
 
 ## 10. The gate
 
