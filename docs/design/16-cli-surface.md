@@ -274,6 +274,8 @@ run 0192f0c4 · 5 verdicts (4 pass, 1 fail) · 0 run errors
 → use-cases status --gate
 ```
 
+When tests ran that sit inside no link (chapter 15 §6), the summary line ends with `· N not tied to a use case`, and a block headed `test not tied to a use case` follows the run errors: one line per test, `file:line  status  name`, the worst status first. The block lists every test, however many, so a lost link is never hidden; `--json` has them as `unlinked_tests`.
+
 With `--json`, `--start` returns the run id and each `{report}` path, `--finish` and `--run` return the sealed run (its manifest fields and results, as in chapter 12), and `--abort` the run it closed.
 
 Exit 1 when the run was sealed with run errors (a missing report, a build failure, a transformer error): CI stops there, and the verdicts that were judged are still stored.

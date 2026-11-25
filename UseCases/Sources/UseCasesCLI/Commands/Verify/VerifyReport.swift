@@ -38,8 +38,8 @@ enum VerifyReport {
     return lines.joined(separator: "\n")
   }
 
-  /// `run <id> · 5 verdicts (4 pass, 1 fail) · 0 run errors`, each run error, and the hint to ask
-  /// the gate (chapter 16 §11).
+  /// `run <id> · 5 verdicts (4 pass, 1 fail) · 0 run errors`, each run error, the tests tied to
+  /// no use case, and the hint to ask the gate (chapter 16 §11).
   static func humanText(
     finish run: VerifiedRun,
     hint: Bool,
@@ -52,16 +52,34 @@ enum VerifyReport {
       "\(verdict.count) \(verdict.status)"
     }.joined(separator: ", ")
     let verdicts = run.verdictCount == 1 ? "1 verdict" : "\(run.verdictCount) verdicts"
+    let notTied = run.notTiedTests
     let errors = run.errors.count == 1 ? "1 run error" : "\(run.errors.count) run errors"
     var lines = [
       "run \(shortened(identifier)) · \(verdicts)"
         + (counts.isEmpty ? "" : " (\(counts))")
-        + " · \(errors)",
+        + " · \(errors)"
+        + (notTied.isEmpty ? "" : " · \(notTied.count) not tied to a use case"),
     ]
 
     lines += run.errors.map { error in
       "  ! \(error)"
     }
+
+    if !notTied.isEmpty {
+      lines.append("test not tied to a use case")
+      lines += notTied.map { test in
+        let place = test.file.map { file in
+          guard let line = test.line else {
+            return file
+          }
+
+          return "\(file):\(line)"
+        } ?? "(no place)"
+
+        return "  \(place)  \(test.status)  \(test.name)"
+      }
+    }
+
     lines += run.notes
 
     if hint {

@@ -29,6 +29,23 @@ public struct VerifiedRun: Equatable, Sendable {
     !errors.isEmpty
   }
 
+  /// The tests that ran but sit inside no link, the worst status first and each status in the
+  /// order the run recorded them.
+  public var notTiedTests: [NotTiedTest] {
+    let tests = manifest?.unlinkedTests ?? []
+
+    return Verdict.allCases.reversed().flatMap { verdict in
+      tests.filter { $0.status == verdict }.map { test in
+        NotTiedTest(
+          name: test.test,
+          file: test.file,
+          line: test.line,
+          status: verdict.rawValue,
+        )
+      }
+    }
+  }
+
   /// Guidance for the person.
   public var notes: [String] {
     manifest?.notes ?? unreadNotes

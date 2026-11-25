@@ -271,6 +271,17 @@ def test_tests_without_a_use_case_are_reported(validated):
     assert [t["test"].split("/")[1] for t in run["unlinked_tests"]] == ["notTiedToAnyUseCase()"]
 
 
+def test_tests_without_a_use_case_are_told_to_a_person(after_run):
+    process = subprocess.run([*COMMAND, "--workspace", after_run, "verify", "--run"], capture_output=True,
+                             stdin=subprocess.DEVNULL, text=True, encoding="utf-8")
+    assert process.returncode == 0, process.stderr
+    lines = process.stdout.splitlines()
+    assert lines[0].endswith("· 1 not tied to a use case"), lines
+    block = lines.index("test not tied to a use case")
+    assert "notTiedToAnyUseCase()" in lines[block + 1]
+    assert lines[block + 1].split("  ")[1].count(":") == 1, "a place is file:line"
+
+
 def test_the_old_false_pass_cannot_happen(ws):
     """Today's example command matches no test and exits 0. It must verify nothing."""
     write_bridge(ws, [{"id": "old-filter", "transformer": "swift-testing",
