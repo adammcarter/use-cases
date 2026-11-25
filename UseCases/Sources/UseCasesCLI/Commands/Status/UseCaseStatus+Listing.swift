@@ -23,7 +23,7 @@ extension UseCaseStatus {
 
 extension RouteStatus {
   /// `unit-tests failed (run 0192f0c4 via unit-tests)` where a result decided it, and
-  /// `unit-tests: changed since run 0191aa02` where none did.
+  /// `unit-tests: changed since run 0191aa02 (last result: pass)` where none did.
   func listing(shortening: RunIdentifierShortener?) -> String {
     let why = explanation.text(shortening: shortening)
 

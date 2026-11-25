@@ -153,7 +153,7 @@ $ use-cases status
 ✗ failed      checkout.pay.card          unit-tests failed (run 0192f0c4 via unit-tests)
 ! error       checkout.pay.wallet        unit-tests error (run 0192f0c4 via unit-tests)
 ○ unverified  shop.login.remember-me     unit-tests: no verdict yet
-~ stale       checkout.pay.refund        unit-tests: changed since run 0191aa02
+~ stale       checkout.pay.refund        unit-tests: changed since run 0191aa02 (last result: pass)
 ✓ verified    shop.login.authenticate
 · draft       shop.cart.share            missing: intent
 
@@ -205,7 +205,7 @@ $ use-cases status checkout.pay.card
 → use-cases verify --run   once it is fixed
 ```
 
-The "why" is chapter 15's explanation for the route: the run that decided it, the run diagnostic ("its test didn't run", "code changed during the run"), or the run it has changed since. Human output shortens a run id to the shortest prefix of at least 8 digits that names only one run in the store, so two runs started within the same minute still show different ids; `--json` always has all 32. Commands that take a run id take all 32 digits.
+The "why" is chapter 15's explanation for the route: the run that decided it, the run diagnostic ("its test didn't run", "code changed during the run"), or the run it has changed since; a stale route whose latest run gave it no verdict shows the diagnostic and then the run it has changed since with its result (chapter 15 §4). Human output shortens a run id to the shortest prefix of at least 8 digits that names only one run in the store, so two runs started within the same minute still show different ids; `--json` always has all 32. Commands that take a run id take all 32 digits.
 
 ## 10. The gate
 
@@ -239,7 +239,7 @@ The "why" is chapter 15's explanation for the route: the run that decided it, th
 
 ```text
 $ use-cases status --gate
-~ stale       shop.cart.share        unit-tests: changed since run 0191aa02 · changed since approved
+~ stale       shop.cart.share        unit-tests: changed since run 0191aa02 (last result: pass) · changed since approved
 ✓ verified    shop.login.hint        (warning: not approved)
 ✓ verified    shop.login.lockout     (not approved)
 
@@ -251,7 +251,7 @@ gate: blocked · 2 block (1 stale, 1 not approved) · 1 warning (1 not approved)
 $ use-cases status --gate
 ✗ failed      checkout.pay.card          unit-tests failed (run 0192f0c4 via unit-tests)
 ○ unverified  shop.login.remember-me     unit-tests: no verdict yet   (warning)
-~ stale       checkout.pay.refund        unit-tests: changed since run 0191aa02
+~ stale       checkout.pay.refund        unit-tests: changed since run 0191aa02 (last result: pass)
 
 gate: blocked · 2 block (1 failed, 1 stale) · 1 warning (1 unverified)
 → use-cases status checkout.pay.card

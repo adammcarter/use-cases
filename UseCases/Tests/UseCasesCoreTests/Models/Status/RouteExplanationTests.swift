@@ -37,8 +37,30 @@ struct RouteExplanationTests {
         .text(shortening: Self.sameMinuteShortener) == "its test didn't run (run 0192f0c4e5a)",
     )
     #expect(
-      RouteExplanation.changedSince(run: Self.sameMinute)
-        .text(shortening: Self.sameMinuteShortener) == "changed since run 0192f0c4e5b",
+      RouteExplanation.changedSince(run: Self.sameMinute, lastResult: "pass")
+        .text(shortening: Self.sameMinuteShortener)
+        == "changed since run 0192f0c4e5b (last result: pass)",
+    )
+  }
+
+  @Test
+  func `a stale route a run gave no verdict says why, then what it changed since`() {
+    let explanation = RouteExplanation.withheldSinceChange(
+      problem: "its test didn't run",
+      run: Self.sameMinute,
+      changedSince: Self.run,
+      lastResult: "fail",
+    )
+
+    #expect(
+      explanation.text(shortening: Self.sameMinuteShortener)
+        == "its test didn't run (run 0192f0c4e5b) · changed since run 0192f0c4e5a"
+        + " (last result: fail)",
+    )
+    #expect(
+      explanation.text(shortening: nil)
+        == "its test didn't run (run 0192f0c4e5b27c3e9b04d2f61a8c3b58)"
+        + " · changed since run 0192f0c4e5a17c3e9b04d2f61a8c3b57 (last result: fail)",
     )
   }
 
@@ -47,8 +69,8 @@ struct RouteExplanationTests {
     let shortener = RunIdentifierShortener(runs: [Self.run, "0192f0c5e5a17c3e9b04d2f61a8c3b57"])
 
     #expect(
-      RouteExplanation.changedSince(run: Self.run).text(shortening: shortener)
-        == "changed since run 0192f0c4",
+      RouteExplanation.changedSince(run: Self.run, lastResult: "fail").text(shortening: shortener)
+        == "changed since run 0192f0c4 (last result: fail)",
     )
   }
 
@@ -74,12 +96,15 @@ struct RouteExplanationTests {
 
   @Test
   func `a stale route names the run it changed since`() {
-    let explanation = RouteExplanation.changedSince(run: Self.run)
+    let explanation = RouteExplanation.changedSince(run: Self.run, lastResult: "error")
 
-    #expect(explanation.text(shortening: Self.shortener) == "changed since run 0192f0c4")
+    #expect(
+      explanation.text(shortening: Self.shortener)
+        == "changed since run 0192f0c4 (last result: error)",
+    )
     #expect(
       explanation.text(shortening: nil)
-        == "changed since run 0192f0c4e5a17c3e9b04d2f61a8c3b57",
+        == "changed since run 0192f0c4e5a17c3e9b04d2f61a8c3b57 (last result: error)",
     )
   }
 

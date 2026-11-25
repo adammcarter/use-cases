@@ -109,7 +109,7 @@ def test_state_filters_and_a_prefix_narrows(every_state):
 
 def test_one_use_case_in_detail_says_why(every_state):
     code, out, _ = human(every_state, "status", "shop.pay.refund")
-    assert code == 0 and "stale" in out and "changed since run" in out and "check" in out
+    assert code == 0 and "stale" in out and "changed since run" in out and "(last result: " in out and "check" in out
     code, out, _ = human(every_state, "status", "shop.pay.card")
     assert "extra" in out and "no " in out  # the non-gating route is listed, marked as not gating
 

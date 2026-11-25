@@ -53,7 +53,7 @@ A verdict belongs to exactly what was proven. It goes `stale` when any of these 
 These do not: the title, description, value tier or out of scope; how the tests are run (`use-cases-bridge.yml`); the comment text around a marker; moving marked code, unchanged, to another place. A `stale` route says since which run:
 
 ```text
-~ stale       basket.discounts  unit-tests: changed since run 01a2057f
+~ stale       basket.discounts  unit-tests: changed since run 01a2057f (last result: pass)
 ```
 
 ## One use case in detail
@@ -63,8 +63,8 @@ $ use-cases status basket.discounts
 ~ stale  basket.discounts · Discounts never make a total negative
 
   route       gates   status          why
-  unit-tests  yes     ~ stale         changed since run 01a20580
-  try-it      yes     ~ stale         changed since run 01a20580
+  unit-tests  yes     ~ stale         changed since run 01a20580 (last result: pass)
+  try-it      yes     ~ stale         changed since run 01a20580 (last result: pass)
 
 sign-off: changed since approved (by Sam on 2026-11-22)
 
@@ -80,7 +80,7 @@ The "why" column names the run that decided each route, or what went wrong in it
 | `no verdict yet` | nothing has run for it in this checkout |
 | `its test didn't run` | the run had no result for its marked test |
 | `not linked: no validation links and no procedure` | nothing can prove it but `use-cases record` |
-| `changed since run …` | proven once, changed since |
+| `changed since run … (last result: …)` | proven once, changed since; the result is what that run gave |
 | `code changed during the run` | the code changed between `--start` and `--finish` |
 
 A route proven by hand ("try it") is brought back with `use-cases record`, even when the hint says to run the tests.
@@ -127,7 +127,7 @@ Verdicts are never carried between checkouts. Unverified here means nothing has 
 $ use-cases status --gate
 ○ unverified  basket.vouchers         unit-tests: no verdict yet   (warning)
 ○ unverified  basket.vouchers-expiry  unit-tests: not linked: no validation links and no procedure (run 01a20586)   (warning)
-~ stale       basket.discounts        unit-tests: changed since run 01a20586 · changed since approved
+~ stale       basket.discounts        unit-tests: changed since run 01a20586 (last result: pass) · changed since approved
 
 gate: blocked · 1 block (1 stale) · 2 warnings (2 unverified)
 → use-cases status basket.discounts
@@ -135,7 +135,7 @@ gate: blocked · 1 block (1 stale) · 2 warnings (2 unverified)
 $ use-cases status --gate --strict
 ○ unverified  basket.vouchers         unit-tests: no verdict yet
 ○ unverified  basket.vouchers-expiry  unit-tests: not linked: no validation links and no procedure (run 01a20586)
-~ stale       basket.discounts        unit-tests: changed since run 01a20586 · changed since approved
+~ stale       basket.discounts        unit-tests: changed since run 01a20586 (last result: pass) · changed since approved
 
 gate (strict): blocked · 3 block (2 unverified, 1 stale)
 → use-cases status basket.vouchers

@@ -42,15 +42,17 @@ A route is stale when history exists for it but no result matches its current fi
 The store keeps whole fingerprints, not their components, so the core does not say which input changed. The explanation names the run the route changed since: the newest result for that use case and route.
 
 ```text
-changed since run <id>
+changed since run <id> (last result: <verdict>)
 ```
 
 Example:
 
 ```text
 shop.login.authenticate / unit-tests   stale
-  changed since run 0000…2a  (last result: pass)
+  changed since run 0000…2a (last result: pass)
 ```
+
+A stale route whose latest run gave it no verdict shows both, the diagnostic first and then the run it changed since with that run's result, so what was last proven is never hidden: `its test didn't run (run <id>) · changed since run <id> (last result: fail)`.
 
 The core never invents a detailed cause. Impact comparison (section 7) names the components that differ when both inventories carry them.
 
@@ -65,6 +67,8 @@ A route that received no verdict in its latest run has a manifest diagnostic (ch
 | its test didn't run | a validation link received no result | check the run command covers that test |
 | code changed during the run | the route's inputs changed between the start point and the finish point; the diagnostic names the files | run again |
 | not linked: no validation links and no procedure | the route has nothing a test report can reach | add markers or bindings, or verify with `use-cases record` |
+
+A stale route (section 4) shows its diagnostic first and then the run it changed since.
 
 Run errors (chapter 13) are explained at run level: which source failed and why.
 
@@ -229,7 +233,7 @@ stale route
         |
 newest result for that use case and route
         |
-explanation: changed since run <id>
+explanation: changed since run <id> (last result: <verdict>)
 
 latest run manifest
         |

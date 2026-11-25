@@ -53,6 +53,7 @@ struct StatusCommandDetailTests {
 
     #expect(text.hasPrefix("~ stale  shop.pay.refund"))
     #expect(text.contains("changed since run "))
+    #expect(text.contains(" (last result: pass)"))
     #expect(text.hasSuffix("→ use-cases verify --start\n"))
   }
 

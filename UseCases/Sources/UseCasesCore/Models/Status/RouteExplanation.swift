@@ -15,8 +15,21 @@ public enum RouteExplanation: Equatable, Sendable {
     run: String,
   )
 
-  /// Results exist, none for the current fingerprint; this run has the newest.
-  case changedSince(run: String)
+  /// No result matches the current fingerprint and the newest run that explains why says so, while
+  /// older results exist: it also names the run holding the newest of them and what it said.
+  case withheldSinceChange(
+    problem: String,
+    run: String,
+    changedSince: String,
+    lastResult: String,
+  )
+
+  /// Results exist, none for the current fingerprint; this run has the newest, and `lastResult`
+  /// is what that result said.
+  case changedSince(
+    run: String,
+    lastResult: String,
+  )
 
   /// Nothing has been run for the route.
   case noVerdictYet
@@ -30,8 +43,11 @@ public enum RouteExplanation: Equatable, Sendable {
         : "run \(Self.shown(run, shortening: shortening)) via \(via.joined(separator: ", "))"
     case let .withheld(problem, run):
       "\(problem) (run \(Self.shown(run, shortening: shortening)))"
-    case let .changedSince(run):
-      "changed since run \(Self.shown(run, shortening: shortening))"
+    case let .withheldSinceChange(problem, run, changedSince, lastResult):
+      "\(problem) (run \(Self.shown(run, shortening: shortening))) · changed since run "
+        + "\(Self.shown(changedSince, shortening: shortening)) (last result: \(lastResult))"
+    case let .changedSince(run, lastResult):
+      "changed since run \(Self.shown(run, shortening: shortening)) (last result: \(lastResult))"
     case .noVerdictYet:
       "no verdict yet"
     }

@@ -3,8 +3,8 @@ extension StoreHistory {
   ///
   /// A result for exactly this fingerprint decides it: the one from the greatest run id. With none,
   /// the route is stale when it has any older result and unverified when it has none; the newest
-  /// run diagnostic for this fingerprint says why no verdict came, and otherwise a stale route
-  /// names the run it has changed since.
+  /// run diagnostic for this fingerprint says why no verdict came, and a stale route also names the
+  /// run it has changed since and what that result was (chapter 15 §4, §5).
   func judgement(
     useCase: UseCaseIdentifier,
     route: RouteIdentifier,
@@ -28,32 +28,52 @@ extension StoreHistory {
       useCase: useCase,
       route: route,
     )
-    let status: VerificationStatus = newest == nil ? .unverified : .stale
 
-    if let withheld = latestDiagnostic(
+    return RouteJudgement(
+      status: newest == nil ? .unverified : .stale,
+      explanation: explanationWithoutResult(
+        useCase: useCase,
+        route: route,
+        fingerprint: fingerprint,
+        newest: newest,
+      ),
+    )
+  }
+
+  /// Why a route with no result at its current fingerprint has none, given its newest result at
+  /// any other fingerprint.
+  private func explanationWithoutResult(
+    useCase: UseCaseIdentifier,
+    route: RouteIdentifier,
+    fingerprint: RouteFingerprint,
+    newest: LocatedResult?,
+  ) -> RouteExplanation {
+    let withheld = latestDiagnostic(
       useCase: useCase,
       route: route,
       fingerprint: fingerprint,
-    ) {
-      return RouteJudgement(
-        status: status,
-        explanation: .withheld(
-          problem: withheld.diagnostic.problem,
-          run: withheld.run.text,
-        ),
-      )
-    }
-
-    guard let newest else {
-      return RouteJudgement(
-        status: status,
-        explanation: .noVerdictYet,
-      )
-    }
-
-    return RouteJudgement(
-      status: status,
-      explanation: .changedSince(run: newest.run.text),
     )
+
+    switch (withheld, newest) {
+    case let (withheld?, newest?):
+      return .withheldSinceChange(
+        problem: withheld.diagnostic.problem,
+        run: withheld.run.text,
+        changedSince: newest.run.text,
+        lastResult: newest.result.verdict.rawValue,
+      )
+    case let (withheld?, nil):
+      return .withheld(
+        problem: withheld.diagnostic.problem,
+        run: withheld.run.text,
+      )
+    case let (nil, newest?):
+      return .changedSince(
+        run: newest.run.text,
+        lastResult: newest.result.verdict.rawValue,
+      )
+    case (nil, nil):
+      return .noVerdictYet
+    }
   }
 }

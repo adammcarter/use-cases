@@ -43,7 +43,11 @@ use_cases:
       - id: stale-why
         given: [A route changed since its run.]
         when: [Its detail is shown.]
-        then: [It names the run it has changed since.]
+        then: [It names the run it has changed since and what that run last said.]
+      - id: stale-keeps-last-result
+        given: [A route whose latest run gave it no verdict, and an older run proved a different version.]
+        when: [A person reads its status.]
+        then: ["It is stale, and the why says both why the latest run gave no verdict and what the last result was."]
       - id: missing-links
         when: ["A use case has no links, or a gating route has neither links nor a procedure."]
         then: [Its detail view warns about it; the list does not.]
@@ -53,7 +57,7 @@ use_cases:
         covers: [why]
       - id: swift-tests
         type: { kind: unit }
-        covers: [stale-why, missing-links]
+        covers: [stale-why, stale-keeps-last-result, missing-links]
   - id: judging
     title: A use case's status is the worst of its gating routes
     description: Promised in chapter 07 (Verification state model) How the core judges, Overall READY status; ADR 019.

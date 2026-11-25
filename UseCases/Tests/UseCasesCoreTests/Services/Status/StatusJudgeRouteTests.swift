@@ -108,8 +108,8 @@ struct StatusJudgeRouteTests {
     #expect(useCase.status == .stale)
     #expect(useCase.routes.map(\.status) == [.stale, .stale])
     #expect(useCase.routes.map(\.explanation) == [
-      .changedSince(run: runs[0]),
-      .changedSince(run: runs[1]),
+      .changedSince(run: runs[0], lastResult: "pass"),
+      .changedSince(run: runs[1], lastResult: "pass"),
     ])
   }
 

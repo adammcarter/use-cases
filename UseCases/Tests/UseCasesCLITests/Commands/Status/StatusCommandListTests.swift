@@ -98,6 +98,7 @@ struct StatusCommandListTests {
     #expect(output[3].hasSuffix("check: no verdict yet"))
     #expect(output[4].hasPrefix("~ stale       shop.pay.refund"))
     #expect(output[4].contains("check: changed since run "))
+    #expect(output[4].hasSuffix(" (last result: pass)"))
     #expect(output[5] == "✓ verified    shop.cart.add")
     #expect(output[6].hasPrefix("· draft       shop.cart.share"))
     #expect(output[6].hasSuffix("missing: value_tier"))

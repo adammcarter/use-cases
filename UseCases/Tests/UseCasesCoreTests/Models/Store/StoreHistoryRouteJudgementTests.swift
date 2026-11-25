@@ -113,7 +113,12 @@ struct StoreHistoryRouteJudgementTests {
     let answer = judgement(of: history)
 
     #expect(answer.status == .stale)
-    #expect(answer.explanation == .changedSince(run: StoreFixture.identifier(4)))
+    #expect(
+      answer.explanation == .changedSince(
+        run: StoreFixture.identifier(4),
+        lastResult: "fail",
+      ),
+    )
   }
 
   @Test
@@ -157,11 +162,14 @@ struct StoreHistoryRouteJudgementTests {
     )
   }
 
-  @Test
-  func `a diagnostic explains a stale route too, in place of the run it changed since`() {
+  @Test(arguments: [Verdict.pass, Verdict.fail])
+  func `a stale route a run gave no verdict says why, and what it last proved`(
+    last: Verdict,
+  ) {
     let history = StoreHistory(
       runs: [
         .sample(1, [result(.pass, old)]),
+        .sample(3, [result(last, old)]),
         .sample(
           5,
           [],
@@ -175,9 +183,11 @@ struct StoreHistoryRouteJudgementTests {
 
     #expect(answer.status == .stale)
     #expect(
-      answer.explanation == .withheld(
+      answer.explanation == .withheldSinceChange(
         problem: "its test didn't run",
         run: StoreFixture.identifier(5),
+        changedSince: StoreFixture.identifier(3),
+        lastResult: last.rawValue,
       ),
     )
   }
