@@ -1,0 +1,78 @@
+prefix: search
+use_cases:
+  - id: words
+    title: Find use cases by words, best match first
+    description: Promised in chapter 16 (CLI surface) §15; ADR 029.
+    value_tier: core
+    intent: A person or agent checks what already exists before adding something.
+    scenarios:
+      - id: ranked
+        when: [A person searches for words.]
+        then: ["A title match ranks above a scenario match, and each result says why."]
+      - id: typos
+        when: [A word has a small typo.]
+        then: ["It still matches, unless --exact."]
+      - id: phrases-and-minus
+        when: [The query holds a quoted phrase or a minus word.]
+        then: [The phrase must appear and the minus word leaves use cases out.]
+      - id: stable
+        when: [The same search runs twice on the same files.]
+        then: [It gives the same answer; nothing found is not an error.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [ranked, typos, phrases-and-minus, stable]
+  - id: like
+    title: Find use cases like a draft
+    description: Promised in chapter 16 (CLI surface) §15.
+    value_tier: core
+    intent: Overlapping use cases are found before a duplicate is written.
+    scenarios:
+      - id: like
+        when: [A person searches --like with a draft use case.]
+        then: [The most similar use cases are listed and the draft never finds itself.]
+      - id: out-of-scope
+        when: [A match is in a use case's out of scope.]
+        then: [It is always labelled.]
+      - id: not-both
+        when: [Words and --like are given together.]
+        then: [It is refused.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [like, out-of-scope, not-both]
+  - id: filters
+    title: Narrow a search by prefix, group, tier, state and field
+    description: Promised in chapter 16 (CLI surface) §15.
+    value_tier: supporting
+    intent: A search can be held to the use cases and fields that matter.
+    scenarios:
+      - id: filters
+        when: ["--under, --group, --tier or --state is given."]
+        then: [Only use cases they name are kept.]
+      - id: fields
+        when: ["--in names fields."]
+        then: [Only those fields are searched.]
+      - id: full
+        when: ["--full is given."]
+        then: [Each result carries exactly what show returns.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [filters, fields, full]
+  - id: pages
+    title: Search results come in pages that never skip or repeat
+    description: Promised in chapter 16 (CLI surface) §15.
+    value_tier: supporting
+    intent: Long result lists are read page by page, and a page from changed files is refused rather than wrong.
+    scenarios:
+      - id: pages
+        when: [Results span several pages.]
+        then: ["Each match appears once, in order."]
+      - id: changed
+        when: [Use cases or verdicts change between pages.]
+        then: [The next page is refused.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [pages, changed]

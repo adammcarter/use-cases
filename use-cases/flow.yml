@@ -1,0 +1,59 @@
+prefix: flow
+use_cases:
+  - id: whole-flow
+    title: The whole flow works end to end
+    description: Promised in chapter 21 (Agent workflows) §3; chapter 22 (UCDD skill) §6.
+    value_tier: core
+    intent: Write, link, verify, gate and sign off, in one session, as the agent flow does it.
+    scenarios:
+      - id: end-to-end
+        when:
+          - A workspace is set up, use cases written, tests linked and run, and the gate asked.
+        then: [Each step's check passes.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [end-to-end]
+  - id: step-checks
+    title: Each step of the agent flow has a check
+    description: Promised in chapter 22 (UCDD skill) §4; chapter 21 (Agent workflows) §3, §6.
+    value_tier: core
+    intent: An agent following the use-case-driven flow cannot move on until the step's check passes.
+    scenarios:
+      - id: checks
+        when: [An agent finishes a step of the flow.]
+        then: [The step's named check is run and must pass before the next step.]
+      - id: tier-sign-off
+        when: [An agent changes a supporting use case where the person allowed it.]
+        then: [The agent may sign it off; critical and core wait for the person.]
+    validation:
+      - id: try-it
+        type: { kind: acceptance }
+        covers: [checks, tier-sign-off]
+        procedure:
+          steps:
+            - "Do: An agent finishes a step of the flow."
+            - "Check: The step's named check is run and must pass before the next step."
+            - "Do: An agent changes a supporting use case where the person allowed it."
+            - "Check: The agent may sign it off; critical and core wait for the person."
+  - id: setup
+    title: Setup asks before it changes anything
+    description: Promised in chapter 22 (UCDD skill) §3; ADR 034; ADR 039.
+    value_tier: core
+    intent: A person brings a repository in through the plugin's setup and nothing changes that they did not say yes to.
+    scenarios:
+      - id: asks-first
+        when: [A person runs the setup skill in a repository.]
+        then: ["It asks its questions one at a time, and writes nothing the person has not said yes to."]
+      - id: offers-install
+        given: [use-cases is not on the PATH.]
+        when: [Setup starts.]
+        then: ["It says so and offers the release download, installing nothing without a yes; declined, it skips the steps that need it and says why."]
+    validation:
+      - id: try-it
+        type: { kind: acceptance }
+        covers: [asks-first, offers-install]
+        procedure:
+          steps:
+            - "In a fresh repository with use-cases on the PATH, run the setup skill and answer no to every question: nothing is written."
+            - "Run it again with use-cases off the PATH: it says so, offers the release download, and installs nothing until told yes."

@@ -1,0 +1,46 @@
+prefix: docs
+use_cases:
+  - id: guides
+    title: The guides ship with the tool and are searchable
+    description: Promised in chapter 16 (CLI surface) §16; ADR 030.
+    value_tier: supporting
+    intent: A person or agent reads the guides for exactly the version they run, without a workspace.
+    scenarios:
+      - id: list
+        when: [use-cases docs runs.]
+        then: ["Every guide is listed in order, with no workspace needed."]
+      - id: search
+        when: [docs is given words.]
+        then: ["Sections are ranked as search ranks, in pages."]
+      - id: one-guide
+        when: [docs names a guide.]
+        then: [That guide is printed whole.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [list, search]
+      - id: swift-tests
+        type: { kind: unit }
+        covers: [one-guide]
+  - id: held-true
+    title: Every command the guides and skills name is real
+    description: Promised in ADR 030; ADR 034; ADR 039; chapter 19 (CI) §7; chapter 22 (UCDD skill) §3.
+    value_tier: core
+    intent: A person or agent following a guide, a skill or a CI recipe never meets a command or flag that does not exist.
+    scenarios:
+      - id: guides
+        when: ["A bundled guide names a command, flag or file."]
+        then: [It exists in this build.]
+      - id: skills
+        when: ["A plugin skill names a command, flag or file."]
+        then: ["It exists, and the setup skill writes its block exactly."]
+      - id: recipes
+        when: [A CI recipe holds a command line.]
+        then: [The real command line reads it.]
+      - id: plugin-version
+        when: [The plugin starts the program.]
+        then: ["It starts the copy it ships, and the plugin carries the version the program reports."]
+    validation:
+      - id: swift-tests
+        type: { kind: unit }
+        covers: [guides, skills, recipes, plugin-version]

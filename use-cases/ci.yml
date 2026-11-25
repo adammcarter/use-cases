@@ -1,0 +1,43 @@
+prefix: ci
+use_cases:
+  - id: recipe
+    title: CI runs fresh with a two-step recipe
+    description: Promised in chapter 19 (CI) §2, §3, §6; ADR 026.
+    value_tier: core
+    intent: A clean checkout proves its use cases with verify --run then the gate.
+    scenarios:
+      - id: clean-checkout
+        when: [The recipe runs from a clean checkout.]
+        then: [verify --run then status --gate gives the gate's answer.]
+      - id: fresh
+        given: [A clean checkout with no earlier runs.]
+        when: [The gate runs after the recipe.]
+        then: ["Nothing is stale, and a route proven only by hand is unverified."]
+      - id: shards
+        when: [Tests are split across machines into one run.]
+        then: [Each shard's results merge into one verdict per route.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [clean-checkout, fresh, shards]
+  - id: install
+    title: CI installs a pinned, checked release
+    description: Promised in chapter 19 (CI) §2; ADR 039.
+    value_tier: supporting
+    intent: A CI job gets exactly the version written in its pipeline, and a damaged download never runs.
+    scenarios:
+      - id: checksum
+        when: [A release download does not match the checksum published beside it.]
+        then: [The install step fails the job.]
+      - id: unpacked-whole
+        given: ["A release for the machine's platform, unpacked into one folder."]
+        when: [Its program is put on the PATH and the recipe runs.]
+        then: ["It works, finding the files shipped beside it."]
+    validation:
+      - id: try-it
+        type: { kind: acceptance }
+        covers: [checksum, unpacked-whole]
+        procedure:
+          steps:
+            - "Download a release tarball and its .sha256 file for this platform, change one byte of the tarball, and check it: the check fails."
+            - "Unpack an unchanged tarball into one folder, link its program onto the PATH, and run use-cases --version and use-cases docs: both work."

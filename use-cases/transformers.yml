@@ -1,0 +1,56 @@
+prefix: transformers
+use_cases:
+  - id: junit
+    title: JUnit reports give each linked test its result
+    description: Promised in chapter 10 (Bridge settings and transformer contract) §13; the junit transformer guide.
+    value_tier: critical
+    intent: Many test tools are read through one transformer, and an outcome is never misread as a pass.
+    scenarios:
+      - id: status-rules
+        when: ["A JUnit report holds failures, errors, skips and retries."]
+        then: ["They become fail, error, incomplete, and the final attempt."]
+      - id: languages
+        when: ["Python, JavaScript, C, Java and Kotlin projects run their tests."]
+        then: [Each linked test gives its result.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [status-rules, languages]
+  - id: swift
+    title: Swift Testing results reach their links
+    description: Promised in chapter 10 (Bridge settings and transformer contract) §13; the transformer guides for swift-testing and swift-test.
+    value_tier: critical
+    intent: A Swift package proves its use cases, and an expected failure is never a pass.
+    scenarios:
+      - id: known-issue
+        when: [A test records a known issue.]
+        then: ["It is incomplete, not pass."]
+      - id: saved-report
+        when: [A saved event stream is read alone.]
+        then: [Each test reaches the link around its declaration.]
+      - id: xctest
+        when: [A package mixes XCTest and Swift Testing under swift-test.]
+        then: [Both kinds of test give results.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [known-issue, saved-report]
+      - id: swift-tests
+        type: { kind: unit }
+        covers: [xctest]
+  - id: exit-code
+    title: A script's exit code proves one file
+    description: Promised in the exit-code transformer guide.
+    value_tier: supporting
+    intent: A plain script with no report can still prove a use case.
+    scenarios:
+      - id: exit-code
+        when: [A script exits 0 or not.]
+        then: [Every link in its file passes or fails.]
+      - id: needs-run
+        when: [The exit-code transformer is used with --start and --finish.]
+        then: [It gives no verdict.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [exit-code, needs-run]

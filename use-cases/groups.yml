@@ -1,0 +1,37 @@
+prefix: groups
+use_cases:
+  - id: membership
+    title: Groups select use cases by id, prefix and glob
+    description: Promised in chapter 03 (Use-case groups) Selectors.
+    value_tier: core
+    intent: A group's members follow its selectors, so new use cases join the right groups by themselves.
+    scenarios:
+      - id: selectors
+        when: [A group includes prefixes or globs.]
+        then: [Members match whole segments only.]
+      - id: exclude-wins
+        when: [A use case is both included and excluded.]
+        then: [It is excluded; an omitted include means everything.]
+      - id: rename
+        when: [A group is renamed.]
+        then: [No verdict changes.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [selectors, exclude-wins, rename]
+  - id: file-rules
+    title: The groups file is checked like the use cases
+    description: Promised in chapter 03 (Use-case groups) Diagnostics.
+    value_tier: supporting
+    intent: A broken groups file is refused and a merely odd one is warned about.
+    scenarios:
+      - id: invalid
+        when: [The groups file is malformed.]
+        then: [The workspace is INVALID.]
+      - id: warns
+        when: [A group is empty or repeats a selector.]
+        then: [It is a warning only.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [invalid, warns]

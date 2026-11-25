@@ -1,0 +1,33 @@
+schema_version: 1
+
+groups:
+  promise-of-proof:
+    description: Every use case where a wrong answer would mislead a person about what is proven.
+    include:
+      ids:
+        - cli.exit-codes
+        - validate.refuses-unsafe-yaml
+        - validate.draft-or-ready
+        - validate.refuses-broken-structure
+        - links.markers
+        - status.judging
+        - status.staleness
+        - gate.default
+        - gate.strict
+        - verify.run
+        - verify.guard
+        - verify.run-errors
+        - verify.reports-owned-by-run
+        - store.sealed-runs
+        - signoff.gate
+        - store.prune
+        - transformers.junit
+        - transformers.swift
+  agent-surface:
+    description: What an agent uses - the MCP tools, editing, search, layouts and the guides.
+    include:
+      prefixes: [mcp, edit, search, render, docs, flow]
+  people-surface:
+    description: What a person types - the command line, init, hooks and CI.
+    include:
+      prefixes: [cli, init, hooks, ci]

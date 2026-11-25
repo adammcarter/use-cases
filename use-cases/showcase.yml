@@ -1,0 +1,38 @@
+prefix: showcase
+use_cases:
+  - id: kept
+    title: A showcase is kept as a verdict with its evidence
+    description: Promised in chapter 23 (Showcases) §5; ADR 035.
+    value_tier: supporting
+    intent: A performed showcase proves its use case like any other route, and goes stale like one.
+    scenarios:
+      - id: kept
+        when: [A showcase is performed and kept.]
+        then: [It is a verdict with its evidence.]
+      - id: blocks
+        when: [A showcase fails.]
+        then: [It blocks the gate.]
+      - id: stale
+        when: [What it performed changes.]
+        then: [The showcase verdict goes stale.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [kept, blocks, stale]
+  - id: performed
+    title: A showcase is planned, performed and thrown away
+    description: Promised in chapter 23 (Showcases) §1, §4.
+    value_tier: supporting
+    intent: A showcase shows a person the behaviour live and leaves nothing behind in the project.
+    scenarios:
+      - id: thrown-away
+        when: [A showcase run ends.]
+        then: ["Everything it set up is gone, and only a kept verdict remains."]
+    validation:
+      - id: try-it
+        type: { kind: acceptance }
+        covers: [thrown-away]
+        procedure:
+          steps:
+            - "Do: A showcase run ends."
+            - "Check: Everything it set up is gone, and only a kept verdict remains."

@@ -1,0 +1,63 @@
+prefix: store
+use_cases:
+  - id: sealed-runs
+    title: Only sealed runs are evidence
+    description: Promised in chapter 12 (Results storage) §6, §22, §24; ADR 007.
+    value_tier: critical
+    intent: A half-written or tampered run never counts as proof.
+    scenarios:
+      - id: unsealed
+        when: [A run never finished.]
+        then: ["It is never evidence, and status warns that the run never finished."]
+      - id: tampered
+        when: [A sealed run's own record is changed afterwards.]
+        then: ["It is a storage error, never skipped."]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [unsealed, tampered]
+  - id: run-ids
+    title: Run ids only go up and follow time
+    description: Promised in chapter 12 (Results storage) §8, §9, §25, §32; ADR 016.
+    value_tier: supporting
+    intent: The newest verdict wins, even across machines and copied stores.
+    scenarios:
+      - id: order
+        when: [Runs are made on two machines and merged.]
+        then: [Ids follow time and the newer verdict wins.]
+      - id: deleted-run
+        when: [A run folder is deleted or the store is copied.]
+        then: [The next id is never lower and the store keeps working.]
+      - id: newer-core
+        when: [A run written by a newer version of the tool is read.]
+        then: [Its verdicts still count in status.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [order, deleted-run, newer-core]
+  - id: prune
+    title: Prune removes old runs and changes no answer
+    description: Promised in chapter 16 (CLI surface) §20; chapter 12 (Results storage) §30, §31.
+    value_tier: critical
+    intent: The results store stops growing without bound, and clearing it never changes what is proven.
+    scenarios:
+      - id: no-answer-changes
+        given: [Runs that a later run has superseded.]
+        when: [A person runs use-cases prune.]
+        then: ["Those runs are removed and listed with the space freed, and status and the gate give the same answers as before."]
+      - id: dry-run
+        when: [prune runs with --dry-run.]
+        then: ["Each run it would remove is listed and nothing is removed; with nothing superseded it says nothing to prune."]
+      - id: refused
+        when: [The workspace is INVALID or the store cannot be read safely.]
+        then: [It is refused with exit 2 and nothing is removed.]
+      - id: persons-call
+        when: ["verify, record or an agent's tool runs."]
+        then: [No run is ever removed; only a person's prune removes runs.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [no-answer-changes, dry-run, refused]
+      - id: swift-tests
+        type: { kind: unit }
+        covers: [persons-call]

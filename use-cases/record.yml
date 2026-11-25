@@ -1,0 +1,46 @@
+prefix: record
+use_cases:
+  - id: by-hand
+    title: Record a verdict by hand
+    description: Promised in chapter 16 (CLI surface) §12; chapter 13 (Verify flow) §12.
+    value_tier: core
+    intent: A "try it" route is proven by a person who performs its steps and records what they saw.
+    scenarios:
+      - id: record
+        when: [A person records pass for a route with a message.]
+        then: [The verdict is stored and judged like any other.]
+      - id: refusals
+        when: ["The use case is a DRAFT, the route or status is unknown, or a value is missing."]
+        then: ["It is refused with exit 2, naming what is wrong or missing."]
+      - id: interactive
+        when: [record --interactive runs in a terminal.]
+        then: [It asks for each value and shows the steps; without a terminal it refuses.]
+      - id: prefix
+        when: [A use case is named by an unambiguous prefix.]
+        then: ["That use case is recorded; an ambiguous one is refused, listing the matches."]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [record, refusals, interactive]
+      - id: swift-tests
+        type: { kind: unit }
+        covers: [prefix]
+  - id: attachments
+    title: Evidence files are kept with a verdict
+    description: Promised in chapter 12 (Results storage) §16; §17.
+    value_tier: supporting
+    intent: A screenshot or output file proves what a person saw, and stays with the verdict.
+    scenarios:
+      - id: kept
+        when: [record --attach names files.]
+        then: [They are kept with the verdict by content.]
+      - id: same-name
+        when: [Two attachments share a name.]
+        then: [It is refused.]
+      - id: damaged
+        when: [An attachment is damaged later.]
+        then: ["It is reported, and the verdict is never rewritten."]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [kept, same-name, damaged]

@@ -1,0 +1,111 @@
+prefix: edit
+use_cases:
+  - id: show
+    title: Show one use case, whole
+    description: Promised in chapter 16 (CLI surface) §14.
+    value_tier: supporting
+    intent: A script or agent reads a use case in exactly the shape save takes back.
+    scenarios:
+      - id: round-trip
+        when: [A use case is shown with --json and saved back unchanged.]
+        then: [Nothing changes.]
+      - id: unknown
+        when: [show names an unknown use case.]
+        then: [It is a usage error.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [round-trip, unknown]
+  - id: save
+    title: Save one use case without touching anything else
+    description: Promised in chapter 16 (CLI surface) §14; ADR 028.
+    value_tier: core
+    intent: Use cases change through whole-use-case commands that never disturb other use cases, comments or blank lines.
+    scenarios:
+      - id: own-lines
+        when: [A use case is replaced.]
+        then: [Only its own lines change.]
+      - id: placement
+        when: [A new use case is saved.]
+        then: ["It goes to the file the recommended structure gives, and a group is required."]
+      - id: never-invalid
+        when: [A save would leave the workspace INVALID.]
+        then: [It is refused and nothing is written.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [own-lines, placement, never-invalid]
+  - id: remove
+    title: Remove one use case and keep its evidence
+    description: Promised in chapter 16 (CLI surface) §14.
+    value_tier: core
+    intent: A use case can be taken out without losing its verdicts or forgetting markers that still name it.
+    scenarios:
+      - id: remove
+        when: [A use case is removed.]
+        then: [Only its lines go; the file goes when it was the last; its verdicts stay.]
+      - id: markers-warned
+        when: [Markers still name the removed use case.]
+        then: [Each is listed as a warning.]
+      - id: unknown
+        when: [remove names an unknown use case.]
+        then: [It is a usage error.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [remove, markers-warned, unknown]
+      - id: swift-tests
+        type: { kind: unit }
+        covers: [markers-warned]
+  - id: batch
+    title: A batch of changes is applied all or nothing
+    description: Promised in chapter 16 (CLI surface) §14; ADR 031.
+    value_tier: core
+    intent: A signed-off batch is written exactly as reviewed, or not at all.
+    scenarios:
+      - id: all-or-nothing
+        when: [One change in a batch is invalid.]
+        then: [Nothing in the batch is written.]
+      - id: fixed-order
+        when: ["A batch is applied, in any written order."]
+        then: ["Removals run, then additions, then updates."]
+      - id: shared-files
+        when:
+          - A batch empties a file and adds to its group, or adds two use cases to a new group.
+        then: ["The files come out right, each written once."]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [all-or-nothing, fixed-order, shared-files]
+  - id: dry-run
+    title: A dry run shows exactly what the real run would do
+    description: Promised in chapter 16 (CLI surface) §17.
+    value_tier: core
+    intent: What a person signs off in a dry run is exactly what gets written.
+    scenarios:
+      - id: matches
+        when: ["save, remove, apply, approve, init, hooks or prune runs with --dry-run."]
+        then: ["Nothing is written, and the report matches the real run."]
+      - id: only-writers
+        when: ["--dry-run is given to a command that writes nothing."]
+        then: [It is a usage error.]
+      - id: wording
+        when: [A person reads a dry run.]
+        then: [Every line says "would".]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [matches, only-writers, wording]
+  - id: comments-kept
+    title: Comments a change would drop are never dropped silently
+    description: Promised in chapter 16 (CLI surface) §14.
+    value_tier: supporting
+    intent: A person never loses a note in a use case file without being told.
+    scenarios:
+      - id: warned
+        when: [A change would drop a comment.]
+        then: ["Each dropped comment is a warning, in the dry run too."]
+    validation:
+      - id: swift-tests
+        type: { kind: unit }
+        covers: [warned]

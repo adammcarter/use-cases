@@ -1,0 +1,109 @@
+prefix: cli
+use_cases:
+  - id: version-and-help
+    title: Says its version and lists its commands
+    description: Promised in chapter 16 (CLI surface) §7.
+    value_tier: supporting
+    intent: A person or script can tell which version runs and what it can do, without a workspace.
+    scenarios:
+      - id: version
+        when: [A person runs use-cases --version.]
+        then: ["The version is printed; with --json, also the transformer contract and store versions."]
+      - id: help
+        when: [A person runs use-cases with no command.]
+        then: [The command list is printed and it exits 0.]
+      - id: command-help
+        when: [A person runs use-cases validate --help.]
+        then: [That command's flags are printed.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [version, help]
+      - id: swift-tests
+        type: { kind: unit }
+        covers: [command-help]
+  - id: finds-the-workspace
+    title: Finds the workspace from any folder below it
+    description: Promised in chapter 16 (CLI surface) §3.
+    value_tier: core
+    intent: Commands work from anywhere inside a repository, and never judge the wrong workspace.
+    scenarios:
+      - id: from-below
+        given: [A workspace root with folders below it.]
+        when: [A command runs in a folder deep below the root.]
+        then: [It uses that root.]
+      - id: no-root
+        when: ["A command runs where no use-cases.yml with root: true is above."]
+        then: [It refuses with exit 2 and says to run use-cases init.]
+      - id: nested-root
+        given: [A workspace nested inside another.]
+        when: [A command runs inside the nested one.]
+        then: [The nested workspace is used on its own.]
+      - id: child-scope-named
+        when: ["--workspace names a child scope, not a root."]
+        then: ["It is refused, so ids never shift."]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [from-below, no-root, nested-root, child-scope-named]
+  - id: json-contract
+    title: Gives scripts exactly one JSON document
+    description: Promised in chapter 16 (CLI surface) §5.
+    value_tier: core
+    intent: Scripts and agents read one stable document per command, for success and failure alike.
+    scenarios:
+      - id: one-document
+        when: [Any command runs with --json.]
+        then: [stdout holds exactly one JSON document matching its published schema.]
+      - id: error-kinds
+        when: [A request fails.]
+        then:
+          - "The document carries an error with its kind: usage, invalid, refused, storage or cancelled."
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [one-document, error-kinds]
+  - id: exit-codes
+    title: Exit codes mean the same for every command
+    description: Promised in chapter 16 (CLI surface) §6.
+    value_tier: critical
+    intent: "CI and hooks act on the exit code alone: 0 done, 1 something needs you, 2 refused, 130 cancelled."
+    scenarios:
+      - id: usage-is-2
+        when: [A command line is wrong.]
+        then: [It exits 2 with kind usage.]
+      - id: invalid-is-2
+        when: [The workspace is INVALID.]
+        then: ["Every command that reads the workspace exits 2, and verify starts no run."]
+      - id: cancelled-is-130
+        when: ["A command is stopped by Ctrl-C, SIGTERM or a closed terminal."]
+        then: ["It exits 130; under --json it prints a cancelled document, or for verify --finish and --run the sealed run, marked cancelled."]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [usage-is-2, invalid-is-2]
+      - id: swift-tests
+        type: { kind: unit }
+        covers: [invalid-is-2, cancelled-is-130]
+  - id: people-first-output
+    title: Output for people leads with the worst and ends with one hint
+    description: Promised in chapter 16 (CLI surface) §4, §18, §19.
+    value_tier: supporting
+    intent: A person reads what matters first, and is told the one next step.
+    scenarios:
+      - id: worst-first
+        when: [A person runs status.]
+        then: ["The worst use case is first, and there is at most one hint line, last."]
+      - id: quiet
+        when: ["A command runs with --quiet, or with --json."]
+        then: [No hint line is written.]
+      - id: no-colour-in-pipes
+        when: ["Output goes to a pipe or a file, or NO_COLOR is set."]
+        then: [It carries no escape codes.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [worst-first, quiet, no-colour-in-pipes]
+      - id: swift-tests
+        type: { kind: unit }
+        covers: [no-colour-in-pipes]

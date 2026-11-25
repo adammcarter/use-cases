@@ -1,0 +1,62 @@
+prefix: gate
+use_cases:
+  - id: default
+    title: The gate blocks anything that stopped being proven
+    description: Promised in chapter 16 (CLI surface) §10; ADR 023.
+    value_tier: critical
+    intent: Nothing that was proven may quietly stop being proven.
+    scenarios:
+      - id: blocks
+        given: ["A use case that failed, errored or went stale."]
+        when: [use-cases status --gate runs.]
+        then: [It exits 1 and names what blocks.]
+      - id: warns
+        given: [Use cases that are only unverified or incomplete.]
+        when: [The gate runs.]
+        then: [They are warnings and the gate is clear.]
+      - id: invalid
+        given: [An INVALID workspace.]
+        when: [The gate runs.]
+        then: [It exits 2.]
+      - id: drafts
+        given: [A DRAFT use case.]
+        when: ["The gate runs, strict or not."]
+        then: [The draft never blocks.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [blocks, warns, invalid, drafts]
+  - id: strict
+    title: The strict gate blocks everything not proven
+    description: Promised in chapter 16 (CLI surface) §10.
+    value_tier: critical
+    intent: A release branch can require every READY use case to be verified.
+    scenarios:
+      - id: strict-blocks
+        given: [An unverified or incomplete use case.]
+        when: [status --gate --strict runs.]
+        then: [It blocks.]
+      - id: no-state-filter
+        when: ["--gate is combined with --state or an id."]
+        then: [It is a usage refusal.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [strict-blocks]
+      - id: swift-tests
+        type: { kind: unit }
+        covers: [no-state-filter]
+  - id: groups
+    title: A group is gated on its members only
+    description: Promised in chapter 03 (Use-case groups) Whole-use-case selection only; chapter 16 (CLI surface) §10.
+    value_tier: core
+    intent: A team can gate one named set of use cases, such as a release.
+    scenarios:
+      - id: members-only
+        given: [A failed use case outside a group.]
+        when: [status --gate --group runs.]
+        then: [Only the group's members decide.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [members-only]

@@ -1,0 +1,68 @@
+prefix: hooks
+use_cases:
+  - id: opt-in
+    title: Git hooks are opt-in and per clone
+    description: Promised in chapter 18 (Hooks) §1, §3, §4, §5; ADR 025.
+    value_tier: core
+    intent: Nobody gets a hook they did not ask for, and a hook is never committed or forced on others.
+    scenarios:
+      - id: asked-only
+        when: [init or hooks runs without being asked to add hooks.]
+        then: [Nothing is added.]
+      - id: add-remove
+        when: [hooks add and hooks remove run.]
+        then: ["The hook is added, then removed."]
+      - id: not-git
+        when: ["hooks runs outside a git repository, or names an unknown hook."]
+        then: [It is refused.]
+      - id: list
+        when: [use-cases hooks runs with no subcommand.]
+        then: ["Each hook reads installed, not installed, another tool's, or under a hook manager, and nothing is written."]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [asked-only, add-remove, not-git]
+      - id: swift-tests
+        type: { kind: unit }
+        covers: [list]
+  - id: never-overwrites
+    title: Hooks never overwrite what is already there
+    description: Promised in chapter 18 (Hooks) §4.
+    value_tier: core
+    intent: Another tool's hook, or one a person edited, is never replaced or removed.
+    scenarios:
+      - id: other-hook
+        when: [A hook file already exists.]
+        then: ["It is left alone, the line to add is given, and it exits 1."]
+      - id: hook-manager
+        when: [The repository uses a hook manager.]
+        then: ["Nothing is written into it, the line for the manager is given, and it exits 1."]
+      - id: edited
+        when: [Our hook was edited.]
+        then: [It is no longer ours to remove.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [other-hook, edited, hook-manager]
+      - id: swift-tests
+        type: { kind: unit }
+        covers: [other-hook]
+  - id: stops
+    title: The hooks stop a bad commit or push
+    description: Promised in chapter 18 (Hooks) §2, §3.
+    value_tier: core
+    intent: An invalid workspace is not committed, and a blocked gate is not pushed.
+    scenarios:
+      - id: commit
+        when: [A commit is made with an INVALID workspace.]
+        then: [The commit hook stops it.]
+      - id: push
+        when: [A push is made with a blocked gate.]
+        then: [The push hook stops it.]
+      - id: finds-tool
+        when: [use-cases is not on PATH when the hook runs.]
+        then: ["It uses the one that added it, or stops and says so."]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [commit, push, finds-tool]

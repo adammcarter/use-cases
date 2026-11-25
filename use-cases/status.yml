@@ -1,0 +1,151 @@
+prefix: status
+use_cases:
+  - id: list
+    title: Status lists every use case, worst first
+    description: Promised in chapter 16 (CLI surface) §9; chapter 07 (Verification state model).
+    value_tier: core
+    intent: A person sees what is broken before what is fine, with a reason beside everything not verified.
+    scenarios:
+      - id: worst-first
+        when: [A person runs use-cases status.]
+        then:
+          - Use cases are listed failed, error, incomplete, unverified, stale, verified, then drafts.
+      - id: nothing-run-yet
+        given: [A checkout where nothing has run.]
+        when: [A person runs status.]
+        then: [It says so in one line and suggests a baseline run.]
+      - id: filters
+        when: ["status is given a prefix, a group or --state."]
+        then: [Only those use cases are listed.]
+      - id: json
+        when: [status runs with --json.]
+        then: ["Every use case has its approval, and every READY one its value tier."]
+      - id: store-line
+        given: [A results store holding runs.]
+        when: [A person runs status.]
+        then: ["A line after the counts gives how many runs the store holds, its size and how many are superseded, and suggests use-cases prune when nothing else needs the hint; there is no such line with no runs, in the detail view or in the gate."]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [worst-first, nothing-run-yet, filters]
+      - id: swift-tests
+        type: { kind: unit }
+        covers: [json, store-line]
+  - id: detail
+    title: One use case in detail says why
+    description: Promised in chapter 16 (CLI surface) §9; chapter 15 (Impact and explanations) §4, §5.
+    value_tier: core
+    intent: For any use case not verified, a person can see which route decided it and why.
+    scenarios:
+      - id: why
+        when: [A person runs status with one use case id.]
+        then: ["Every route is shown with whether it gates, its status and why."]
+      - id: stale-why
+        given: [A route changed since its run.]
+        when: [Its detail is shown.]
+        then: [It names the run it has changed since.]
+      - id: missing-links
+        when: ["A use case has no links, or a gating route has neither links nor a procedure."]
+        then: [Its detail view warns about it; the list does not.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [why]
+      - id: swift-tests
+        type: { kind: unit }
+        covers: [stale-why, missing-links]
+  - id: judging
+    title: A use case's status is the worst of its gating routes
+    description: Promised in chapter 07 (Verification state model) How the core judges, Overall READY status; ADR 019.
+    value_tier: critical
+    intent: No route can hide another route's failure, and a route that does not gate never decides.
+    scenarios:
+      - id: worst-of-routes
+        given: [A use case with one passing and one failing gating route.]
+        when: [Status is judged.]
+        then: [The use case is failed.]
+      - id: non-gating
+        given: ["A route with gates_verification: false that fails."]
+        when: [Status is judged.]
+        then: [It never decides the use case's status.]
+      - id: skipped-test
+        given: [A linked test the run skipped.]
+        when: [Status is judged.]
+        then: [The route is never a pass; a failure among its tests still decides it.]
+      - id: not-run
+        given: [A route one of whose linked tests gave no result in its run.]
+        when: [Status is judged.]
+        then: ["The route gets no verdict from that run and says its test didn't run; it is never verified by it."]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [worst-of-routes, non-gating, skipped-test, not-run]
+  - id: staleness
+    title: A verdict goes stale when what it proved changes
+    description: Promised in chapter 11 (Fingerprints and freshness) §21, §24, §31, §32; chapter 15 (Impact and explanations) §9.
+    value_tier: critical
+    intent: A pass only counts for the code, tests and promise it was given; any change to those makes it stale.
+    scenarios:
+      - id: linked-code
+        when: [Linked code or a linked test is edited after a run.]
+        then: [The route is stale.]
+      - id: unlinked-code
+        when: [Code no link names is edited.]
+        then: [Nothing changes.]
+      - id: promise
+        when: [The intent or a covered scenario changes.]
+        then: [The route is stale; a title change is not.]
+      - id: move
+        when: [Linked code moves without changing.]
+        then: ["It stays verified, unless the strict policy is on."]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [linked-code, unlinked-code, promise, move]
+  - id: restored
+    title: Restoring what was proven brings its verdict back
+    description: Promised in chapter 11 (Fingerprints and freshness) §53.
+    value_tier: supporting
+    intent: Undoing a change makes the earlier verdict apply again, without running the tests again.
+    scenarios:
+      - id: restored
+        given: ["A route verified, then changed, so stale."]
+        when: [The change is undone exactly.]
+        then: [The earlier verdict applies again.]
+    validation:
+      - id: swift-tests
+        type: { kind: unit }
+        covers: [restored]
+  - id: resources
+    title: A route's declared resources are part of what it proved
+    description: Promised in chapter 06 (Validation model) Resources; chapter 11 (Fingerprints and freshness) §41-§43.
+    value_tier: core
+    intent: Data files a route depends on make its verdict stale when they change, and a missing one is refused.
+    scenarios:
+      - id: resources
+        when: [A resource a route names is edited.]
+        then: [The route is stale.]
+      - id: missing
+        when: [A route names a resource that does not exist.]
+        then: [It is refused.]
+      - id: globs
+        when: [A resource glob is used.]
+        then:
+          - It matches only files the scan reads; an excluded file never changes it unless named explicitly.
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [resources, missing, globs]
+  - id: line-endings
+    title: Checkouts that differ only in line endings agree
+    description: Promised in chapter 11 (Fingerprints and freshness) §12; chapter 04 (Workspace structure) Freshness policy.
+    value_tier: supporting
+    intent: An LF and a CRLF checkout of the same commit give the same fingerprints by default.
+    scenarios:
+      - id: lf-crlf
+        when: [The same commit is checked out with LF and with CRLF.]
+        then: [Verdicts agree.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [lf-crlf]

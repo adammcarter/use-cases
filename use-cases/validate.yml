@@ -1,0 +1,152 @@
+prefix: validate
+use_cases:
+  - id: checks-files-only
+    title: Validate checks the files and runs nothing
+    description: Promised in chapter 16 (CLI surface) §8; ADR 021.
+    value_tier: core
+    intent: "Validate is safe on every save, commit and pull request: it runs no test and writes nothing."
+    scenarios:
+      - id: valid-summary
+        given: [A valid workspace.]
+        when: [A person runs use-cases validate.]
+        then: ["It says valid with counts of use cases, links and files, and exits 0."]
+      - id: runs-no-test
+        given: [Bridge settings with a run command.]
+        when: [validate runs.]
+        then: [No test command runs and nothing is written.]
+      - id: warnings-never-fail
+        given: ["Markers for unknown use cases, or malformed markers."]
+        when: [validate runs.]
+        then: [They are listed as warnings and the workspace stays valid.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [valid-summary, runs-no-test, warnings-never-fail]
+  - id: refuses-unsafe-yaml
+    title: Refuses YAML that readers could take differently
+    description: Promised in chapter 09 (Workspace loading) §14 YAML model; chapter 02 (Use-case schema) scenarios; ADR 017.
+    value_tier: critical
+    intent: A use case file means one thing to every reader, so no tool ever judges a different promise than the person wrote.
+    scenarios:
+      - id: ambiguous-scalars
+        when: ["A file holds a value two YAML versions read differently, unquoted."]
+        then: [The workspace is INVALID and names the value to quote.]
+      - id: duplicate-keys
+        when: [A mapping repeats a key.]
+        then: [The workspace is INVALID.]
+      - id: unsafe-yaml
+        when: [A file uses YAML no reader can take one way or safely.]
+        then: ["It is refused, never cut or guessed."]
+      - id: unquoted-note
+        when: ["Unquoted text in a use case is followed by a space and a #."]
+        then: ["The workspace is INVALID, naming the line and saying to quote the text; a note on its own line is fine."]
+      - id: ordinary-yaml
+        when: ["A file uses multi-line text, aliases or a byte order mark."]
+        then: [It is read as ordinary YAML.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [ambiguous-scalars, duplicate-keys, unsafe-yaml, unquoted-note, ordinary-yaml]
+  - id: draft-or-ready
+    title: A use case is READY, DRAFT or INVALID by its fields
+    description: Promised in chapter 02 (Use-case schema) Authored state; chapter 07 (Verification state model).
+    value_tier: critical
+    intent: Only complete use cases are judged; an incomplete one is listed with what it lacks and never blocks.
+    scenarios:
+      - id: missing-field-is-draft
+        given: [A use case without a value tier.]
+        when: [The workspace loads.]
+        then: ["It is a DRAFT, listed with what is missing."]
+      - id: wrong-type-is-invalid
+        when: [A field holds a value of the wrong type.]
+        then: ["The workspace is INVALID, not DRAFT."]
+      - id: uncovered-scenario-is-draft
+        when: [A scenario has no gating route covering it.]
+        then: [The use case stays a DRAFT.]
+      - id: ready-without-links
+        when: [A READY use case has no links at all.]
+        then: [It is still READY.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [wrong-type-is-invalid, uncovered-scenario-is-draft, ready-without-links]
+      - id: swift-tests
+        type: { kind: unit }
+        covers: [missing-field-is-draft]
+  - id: refuses-broken-structure
+    title: Refuses ids and coverage that do not add up
+    description: Promised in chapter 05 (Identity and id grammar) Segment rules; chapter 02 (Use-case schema) INVALID; chapter 06 (Validation model) Coverage, Where running lives.
+    value_tier: critical
+    intent: Every id means one thing, and every route covers scenarios that exist.
+    scenarios:
+      - id: duplicate-ids
+        when: [Two scenarios or two routes of one use case share an id.]
+        then: [The workspace is INVALID.]
+      - id: unknown-scenario
+        when: [A route covers a scenario that does not exist.]
+        then: [The workspace is INVALID.]
+      - id: no-tool-in-use-case
+        when: ["A use case or route carries a field for running tests, such as a command or a timeout."]
+        then: ["The workspace is INVALID: how tests run lives in the bridge settings, never in a use case."]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [duplicate-ids, unknown-scenario, no-tool-in-use-case]
+  - id: workspace-layout-rules
+    title: Refuses a workspace layout that could be read two ways
+    description: Promised in chapter 04 (Workspace structure) The workspace root, Path spelling, Symlinks; chapter 09 (Workspace loading) §11.1, §12, §19.
+    value_tier: core
+    intent: The same checkout gives the same use cases on every system.
+    scenarios:
+      - id: root-says-root
+        when: ["The root use-cases.yml does not say root: true."]
+        then: [It is not a workspace root.]
+      - id: spelling-matches-disk
+        when: [A folder or file name differs from the disk only by case or Unicode form.]
+        then: [It is INVALID and the message names the on-disk spelling.]
+      - id: no-symlinks
+        when: ["A use-cases folder or file is a symlink, or holds one."]
+        then: [It is INVALID; symlinks are never followed.]
+      - id: stray-files
+        when: ["The use-cases folder holds a file that is not a definition, or a scope inside it."]
+        then: ["It is INVALID, never skipped."]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [root-says-root, spelling-matches-disk, no-symlinks, stray-files]
+  - id: discovery-exclusions
+    title: Skips exactly the folders the workspace excludes
+    description: Promised in chapter 04 (Workspace structure) Discovery exclusions; ADR 012.
+    value_tier: core
+    intent: Generated, vendored and history folders never make a workspace invalid, and nothing else is silently skipped.
+    scenarios:
+      - id: excluded-folder
+        given: [discovery.exclude names a folder.]
+        when: [The workspace loads.]
+        then: [Nothing inside it is searched for definitions or markers.]
+      - id: history-and-store
+        when: [Version-control history or a results store holds marker text.]
+        then: [It is never scanned.]
+      - id: exclusion-into-definitions
+        when: [An exclusion reaches inside a use-cases folder.]
+        then: ["It is INVALID, naming the pattern."]
+      - id: pattern-dialect
+        when: [A pattern is malformed.]
+        then: [It is INVALID.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [excluded-folder, history-and-store, exclusion-into-definitions, pattern-dialect]
+  - id: scale
+    title: Commands stay quick on a large workspace
+    description: Promised in chapter 09 (Workspace loading) §36 Required properties (Performant); chapter 11 (Fingerprints and freshness) §87.
+    value_tier: supporting
+    intent: A workspace with thousands of use cases and files is still usable from a hook.
+    scenarios:
+      - id: scale
+        when: ["validate, links, status and search run on a large generated workspace."]
+        then: [Each finishes within the proof's budget.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [scale]

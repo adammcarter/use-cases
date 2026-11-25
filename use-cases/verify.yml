@@ -1,0 +1,203 @@
+prefix: verify
+use_cases:
+  - id: run
+    title: verify --run runs the tests and keeps one verdict per route
+    description: Promised in chapter 13 (Verify flow) §7; chapter 14 (Run commands).
+    value_tier: critical
+    intent: One command runs every test command in the bridge settings and gives every linked use case its verdict.
+    scenarios:
+      - id: one-command
+        given: [Bridge settings with test commands.]
+        when: [use-cases verify --run runs.]
+        then: [Every linked route gets a verdict from its tests.]
+      - id: failing-test-is-verdict
+        when: [A test fails.]
+        then: [verify exits 0 and the use case is failed.]
+      - id: only
+        when: [verify --run --only names validations.]
+        then: [Only those run; an unknown name is refused before anything runs.]
+      - id: merge
+        when: [Several commands prove one use case.]
+        then: [Their results merge before it is judged.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [one-command, failing-test-is-verdict, only, merge]
+  - id: start-finish
+    title: Your own test step between --start and --finish
+    description: Promised in chapter 13 (Verify flow) §5, §6, §7; ADR 006.
+    value_tier: core
+    intent: Tests run by a script, an IDE or CI still give verdicts, through a run started and finished around them.
+    scenarios:
+      - id: own-step
+        when: ["A person runs --start, runs the tests to the printed report path, then --finish."]
+        then: [The run gets verdicts from that report.]
+      - id: finish-without-start
+        when: ["--finish runs with no started run."]
+        then: [It is refused.]
+      - id: only-at-start
+        when: ["--only is given at --finish."]
+        then: ["It is refused: the selection is made at the start."]
+      - id: bridge-changed
+        when: [The bridge settings change between --start and --finish.]
+        then: ["--finish refuses."]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [own-step, finish-without-start, only-at-start, bridge-changed]
+  - id: guard
+    title: Code changed during a run gives no verdict
+    description: Promised in chapter 13 (Verify flow) §8.
+    value_tier: critical
+    intent: A verdict is only ever about the code that was tested.
+    scenarios:
+      - id: changed-during
+        when: [Linked code is edited between start and finish.]
+        then: ["Its route gets \"code changed during the run\", naming the files, not a verdict."]
+      - id: unlinked-edit
+        when: [Unlinked code is edited during the run.]
+        then: [Every verdict is kept.]
+      - id: route-added
+        when: [A route is added during the run.]
+        then: [It gets no verdict.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [changed-during, unlinked-edit, route-added]
+  - id: run-errors
+    title: Run errors are said, and never become passes
+    description: Promised in chapter 13 (Verify flow) §10; chapter 14 (Run commands) §11, §12, §13; chapter 16 (CLI surface) §6.
+    value_tier: critical
+    intent: A build break, a crash or a missing report is a run error that exits 1, never a pass or a silent gap.
+    scenarios:
+      - id: build-break
+        when: [The test command fails without any failing test.]
+        then: ["The run has a run error, exits 1, and gives no verdicts from it."]
+      - id: signal-timeout
+        when: [The command is killed by a signal or times out.]
+        then: [It is a run error and the whole process group is stopped.]
+      - id: no-report
+        when: ["No report is written, or the report folder is empty."]
+        then: [It is a run error.]
+      - id: broken-transformer
+        when: [A transformer fails.]
+        then: ["The run fails, not the use cases."]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [build-break, signal-timeout, no-report, broken-transformer]
+  - id: reports-owned-by-run
+    title: Each run owns its reports and never reads an older one
+    description: Promised in ADR 020; chapter 12 (Results storage) §15.
+    value_tier: critical
+    intent: A verdict can never come from a report an earlier run left behind.
+    scenarios:
+      - id: own-reports
+        when: [Two runs write reports.]
+        then: [Each keeps its own and nothing is deleted.]
+      - id: never-earlier
+        given: [A report left by an earlier run.]
+        when: [A new run finishes without its tests writing one.]
+        then: [The old report is never read.]
+      - id: sealed-bytes
+        when: [A report changes after the run is sealed.]
+        then: ["It is a warning, never a new verdict."]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [own-reports, never-earlier, sealed-bytes]
+  - id: commands
+    title: Test commands run directly, in the real project
+    description: Promised in chapter 14 (Run commands) §8, §9, §10; chapter 13 (Verify flow) §3; ADR 005.
+    value_tier: core
+    intent: Commands run exactly as written, where the project is, with no input and a bounded console.
+    scenarios:
+      - id: real-project
+        when: [verify --run runs a command.]
+        then: ["It runs in the real project, not a copy."]
+      - id: working-dir
+        given: [A validation with working_dir.]
+        when: [It runs.]
+        then: [The command runs in that folder.]
+      - id: report-placeholder
+        when: [A validation has no report name.]
+        then: ["{report} is a folder."]
+      - id: no-input
+        when: [A command reads its input or prints a lot.]
+        then: [It gets no input and its console is bounded.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [real-project, working-dir, report-placeholder, no-input]
+  - id: no-surprises
+    title: A run does exactly what it is told, once
+    description: Promised in chapter 14 (Run commands) §6, §15; chapter 13 (Verify flow) §14; chapter 15 (Impact and explanations) §12; chapter 10 (Bridge settings and transformer contract) §10.
+    value_tier: core
+    intent: Commands are never run through a hidden shell, retried, or skipped on a guess, and a stuck transformer is stopped.
+    scenarios:
+      - id: no-shell
+        when: [A run command argument holds shell syntax.]
+        then: ["It is passed as written, never expanded by a shell the tool adds."]
+      - id: no-retry
+        when: [A test command fails.]
+        then: [It is not run again by the tool.]
+      - id: no-skipping
+        given: [Every route a validation reached last time is verified.]
+        when: [verify --run runs.]
+        then: [That validation still runs.]
+      - id: transformer-time
+        when: [A transformer does not finish in its time.]
+        then: [It is stopped and the error says how long it had.]
+    validation:
+      - id: swift-tests
+        type: { kind: unit }
+        covers: [no-shell, transformer-time]
+      - id: try-it
+        type: { kind: acceptance }
+        covers: [no-retry, no-skipping]
+        procedure:
+          steps:
+            - "Do: A test command fails."
+            - "Check: It is not run again by the tool."
+            - "Set up: Every route a validation reached last time is verified."
+            - "Do: verify --run runs."
+            - "Check: That validation still runs."
+  - id: open-runs
+    title: Open runs are named, locked and can be aborted
+    description: Promised in chapter 13 (Verify flow) §6, §15, §16.
+    value_tier: core
+    intent: Several open runs never touch each other, and one nobody will finish can be closed.
+    scenarios:
+      - id: two-open
+        given: [Two open runs.]
+        when: ["--finish or --abort runs without --run-id."]
+        then: [It refuses and names the open runs.]
+      - id: locked
+        when: [A run is being finished by one process.]
+        then: ["No other can finish it, and a finished run cannot be finished again."]
+      - id: cancelled
+        when: [A run is cancelled.]
+        then: ["It is sealed as interrupted; results judged before the cancel are kept, and no verdict is made up for the rest."]
+      - id: abort
+        when: [use-cases verify --abort --run-id runs.]
+        then: [That run is closed.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [two-open, locked, cancelled]
+      - id: swift-tests
+        type: { kind: unit }
+        covers: [abort]
+  - id: unlinked-tests
+    title: Tests no use case claims are reported
+    description: Promised in chapter 15 (Impact and explanations) §6; chapter 07 (Verification state model) How the core judges.
+    value_tier: supporting
+    intent: A person sees which tests ran without a link, so a lost link is found.
+    scenarios:
+      - id: unlinked
+        when: [A run reads tests that sit inside no link.]
+        then: [They are listed as unlinked.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [unlinked]

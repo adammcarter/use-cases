@@ -1,0 +1,49 @@
+prefix: signoff
+use_cases:
+  - id: approve
+    title: Record a person's sign-off on the use case
+    description: Promised in chapter 16 (CLI surface) §14; ADR 032.
+    value_tier: core
+    intent: A sign-off names who approved which promise, and notices when the promise changes.
+    scenarios:
+      - id: recorded
+        when: [use-cases approve <id> --by Sam runs.]
+        then:
+          - approved is written on the use case with the name, the date and a fingerprint of the promise.
+      - id: changed
+        when: [The promise changes after approval.]
+        then: [It reads changed since approved; changing only how it is proven keeps the approval.]
+      - id: save-never-approves
+        when: [A use case is saved.]
+        then: ["save never writes an approval: it keeps the one the use case had, and a save carrying a different one is refused."]
+      - id: all-and-batch
+        when: [approve --all or apply --approved-by runs.]
+        then: ["Every use case, or every one the batch saves, is approved."]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [recorded, changed, save-never-approves, all-and-batch]
+  - id: gate
+    title: With sign-off required, the gate holds unapproved promises by tier
+    description: Promised in chapter 16 (CLI surface) §9, §10 Sign-off.
+    value_tier: critical
+    intent: A critical promise nobody approved, or that changed since approval, cannot pass the gate.
+    scenarios:
+      - id: by-tier
+        given: ["sign_off: required in the root."]
+        when: [The gate runs.]
+        then: [An unapproved critical use case blocks; core and supporting warn; strict blocks all.]
+      - id: "off"
+        given: [No sign_off setting.]
+        when: [The gate runs.]
+        then: [Approvals are shown and never gate.]
+      - id: root-only
+        when: [sign_off is set in a child scope.]
+        then: ["It is INVALID: it is root-only."]
+      - id: why
+        when: [The gate holds a use case for its sign-off.]
+        then: ["Its line says not approved or changed since approved, and --json gives its approval."]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [by-tier, "off", root-only, why]

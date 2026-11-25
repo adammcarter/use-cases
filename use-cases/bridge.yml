@@ -1,0 +1,81 @@
+prefix: bridge
+use_cases:
+  - id: settings
+    title: Bridge settings are checked when they load
+    description: Promised in chapter 10 (Bridge settings and transformer contract) §4, §7-§9, §18; chapter 09 §21.
+    value_tier: core
+    intent: A mistake in how tests are run is found before any test runs.
+    scenarios:
+      - id: names
+        when: [A validation id or report name is not a portable name.]
+        then: [It is INVALID.]
+      - id: transformer-ref
+        when: ["A bundled transformer name is unknown, or a transformer program sits outside the workspace."]
+        then: [The workspace is INVALID.]
+      - id: root-only
+        when: [Bridge settings sit below the root.]
+        then: [They are refused.]
+      - id: warnings
+        when: ["The settings list no validations, or a validation has no run command."]
+        then: [It is a warning and the workspace stays valid.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [names, transformer-ref, root-only, warnings]
+  - id: no-settings
+    title: The core works with no bridge settings at all
+    description: Promised in chapter 01 (Core foundation) The three rings; chapter 10 (Bridge settings and transformer contract) §2, §4; chapter 13 (Verify flow) §13; chapter 19 (CI) §2; ADR 000.
+    value_tier: supporting
+    intent: "Use cases stand alone: without any helper, they are still written, validated and recorded."
+    scenarios:
+      - id: core-alone
+        given: [No use-cases-bridge.yml.]
+        when: ["validate, status and record run."]
+        then: [They work.]
+      - id: verify-with-nothing-to-run
+        given: [No validations set up.]
+        when: [verify --run runs.]
+        then: ["Nothing runs, a note says so, and it exits 0."]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [core-alone]
+      - id: swift-tests
+        type: { kind: unit }
+        covers: [verify-with-nothing-to-run]
+  - id: links-transformers
+    title: A links program adds links and is trusted for nothing else
+    description: Promised in chapter 10 (Bridge settings and transformer contract) §11, §14.
+    value_tier: supporting
+    intent: Teams can link tests by their own convention, without the program being able to change anything else.
+    scenarios:
+      - id: test-names
+        given: [The test-names links transformer.]
+        when: [Tests are named after use cases.]
+        then: [They link with no markers.]
+      - id: any-language
+        when: [A links program is written in any language.]
+        then: ["It works, and what it returns is checked."]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [test-names, any-language]
+  - id: monorepo
+    title: One workspace proves several services
+    description: Promised in chapter 04 (Workspace structure) Scope, Scope prefix; chapter 10 (Bridge settings and transformer contract) §7; chapter 11 (Fingerprints and freshness) §31.
+    value_tier: core
+    intent: A monorepo has one namespace of use cases, each service proven by its own command.
+    scenarios:
+      - id: nested-scopes
+        when: [Services have their own scopes.]
+        then: [They compose one namespace.]
+      - id: every-service
+        when: [verify --run runs.]
+        then: [Every service is verified in one run.]
+      - id: locality
+        when: [One service is edited.]
+        then: [Only its use cases go stale; a shared file stales both.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [nested-scopes, every-service, locality]

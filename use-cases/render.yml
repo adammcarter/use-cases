@@ -1,0 +1,27 @@
+prefix: render
+use_cases:
+  - id: layouts
+    title: The core draws the layouts people review
+    description: Promised in chapter 21 (Agent workflows) §7; ADR 033.
+    value_tier: supporting
+    intent: Intent, brief, proposal and results are drawn the same way every time, for a person to approve.
+    scenarios:
+      - id: intent
+        when: [render intent runs.]
+        then: ["It shows what, why and who, with no workspace needed."]
+      - id: brief
+        when: [render brief runs on a proposal.]
+        then: ["Each added, changed or removed use case gets a card with its id top right, showing now and was."]
+      - id: proposal
+        when: [render proposal runs on a proposal.]
+        then: ["The whole change is on one screen, plain words first and ids last."]
+      - id: refused
+        when: [A proposal file is one apply would refuse.]
+        then: [It is refused with the same message.]
+      - id: results
+        when: [A proposal file is applied and its results drawn.]
+        then: [The applied batch is exactly the file.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [intent, brief, proposal, refused, results]

@@ -1,0 +1,85 @@
+prefix: init
+use_cases:
+  - id: scaffold
+    title: init sets up a repository and never overwrites
+    description: Promised in chapter 17 (Init) §1, §2, §3; ADR 024.
+    value_tier: core
+    intent: A new repository becomes a valid workspace in one command, and a second run changes nothing a person wrote.
+    scenarios:
+      - id: empty-folder
+        when: [init runs in an empty folder.]
+        then: [It writes a valid workspace with a draft example and lists what it made.]
+      - id: never-overwrites
+        when: ["init runs again, or in a folder that is already the workspace root."]
+        then: ["Every existing file is kept and listed as kept; it adds only the bridge template and the .gitignore line, never the example or the groups file."]
+      - id: minimal
+        when: [init --minimal runs.]
+        then: [Only the workspace file and the .gitignore line are written.]
+      - id: inside-workspace
+        when: ["init runs in a folder below a workspace root, or where a child scope's file is."]
+        then: ["It is refused with exit 2, naming the root it found, and nothing is made."]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [empty-folder, never-overwrites, minimal, inside-workspace]
+  - id: choices
+    title: init asks a person, and flags answer in advance
+    description: Promised in chapter 17 (Init) §1, §4, §8.
+    value_tier: supporting
+    intent: A person is asked about the prefix and hooks in a terminal; scripts give the answers as flags.
+    scenarios:
+      - id: wizard
+        when: [init runs in a terminal.]
+        then: ["It asks, and the answers decide."]
+      - id: prefix
+        when: ["--prefix is given."]
+        then: [The root prefix is set; an invalid one is refused with exit 2.]
+      - id: existing-workspace
+        given: [A folder that is already the workspace root.]
+        when: [init runs.]
+        then: ["It asks only about hooks; a --prefix that differs from the workspace's is refused, never dropped."]
+      - id: no-terminal
+        when: ["init runs outside a terminal, or with --no-input or --json."]
+        then: [It asks nothing and never waits; every refusal comes before any question.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [wizard, prefix]
+      - id: swift-tests
+        type: { kind: unit }
+        covers: [existing-workspace, no-terminal]
+  - id: no-test-command
+    title: init never writes a test command
+    description: Promised in chapter 17 (Init) §4, §5.
+    value_tier: core
+    intent: The bridge settings are a commented template; the test command is always the person's choice.
+    scenarios:
+      - id: template
+        when: [init runs in any codebase.]
+        then: ["The bridge file holds no active command, and the prefix and folder exclusions stay comments."]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [template]
+  - id: gitignore
+    title: init keeps verdicts out of version control
+    description: Promised in chapter 17 (Init) §6.
+    value_tier: supporting
+    intent: "Verdicts are like test results: never committed."
+    scenarios:
+      - id: one-line
+        when: [init runs in a git repository.]
+        then: [.gitignore gains .use-cases/ once.]
+      - id: existing
+        when: [.gitignore already excludes it.]
+        then: [It is recognised and left alone.]
+      - id: no-git
+        when: [init runs where there is no git and no .gitignore.]
+        then: ["Nothing is added, and a note says to keep .use-cases/ out of version control."]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [one-line, existing]
+      - id: swift-tests
+        type: { kind: unit }
+        covers: [no-git]

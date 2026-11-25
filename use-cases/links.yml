@@ -1,0 +1,108 @@
+prefix: links
+use_cases:
+  - id: markers
+    title: Marker pairs link code to a use case
+    description: Promised in chapter 08 (Links) Marker sentinels, Pairing, The linked region, Overlap.
+    value_tier: critical
+    intent: A pair of comments ties the code between them to a use case or one of its routes, byte for byte.
+    scenarios:
+      - id: pair-links-region
+        given: [A test wrapped in a marker pair naming a route.]
+        when: [The workspace loads.]
+        then: [The lines strictly between the markers are a validation link for that route.]
+      - id: broken-pairs-invalid
+        when: ["An end has no start, a start is never closed, or pairs cross."]
+        then: [The workspace is INVALID.]
+      - id: malformed-id
+        when: [A marker id is malformed.]
+        then: ["It is a warning, never read as a shorter id."]
+      - id: nesting
+        when: [A marker is nested inside another.]
+        then:
+          - The outer region is unchanged, and only overlapping links of one use case and role warn.
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [pair-links-region, broken-pairs-invalid, malformed-id, nesting]
+  - id: manual-bindings
+    title: A manual binding links a file or lines without markers
+    description: Promised in chapter 08 (Links) Manual binding object, Manual binding validity, Excluded content, Binding ID uniqueness.
+    value_tier: core
+    intent: Files that cannot hold comments can still be linked, from the use case.
+    scenarios:
+      - id: binding-links
+        given: [A route with a binding to a file and lines.]
+        when: [Its tests run.]
+        then: [The test inside those lines gives the route its result.]
+      - id: missing-file
+        when: ["A binding names a file that does not exist, or a position that cannot be."]
+        then: [It is refused.]
+      - id: excluded-target
+        when: ["A binding points into an excluded folder, at an empty file, or at an empty range."]
+        then: [It warns and the workspace stays valid.]
+      - id: claimed-twice
+        when: [One binding is claimed twice.]
+        then: [The workspace is INVALID.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [binding-links, missing-file, excluded-target, claimed-twice]
+  - id: list-links
+    title: Lists the code each use case is tied to
+    description: Promised in chapter 16 (CLI surface) §13.
+    value_tier: supporting
+    intent: A person sees which files and lines prove and implement each use case.
+    scenarios:
+      - id: by-prefix
+        when: [A person runs use-cases links with a use case or prefix.]
+        then: ["Only those links are listed, but every diagnostic is still shown."]
+      - id: ordered
+        when: [links runs with --json.]
+        then: ["Links are ordered by use case, route, binding, file and start line as a number."]
+      - id: whole-file-range
+        when: [A link covers a whole file.]
+        then: [It runs from line 1 to the last line holding bytes.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [by-prefix, ordered, whole-file-range]
+  - id: moved-code
+    title: Warns when marked code has moved away
+    description: Promised in chapter 08 (Links) The linked region.
+    value_tier: core
+    intent: A marker pair left behind with nothing between it is said everywhere people look, so a lost link is noticed.
+    scenarios:
+      - id: empty-region
+        given: [A marker pair with nothing between it.]
+        when: ["validate, links or status runs."]
+        then: [Each shows an empty-region warning.]
+      - id: renamed-test
+        given: [A linked test renamed out of its region.]
+        when: [The tests run.]
+        then: [Its route never passes.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [empty-region, renamed-test]
+  - id: scan-robustness
+    title: The marker scan reads every file the same way on every system
+    description: Promised in chapter 08 (Links) Text encoding; chapter 09 (Workspace loading) §20.3.
+    value_tier: core
+    intent: Line endings, encodings and odd files never change which code is linked.
+    scenarios:
+      - id: line-endings
+        when: [A file uses CRLF or a byte order mark.]
+        then: [Its markers resolve as in an LF file.]
+      - id: not-utf8
+        when: [A file holding marker text is not UTF-8.]
+        then: [It is skipped with a warning.]
+      - id: unreadable
+        when: [A file or folder cannot be read.]
+        then: ["The workspace is INVALID, naming it."]
+      - id: special-files
+        when: [The tree holds a pipe or a file name with a control character.]
+        then: [It is warned about and never opened.]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [line-endings, not-utf8, unreadable, special-files]

@@ -1,0 +1,50 @@
+prefix: mcp
+use_cases:
+  - id: tools
+    title: Agents get the commands as MCP tools
+    description: Promised in chapter 20 (MCP tools) §1, §3, §4, §5; ADR 027.
+    value_tier: core
+    intent: An agent uses exactly the commands a person uses, with the same documents and refusals.
+    scenarios:
+      - id: same-documents
+        when: [An agent calls a tool.]
+        then: [It returns exactly the command's JSON document.]
+      - id: changes
+        when: ["An agent saves, removes, applies or approves through tools."]
+        then: [The same rules hold; a refused save writes nothing.]
+      - id: verify
+        when: ["An agent verifies, records and asks the gate."]
+        then: [Verdicts are like any other.]
+      - id: refusals
+        when: ["A tool is refused, given bad arguments or unknown."]
+        then:
+          - It is a tool error with the error document, refused before anything runs, or a protocol error.
+      - id: person-only
+        when: ["An agent looks for a tool to set up a workspace, add hooks, prune runs or record interactively."]
+        then: ["There is none: those stay with the person at the command line."]
+    validation:
+      - id: acceptance
+        type: { kind: acceptance }
+        covers: [same-documents, changes, verify, refusals]
+      - id: swift-tests
+        type: { kind: unit }
+        covers: [person-only]
+  - id: server-lifetime
+    title: The MCP server stops cleanly with its host
+    description: Promised in chapter 20 (MCP tools) §2.
+    value_tier: supporting
+    intent: A server whose host goes away never lingers, and a cancelled call seals its run.
+    scenarios:
+      - id: host-gone
+        when: [The host closes the input or goes away.]
+        then: [The server ends by itself.]
+      - id: cancelled-call
+        when: [The host cancels a verify call.]
+        then: [The test is stopped and the run is sealed.]
+      - id: workspace
+        when: [The server is started with a workspace that is not a folder.]
+        then: [It is refused at the start with exit 2.]
+    validation:
+      - id: swift-tests
+        type: { kind: unit }
+        covers: [host-gone, cancelled-call, workspace]
