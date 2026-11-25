@@ -12,6 +12,7 @@ groups:
         - links.markers
         - status.judging
         - status.staleness
+        - status.resources
         - gate.default
         - gate.strict
         - verify.run

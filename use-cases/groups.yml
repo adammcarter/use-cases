@@ -31,7 +31,10 @@ use_cases:
       - id: warns
         when: [A group is empty or repeats a selector.]
         then: [It is a warning only.]
+      - id: selects-nothing
+        when: ["A group's include selects nothing, or names an id that does not exist."]
+        then: [The workspace is INVALID.]
     validation:
       - id: acceptance
         type: { kind: acceptance }
-        covers: [invalid, warns]
+        covers: [invalid, warns, selects-nothing]

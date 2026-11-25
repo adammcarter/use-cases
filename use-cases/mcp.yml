@@ -16,16 +16,18 @@ use_cases:
         when: ["An agent verifies, records and asks the gate."]
         then: [Verdicts are like any other.]
       - id: refusals
-        when: ["A tool is refused, given bad arguments or unknown."]
-        then:
-          - It is a tool error with the error document, refused before anything runs, or a protocol error.
+        when: [A command is refused, or a tool is given bad arguments.]
+        then: ["It is a tool error carrying the error document, before anything runs."]
+      - id: unknown-tool
+        when: [An agent calls a tool that does not exist.]
+        then: [It is a protocol error.]
       - id: person-only
         when: ["An agent looks for a tool to set up a workspace, add hooks, prune runs or record interactively."]
         then: ["There is none: those stay with the person at the command line."]
     validation:
       - id: acceptance
         type: { kind: acceptance }
-        covers: [same-documents, changes, verify, refusals]
+        covers: [same-documents, changes, verify, refusals, unknown-tool]
       - id: swift-tests
         type: { kind: unit }
         covers: [person-only]

@@ -36,7 +36,7 @@ use_cases:
         then: [The test inside those lines gives the route its result.]
       - id: missing-file
         when: ["A binding names a file that does not exist, or a position that cannot be."]
-        then: [It is refused.]
+        then: [The workspace is INVALID.]
       - id: excluded-target
         when: ["A binding points into an excluded folder, at an empty file, or at an empty range."]
         then: [It warns and the workspace stays valid.]

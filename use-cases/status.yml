@@ -75,7 +75,7 @@ use_cases:
       - id: skipped-test
         given: [A linked test the run skipped.]
         when: [Status is judged.]
-        then: [The route is never a pass; a failure among its tests still decides it.]
+        then: [It is incomplete, unless another of its tests failed.]
       - id: not-run
         given: [A route one of whose linked tests gave no result in its run.]
         when: [Status is judged.]
@@ -102,10 +102,13 @@ use_cases:
       - id: move
         when: [Linked code moves without changing.]
         then: ["It stays verified, unless the strict policy is on."]
+      - id: route-changed
+        when: ["A route's type, what it covers, its gating or its procedure changes."]
+        then: ["That route is stale; the use case's other routes are not."]
     validation:
       - id: acceptance
         type: { kind: acceptance }
-        covers: [linked-code, unlinked-code, promise, move]
+        covers: [linked-code, unlinked-code, promise, move, route-changed]
   - id: restored
     title: Restoring what was proven brings its verdict back
     description: Promised in chapter 11 (Fingerprints and freshness) §53.
@@ -123,15 +126,15 @@ use_cases:
   - id: resources
     title: A route's declared resources are part of what it proved
     description: Promised in chapter 06 (Validation model) Resources; chapter 11 (Fingerprints and freshness) §41-§43.
-    value_tier: core
-    intent: Data files a route depends on make its verdict stale when they change, and a missing one is refused.
+    value_tier: critical
+    intent: Data files a route depends on make its verdict stale when they change, and a missing one makes the workspace INVALID.
     scenarios:
       - id: resources
         when: [A resource a route names is edited.]
         then: [The route is stale.]
       - id: missing
         when: [A route names a resource that does not exist.]
-        then: [It is refused.]
+        then: [The workspace is INVALID.]
       - id: globs
         when: [A resource glob is used.]
         then:

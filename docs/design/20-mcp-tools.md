@@ -87,6 +87,8 @@ A tool returns the command's `--json` document twice over: as text, and as struc
 
 A tool never changes, adds to or summarises the document. An agent reads exactly what a script reads.
 
+A call to a tool the server does not have has no result: it is a protocol error (invalid params), and nothing runs.
+
 ## 5. What it proves
 
 The tools cannot do anything the command line cannot, and cannot skip any rule it applies: each call is the command itself. A verdict an agent records through `use_cases_record_verdict` is recorded exactly as a person's `use-cases record`.

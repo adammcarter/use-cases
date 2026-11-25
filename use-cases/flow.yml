@@ -18,7 +18,7 @@ use_cases:
     title: Each step of the agent flow has a check
     description: Promised in chapter 22 (UCDD skill) §4; chapter 21 (Agent workflows) §3, §6.
     value_tier: core
-    intent: An agent following the use-case-driven flow cannot move on until the step's check passes.
+    intent: "Every step of the flow ends on a named command's output, which the agent reports, never its own word."
     scenarios:
       - id: checks
         when: [An agent finishes a step of the flow.]
@@ -32,10 +32,14 @@ use_cases:
         covers: [checks, tier-sign-off]
         procedure:
           steps:
-            - "Do: An agent finishes a step of the flow."
-            - "Check: The step's named check is run and must pass before the next step."
-            - "Do: An agent changes a supporting use case where the person allowed it."
-            - "Check: The agent may sign it off; critical and core wait for the person."
+            - "Set up: In a scratch repo that works use case first, run the plugin and ask the agent for a small change."
+            - "Check: At each step of the flow the agent's report quotes the output of the command that step names (render intent, render brief and apply --dry-run, links, verify, status --gate), not its own word."
+            - "Do: Without giving the agent permission to handle supporting changes, ask for a change to a supporting use case."
+            - "Check: The agent asks you to sign it off."
+            - "Do: Give the permission (you can handle supporting changes in this repo) and ask for the change again."
+            - "Check: The agent records the sign-off itself, and show reads approved."
+            - "Do: Ask for a change to a critical use case."
+            - "Check: The agent still asks you, permission or not."
   - id: setup
     title: Setup asks before it changes anything
     description: Promised in chapter 22 (UCDD skill) §3; ADR 034; ADR 039.

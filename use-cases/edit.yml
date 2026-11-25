@@ -98,7 +98,7 @@ use_cases:
         then: [It is a usage error.]
       - id: wording
         when: [A person reads a dry run.]
-        then: [Every line says "would".]
+        then: ["Each change it reports reads 'would …' (would save, would update, would remove, would install)."]
     validation:
       - id: acceptance
         type: { kind: acceptance }

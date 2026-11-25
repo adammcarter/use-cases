@@ -34,5 +34,7 @@ use_cases:
         covers: [thrown-away]
         procedure:
           steps:
-            - "Do: A showcase run ends."
-            - "Check: Everything it set up is gone, and only a kept verdict remains."
+            - "Do: Run git status in the project, then perform a showcase of one use case through the showcase skill, and say yes to keeping what it proved."
+            - "Check: The showcase performed that use case's try-it steps, and the verdict it kept shows in use-cases show with its message and evidence."
+            - "Do: When the showcase ends, run git status again."
+            - "Check: Nothing it set up is left in the project, and only the kept verdict remains in the results store."

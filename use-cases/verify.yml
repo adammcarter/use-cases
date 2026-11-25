@@ -157,11 +157,12 @@ use_cases:
         covers: [no-retry, no-skipping]
         procedure:
           steps:
-            - "Do: A test command fails."
-            - "Check: It is not run again by the tool."
-            - "Set up: Every route a validation reached last time is verified."
-            - "Do: verify --run runs."
-            - "Check: That validation still runs."
+            - "Set up: In a workspace whose bridge settings run a test command that appends a line to a scratch file and exits 1."
+            - "Do: Run use-cases verify --run."
+            - "Check: The scratch file has exactly one new line: the tool did not run the command again."
+            - "Set up: Make the command pass, and run use-cases verify --run until every route it reaches is verified."
+            - "Do: Run use-cases verify --run again."
+            - "Check: The command runs again (the scratch file grows), though everything was already verified."
   - id: open-runs
     title: Open runs are named, locked and can be aborted
     description: Promised in chapter 13 (Verify flow) §6, §15, §16.

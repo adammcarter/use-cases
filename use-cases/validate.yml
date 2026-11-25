@@ -108,8 +108,8 @@ use_cases:
         when: ["A use-cases folder or file is a symlink, or holds one."]
         then: [It is INVALID; symlinks are never followed.]
       - id: stray-files
-        when: ["The use-cases folder holds a file that is not a definition, or a scope inside it."]
-        then: ["It is INVALID, never skipped."]
+        when: ["A YAML file in the use-cases folder is not a valid use case file, or a use-cases.yml sits inside it."]
+        then: ["It is INVALID, naming it, never skipped; a file that is not YAML is left alone."]
     validation:
       - id: acceptance
         type: { kind: acceptance }
@@ -144,16 +144,3 @@ use_cases:
       - id: swift-tests
         type: { kind: unit }
         covers: [not-a-scope]
-  - id: scale
-    title: Commands stay quick on a large workspace
-    description: Promised in chapter 09 (Workspace loading) §36 Required properties (Performant); chapter 11 (Fingerprints and freshness) §87.
-    value_tier: supporting
-    intent: A workspace with thousands of use cases and files is still usable from a hook.
-    scenarios:
-      - id: scale
-        when: ["validate, links, status and search run on a large generated workspace."]
-        then: [Each finishes within the proof's budget.]
-    validation:
-      - id: acceptance
-        type: { kind: acceptance }
-        covers: [scale]

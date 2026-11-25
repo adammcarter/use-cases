@@ -19,9 +19,13 @@ use_cases:
         when: [A proposal file is one apply would refuse.]
         then: [It is refused with the same message.]
       - id: results
-        when: [A proposal file is applied and its results drawn.]
-        then: [The applied batch is exactly the file.]
+        given: [An applied, verified proposal.]
+        when: [render results runs.]
+        then: ["It shows each saved use case's status and checks, the removed ones, and whether the gate passes; a proposal not yet applied is refused."]
+      - id: applied-as-signed
+        when: [apply runs on a proposal file.]
+        then: [Exactly its batch is applied; the layout-only fields change nothing.]
     validation:
       - id: acceptance
         type: { kind: acceptance }
-        covers: [intent, brief, proposal, refused, results]
+        covers: [intent, brief, proposal, refused, results, applied-as-signed]

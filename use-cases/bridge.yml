@@ -14,7 +14,7 @@ use_cases:
         then: [The workspace is INVALID.]
       - id: root-only
         when: [Bridge settings sit below the root.]
-        then: [They are refused.]
+        then: [The workspace is INVALID.]
       - id: warnings
         when: ["The settings list no validations, or a validation has no run command."]
         then: [It is a warning and the workspace stays valid.]
