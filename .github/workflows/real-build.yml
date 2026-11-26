@@ -3,6 +3,9 @@ name: real build
 # The Swift use-cases (ADR 036-038): built and unit-tested on macOS and Linux, then held to its
 # acceptance suite, UseCases/Acceptance (ADR 037), run against the built binaries.
 # macOS runs the runner's Xcode Swift; Linux runs the official swift:6.4.2-noble image.
+# Each job also holds this repository's own use cases to the gate (docs/design/19-ci.md, your own test
+# step): use-cases verify --start, the unit and acceptance tests write their reports to the paths it
+# gave, then verify --finish and status --gate, with the use-cases program the job built.
 
 # Started by hand for now (Actions tab, or `gh workflow run "real build"`): the unit tests do not
 # end on the hosted machines yet, and every run is paid for. Pushes start it again once it is green.
@@ -38,16 +41,22 @@ jobs:
         with: { gradle-version: "9.7.1" }
       - name: Build
         run: swift --version && swift build --package-path UseCases
+      - name: Use cases (start)
+        # Opens this job's verify run with the program just built, before any test runs; the run id
+        # and each validation's report path go to the later steps (VERIFY_*).
+        id: verify-start
+        run: UseCases/scripts/ci-verify-start "$(swift build --package-path UseCases --show-bin-path)/use-cases"
       - name: Unit tests
         # Compiling the tests takes most of this on a hosted runner. test-bounded kills a test run that never ends at its
         # 14-minute limit and names the tests that never finished; the step limit is the outer guard. The output goes to
         # files only (the suite prints lines of up to 2 MB, which the runner scans one by one); the step prints a bounded
-        # view of it, and the whole logs are kept by the last step.
+        # view of it, and the whole logs are kept by the last step. Swift Testing's event stream, which
+        # test-bounded reads, is the swift-tests report of the verify run.
         timeout-minutes: 18
         run: |
           UseCases/scripts/ci-bounded-step run "$RUNNER_TEMP/logs/unit-tests/log" \
-            env TEST_BOUNDED_LOG="$RUNNER_TEMP/logs/unit-tests/test-bounded.log" \
-            UseCases/scripts/test-bounded 14 swift test --package-path UseCases
+            env TEST_BOUNDED_LOG="$RUNNER_TEMP/logs/unit-tests/test-bounded.log" TEST_BOUNDED_EVENTS="$VERIFY_REPORT_SWIFT_TESTS" \
+            UseCases/scripts/test-bounded 14 swift test --package-path UseCases --experimental-event-stream-version 0
       - name: Keep the unit test logs
         if: always()
         uses: actions/upload-artifact@v4
@@ -67,13 +76,35 @@ jobs:
           export USE_CASES_UNDER_TEST="$BIN/use-cases" USE_CASES_TRANSFORMERS_UNDER_TEST="$BIN/use-cases-transformers"
           UseCases/scripts/ci-bounded-step run --minutes 14 "$RUNNER_TEMP/logs/acceptance.log" \
             uv run --python 3.12 --with pyyaml --with pytest --with 'jsonschema[format]' \
-            pytest UseCases/Acceptance -q -p no:cacheprovider -rs
+            pytest UseCases/Acceptance -q -p no:cacheprovider -rs \
+            -o junit_family=xunit1 --junitxml="$VERIFY_REPORT_ACCEPTANCE"
+      - name: Use cases (finish)
+        # Seals the run even when a test step failed or was skipped: a test step that wrote no report
+        # is a run error (exit 1), a failing test is a verdict that the gate judges. Its answer is kept
+        # with the logs too.
+        if: ${{ !cancelled() && steps.verify-start.outcome == 'success' }}
+        run: |
+          UseCases/scripts/ci-bounded-step run "$RUNNER_TEMP/logs/use-cases-finish.log" \
+            "$VERIFY_USE_CASES" verify --finish --run-id "$VERIFY_RUN_ID"
+      - name: Use cases (gate)
+        if: ${{ !cancelled() && steps.verify-start.outcome == 'success' }}
+        run: '"$VERIFY_USE_CASES" status --gate'
       - name: Keep the logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: macos-logs
           path: ${{ runner.temp }}/logs/*.log
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Keep the use cases run
+        # The run's reports, consoles and verdicts, for a person to read; no later run reads them.
+        if: ${{ !cancelled() && steps.verify-start.outcome == 'success' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-use-cases-runs
+          path: .use-cases/runs
+          include-hidden-files: true
           if-no-files-found: warn
           retention-days: 7
 
@@ -101,16 +132,22 @@ jobs:
         run: uv run --python 3.12 --with 'jsonschema[format]' --with pyyaml python docs/schemas/engine/validate.py
       - name: Build
         run: swift --version && swift build --package-path UseCases
+      - name: Use cases (start)
+        # Opens this job's verify run with the program just built, before any test runs; the run id
+        # and each validation's report path go to the later steps (VERIFY_*).
+        id: verify-start
+        run: UseCases/scripts/ci-verify-start "$(swift build --package-path UseCases --show-bin-path)/use-cases"
       - name: Unit tests (start)
         # The tests run in the background, so that the next step can watch them and end them itself. The
         # machine is described first: what the run saw is the evidence when it does not end. The logs go to
         # the runner's temp folder (/__w/_temp in the container), outside the checkout; the last step keeps them.
+        # Swift Testing's event stream, which test-bounded reads, is the swift-tests report of the verify run.
         run: |
           uname -a; nproc; getconf _NPROCESSORS_ONLN; free -m; df -h / /tmp; ulimit -a
           head -n1 /sys/fs/cgroup/memory.max /sys/fs/cgroup/pids.max 2>/dev/null || true
           UseCases/scripts/ci-bounded-step start /__w/_temp/logs/unit-tests \
-            env TEST_BOUNDED_LOG=/__w/_temp/logs/unit-tests/test-bounded.log \
-            UseCases/scripts/test-bounded 25 swift test --package-path UseCases
+            env TEST_BOUNDED_LOG=/__w/_temp/logs/unit-tests/test-bounded.log TEST_BOUNDED_EVENTS="$VERIFY_REPORT_SWIFT_TESTS" \
+            UseCases/scripts/test-bounded 25 swift test --package-path UseCases --experimental-event-stream-version 0
       - name: Unit tests
         # Waits at most 28 minutes from the start, printing the machine's state every minute; then kills every
         # process in the container but its init and entrypoint, prints the log and fails. test-bounded's own
@@ -135,13 +172,14 @@ jobs:
         # XCTest and Foundation, not in this package; overruns are what this step is for. About 12
         # minutes on a hosted runner, most of it building the whole package with the sanitizer;
         # ci-bounded-step ends it and everything it started at 25 minutes and fails the
-        # step (124); the step limit is the outer guard only.
+        # step (124); the step limit is the outer guard only. Its build goes outside the checkout:
+        # the verify run's finish reads the checkout, and the guides that build copies hold markers.
         timeout-minutes: 28
         env:
           ASAN_OPTIONS: detect_leaks=0
         run: |
           UseCases/scripts/ci-bounded-step run --minutes 25 /__w/_temp/logs/asan.log \
-            swift test --package-path UseCases --scratch-path UseCases/.build-asan --sanitize=address --filter LocalFileSystem
+            swift test --package-path UseCases --scratch-path /__w/_temp/build-asan --sanitize=address --filter LocalFileSystem
       - name: Acceptance tests
         # About 11 minutes in the container. ci-bounded-step ends the run and everything it started at
         # 22 minutes and fails the step (124); the step limit is the outer guard only.
@@ -151,12 +189,34 @@ jobs:
           export USE_CASES_UNDER_TEST="$BIN/use-cases" USE_CASES_TRANSFORMERS_UNDER_TEST="$BIN/use-cases-transformers"
           UseCases/scripts/ci-bounded-step run --minutes 22 /__w/_temp/logs/acceptance.log \
             uv run --python 3.12 --with pyyaml --with pytest --with 'jsonschema[format]' \
-            pytest UseCases/Acceptance -q -p no:cacheprovider -rs
+            pytest UseCases/Acceptance -q -p no:cacheprovider -rs \
+            -o junit_family=xunit1 --junitxml="$VERIFY_REPORT_ACCEPTANCE"
+      - name: Use cases (finish)
+        # Seals the run even when a test step failed or was skipped: a test step that wrote no report
+        # is a run error (exit 1), a failing test is a verdict that the gate judges. Its answer is kept
+        # with the logs too.
+        if: ${{ !cancelled() && steps.verify-start.outcome == 'success' }}
+        run: |
+          UseCases/scripts/ci-bounded-step run /__w/_temp/logs/use-cases-finish.log \
+            "$VERIFY_USE_CASES" verify --finish --run-id "$VERIFY_RUN_ID"
+      - name: Use cases (gate)
+        if: ${{ !cancelled() && steps.verify-start.outcome == 'success' }}
+        run: '"$VERIFY_USE_CASES" status --gate'
       - name: Keep the logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: linux-logs
           path: /__w/_temp/logs/*.log
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Keep the use cases run
+        # The run's reports, consoles and verdicts, for a person to read; no later run reads them.
+        if: ${{ !cancelled() && steps.verify-start.outcome == 'success' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-use-cases-runs
+          path: .use-cases/runs
+          include-hidden-files: true
           if-no-files-found: warn
           retention-days: 7

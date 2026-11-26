@@ -11,6 +11,8 @@
 # the tests that never ended are read from Swift Testing's own record of starts and ends rather than
 # from the console log (set TEST_BOUNDED_NO_EVENTS=1 to turn this off).
 # Other settings: TEST_BOUNDED_LOG   where the whole log is kept (default: a mktemp file)
+#                 TEST_BOUNDED_EVENTS where the event stream goes (default: beside the log, LOG.events);
+#                                    a run whose event stream is also its report names the report
 #                 TEST_BOUNDED_MATCH text unique to this run; any process whose command line
 #                                    contains it is killed too (default: the event file's path,
 #                                    when there is one)
@@ -182,7 +184,7 @@ unfinished_from_events() {
 # (the console log passes through swift-test, which drops or holds back lines: see the notes above).
 events=
 if [ -z "${TEST_BOUNDED_NO_EVENTS-}" ] && [ "$1" = swift ] && [ "${2-}" = test ]; then
-  events="$log.events"
+  events=${TEST_BOUNDED_EVENTS:-$log.events}
   : > "$events" || exit 2
   _swift=$1; _test=$2; shift 2
   set -- "$_swift" "$_test" --experimental-event-stream-output "$events" "$@"

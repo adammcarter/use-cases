@@ -1,0 +1,38 @@
+#!/bin/sh
+# ci-verify-start: open this CI job's verify run and hand it to the steps after it.
+#
+#   UseCases/scripts/ci-verify-start USE_CASES
+#
+# Runs USE_CASES verify --start --json (USE_CASES: the use-cases program this checkout built), prints
+# its answer, and passes on, for the test steps and the finish:
+#   VERIFY_USE_CASES          the program
+#   VERIFY_RUN_ID             the run id, for use-cases verify --finish --run-id
+#   VERIFY_REPORT_<ID>        where validation <ID> of use-cases-bridge.yml writes its report, its id
+#                             upper-cased with - as _ (swift-tests: VERIFY_REPORT_SWIFT_TESTS)
+# Inside GitHub Actions they are appended to $GITHUB_ENV; anywhere else they are printed as lines that
+# start with "export ", for instance:
+#   eval "$(UseCases/scripts/ci-verify-start "$PWD/UseCases/.build/debug/use-cases" | grep '^export ')"
+# The JSON is read with uv's Python (both jobs set up uv; the Linux image holds no JSON tool).
+
+set -eu
+[ $# -eq 1 ] || { echo "usage: ci-verify-start USE_CASES" >&2; exit 2; }
+uc=$1
+answer=$("$uc" verify --start --json)
+printf '%s\n' "$answer"
+if [ -n "${GITHUB_ENV-}" ]; then form="env"; else form="export"; fi
+# shellcheck disable=SC2016  # the program is Python
+vars=$(printf '%s' "$answer" | uv run --quiet --no-project --python 3.12 python -I -c '
+import json, re, shlex, sys
+form, program = sys.argv[1], sys.argv[2]
+answer = json.load(sys.stdin)
+pairs = [("VERIFY_USE_CASES", program), ("VERIFY_RUN_ID", answer["run_id"])]
+pairs += [("VERIFY_REPORT_" + re.sub(r"[^A-Z0-9]", "_", v.upper()), p) for v, p in answer["reports"].items()]
+for name, value in pairs:
+    print(name + "=" + value if form == "env" else "export " + name + "=" + shlex.quote(value))
+' "$form" "$uc")
+if [ "$form" = env ]; then
+  printf '%s\n' "$vars" >> "$GITHUB_ENV"
+  printf '%s\n' "$vars" | sed 's/^/passed on: /'
+else
+  printf '%s\n' "$vars"
+fi
