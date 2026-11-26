@@ -39,6 +39,7 @@ jobs:
         with:
           name: use-cases-runs
           path: .use-cases/runs
+          include-hidden-files: true            # upload-artifact skips hidden paths (.use-cases) without this
 ```
 
 ## Release branches
@@ -52,14 +53,25 @@ jobs:
 
 ## Your own test step
 
+The test step fails the job as usual, so a failing test that no use case claims fails CI. The finish and gate steps run even then (not when the job is cancelled, and only when the start step succeeded), so the run is still sealed and judged.
+
+The report path is read with `sed`: the JSON of `verify --start --json` has one key to a line, and the official Swift Linux image has neither `jq` nor Python, so nothing needs installing. (A repository that has uv can read it with Python instead, as `UseCases/scripts/ci-verify-start` does.)
+
 ```yaml
       - id: start
-        run: echo "report=$(use-cases verify --start --json | jq -r '.reports["unit-tests"]')" >> "$GITHUB_OUTPUT"
+        run: |
+          json=$(use-cases verify --start --json)
+          echo "report=$(printf '%s' "$json" | sed -n 's/.*"unit-tests": *"\([^"]*\)".*/\1/p')" >> "$GITHUB_OUTPUT"
       - run: python -m pytest --junitxml="${{ steps.start.outputs.report }}"
-        continue-on-error: true                # a failing test is a verdict: --finish still reads it
-      - run: use-cases verify --finish
-      - run: use-cases status --gate
+      - if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        run: use-cases verify --finish
+      - if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        run: use-cases status --gate
 ```
+
+- Between the start and finish steps, write no files that hold marker text into the checkout outside `discovery.exclude` (a second build folder that copies docs, for instance): finish refuses the workspace. Put build output outside the checkout (`$RUNNER_TEMP`) or exclude it.
+- For Swift, `swift test --experimental-event-stream-output "$REPORT" --experimental-event-stream-version 0` writes the report; a wrapper that already passes the output flag is pointed at `$REPORT`, because `swift test` takes the flag only once (`../transformers/swift-testing.md`).
+- To keep the run for people to read, add `actions/upload-artifact@v4` of `.use-cases/runs` with `include-hidden-files: true` and the same `if:`.
 
 ## Sharded tests
 
@@ -75,7 +87,9 @@ jobs:
       - uses: actions/checkout@v4
       - run: ./scripts/setup-ci.sh          # after the Install use-cases step
       - id: start
-        run: echo "run_id=$(use-cases verify --start --json | jq -r '.run_id')" >> "$GITHUB_OUTPUT"
+        run: |
+          json=$(use-cases verify --start --json)
+          echo "run_id=$(printf '%s' "$json" | sed -n 's/.*"run_id": *"\([^"]*\)".*/\1/p')" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v4
         with:
           name: use-cases-run
@@ -92,14 +106,17 @@ jobs:
       - uses: actions/checkout@v4
       - run: ./scripts/setup-ci.sh          # after the Install use-cases step
       - run: python -m pytest $(./scripts/tests-for-shard.sh ${{ matrix.shard }} 3) --junitxml=shard-${{ matrix.shard }}.xml
-        continue-on-error: true
-      - uses: actions/upload-artifact@v4
+      - if: ${{ !cancelled() }}              # the report is kept even when the shard's tests failed
+        uses: actions/upload-artifact@v4
         with:
           name: shard-${{ matrix.shard }}
           path: shard-${{ matrix.shard }}.xml
 
   finish:
     needs: [start, shard]
+    # Runs after the shards whether or not their tests passed, so every report is collected and the run is
+    # sealed; a shard with failing tests still fails its own job, and so the pipeline.
+    if: ${{ !cancelled() && needs.start.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -114,5 +131,6 @@ jobs:
           merge-multiple: true
           path: .use-cases/runs/${{ needs.start.outputs.run_id }}/reports/unit-tests
       - run: use-cases verify --finish --run-id ${{ needs.start.outputs.run_id }}
-      - run: use-cases status --gate
+      - if: ${{ !cancelled() }}
+        run: use-cases status --gate
 ```

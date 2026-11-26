@@ -16,6 +16,8 @@ validations:
 
 Plain `swift test` writes no report. The event-stream flags are required, either in `run` or in your own test command when you run the tests yourself between `use-cases verify --start` and `--finish`.
 
+`swift test` takes `--experimental-event-stream-output` only once. A test wrapper that already passes it (to read the stream itself) must be pointed at the `{report}` path, the path `--start` gave, instead of adding a second flag.
+
 ## How it matches tests to links
 
 - Every test in the stream carries its source file and declaration line.

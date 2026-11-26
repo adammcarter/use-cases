@@ -15,8 +15,10 @@ use-cases status --gate      does anything block?
 |---|---|---|---|
 | `use-cases verify --run` | the run finished with no run errors | run errors: a build failure, a missing report, a transformer error | refused: the workspace is INVALID |
 | `use-cases status --gate` | nothing blocks | something blocks | refused |
+| `use-cases verify --start` | the run is open, its run id and report paths printed | (never) | refused: the workspace is INVALID |
+| `use-cases verify --finish` | the run was sealed with no run errors | run errors: a test step wrote no report, a build failure, a transformer error | refused: no started run, or the workspace is INVALID |
 
-A failing test is not a `verify` failure: it is a verdict, and the gate decides whether it blocks.
+A failing test is not a `verify` failure: it is a verdict, and the gate decides whether it blocks. A run error is not a verdict: its routes get none, so they are `unverified` and the gate only warns. What fails CI for a run error is `verify --finish` (or `verify --run`) exiting 1.
 
 ## Install it in CI
 
@@ -62,7 +64,11 @@ use-cases verify --finish            reads it, judges, keeps the verdicts
 use-cases status --gate
 ```
 
-Read the path from the JSON with any JSON tool and pass it to your test step.
+Read the path from the JSON with whatever the machine already has and pass it to your test step. The JSON is small and has one key to a line, so a line filter such as `sed` is enough; a minimal image may hold neither `jq` nor Python.
+
+- The test step fails the job as usual: a failing test that no use case claims must still fail CI. Run `--finish` and the gate whether or not it failed (not when the job was cancelled, and only when `--start` succeeded), so the run is still sealed and judged.
+- A test wrapper that already writes a report must write it to the path from `--start`, not to a second place, when the test tool takes its report option only once.
+- Between `--start` and `--finish`, write no files that hold marker text into the checkout outside `discovery.exclude`: a second build folder that copies docs or sources would hold copies of the markers, and `--finish` refuses the workspace. Put build output outside the checkout, or exclude its folder.
 
 ## Tests split across machines
 
