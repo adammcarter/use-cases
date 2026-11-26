@@ -90,6 +90,46 @@ struct VerifyReportTests {
   }
 
   @Test
+  func `a finished run caps the passing tests not tied to a use case, not the bad ones`() throws {
+    let passing = (1 ... 25).map { (number: Int) in
+      UnlinkedTest(test: "S/ok\(number)()", file: "Tests/A.swift", line: number, status: .pass)
+    }
+    let failing = [
+      UnlinkedTest(test: "S/broken()", file: "Tests/B.swift", line: 12, status: .fail),
+      UnlinkedTest(test: "S/lost()", file: nil, line: nil, status: .error),
+    ]
+    let lines = try VerifyReport.humanText(
+      finish: finished(unlinked: passing + failing),
+      hint: true,
+    ).split(separator: "\n").map(String.init)
+
+    #expect(lines[0].hasSuffix("· 27 not tied to a use case"))
+    let block = try #require(lines.firstIndex(of: "test not tied to a use case"))
+    #expect(lines[block + 1] == "  (no place)  error  S/lost()")
+    #expect(lines[block + 2] == "  Tests/B.swift:12  fail  S/broken()")
+    let listed = lines[(block + 1)...].prefix { line in
+      line.hasPrefix("  ") && !line.hasPrefix("  …")
+    }
+    #expect(listed.count == 20)
+    #expect(lines.contains("  … 7 more not tied to a use case (--json lists every one)"))
+    #expect(lines.last == "→ use-cases status --gate")
+  }
+
+  @Test
+  func `a finished run with over 20 bad tests not tied shows them all and no passing`() throws {
+    let failing = (1 ... 23).map { (number: Int) in
+      UnlinkedTest(test: "S/bad\(number)()", file: "Tests/B.swift", line: number, status: .fail)
+    }
+    let passed = UnlinkedTest(test: "S/ok()", file: "Tests/A.swift", line: 1, status: .pass)
+    let run = try finished(unlinked: failing + [passed])
+    let text = VerifyReport.humanText(finish: run, hint: false)
+
+    #expect(text.components(separatedBy: "  fail  ").count - 1 == 23)
+    #expect(!text.contains("S/ok()"))
+    #expect(text.contains("  … 1 more not tied to a use case (--json lists every one)"))
+  }
+
+  @Test
   func `a finished run with every test tied says nothing about tests not tied`() throws {
     let text = try VerifyReport.humanText(finish: finished(unlinked: []), hint: false)
 

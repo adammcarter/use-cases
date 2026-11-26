@@ -4,6 +4,9 @@ import UseCasesCore
 /// What `use-cases verify` prints (chapter 16 §11): lines for people, one JSON document for
 /// scripts.
 enum VerifyReport {
+  /// The most lines the "not tied to a use case" block spends (chapter 16 §11).
+  private static let notTiedLineLimit = 20
+
   /// `started run <id>`, where each report goes, anything else worth knowing, and the hint that
   /// says what to do next (chapter 16 §18).
   static func humanText(
@@ -62,7 +65,12 @@ enum VerifyReport {
 
     if !notTied.isEmpty {
       lines.append("test not tied to a use case")
-      lines += notTied.map { test in
+      let passing = "pass"
+      let bad = notTied.filter { $0.status != passing }
+      let good = notTied.filter { $0.status == passing }
+      let shown = bad + good.prefix(max(0, Self.notTiedLineLimit - bad.count))
+
+      lines += shown.map { test in
         let place = test.file.map { file in
           guard let line = test.line else {
             return file
@@ -72,6 +80,12 @@ enum VerifyReport {
         } ?? "(no place)"
 
         return "  \(place)  \(test.status)  \(test.name)"
+      }
+
+      if shown.count < notTied.count {
+        lines.append(
+          "  … \(notTied.count - shown.count) more not tied to a use case (--json lists every one)",
+        )
       }
     }
 
