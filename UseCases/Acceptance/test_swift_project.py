@@ -295,8 +295,8 @@ def test_tests_without_a_use_case_are_reported(validated):
 # @use-case:end verify.unlinked-tests#acceptance.unlinked
 
 
-def test_tests_without_a_use_case_are_told_to_a_person(after_run):
-    process = subprocess.run([*COMMAND, "--workspace", after_run, "verify", "--run"], capture_output=True,
+def test_tests_without_a_use_case_are_told_to_a_person(ws):
+    process = subprocess.run([*COMMAND, "--workspace", ws, "verify", "--run"], capture_output=True,
                              stdin=subprocess.DEVNULL, text=True, encoding="utf-8")
     assert process.returncode == 0, process.stderr
     lines = process.stdout.splitlines()
