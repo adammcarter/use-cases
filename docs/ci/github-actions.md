@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install use-cases
         env:
-          USE_CASES_VERSION: "0.1.0"          # pinned: change it on purpose
+          USE_CASES_VERSION: "0.1.1"          # pinned: change it on purpose
           USE_CASES_REPOSITORY: adammcarter/use-cases    # where the release is published
         run: |
           case "$RUNNER_OS-$RUNNER_ARCH" in

@@ -2,7 +2,7 @@
 public struct ProductVersion: Equatable, Sendable {
   /// The versions this build was made with.
   public static let current = ProductVersion(
-    release: "0.1.0",
+    release: "0.1.1",
     contract: 1,
     store: 1,
   )

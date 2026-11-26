@@ -8,7 +8,7 @@ An example of chapter 19's recipe on GitLab CI. The hidden `.install-use-cases` 
 # .gitlab-ci.yml
 .install-use-cases:
   variables:
-    USE_CASES_VERSION: "0.1.0"             # pinned: change it on purpose
+    USE_CASES_VERSION: "0.1.1"             # pinned: change it on purpose
     USE_CASES_RELEASE_URL: https://github.com/adammcarter/use-cases/releases/download   # where the release is published
   before_script:
     - |
